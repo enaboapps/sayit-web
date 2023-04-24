@@ -3,9 +3,8 @@ import { getAuth } from 'firebase/auth';
 
 class Firebase {
     setup() {
-        // Your web app's Firebase configuration
-        var firebaseConfig = {
-            apiKey: "AIzaSyBm9JmV7Ku5mR6V7iQZ1wYg7q3q3H3V7Xo",
+        const firebaseConfig = {
+            apiKey: "AIzaSyBh4y_-wcEKf4mSlp0pruAP16WQn3HTlII",
             authDomain: "sayit-b44d5.firebaseapp.com",
             databaseURL: "https://sayit-b44d5.firebaseio.com",
             projectId: "sayit-b44d5",

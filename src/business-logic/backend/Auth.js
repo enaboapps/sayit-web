@@ -1,4 +1,5 @@
 import Firebase from "./Firebase";
+import { sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 
 class Auth {
     constructor() {
@@ -9,45 +10,69 @@ class Auth {
     // Sign up with email and password
     // Returns a promise with true if the user has successfully signed up, false otherwise
     async signUpWithEmailAndPassword(email, password) {
-        try {
-            await this.auth.createUserWithEmailAndPassword(email, password);
-            if (this.auth.currentUser) {
+        createUserWithEmailAndPassword(this.auth, email, password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                console.log("user: ", user);
                 return true;
-            } else {
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log("errorCode: ", errorCode);
+                console.log("errorMessage: ", errorMessage);
                 return false;
-            }
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
+            });
     }
 
     // Sign in with email and password
     // Returns a promise with true if the user has successfully signed in, false otherwise
     async signInWithEmailAndPassword(email, password) {
-        try {
-            await this.auth.signInWithEmailAndPassword(email, password);
-            if (this.auth.currentUser) {
+        signInWithEmailAndPassword(this.auth, email, password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                console.log("user: ", user);
                 return true;
-            } else {
+            })
+            .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log("errorCode: ", errorCode);
+                console.log("errorMessage: ", errorMessage);
                 return false;
-            }
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
+            });
     }
 
     // Sign out
     // Returns a promise with true if the user has successfully signed out, false otherwise
     async signOut() {
-        try {
-            await this.auth.signOut();
-            return true;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
+        signOut(this.auth)
+            .then(() => {
+                // Sign-out successful.
+                return true;
+            })
+            .catch((error) => {
+                // An error happened.
+                return false;
+            });
+    }
+
+    // Request a password reset email
+    // Returns a promise with true if the email has been sent, false otherwise
+    async sendPasswordResetEmail(email) {
+        console.log("sendPasswordResetEmail with email: ", email);
+        sendPasswordResetEmail(this.auth, email)
+            .then(() => {
+                // Email sent.
+                return true;
+            })
+            .catch((error) => {
+                // An error happened.
+                console.log("error: ", error);
+                return false;
+            });
     }
 
     // Function to check if a password is strong enough
