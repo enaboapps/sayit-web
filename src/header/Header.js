@@ -6,8 +6,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Header.css';
+import Auth from '../business-logic/backend/Auth';
 
 function Header() {
+    const signedIn = Auth.isSignedIn();
     return (
         <div className="header">
             <div className="header-left">
@@ -17,6 +19,11 @@ function Header() {
                 <Link to="/type">Type</Link>
                 <Link to="/phrases">Phrases</Link>
                 <Link to="/about">About</Link>
+                {signedIn ? (
+                    <Link to="/account">Account</Link>
+                ) : (
+                    <Link to="/sign-in">Sign In</Link>
+                )}
             </div>
         </div>
     );

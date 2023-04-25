@@ -73,6 +73,26 @@ class Auth {
             });
     }
 
+    // Function to check if user is signed in
+    // Returns true if the user is signed in, false otherwise
+    isSignedIn() {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        return !!user;
+    }
+
+    // Function to get the current user email
+    // Returns the user email if the user is signed in, null otherwise
+    getCurrentUserEmail() {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (user) {
+            return user.email;
+        } else {
+            return null;
+        }
+    }
+
     // Function to check if a password is strong enough
     // Returns true if the password is strong enough, false otherwise
     // 8 characters, 1 uppercase, 1 lowercase, 1 number
