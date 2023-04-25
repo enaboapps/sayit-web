@@ -1,16 +1,11 @@
-import Firebase from "./Firebase";
-import { sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 
 class Auth {
-    constructor() {
-        // Initialize Firebase auth
-        this.auth = Firebase.getAuth();
-    }
-
     // Sign up with email and password
     // Returns a promise with true if the user has successfully signed up, false otherwise
     async signUpWithEmailAndPassword(email, password) {
-        createUserWithEmailAndPassword(this.auth, email, password)
+        const auth = getAuth();
+        createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
@@ -29,7 +24,8 @@ class Auth {
     // Sign in with email and password
     // Returns a promise with true if the user has successfully signed in, false otherwise
     async signInWithEmailAndPassword(email, password) {
-        signInWithEmailAndPassword(this.auth, email, password)
+        const auth = getAuth();
+        signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
@@ -48,7 +44,8 @@ class Auth {
     // Sign out
     // Returns a promise with true if the user has successfully signed out, false otherwise
     async signOut() {
-        signOut(this.auth)
+        const auth = getAuth();
+        signOut(auth)
             .then(() => {
                 // Sign-out successful.
                 return true;
@@ -63,7 +60,8 @@ class Auth {
     // Returns a promise with true if the email has been sent, false otherwise
     async sendPasswordResetEmail(email) {
         console.log("sendPasswordResetEmail with email: ", email);
-        sendPasswordResetEmail(this.auth, email)
+        const auth = getAuth();
+        sendPasswordResetEmail(auth, email)
             .then(() => {
                 // Email sent.
                 return true;
