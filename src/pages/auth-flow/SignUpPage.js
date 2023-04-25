@@ -2,6 +2,7 @@ import React from "react";
 import Auth from "../../business-logic/backend/Auth"
 import { Link } from "react-router-dom";
 import "./AuthFlow.css";
+import BaseLayout from "../../layout/BaseLayout";
 
 class SignUpPage extends React.Component {
     constructor(props) {
@@ -48,54 +49,56 @@ class SignUpPage extends React.Component {
     render() {
         const { email, password, confirm_password, error } = this.state;
         return (
-            <div className="container">
-                <h1>Sign Up</h1>
-                <form onSubmit={this.handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            id="email"
-                            name="email"
-                            value={email}
-                            onChange={this.handleChange}
-                            placeholder="Enter email"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            id="password"
-                            name="password"
-                            value={password}
-                            onChange={this.handleChange}
-                            placeholder="Enter password"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="confirm_password">Confirm Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            id="confirm_password"
-                            name="confirm_password"
-                            value={confirm_password}
-                            onChange={this.handleChange}
-                            placeholder="Confirm password"
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary">
-                        Sign Up
-                    </button>
-                    {error && <p>{error.message}</p>}
-                </form>
-                <p>
-                    Already have an account? <Link to="/sign-in">Sign In</Link>
-                </p>
-            </div>
+            <BaseLayout>
+                <div className="container">
+                    <h1>Sign Up</h1>
+                    <form onSubmit={this.handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                className="form-control"
+                                id="email"
+                                name="email"
+                                value={email}
+                                onChange={this.handleChange}
+                                placeholder="Enter email"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                id="password"
+                                name="password"
+                                value={password}
+                                onChange={this.handleChange}
+                                placeholder="Enter password"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="confirm_password">Confirm Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                id="confirm_password"
+                                name="confirm_password"
+                                value={confirm_password}
+                                onChange={this.handleChange}
+                                placeholder="Confirm password"
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary">
+                            Sign Up
+                        </button>
+                        {error && <p>{error.message}</p>}
+                    </form>
+                    <p>
+                        Already have an account? <Link to="/sign-in">Sign In</Link>
+                    </p>
+                </div>
+            </BaseLayout>
         );
     }
 }

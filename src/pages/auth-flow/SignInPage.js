@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Auth from "../../business-logic/backend/Auth";
 import "./AuthFlow.css";
+import BaseLayout from "../../layout/BaseLayout";
 
 class SignInPage extends React.Component {
     constructor(props) {
@@ -35,45 +36,47 @@ class SignInPage extends React.Component {
     render() {
         const { email, password, error } = this.state;
         return (
-            <div className="container">
-                <h1>Sign In</h1>
-                <form onSubmit={this.handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            className="form-control"
-                            id="email"
-                            name="email"
-                            value={email}
-                            onChange={this.handleChange}
-                            placeholder="Enter email"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            className="form-control"
-                            id="password"
-                            name="password"
-                            value={password}
-                            onChange={this.handleChange}
-                            placeholder="Password"
-                        />
-                    </div>
-                    <button type="submit" className="btn btn-primary">
-                        Sign In
-                    </button>
-                    {error && <p>{error.message}</p>}
-                </form>
-                <p>
-                    <Link to="/reset-password">Forgot password?</Link>
-                </p>
-                <p>
-                    Don't have an account? <Link to="/sign-up">Sign Up</Link>
-                </p>
-            </div>
+            <BaseLayout>
+                <div className="container">
+                    <h1>Sign In</h1>
+                    <form onSubmit={this.handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="email">Email</label>
+                            <input
+                                type="email"
+                                className="form-control"
+                                id="email"
+                                name="email"
+                                value={email}
+                                onChange={this.handleChange}
+                                placeholder="Enter email"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">Password</label>
+                            <input
+                                type="password"
+                                className="form-control"
+                                id="password"
+                                name="password"
+                                value={password}
+                                onChange={this.handleChange}
+                                placeholder="Password"
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary">
+                            Sign In
+                        </button>
+                        {error && <p>{error.message}</p>}
+                    </form>
+                    <p>
+                        <Link to="/reset-password">Forgot password?</Link>
+                    </p>
+                    <p>
+                        Don't have an account? <Link to="/sign-up">Sign Up</Link>
+                    </p>
+                </div>
+            </BaseLayout>
         );
     }
 }
