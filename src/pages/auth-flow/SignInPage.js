@@ -1,84 +1,76 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Auth from "../../business-logic/backend/Auth";
+import { onAuthStateChanged } from "firebase/auth";
 import "./AuthFlow.css";
 import BaseLayout from "../../layout/BaseLayout";
+import { useNavigate } from "react-router-dom";
 
-class SignInPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            email: "",
-            password: "",
-            error: null,
-        };
-    }
-
-    handleChange = (event) => {
-        this.setState({
-            [event.target.name]: event.target.value,
+function SignInPage() {
+    const [email, setEmail] = React.useState("");
+    const [password, setPassword] = React.useState("");
+    const [error, setError] = React.useState(null);
+    const navigate = useNavigate();
+    const signedIn = Auth.isSignedIn();
+    React.useEffect(() => {
+        onAuthStateChanged(Auth.getAuth(), (user) => {
+            if (user) {
+                navigate("/");
+            }
         });
-    };
-
-    handleSubmit = async (event) => {
+    }, []);
+    if (signedIn) {
+        navigate("/");
+        return null;
+    }
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        const { email, password } = this.state;
-        const success = await Auth.signInWithEmailAndPassword(email, password);
-        if (success) {
-            this.props.history.push("/");
-        } else {
-            this.setState({
-                error: "Sign in failed",
-            });
+        const message = await Auth.signInWithEmailAndPassword(email, password);
+        if (message) {
+            setError(message);
         }
     };
-
-    render() {
-        const { email, password, error } = this.state;
-        return (
-            <BaseLayout>
-                <div className="container">
-                    <h1>Sign In</h1>
-                    <form onSubmit={this.handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                id="email"
-                                name="email"
-                                value={email}
-                                onChange={this.handleChange}
-                                placeholder="Enter email"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                id="password"
-                                name="password"
-                                value={password}
-                                onChange={this.handleChange}
-                                placeholder="Password"
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary">
-                            Sign In
-                        </button>
-                        {error && <p>{error.message}</p>}
-                    </form>
-                    <p>
-                        <Link to="/reset-password">Forgot password?</Link>
-                    </p>
-                    <p>
-                        Don't have an account? <Link to="/sign-up">Sign Up</Link>
-                    </p>
-                </div>
-            </BaseLayout>
-        );
-    }
+    return (
+        <BaseLayout>
+            <div className="container">
+                <h1>Sign In</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            className="form-control"
+                            id="email"
+                            name="email"
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            id="password"
+                            name="password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                        />
+                    </div>
+                    {error && <p className="error">{error}</p>}
+                    <button type="submit" className="btn btn-primary">
+                        Sign In
+                    </button>
+                </form>
+                <p>
+                    Forgot your password? <Link to="/reset-password">Reset Password</Link>
+                </p>
+                <p>
+                    Don't have an account? <Link to="/sign-up">Sign Up</Link>
+                </p>
+            </div>
+        </BaseLayout>
+    );
 }
 
 export default SignInPage;

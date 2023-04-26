@@ -3,66 +3,51 @@ import Auth from "../../business-logic/backend/Auth";
 import { Link } from "react-router-dom";
 import "./AuthFlow.css";
 import BaseLayout from "../../layout/BaseLayout";
+import { useNavigate } from "react-router-dom";
 
-class ResetPasswordPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            email: "",
-            error: null,
-        };
+function ResetPasswordPage() {
+    const [email, setEmail] = React.useState("");
+    const [error, setError] = React.useState(null);
+    const navigate = useNavigate();
+    const signedIn = Auth.isSignedIn();
+    if (signedIn) {
+        navigate("/");
+        return null;
     }
-
-    handleChange = (event) => {
-        this.setState({
-            [event.target.name]: event.target.value,
-        });
-    };
-
-    handleSubmit = async (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        const { email } = this.state;
-        const success = await Auth.sendPasswordResetEmail(email);
-        if (success) {
-            this.props.history.push("/");
+        const message = await Auth.sendPasswordResetEmail(email);
+        if (message) {
+            setError(message);
         } else {
-            this.setState({
-                error: "Password reset failed",
-            });
+            navigate("/sign-in");
         }
     };
-
-    render() {
-        const { email, error } = this.state;
-        return (
-            <BaseLayout>
-                <div className="container">
-                    <h1>Reset Password</h1>
-                    <form onSubmit={this.handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                id="email"
-                                name="email"
-                                value={email}
-                                onChange={this.handleChange}
-                                placeholder="Enter email"
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary">
-                            Reset Password
-                        </button>
-                        {error && <p className="error">{error}</p>}
-                    </form>
-                    <p>
-                        <Link to="/">Back to sign in</Link>
-                    </p>
-                </div>
-            </BaseLayout>
-        );
-    }
+    return (
+        <BaseLayout>
+            <div className="container">
+                <h1>Reset Password</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            className="form-control"
+                            id="email"
+                            name="email"
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                        />
+                    </div>
+                    {error && <p className="error">{error}</p>}
+                    <button type="submit" className="btn btn-primary">Send Password Reset Email</button>
+                </form>
+                <p>
+                    Don't have an account? <Link to="/sign-up">Sign Up</Link>
+                </p>
+            </div>
+        </BaseLayout>
+    );
 }
 
 export default ResetPasswordPage;

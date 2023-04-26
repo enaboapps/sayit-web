@@ -3,104 +3,86 @@ import Auth from "../../business-logic/backend/Auth"
 import { Link } from "react-router-dom";
 import "./AuthFlow.css";
 import BaseLayout from "../../layout/BaseLayout";
+import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged } from "firebase/auth";
 
-class SignUpPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            email: "",
-            password: "",
-            confirm_password: "",
-            error: null,
-        };
-    }
-
-    handleChange = (event) => {
-        this.setState({
-            [event.target.name]: event.target.value,
+function SignUpPage() {
+    const [email, setEmail] = React.useState("");
+    const [password, setPassword] = React.useState("");
+    const [confirmPassword, setConfirmPassword] = React.useState("");
+    const [error, setError] = React.useState(null);
+    const navigate = useNavigate();
+    const signedIn = Auth.isSignedIn();
+    React.useEffect(() => {
+        onAuthStateChanged(Auth.getAuth(), (user) => {
+            if (user) {
+                navigate("/");
+            }
         });
-    };
-
-    handleSubmit = async (event) => {
+    }, []);
+    if (signedIn) {
+        navigate("/");
+        return null;
+    }
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        const { email, password, confirm_password } = this.state;
-        if (password !== confirm_password) {
-            this.setState({
-                error: "Passwords do not match",
-            });
+        if (password !== confirmPassword) {
+            setError("Passwords do not match");
             return;
         }
         if (!Auth.isPasswordStrongEnough(password)) {
-            this.setState({
-                error: "Password is not strong enough",
-            });
-            return;
+            setError("Password is not strong enough");
         }
-        const success = await Auth.signUpWithEmailAndPassword(email, password);
-        if (success) {
-            this.props.history.push("/");
-        } else {
-            this.setState({
-                error: "Sign up failed",
-            });
+        const message = await Auth.createUserWithEmailAndPassword(email, password);
+        if (message) {
+            setError(message);
         }
     };
-
-    render() {
-        const { email, password, confirm_password, error } = this.state;
-        return (
-            <BaseLayout>
-                <div className="container">
-                    <h1>Sign Up</h1>
-                    <form onSubmit={this.handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email</label>
-                            <input
-                                type="email"
-                                className="form-control"
-                                id="email"
-                                name="email"
-                                value={email}
-                                onChange={this.handleChange}
-                                placeholder="Enter email"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                id="password"
-                                name="password"
-                                value={password}
-                                onChange={this.handleChange}
-                                placeholder="Enter password"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="confirm_password">Confirm Password</label>
-                            <input
-                                type="password"
-                                className="form-control"
-                                id="confirm_password"
-                                name="confirm_password"
-                                value={confirm_password}
-                                onChange={this.handleChange}
-                                placeholder="Confirm password"
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary">
-                            Sign Up
-                        </button>
-                        {error && <p>{error.message}</p>}
-                    </form>
-                    <p>
-                        Already have an account? <Link to="/sign-in">Sign In</Link>
-                    </p>
-                </div>
-            </BaseLayout>
-        );
-    }
+    return (
+        <BaseLayout>
+            <div className="container">
+                <h1>Sign Up</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            type="email"
+                            className="form-control"
+                            id="email"
+                            name="email"
+                            value={email}
+                            onChange={(event) => setEmail(event.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            id="password"
+                            name="password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="confirmPassword">Confirm Password</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            value={confirmPassword}
+                            onChange={(event) => setConfirmPassword(event.target.value)}
+                        />
+                    </div>
+                    {error && <p className="error">{error}</p>}
+                    <button type="submit" className="btn btn-primary">Sign Up</button>
+                </form>
+                <p>Already have an account? <Link to="/sign-in">Sign In</Link></p>
+            </div>
+        </BaseLayout>
+    );
 }
 
 export default SignUpPage;

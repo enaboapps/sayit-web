@@ -1,67 +1,36 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import Auth from "../../business-logic/backend/Auth";
+import { onAuthStateChanged } from "firebase/auth";
 import "./AuthFlow.css";
 import BaseLayout from "../../layout/BaseLayout";
+import { useNavigate } from "react-router-dom";
 
-class AccountPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            email: "",
-            error: null,
-        };
-    }
-
-    componentDidMount() {
-        const email = Auth.getCurrentUserEmail();
-        this.setState({
-            email,
+function AccountPage() {
+    const navigate = useNavigate();
+    const signedIn = Auth.isSignedIn();
+    React.useEffect(() => {
+        onAuthStateChanged(Auth.getAuth(), (user) => {
+            if (!user) {
+                navigate("/sign-in");
+            }
         });
+    }, []);
+    if (!signedIn) {
+        navigate("/sign-in");
+        return null;
     }
-
-    handleSignOut = async () => {
-        const success = await Auth.signOut();
-        if (success) {
-            this.props.history.push("/");
-        } else {
-            this.setState({
-                error: "Sign out failed",
-            });
-        }
+    const signOut = async () => {
+        await Auth.signOut();
     };
-
-    render() {
-        const { email, error } = this.state;
-        return (
-            <BaseLayout>
-                <div className="container">
-                    <h1>Account</h1>
-                    <div className="form-group">
-                        <label htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            readOnly
-                            className="form-control"
-                            id="email"
-                            name="email"
-                            value={email}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={this.handleSignOut}
-                        >
-                            Sign Out
-                        </button>
-                    </div>
-                    {error && <p className="text-danger">{error}</p>}
-                </div>
-            </BaseLayout>
-        );
-    }
+    return (
+        <BaseLayout>
+            <div className="container">
+                <h1>Account</h1>
+                <p>You are signed in as {Auth.getCurrentUserEmail()}</p>
+                <button className="btn btn-primary" onClick={signOut}>Sign Out</button>
+            </div>
+        </BaseLayout>
+    );
 }
 
 export default AccountPage;

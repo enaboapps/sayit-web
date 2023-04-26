@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
 
 class Firebase {
     setup() {
@@ -16,10 +17,15 @@ class Firebase {
         // Initialize Firebase
         this.app = initializeApp(firebaseConfig);
         this.analytics = getAnalytics(this.app);
+        this.auth = getAuth();
     }
 
     getApp() {
         return this.app;
+    }
+
+    getAuth() {
+        return this.auth;
     }
 }
 

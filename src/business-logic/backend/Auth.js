@@ -1,82 +1,87 @@
-import { getAuth, sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { sendPasswordResetEmail, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import Firebase from "./Firebase";
 
 class Auth {
+    getAuth() {
+        return Firebase.getAuth();
+    }
+
     // Sign up with email and password
-    // Returns a promise with true if the user has successfully signed up, false otherwise
+    // Returns null if the user has successfully signed up, an error otherwise
     async signUpWithEmailAndPassword(email, password) {
-        const auth = getAuth();
+        const auth = this.getAuth();
         createUserWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
-                // Signed in 
+                // Signed in
                 const user = userCredential.user;
                 console.log("user: ", user);
-                return true;
+                return null;
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log("errorCode: ", errorCode);
                 console.log("errorMessage: ", errorMessage);
-                return false;
+                return errorMessage;
             });
     }
 
     // Sign in with email and password
-    // Returns a promise with true if the user has successfully signed in, false otherwise
+    // Returns null if the user has successfully signed in, an error otherwise
     async signInWithEmailAndPassword(email, password) {
-        const auth = getAuth();
+        const auth = this.getAuth();
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 // Signed in 
                 const user = userCredential.user;
                 console.log("user: ", user);
-                return true;
+                return null;
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log("errorCode: ", errorCode);
                 console.log("errorMessage: ", errorMessage);
-                return false;
+                return errorMessage;
             });
     }
 
     // Sign out
-    // Returns a promise with true if the user has successfully signed out, false otherwise
+    // Returns null if the user has successfully signed out, an error otherwise
     async signOut() {
-        const auth = getAuth();
+        const auth = this.getAuth();
         signOut(auth)
             .then(() => {
                 // Sign-out successful.
-                return true;
+                return null;
             })
             .catch((error) => {
                 // An error happened.
-                return false;
+                return error;
             });
     }
 
     // Request a password reset email
-    // Returns a promise with true if the email has been sent, false otherwise
+    // Returns null if the email has been sent, an error otherwise
     async sendPasswordResetEmail(email) {
         console.log("sendPasswordResetEmail with email: ", email);
-        const auth = getAuth();
+        const auth = this.getAuth();
         sendPasswordResetEmail(auth, email)
             .then(() => {
                 // Email sent.
-                return true;
+                return null;
             })
             .catch((error) => {
                 // An error happened.
                 console.log("error: ", error);
-                return false;
+                return error;
             });
     }
 
     // Function to check if user is signed in
     // Returns true if the user is signed in, false otherwise
     isSignedIn() {
-        const auth = getAuth();
+        const auth = this.getAuth();
         const user = auth.currentUser;
         return !!user;
     }
@@ -84,7 +89,7 @@ class Auth {
     // Function to get the current user email
     // Returns the user email if the user is signed in, null otherwise
     getCurrentUserEmail() {
-        const auth = getAuth();
+        const auth = this.getAuth();
         const user = auth.currentUser;
         if (user) {
             return user.email;
