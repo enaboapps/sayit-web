@@ -2,6 +2,7 @@ import React from "react";
 import Auth from "../../business-logic/backend/Auth";
 import { onAuthStateChanged } from "firebase/auth";
 import "./AuthFlow.css";
+import "../../global.css";
 import BaseLayout from "../../layout/BaseLayout";
 import { useNavigate } from "react-router-dom";
 
@@ -27,7 +28,7 @@ function AccountPage() {
             <div className="container">
                 <h1>Account</h1>
                 <p>You are signed in as {Auth.getCurrentUserEmail()}</p>
-                <button className="btn btn-primary" onClick={signOut}>Sign Out</button>
+                <button className="btn" onClick={signOut}>Sign Out</button>
             </div>
         </BaseLayout>
     );

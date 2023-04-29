@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import './styles/PhraseDataGrid.css';
+import '../../../global.css'
 
 function PhraseDataGrid({ data, itemsPerPage, renderItem }) {
     const [currentPage, setCurrentPage] = useState(1);

@@ -2,6 +2,7 @@ import React from "react";
 import Auth from "../../business-logic/backend/Auth"
 import { Link } from "react-router-dom";
 import "./AuthFlow.css";
+import "../../global.css";
 import BaseLayout from "../../layout/BaseLayout";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
@@ -77,7 +78,7 @@ function SignUpPage() {
                         />
                     </div>
                     {error && <p className="error">{error}</p>}
-                    <button type="submit" className="btn btn-primary">Sign Up</button>
+                    <button type="submit" className="btn">Sign Up</button>
                 </form>
                 <p>Already have an account? <Link to="/sign-in">Sign In</Link></p>
             </div>
