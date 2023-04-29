@@ -82,8 +82,13 @@ class Auth {
     // Returns true if the user is signed in, false otherwise
     isSignedIn() {
         const auth = this.getAuth();
-        const user = auth.currentUser;
-        return !!user;
+        if (auth) {
+            const user = auth.currentUser;
+            if (user) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Function to get the current user email
@@ -95,6 +100,18 @@ class Auth {
             return user.email;
         } else {
             return null;
+        }
+    }
+
+    // Function to get the current user id
+    // Returns the user id if the user is signed in, empty string otherwise
+    getCurrentUserId() {
+        if (this.isSignedIn()) {
+            const auth = this.getAuth();
+            const user = auth.currentUser;
+            return user.uid;
+        } else {
+            return "";
         }
     }
 
