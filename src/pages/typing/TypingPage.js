@@ -5,6 +5,7 @@
 
 import React from 'react';
 import BaseLayout from '../../layout/BaseLayout';
+import '../../global.css';
 import './TypingPage.css';
 
 function TypingPage() {
@@ -32,13 +33,13 @@ function TypingPage() {
                 <textarea className="text-area" value={text} onChange={handleTextChange} />
                 {text.length > 0 && (
                     <div className="button-container">
-                        <button className="btn btn-primary" onClick={handleSpeakText}>
+                        <button className="btn" onClick={handleSpeakText}>
                             Speak
                         </button>
-                        <button className="btn btn-primary" onClick={handleClearText}>
+                        <button className="btn" onClick={handleClearText}>
                             Clear
                         </button>
-                        <button className="btn btn-primary" onClick={handleSaveText}>
+                        <button className="btn" onClick={handleSaveText}>
                             Save
                         </button>
                     </div>
