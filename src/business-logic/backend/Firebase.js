@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 class Firebase {
@@ -15,10 +15,22 @@ class Firebase {
             appId: "1:608911208973:web:1b8355fc596ff3943d9b44",
             measurementId: "G-J1XJKTDB25"
         };
+
         // Initialize Firebase
         this.app = initializeApp(firebaseConfig);
         this.analytics = getAnalytics(this.app);
         this.auth = getAuth();
+    
+        // Set auth persistence to local
+        setPersistence(this.auth, browserLocalPersistence)
+            .then(() => {
+                // Auth state persistence set to local
+                console.log("Auth state persistence set to local");
+            })
+            .catch((error) => {
+                // An error occurred
+                console.log("An error occurred: ", error);
+        });
     }
 
     getApp() {
