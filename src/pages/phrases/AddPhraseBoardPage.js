@@ -1,0 +1,50 @@
+// This page is for adding a new phrase board
+// It will display a form for the user to enter the name of the phrase board
+
+import React, { useState } from 'react';
+import BaseLayout from '../../layout/BaseLayout';
+import '../../global.css';
+import PhraseStore from '../../business-logic/phrases/PhraseStore';
+import { useNavigate } from 'react-router-dom';
+import { render } from '@testing-library/react';
+
+function AddPhraseBoardPage() {
+    const [name, setName] = useState("");
+    const navigate = useNavigate();
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const success = await PhraseStore.createPhraseBoard(name);
+        if (success) {
+            navigate("/phrases");
+        } else {
+            alert("Error creating phrase board");
+        }
+    };
+
+    return (
+        <BaseLayout>
+            <div className="container">
+                <h1>Add Phrase Board</h1>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="name">Name</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            id="name"
+                            name="name"
+                            value={name}
+                            onChange={(event) => setName(event.target.value)}
+                        />
+                    </div>
+                    <button type="submit" className="btn">
+                        Add Phrase Board
+                    </button>
+                </form>
+            </div>
+        </BaseLayout>
+    );
+}
+
+export default AddPhraseBoardPage;

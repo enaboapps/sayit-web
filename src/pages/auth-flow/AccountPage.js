@@ -1,7 +1,6 @@
 import React from "react";
 import Auth from "../../business-logic/backend/Auth";
 import { onAuthStateChanged } from "firebase/auth";
-import "./AuthFlow.css";
 import "../../global.css";
 import BaseLayout from "../../layout/BaseLayout";
 import { useNavigate } from "react-router-dom";

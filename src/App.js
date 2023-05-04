@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/home/HomePage';
 import TypingPage from './pages/typing/TypingPage';
 import PhraseBoardsPage from './pages/phrases/PhraseBoardsPage';
+import AddPhraseBoardPage from './pages/phrases/AddPhraseBoardPage';
 import SignInPage from './pages/auth-flow/SignInPage';
 import SignUpPage from './pages/auth-flow/SignUpPage';
 import ResetPasswordPage from './pages/auth-flow/ResetPasswordPage';
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/type" element={<TypingPage />} />
           <Route path="/phrases" element={<PhraseBoardsPage />} />
+          <Route path="/phrases/add" element={<AddPhraseBoardPage />} />
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/sign-up" element={<SignUpPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

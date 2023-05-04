@@ -2,7 +2,7 @@
 // The data is stored in Firebase Firestore
 // The data is stored in the following path: {uid}-phraseboards/{phraseBoardId}
 
-import { doc, getDoc, getDocs, setDoc, deleteDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, collection } from 'firebase/firestore';
 import Firebase from '../backend/Firebase';
 import Auth from '../backend/Auth';
 import PhraseBoard from './models/PhraseBoard';
@@ -21,18 +21,22 @@ class PhraseStore {
     }
 
     // Create a new phrase board
-    // Returns null if the phrase board was successfully created, an error otherwise
-    async createPhraseBoard(name, symbol = null, callback) {
+    // Returns true if the phrase board was successfully created, false otherwise
+    async createPhraseBoard(name, symbol = null) {
         const col = this.getCollection();
-        const phraseBoard = new PhraseBoard(name, symbol);
-        await setDoc(doc(col, phraseBoard.id), phraseBoard.toDocument())
-            .then(() => {
-                callback(null);
+        const phraseBoard = new PhraseBoard();
+        phraseBoard.name = name;
+        var success = false;
+        await addDoc(col, phraseBoard.toDocument())
+            .then((docRef) => {
+                console.log("Document written with ID: ", docRef.id);
+                success = true;
             })
             .catch((error) => {
                 console.error("Error adding document: ", error);
-                callback(error);
+                success = false;
             });
+        return success;
     }
 
     // Delete a phrase board

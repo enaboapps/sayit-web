@@ -6,6 +6,8 @@ import BaseLayout from '../../layout/BaseLayout';
 import PhraseDataGrid from './components/PhraseDataGrid';
 import PhraseBoardTile from './components/PhraseBoardTile';
 import PhraseStore from '../../business-logic/phrases/PhraseStore';
+import { useNavigate } from 'react-router-dom';
+import '../../global.css';
 
 class PhraseBoardsPage extends React.Component {
     constructor(props) {
@@ -38,10 +40,26 @@ class PhraseBoardsPage extends React.Component {
                             <PhraseBoardTile name={item.name} />
                         )} />
                     )}
+                    <PhraseBoardsPageBottomBar />
                 </div>
             </BaseLayout>
         );
     }
+}
+
+// bottom bar
+function PhraseBoardsPageBottomBar() {
+    const navigate = useNavigate();
+    
+    const onAddPhraseBoard = () => {
+        navigate("/phrases/add");
+    }
+
+    return (
+        <div className="bottom-bar">
+            <button className="btn" onClick={onAddPhraseBoard}>Add Phrase Board</button>
+        </div>
+    );
 }
 
 export default PhraseBoardsPage;
