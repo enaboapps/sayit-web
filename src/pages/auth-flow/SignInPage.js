@@ -58,7 +58,7 @@ function SignInPage() {
                         />
                     </div>
                     {error && <p className="error">{error}</p>}
-                    <button type="submit" className="btn">
+                    <button type="submit" className="btn-default">
                         Sign In
                     </button>
                 </form>

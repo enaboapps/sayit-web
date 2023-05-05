@@ -17,7 +17,7 @@ function Header() {
             </div>
             <div className="header-right">
                 <Link to="/type">Type</Link>
-                <Link to="/phrases">Phrases</Link>
+                <Link to="/boards">Phrases</Link>
                 <Link to="/about">About</Link>
                 {signedIn ? (
                     <Link to="/account">Account</Link>

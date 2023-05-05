@@ -9,56 +9,82 @@ import PhraseStore from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
 import '../../global.css';
 
-class PhraseBoardsPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            phraseBoards: [],
-            loading: true
-        };
-    }
 
-    async componentDidMount() {
-        await PhraseStore.getAllPhraseBoards ((phraseBoards) => {
-            this.setState({
-                phraseBoards,
-                loading: false
+function PhraseBoardsPage() {
+    const [phraseBoards, setPhraseBoards] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState(false);
+    const [editable, setEditable] = useState(false);
+
+    useEffect(() => {
+        async function fetchData() {
+            await PhraseStore.getAllPhraseBoards ((phraseBoards) => {
+                setPhraseBoards(phraseBoards);
+                setLoading(false);
+                setEditable(phraseBoards.length > 0);
             });
-        });
+        }
+        fetchData();
+    }, []);
+
+    const navigate = useNavigate();
+
+    function handlePhraseBoardClick(phraseBoard) {
+        if (editing) {
+            navigate(`/boards/edit/${phraseBoard.id}`);
+        } else {
+            navigate(`/boards/${phraseBoard.id}`);
+        }
     }
 
-    render() {
+    function openAddPhraseBoardPage() {
+        navigate("/boards/add");
+    }
+
+    function editingBanner() {
         return (
-            <BaseLayout>
-                <div className="container">
-                    <h1>Phrase Boards</h1>
-                    {this.state.loading && (
-                        <div>Loading...</div>
-                    )}
-                    {!this.state.loading && (
-                        <PhraseDataGrid data={this.state.phraseBoards} itemsPerPage={9} renderItem={(item) => (
-                            <PhraseBoardTile name={item.name} />
-                        )} />
-                    )}
-                    <PhraseBoardsPageBottomBar />
-                </div>
-            </BaseLayout>
+            <div>
+                <p>Click on a phrase board to edit it</p>
+            </div>
         );
     }
-}
 
-// bottom bar
-function PhraseBoardsPageBottomBar() {
-    const navigate = useNavigate();
-    
-    const onAddPhraseBoard = () => {
-        navigate("/phrases/add");
+    function bottomBar() {
+        return (
+            <div className="bottom-bar">
+                <button className="btn-default" onClick={openAddPhraseBoardPage}>
+                    Add Phrase Board
+                </button>
+                {editable && (
+                    <button className="btn-default" onClick={() => setEditing(!editing)}>
+                        {editing ? "Done" : "Edit"}
+                    </button>
+                )}
+            </div>
+        );
     }
 
     return (
-        <div className="bottom-bar">
-            <button className="btn" onClick={onAddPhraseBoard}>Add Phrase Board</button>
-        </div>
+        <BaseLayout>
+            <div className="container">
+                <h1>Phrase Boards</h1>
+                {loading && <div>Loading...</div>}
+                {!loading && (
+                    <PhraseDataGrid
+                        data={phraseBoards}
+                        itemsPerPage={9}
+                        renderItem={(item) => (
+                            <PhraseBoardTile
+                                name={item.name}
+                                onClick={() => handlePhraseBoardClick(item)}
+                            />
+                        )}
+                    />
+                )}
+                {editing && editingBanner()}
+                {bottomBar()}
+            </div>
+        </BaseLayout>
     );
 }
 

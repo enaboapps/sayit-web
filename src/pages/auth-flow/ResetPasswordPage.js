@@ -40,7 +40,7 @@ function ResetPasswordPage() {
                         />
                     </div>
                     {error && <p className="error">{error}</p>}
-                    <button type="submit" className="btn">Send Password Reset Email</button>
+                    <button type="submit" className="btn-default">Send Password Reset Email</button>
                 </form>
                 <p>
                     Don't have an account? <Link to="/sign-up">Sign Up</Link>

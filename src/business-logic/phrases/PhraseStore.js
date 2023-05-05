@@ -40,18 +40,21 @@ class PhraseStore {
     }
 
     // Delete a phrase board
-    // Returns null if the phrase board was successfully deleted, an error otherwise
-    async deletePhraseBoard(phraseBoardId, callback) {
+    // Returns true if the phrase board was successfully deleted, false otherwise
+    async deletePhraseBoard(phraseBoardId) {
         const col = this.getCollection();
         const docRef = doc(col, phraseBoardId);
+        var success = false;
         await deleteDoc(docRef)
             .then(() => {
-                callback(null);
+                console.log("Document successfully deleted!");
+                success = true;
             })
             .catch((error) => {
                 console.error("Error removing document: ", error);
-                callback(error);
+                success = false;
             });
+        return success;
     }
 
     // Get a phrase board
@@ -92,19 +95,24 @@ class PhraseStore {
     }
 
     // Update a phrase board
-    // Returns null if the phrase board was successfully updated, an error otherwise (callback)
-    async updatePhraseBoard(phraseBoardId, name, symbol = null, callback) {
+    // Returns true if the phrase board was successfully updated, false otherwise
+    async updatePhraseBoard(phraseBoardId, name, symbol = null) {
         const col = this.getCollection();
         const docRef = doc(col, phraseBoardId);
-        const phraseBoard = new PhraseBoard(name, symbol);
+        const phraseBoard = new PhraseBoard();
+        phraseBoard.id = phraseBoardId;
+        phraseBoard.name = name;
+        var success = false;
         await setDoc(docRef, phraseBoard.toDocument())
             .then(() => {
-                callback(null);
+                console.log("Document successfully updated!");
+                success = true;
             })
             .catch((error) => {
                 console.error("Error updating document: ", error);
-                callback(error);
+                success = false;
             });
+        return success;
     }
 
     // Create a new phrase

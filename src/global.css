@@ -4,18 +4,36 @@
     padding: 20px;
 }
 
-.btn {
+.btn-default {
     display: inline-block;
-    font-size: 16px;
+    font-size: 22px;
     font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
     background-color: #204d74;
     color: yellow;
     transition: all 0.3s ease-in-out;
 }
 
-.btn:hover {
+.btn-default:hover {
     background-color: #f5f5f5;
     color: #204d74;
+}
+
+.btn-danger {
+    display: inline-block;
+    font-size: 22px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background-color: #dc3545;
+    color: #fff;
+    transition: all 0.3s ease-in-out;
+}
+
+.btn-danger:hover {
+    background-color: #f5f5f5;
+    color: #dc3545;
 }
 
 .form-group {
@@ -54,9 +72,10 @@ a:hover {
 
 .bottom-bar {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 20px;
     background-color: #204d74;
     color: yellow;
     font-size: 16px;
@@ -69,4 +88,8 @@ a:hover {
     z-index: 100;
     border-top-left-radius: 30px;
     border-top-right-radius: 30px;
+}
+
+.spacer {
+    flex: 1;
 }

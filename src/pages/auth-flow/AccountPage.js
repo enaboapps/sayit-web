@@ -27,7 +27,7 @@ function AccountPage() {
             <div className="container">
                 <h1>Account</h1>
                 <p>You are signed in as {Auth.getCurrentUserEmail()}</p>
-                <button className="btn" onClick={signOut}>Sign Out</button>
+                <button className="btn-default" onClick={signOut}>Sign Out</button>
             </div>
         </BaseLayout>
     );

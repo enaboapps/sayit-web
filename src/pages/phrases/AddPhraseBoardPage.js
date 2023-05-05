@@ -16,7 +16,7 @@ function AddPhraseBoardPage() {
         event.preventDefault();
         const success = await PhraseStore.createPhraseBoard(name);
         if (success) {
-            navigate("/phrases");
+            navigate("/boards");
         } else {
             alert("Error creating phrase board");
         }
