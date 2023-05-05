@@ -22,6 +22,16 @@ function AddPhraseBoardPage() {
         }
     };
 
+    function bottomBar() {
+        return (
+            <div className="bottom-bar">
+                <button className="btn-default" type='submit' onClick={handleSubmit}>
+                    Save
+                </button>
+            </div>
+        );
+    }
+
     return (
         <BaseLayout>
             <div className="container">
@@ -38,10 +48,8 @@ function AddPhraseBoardPage() {
                             onChange={(event) => setName(event.target.value)}
                         />
                     </div>
-                    <button type="submit" className="btn">
-                        Add Phrase Board
-                    </button>
                 </form>
+                {bottomBar()}
             </div>
         </BaseLayout>
     );
