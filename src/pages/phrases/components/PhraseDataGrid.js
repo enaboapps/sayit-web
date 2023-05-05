@@ -57,11 +57,11 @@ function PhraseDataGrid({ data, itemsPerPage, renderItem }) {
                 ))}
             </div>
             <div className="page-controls">
-                <button className="btn" onClick={goToPreviousPage} disabled={currentPage === 1}>
+                <button className="btn-default" onClick={goToPreviousPage} disabled={currentPage === 1}>
                     Previous Page
                 </button>
                 <span>Page {currentPage} of {totalPages}</span>
-                <button className="btn" onClick={goToNextPage} disabled={currentPage === totalPages}>
+                <button className="btn-default" onClick={goToNextPage} disabled={currentPage === totalPages}>
                     Next Page
                 </button>
             </div>

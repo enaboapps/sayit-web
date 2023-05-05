@@ -8,20 +8,15 @@ import React from 'react';
 import './styles/PhraseDataTile.css';
 
 function PhraseBoardTile(props) {
-    const { name, onClick, editingEnabled } = props;
+    const { name, onClick } = props;
     const handleClick = () => {
         if (onClick) {
             onClick();
         }
     }
     return (
-        <div className="phrase-data-tile" onClick={handleClick}>
-            <div className="phrase-data-tile-name">{name}</div>
-            {editingEnabled && (
-                <div className="phrase-data-tile-edit">
-                    <button className="btn btn-primary">Edit</button>
-                </div>
-            )}
+        <div className="phrase-card" onClick={handleClick}>
+            <div className="phrase-name">{name}</div>
         </div>
     );
 }
