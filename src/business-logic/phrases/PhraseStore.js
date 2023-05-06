@@ -116,42 +116,50 @@ class PhraseStore {
     }
 
     // Create a new phrase
-    // Returns null if the phrase was successfully created, an error otherwise (callback)
-    async createPhrase(phraseBoardId, title, text, callback) {
-        const phrase = new Phrase(title, text);
+    // Returns true if the phrase was successfully created, false otherwise
+    async createPhrase(phraseBoardId, text, symbol = null) {
         const col = this.getCollection();
-        await setDoc(doc(col, phraseBoardId, "phrases", phrase.id), phrase.toDocument())
-            .then(() => {
-                console.log("Document successfully written!");
-                callback(null);
+        const phraseCol = collection(col, phraseBoardId, "phrases");
+        const phrase = new Phrase();
+        phrase.text = text;
+        var success = false;
+        await addDoc(phraseCol, phrase.toDocument())
+            .then((docRef) => {
+                console.log("Document written with ID: ", docRef.id);
+                success = true;
             })
             .catch((error) => {
-                console.error("Error writing document: ", error);
-                callback(error);
+                console.error("Error adding document: ", error);
+                success = false;
             });
+        return success;
     }
 
     // Delete a phrase
-    // Returns null if the phrase was successfully deleted, an error otherwise (callback)
-    async deletePhrase(phraseBoardId, phraseId, callback) {
+    // Returns true if the phrase was successfully deleted, false otherwise
+    async deletePhrase(phraseBoardId, phraseId) {
         const col = this.getCollection();
-        const docRef = doc(col, phraseBoardId, "phrases", phraseId);
+        const phraseCol = collection(col, phraseBoardId, "phrases");
+        const docRef = doc(phraseCol, phraseId);
+        var success = false;
         await deleteDoc(docRef)
             .then(() => {
                 console.log("Document successfully deleted!");
-                callback(null);
+                success = true;
             })
             .catch((error) => {
                 console.error("Error removing document: ", error);
-                callback(error);
+                success = false;
             });
+        return success;
     }
 
     // Get a phrase
     // Returns the phrase if it exists, null otherwise
     async getPhrase(phraseBoardId, phraseId, callback) {
         const col = this.getCollection();
-        const docRef = doc(col, phraseBoardId, "phrases", phraseId);
+        const phraseCol = collection(col, phraseBoardId, "phrases");
+        const docRef = doc(phraseCol, phraseId);
         await getDoc(docRef)
             .then((docSnap) => {
                 if (docSnap.exists()) {
@@ -170,12 +178,17 @@ class PhraseStore {
     // Returns an array of phrases
     async getPhrases(phraseBoardId, callback) {
         const col = this.getCollection();
-        await getDocs(col, phraseBoardId, "phrases")
+        const phraseCol = collection(col, phraseBoardId, "phrases");
+        await getDocs(phraseCol)
             .then((querySnapshot) => {
                 const phrases = [];
                 querySnapshot.forEach((doc) => {
+                    console.log(doc.id, " => ", doc.data());
                     phrases.push(Phrase.fromDocument(doc));
                 });
+                for (var i = 0; i < phrases.length; i++) {
+                    console.log(phrases[i].text);
+                }
                 callback(phrases);
             })
             .catch((error) => {
@@ -185,18 +198,21 @@ class PhraseStore {
     }
 
     // Update a phrase
-    async updatePhrase(phraseBoardId, phrase, callback) {
+    async updatePhrase(phraseBoardId, phrase) {
         const col = this.getCollection();
-        const docRef = doc(col, phraseBoardId, "phrases", phrase.id);
+        const phraseCol = collection(col, phraseBoardId, "phrases");
+        const docRef = doc(phraseCol, phrase.id);
+        var success = false;
         await setDoc(docRef, phrase.toDocument())
             .then(() => {
-                console.log("Document successfully written!");
-                callback(null);
+                console.log("Document successfully updated!");
+                success = true;
             })
             .catch((error) => {
-                console.error("Error writing document: ", error);
-                callback(error);
+                console.error("Error updating document: ", error);
+                success = false;
             });
+        return success;
     }
 }
 

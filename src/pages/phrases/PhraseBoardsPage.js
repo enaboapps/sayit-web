@@ -33,7 +33,7 @@ function PhraseBoardsPage() {
         if (editing) {
             navigate(`/boards/edit/${phraseBoard.id}`);
         } else {
-            navigate(`/boards/${phraseBoard.id}`);
+            navigate(`/boards/${phraseBoard.id}/phrases`);
         }
     }
 

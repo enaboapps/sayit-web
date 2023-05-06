@@ -20,8 +20,10 @@ class Phrase {
     // Construct from a Firebase document
     static fromDocument(doc) {
         const data = doc.data();
-        const phrase = new Phrase(data.title, data.text);
+        const phrase = new Phrase();
         phrase.id = doc.id;
+        phrase.title = data.title;
+        phrase.text = data.text;
         phrase.symbol = data.symbol;
         phrase.frequency = data.frequency;
         phrase.position = data.position;
