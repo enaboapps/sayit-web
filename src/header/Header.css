@@ -14,12 +14,18 @@
   }
   
   .header-right a {
-    color: yellow;
+    color: #2070ba;
+    background-color: yellow;
+    padding: 10px;
+    height: 100%;
+    border-radius: 8px;
     margin-left: 10px;
     text-decoration: bold;
   }
   
   .header-right a:hover {
-    text-decoration: underline;
+    text-decoration: none;
+    background-color: #f5f5f5;
+    color: #2070ba;
   }
   
