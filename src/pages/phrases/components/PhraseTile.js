@@ -16,7 +16,9 @@ function PhraseTile(props) {
     }
     return (
         <div className="phrase-card" onClick={handleClick}>
-            <div className="phrase-name">{text}</div>
+            <p>
+                {text}
+            </p>
         </div>
     );
 }
