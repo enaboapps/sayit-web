@@ -9,6 +9,16 @@ import PhraseBoard from './models/PhraseBoard';
 import Phrase from './models/Phrase';
 
 class PhraseStore {
+    // Variables to keep track of the number of phrase boards and phrases
+    // This is used to determine the position of a new phrase board or phrase
+    phraseBoardCount;
+    phraseCount;
+
+    constructor() {
+        this.phraseBoardCount = 0;
+        this.phraseCount = 0;
+    }
+
     getCollectionName() {
         const user = Auth.getCurrentUserId();
         return `${user}-phraseboards`;
@@ -26,6 +36,7 @@ class PhraseStore {
         const col = this.getCollection();
         const phraseBoard = new PhraseBoard();
         phraseBoard.name = name;
+        phraseBoard.position = this.phraseBoardCount + 1;
         var success = false;
         await addDoc(col, phraseBoard.toDocument())
             .then((docRef) => {
@@ -87,6 +98,7 @@ class PhraseStore {
                 querySnapshot.forEach((doc) => {
                     phraseBoards.push(PhraseBoard.fromDocument(doc));
                 });
+                this.phraseBoardCount = phraseBoards.length;
                 // Order the phrase boards by position
                 phraseBoards.sort((a, b) => a.position - b.position);
                 callback(phraseBoards);
@@ -124,6 +136,7 @@ class PhraseStore {
         const phraseCol = collection(col, phraseBoardId, "phrases");
         const phrase = new Phrase();
         phrase.text = text;
+        phrase.position = this.phraseCount + 1;
         var success = false;
         await addDoc(phraseCol, phrase.toDocument())
             .then((docRef) => {
@@ -188,6 +201,7 @@ class PhraseStore {
                     console.log(doc.id, " => ", doc.data());
                     phrases.push(Phrase.fromDocument(doc));
                 });
+                this.phraseCount = phrases.length;
                 // Order the phrases by their position
                 phrases.sort((a, b) => {
                     return a.position - b.position;
