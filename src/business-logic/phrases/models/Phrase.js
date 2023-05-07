@@ -1,5 +1,5 @@
 class Phrase {
-    constructor(title, text) {
+    constructor() {
         // generate a random id
         const randomId = () => {
             const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -9,9 +9,9 @@ class Phrase {
             }
             return id;
         };
-        this.id = randomId(); 
-        this.title = title;
-        this.text = text;
+        this.id = randomId();
+        this.title = "";
+        this.text = "";
         this.symbol = null;
         this.frequency = 0;
         this.position = 0;
@@ -33,11 +33,8 @@ class Phrase {
     // Construct a json object for Firebase
     toDocument() {
         return {
-            title: this.title,
             text: this.text,
-            symbol: this.symbol,
-            frequency: this.frequency,
-            position: this.position
+            position: this.position,
         };
     }
 }

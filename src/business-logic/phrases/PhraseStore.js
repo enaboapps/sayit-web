@@ -135,7 +135,6 @@ class PhraseStore {
         const col = this.getCollection();
         const phraseCol = collection(col, phraseBoardId, "phrases");
         const phrase = new Phrase();
-        phrase.title = text;
         phrase.text = text;
         phrase.position = this.phraseCount + 1;
         var success = false;
@@ -219,12 +218,17 @@ class PhraseStore {
     }
 
     // Update a phrase
-    async updatePhrase(phraseBoardId, phrase) {
+    async updatePhrase(phraseBoardId, phraseId, phrase) {
         const col = this.getCollection();
         const phraseCol = collection(col, phraseBoardId, "phrases");
-        const docRef = doc(phraseCol, phrase.id);
+        const p = new Phrase();
+        p.id = phraseId;
+        p.text = phrase.text;
+        p.position = phrase.position;
+        console.log(p.toDocument());
+        const docRef = doc(phraseCol, phraseId);
         var success = false;
-        await setDoc(docRef, phrase.toDocument())
+        await setDoc(docRef, p.toDocument())
             .then(() => {
                 console.log("Document successfully updated!");
                 success = true;
