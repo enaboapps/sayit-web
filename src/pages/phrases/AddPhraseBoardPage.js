@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import BaseLayout from '../../layout/BaseLayout';
 import '../../global.css';
-import PhraseStore from '../../business-logic/phrases/PhraseStore';
+import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
 import { render } from '@testing-library/react';
 
@@ -14,7 +14,7 @@ function AddPhraseBoardPage() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const success = await PhraseStore.createPhraseBoard(name);
+        const success = await getPhraseStoreInstance().createPhraseBoard(name);
         if (success) {
             navigate("/boards");
         } else {

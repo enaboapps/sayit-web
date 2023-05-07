@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import BaseLayout from '../../layout/BaseLayout';
 import PhraseDataGrid from './components/PhraseDataGrid';
 import PhraseBoardTile from './components/PhraseBoardTile';
-import PhraseStore from '../../business-logic/phrases/PhraseStore';
+import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
 import '../../global.css';
 
@@ -18,7 +18,7 @@ function PhraseBoardsPage() {
 
     useEffect(() => {
         async function fetchData() {
-            await PhraseStore.getAllPhraseBoards ((phraseBoards) => {
+            await getPhraseStoreInstance().getAllPhraseBoards ((phraseBoards) => {
                 setPhraseBoards(phraseBoards);
                 setLoading(false);
                 setEditable(phraseBoards.length > 0);

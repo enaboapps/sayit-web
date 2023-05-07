@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import BaseLayout from '../../layout/BaseLayout';
 import PhraseDataGrid from './components/PhraseDataGrid';
 import PhraseTile from './components/PhraseTile';
-import PhraseStore from '../../business-logic/phrases/PhraseStore';
+import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../global.css';
 
@@ -19,7 +19,7 @@ function PhrasesPage() {
 
     useEffect(() => {
         async function fetchData() {
-            await PhraseStore.getPhrases(id, (phrases) => {
+            await getPhraseStoreInstance().getPhrases(id, (phrases) => {
                 setPhrases(phrases);
                 setLoading(false);
                 setEditable(phrases.length > 0);

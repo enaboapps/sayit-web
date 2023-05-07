@@ -222,4 +222,14 @@ class PhraseStore {
     }
 }
 
-export default new PhraseStore();
+let phraseStoreInstance = null; // Singleton instance of PhraseStore
+
+// Get the singleton instance of PhraseStore
+function getPhraseStoreInstance() {
+    if (phraseStoreInstance == null) {
+        phraseStoreInstance = new PhraseStore();
+    }
+    return phraseStoreInstance;
+}
+
+export default getPhraseStoreInstance;

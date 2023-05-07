@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import BaseLayout from '../../layout/BaseLayout';
 import '../../global.css';
-import PhraseStore from '../../business-logic/phrases/PhraseStore';
+import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
 
 function EditPhraseBoardPage(props) {
@@ -15,7 +15,7 @@ function EditPhraseBoardPage(props) {
 
     useEffect(() => {
         const loadPhraseBoard = async () => {
-            await PhraseStore.getPhraseBoard(id, (phraseBoard) => {
+            await getPhraseStoreInstance().getPhraseBoard(id, (phraseBoard) => {
                 setName(phraseBoard.name);
             });
         };
@@ -24,7 +24,7 @@ function EditPhraseBoardPage(props) {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const success = await PhraseStore.updatePhraseBoard(id, name);
+        const success = await getPhraseStoreInstance().updatePhraseBoard(id, name);
         if (success) {
             navigate("/boards");
         } else {
@@ -34,7 +34,7 @@ function EditPhraseBoardPage(props) {
 
     const handleDelete = async (event) => {
         event.preventDefault();
-        const success = await PhraseStore.deletePhraseBoard(id);
+        const success = await getPhraseStoreInstance().deletePhraseBoard(id);
         if (success) {
             navigate("/boards");
         } else {
