@@ -135,6 +135,7 @@ class PhraseStore {
         const col = this.getCollection();
         const phraseCol = collection(col, phraseBoardId, "phrases");
         const phrase = new Phrase();
+        phrase.title = text;
         phrase.text = text;
         phrase.position = this.phraseCount + 1;
         var success = false;
