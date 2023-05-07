@@ -9,6 +9,7 @@ import PhraseTile from './components/PhraseTile';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../global.css';
+import getSpeechServiceInstance from '../../speech/SpeechService';
 
 function PhrasesPage() {
     const [phrases, setPhrases] = useState([]);
@@ -34,7 +35,7 @@ function PhrasesPage() {
         if (editing) {
             navigate(`/boards/${id}/phrases/edit/${phrase.id}`);
         } else {
-            // TODO: play audio
+            getSpeechServiceInstance().speak(phrase.text);
         }
     }
 
