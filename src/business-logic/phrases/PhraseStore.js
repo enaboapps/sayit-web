@@ -110,14 +110,15 @@ class PhraseStore {
 
     // Update a phrase board
     // Returns true if the phrase board was successfully updated, false otherwise
-    async updatePhraseBoard(phraseBoardId, name, symbol = null) {
+    async updatePhraseBoard(phraseBoard) {
         const col = this.getCollection();
-        const docRef = doc(col, phraseBoardId);
-        const phraseBoard = new PhraseBoard();
-        phraseBoard.id = phraseBoardId;
-        phraseBoard.name = name;
+        const docRef = doc(col, phraseBoard.id);
         var success = false;
-        await setDoc(docRef, phraseBoard.toDocument())
+        const pb = new PhraseBoard();
+        pb.id = phraseBoard.id;
+        pb.name = phraseBoard.name;
+        pb.position = phraseBoard.position;
+        await setDoc(docRef, pb.toDocument())
             .then(() => {
                 console.log("Document successfully updated!");
                 success = true;

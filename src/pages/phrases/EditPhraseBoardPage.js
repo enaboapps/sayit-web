@@ -9,6 +9,7 @@ import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
 
 function EditPhraseBoardPage(props) {
+    const [phraseBoard, setPhraseBoard] = useState({ name: "" });
     const [name, setName] = useState("");
     const navigate = useNavigate();
     const { id } = useParams();
@@ -16,6 +17,7 @@ function EditPhraseBoardPage(props) {
     useEffect(() => {
         const loadPhraseBoard = async () => {
             await getPhraseStoreInstance().getPhraseBoard(id, (phraseBoard) => {
+                setPhraseBoard(phraseBoard);
                 setName(phraseBoard.name);
             });
         };
@@ -24,7 +26,8 @@ function EditPhraseBoardPage(props) {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        const success = await getPhraseStoreInstance().updatePhraseBoard(id, name);
+        phraseBoard.name = name;
+        const success = await getPhraseStoreInstance().updatePhraseBoard(phraseBoard);
         if (success) {
             navigate("/boards");
         } else {
