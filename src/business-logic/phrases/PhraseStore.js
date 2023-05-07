@@ -87,6 +87,8 @@ class PhraseStore {
                 querySnapshot.forEach((doc) => {
                     phraseBoards.push(PhraseBoard.fromDocument(doc));
                 });
+                // Order the phrase boards by position
+                phraseBoards.sort((a, b) => a.position - b.position);
                 callback(phraseBoards);
             })
             .catch((error) => {
@@ -185,6 +187,10 @@ class PhraseStore {
                 querySnapshot.forEach((doc) => {
                     console.log(doc.id, " => ", doc.data());
                     phrases.push(Phrase.fromDocument(doc));
+                });
+                // Order the phrases by their position
+                phrases.sort((a, b) => {
+                    return a.position - b.position;
                 });
                 for (var i = 0; i < phrases.length; i++) {
                     console.log(phrases[i].text);
