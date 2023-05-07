@@ -42,6 +42,14 @@ function PhrasesPage() {
         navigate(`/boards/${id}/phrases/add`);
     }
 
+    function editingBanner() {
+        return (
+            <div className="editing-banner">
+                <p>Click on a phrase to edit it</p>
+            </div>
+        );
+    }
+
     function bottomBar() {
         return (
             <div className="bottom-bar">
@@ -75,6 +83,7 @@ function PhrasesPage() {
                         )}
                     />
                 )}
+                {editing && editingBanner()}
                 {bottomBar()}
             </div>
         </BaseLayout>
