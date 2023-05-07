@@ -37,6 +37,10 @@ function PhraseDataGrid({ data, itemsPerPage, renderItem }) {
 
     const currentItems = items.slice(indexOfFirstItem, indexOfLastItem).map((item) => item.item);
 
+    // determine which buttons to show
+    const showPreviousButton = currentPage > 1;
+    const showNextButton = currentPage < totalPages;
+
     const goToPreviousPage = () => {
         if (currentPage > 1) {
             setCurrentPage(currentPage - 1);
@@ -57,13 +61,16 @@ function PhraseDataGrid({ data, itemsPerPage, renderItem }) {
                 ))}
             </div>
             <div className="page-controls">
-                <button className="btn-default" onClick={goToPreviousPage} disabled={currentPage === 1}>
-                    Previous Page
-                </button>
-                <span>Page {currentPage} of {totalPages}</span>
-                <button className="btn-default" onClick={goToNextPage} disabled={currentPage === totalPages}>
-                    Next Page
-                </button>
+                {showPreviousButton && (
+                    <button className="btn-default" onClick={goToPreviousPage}>
+                        Previous
+                    </button>
+                )}
+                {showNextButton && (
+                    <button className="btn-default" onClick={goToNextPage}>
+                        Next
+                    </button>
+                )}
             </div>
         </div>
     );

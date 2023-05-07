@@ -10,9 +10,8 @@
     background-color: #204d74;
     cursor: pointer;
     transition: all 0.3s ease-in-out;
-    width: 85%;
-    height: 80px;
     overflow: hidden;
+    max-height: 100px;
 }
 
 .phrase-card:hover {
@@ -22,5 +21,5 @@
 
 .phrase-card p {
     margin: 0;
-    font-size: 16px;
+    font-size: 22pt;
 }
