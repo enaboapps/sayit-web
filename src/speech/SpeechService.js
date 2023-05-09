@@ -1,5 +1,7 @@
 // This class uses the Web Speech API.
 
+import getSpeechSettings from "./SpeechSettings";
+
 class SpeechService {
     // The SpeechSynthesisUtterance object is used to store data that will be spoken
     utterance;
@@ -13,16 +15,23 @@ class SpeechService {
     }
 
     // Speak the given text
-    speak(text) {
+    async speak(text) {
         console.log(`Speaking: ${text}`);
         this.utterance.text = text;
-        this.utterance.voice = this.synth.getVoices()[0];
-        this.synth.speak(this.utterance);
+        await getSpeechSettings().getVoice((voice) => {
+            this.utterance.voice = voice;
+            this.synth.speak(this.utterance);
+        });
     }
 
     // Stop speaking
     stop() {
         this.synth.cancel();
+    }
+
+    // Get the list of voices
+    getVoices() {
+        return this.synth.getVoices();
     }
 }
 

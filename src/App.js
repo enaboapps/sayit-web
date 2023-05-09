@@ -8,6 +8,7 @@ import EditPhraseBoardPage from './pages/phrases/EditPhraseBoardPage';
 import PhrasesPage from './pages/phrases/PhrasesPage';
 import AddPhrasePage from './pages/phrases/AddPhrasePage';
 import EditPhrasePage from './pages/phrases/EditPhrasePage';
+import SettingsLandingPage from './settings/ui/SettingsLandingPage';
 import SignInPage from './pages/auth-flow/SignInPage';
 import SignUpPage from './pages/auth-flow/SignUpPage';
 import ResetPasswordPage from './pages/auth-flow/ResetPasswordPage';
@@ -26,6 +27,7 @@ function App() {
           <Route path="/boards/:id/phrases" element={<PhrasesPage />} />
           <Route path="/boards/:id/phrases/add" element={<AddPhrasePage />} />
           <Route path="/boards/:id/phrases/edit/:phraseId" element={<EditPhrasePage />} />
+          <Route path="/settings" element={<SettingsLandingPage />} />
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/sign-up" element={<SignUpPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

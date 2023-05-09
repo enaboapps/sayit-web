@@ -31,11 +31,12 @@ function PhrasesPage() {
 
     const navigate = useNavigate();
 
-    function handlePhraseClick(phrase) {
+    async function handlePhraseClick(phrase) {
         if (editing) {
             navigate(`/boards/${id}/phrases/edit/${phrase.id}`);
         } else {
-            getSpeechServiceInstance().speak(phrase.text);
+            const speechService = getSpeechServiceInstance();
+            await speechService.speak(phrase.text);
         }
     }
 
