@@ -8,10 +8,11 @@ import PhraseBoardTile from './components/PhraseBoardTile';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
 import '../../global.css';
+import PhraseBoard from '../../business-logic/phrases/models/PhraseBoard';
 
 
 function PhraseBoardsPage() {
-    const [phraseBoards, setPhraseBoards] = useState([]);
+    const [phraseBoards, setPhraseBoards] = useState([] as PhraseBoard[]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [editable, setEditable] = useState(false);
@@ -19,9 +20,11 @@ function PhraseBoardsPage() {
     useEffect(() => {
         async function fetchData() {
             await getPhraseStoreInstance().getAllPhraseBoards ((phraseBoards) => {
-                setPhraseBoards(phraseBoards);
-                setLoading(false);
-                setEditable(phraseBoards.length > 0);
+                if (phraseBoards) {
+                    setPhraseBoards(phraseBoards);
+                    setLoading(false);
+                    setEditable(phraseBoards.length > 0);
+                }
             });
         }
         fetchData();
@@ -29,7 +32,7 @@ function PhraseBoardsPage() {
 
     const navigate = useNavigate();
 
-    function handlePhraseBoardClick(phraseBoard) {
+    function handlePhraseBoardClick(phraseBoard: PhraseBoard) {
         if (editing) {
             navigate(`/boards/edit/${phraseBoard.id}`);
         } else {

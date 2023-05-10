@@ -12,7 +12,7 @@ function AddPhraseBoardPage() {
     const [name, setName] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
         const success = await getPhraseStoreInstance().createPhraseBoard(name);
         if (success) {

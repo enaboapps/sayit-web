@@ -4,7 +4,11 @@
 import React from 'react';
 import Header from '../header/Header';
 
-function BaseLayout(props) {
+type BaseLayoutProps = {
+    children: React.ReactNode;
+};
+
+function BaseLayout(props: BaseLayoutProps) {
     return (
         <div>
             <Header />

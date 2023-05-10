@@ -10,9 +10,10 @@ import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../../global.css';
 import getSpeechServiceInstance from '../../speech/SpeechService';
+import Phrase from '../../business-logic/phrases/models/Phrase';
 
 function PhrasesPage() {
-    const [phrases, setPhrases] = useState([]);
+    const [phrases, setPhrases] = useState([] as Phrase[]);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [editable, setEditable] = useState(false);
@@ -20,18 +21,22 @@ function PhrasesPage() {
 
     useEffect(() => {
         async function fetchData() {
-            await getPhraseStoreInstance().getPhrases(id, (phrases) => {
-                setPhrases(phrases);
-                setLoading(false);
-                setEditable(phrases.length > 0);
-            });
+            if (id) {
+                await getPhraseStoreInstance().getPhrases(id, (phrases) => {
+                    if (phrases) {
+                        setPhrases(phrases);
+                        setLoading(false);
+                        setEditable(phrases.length > 0);
+                    }
+                });
+            }
         }
         fetchData();
     }, [id]);
 
     const navigate = useNavigate();
 
-    async function handlePhraseClick(phrase) {
+    async function handlePhraseClick(phrase: Phrase) {
         if (editing) {
             navigate(`/boards/${id}/phrases/edit/${phrase.id}`);
         } else {

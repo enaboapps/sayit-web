@@ -10,21 +10,26 @@ function SignUpPage() {
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [confirmPassword, setConfirmPassword] = React.useState("");
-    const [error, setError] = React.useState(null);
+    const [error, setError] = React.useState("");
     const navigate = useNavigate();
     const signedIn = Auth.isSignedIn();
     React.useEffect(() => {
-        onAuthStateChanged(Auth.getAuth(), (user) => {
+        const auth = Auth.getAuth();
+        if (!auth) {
+            return;
+        }
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 navigate("/");
             }
         });
+        return unsubscribe;
     }, []);
     if (signedIn) {
         navigate("/");
         return null;
     }
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
         if (password !== confirmPassword) {
             setError("Passwords do not match");
@@ -33,7 +38,7 @@ function SignUpPage() {
         if (!Auth.isPasswordStrongEnough(password)) {
             setError("Password is not strong enough");
         }
-        const message = await Auth.createUserWithEmailAndPassword(email, password);
+        const message = await Auth.signUpWithEmailAndPassword(email, password) as string | null;
         if (message) {
             setError(message);
         }

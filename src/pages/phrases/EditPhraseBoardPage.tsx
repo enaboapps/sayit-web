@@ -7,24 +7,29 @@ import BaseLayout from '../../layout/BaseLayout';
 import '../../global.css';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
+import PhraseBoard from '../../business-logic/phrases/models/PhraseBoard';
 
-function EditPhraseBoardPage(props) {
-    const [phraseBoard, setPhraseBoard] = useState({ name: "" });
+function EditPhraseBoardPage() {
+    const [phraseBoard, setPhraseBoard] = useState({} as PhraseBoard);
     const [name, setName] = useState("");
     const navigate = useNavigate();
     const { id } = useParams();
 
     useEffect(() => {
         const loadPhraseBoard = async () => {
-            await getPhraseStoreInstance().getPhraseBoard(id, (phraseBoard) => {
-                setPhraseBoard(phraseBoard);
-                setName(phraseBoard.name);
-            });
+            if (id) {
+                await getPhraseStoreInstance().getPhraseBoard(id, (phraseBoard) => {
+                    if (phraseBoard) {
+                        setPhraseBoard(phraseBoard);
+                        setName(phraseBoard.name);
+                    }
+                });
+            }
         };
         loadPhraseBoard();
     }, [id]);
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
         phraseBoard.name = name;
         const success = await getPhraseStoreInstance().updatePhraseBoard(phraseBoard);
@@ -35,13 +40,15 @@ function EditPhraseBoardPage(props) {
         }
     };
 
-    const handleDelete = async (event) => {
+    const handleDelete = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
-        const success = await getPhraseStoreInstance().deletePhraseBoard(id);
-        if (success) {
-            navigate("/boards");
-        } else {
-            alert("Error deleting phrase board");
+        if (id) {
+            const success = await getPhraseStoreInstance().deletePhraseBoard(id);
+            if (success) {
+                navigate("/boards");
+            } else {
+                alert("Error deleting phrase board");
+            }
         }
     };
 

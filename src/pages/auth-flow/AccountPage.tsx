@@ -9,7 +9,11 @@ function AccountPage() {
     const navigate = useNavigate();
     const signedIn = Auth.isSignedIn();
     React.useEffect(() => {
-        onAuthStateChanged(Auth.getAuth(), (user) => {
+        const auth = Auth.getAuth();
+        if (!auth) {
+            return;
+        }
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (!user) {
                 navigate("/sign-in");
             }

@@ -13,17 +13,22 @@ function SignInPage() {
     const navigate = useNavigate();
     const signedIn = Auth.isSignedIn();
     React.useEffect(() => {
-        onAuthStateChanged(Auth.getAuth(), (user) => {
+        const auth = Auth.getAuth();
+        if (!auth) {
+            return;
+        }
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 navigate("/");
             }
         });
+        return unsubscribe;
     }, []);
     if (signedIn) {
         navigate("/");
         return null;
     }
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
         const message = await Auth.signInWithEmailAndPassword(email, password);
         if (message) {

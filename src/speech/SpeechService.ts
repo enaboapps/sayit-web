@@ -15,10 +15,10 @@ class SpeechService {
     }
 
     // Speak the given text
-    async speak(text) {
+    async speak(text: string) {
         console.log(`Speaking: ${text}`);
         this.utterance.text = text;
-        await getSpeechSettings().getVoice((voice) => {
+        await getSpeechSettings().getVoice((voice: SpeechSynthesisVoice | null) => {
             this.utterance.voice = voice;
             this.synth.speak(this.utterance);
         });
@@ -35,7 +35,7 @@ class SpeechService {
     }
 }
 
-let speechService = null;   // singleton
+let speechService: SpeechService | null = null;   // singleton
 
 // Get the singleton instance of SpeechService
 function getSpeechServiceInstance() {

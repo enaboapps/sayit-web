@@ -14,14 +14,16 @@ function AddPhrasePage() {
 
     const navigate = useNavigate();
 
-    function handlePhraseChange(event) {
+    function handlePhraseChange(event: { target: { value: React.SetStateAction<string>; }; }) {
         setPhrase(event.target.value);
     }
 
     async function handleAddPhrase() {
         const phraseStore = getPhraseStoreInstance();
-        await phraseStore.createPhrase(id, phrase);
-        navigate(`/boards/${id}/phrases`);
+        if (id) {
+            await phraseStore.createPhrase(id, phrase);
+            navigate(`/boards/${id}/phrases`);
+        }
     }
 
     function bottomBar() {

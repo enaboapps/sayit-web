@@ -1,9 +1,18 @@
-import { initializeApp } from 'firebase/app';
+import { FirebaseApp, initializeApp } from 'firebase/app';
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence, Auth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 class Firebase {
+    app: FirebaseApp | null;
+    auth: Auth | null;
+    
+    constructor() {
+        // define the firebase app
+        this.app = null;
+        this.auth = null;
+    }
+
     setup() {
         const firebaseConfig = {
             apiKey: "AIzaSyBh4y_-wcEKf4mSlp0pruAP16WQn3HTlII",
@@ -18,7 +27,7 @@ class Firebase {
 
         // Initialize Firebase
         this.app = initializeApp(firebaseConfig);
-        this.analytics = getAnalytics(this.app);
+        getAnalytics(this.app);
         this.auth = getAuth();
     
         // Set auth persistence to local
@@ -42,7 +51,10 @@ class Firebase {
     }
 
     getDb() {
-        return getFirestore(this.app);
+        if (this.app) {
+            return getFirestore(this.app);
+        }
+        return null;
     }
 }
 

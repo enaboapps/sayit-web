@@ -7,7 +7,12 @@
 import React from 'react';
 import './styles/PhraseDataTile.css';
 
-function PhraseBoardTile(props) {
+type PhraseBoardTileProps = {
+    name: string;
+    onClick?: () => void;
+};
+
+function PhraseBoardTile(props: PhraseBoardTileProps) {
     const { name, onClick } = props;
     const handleClick = () => {
         if (onClick) {

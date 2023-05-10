@@ -7,20 +7,18 @@ import { useNavigate } from "react-router-dom";
 
 function ResetPasswordPage() {
     const [email, setEmail] = React.useState("");
-    const [error, setError] = React.useState(null);
+    const [error, setError] = React.useState("");
     const navigate = useNavigate();
     const signedIn = Auth.isSignedIn();
     if (signedIn) {
         navigate("/");
         return null;
     }
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
         const message = await Auth.sendPasswordResetEmail(email);
         if (message) {
             setError(message);
-        } else {
-            navigate("/sign-in");
         }
     };
     return (

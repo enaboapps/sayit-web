@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import './styles/PhraseDataGrid.css';
 import '../../../global.css'
+import React from 'react';
 
-function PhraseDataGrid({ data, itemsPerPage, renderItem }) {
+type PhraseDataGridProps = {
+    data: any[];
+    itemsPerPage: number;
+    renderItem: (item: any) => React.ReactNode;
+};
+
+function PhraseDataGrid(props: PhraseDataGridProps) {
     const [currentPage, setCurrentPage] = useState(1);
+
+    const { data, itemsPerPage, renderItem } = props;
     
     if (!data) {
         console.log('data is null');

@@ -8,9 +8,10 @@ import BaseLayout from '../../layout/BaseLayout';
 import '../../global.css';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
+import Phrase from '../../business-logic/phrases/models/Phrase';
 
 function EditPhrasePage() {
-    const [phrase, setPhrase] = useState("");
+    const [phrase, setPhrase] = useState({} as Phrase);
     const [text, setText] = useState("");
     const { id, phraseId } = useParams();
 
@@ -19,15 +20,19 @@ function EditPhrasePage() {
     useEffect(() => {
         async function fetchData() {
             const phraseStore = getPhraseStoreInstance();
-            await phraseStore.getPhrase(id, phraseId, (phrase) => {
-                setPhrase(phrase);
-                setText(phrase.text);
-            });
+            if (id && phraseId) {
+                await phraseStore.getPhrase(id, phraseId, (phrase) => {
+                    if (phrase) {
+                        setPhrase(phrase);
+                        setText(phrase.text);
+                    }
+                });
+            }
         }
         fetchData();
     }, [id, phraseId]);
 
-    function handlePhraseChange(event) {
+    function handlePhraseChange(event: { target: { value: React.SetStateAction<string>; }; }) {
         setText(event.target.value);
         let ph = phrase;
         ph.text = text;
@@ -36,14 +41,18 @@ function EditPhrasePage() {
 
     async function handleSavePhrase() {
         const phraseStore = getPhraseStoreInstance();
-        await phraseStore.updatePhrase(id, phraseId, phrase);
-        navigate(`/boards/${id}/phrases`);
+        if (id && phraseId && phrase) {
+            await phraseStore.updatePhrase(id, phraseId, phrase);
+            navigate(`/boards/${id}/phrases`);
+        }
     }
 
     async function handleDeletePhrase() {
         const phraseStore = getPhraseStoreInstance();
-        await phraseStore.deletePhrase(id, phraseId);
-        navigate(`/boards/${id}/phrases`);
+        if (id && phraseId) {
+            await phraseStore.deletePhrase(id, phraseId);
+            navigate(`/boards/${id}/phrases`);
+        }
     }
 
     function bottomBar() {

@@ -10,7 +10,7 @@ import getSpeechSettings from '../../speech/SpeechSettings';
 
 function SettingsLandingPage() {
     const [voice, setVoice] = useState("");
-    const [voices, setVoices] = useState([]);
+    const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
     useEffect(() => {
         async function fetchData() {
@@ -19,15 +19,14 @@ function SettingsLandingPage() {
             console.log(voices);
             setVoices(voices);
             const speechSettings = getSpeechSettings();
-            await speechSettings.getVoice((v) => {
-                setVoice(v.name);
-                console.log(v.name);
-            });
+            await speechSettings.getVoice((voice: SpeechSynthesisVoice | null) => (
+                setVoice(voice?.name || "")
+            ));
         }
         fetchData();
     }, []);
 
-    async function handleVoiceChange(event) {
+    async function handleVoiceChange(event: React.ChangeEvent<HTMLSelectElement>) {
         setVoice(event.target.value);
         const speechSettings = getSpeechSettings();
         await speechSettings.setVoice(event.target.value);

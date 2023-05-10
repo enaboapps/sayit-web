@@ -1,4 +1,11 @@
+import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+
 class PhraseBoard {
+    id: string;
+    name: string;
+    position: number;
+    phrases: any;
+
     constructor() {
         // generate a random id
         const randomId = () => {
@@ -15,7 +22,7 @@ class PhraseBoard {
     }
 
     // Construct from a Firebase document
-    static fromDocument(doc) {
+    static fromDocument(doc: QueryDocumentSnapshot<DocumentData>) {
         const data = doc.data();
         const phraseBoard = new PhraseBoard();
         phraseBoard.id = doc.id;
@@ -32,7 +39,7 @@ class PhraseBoard {
         };
     }
 
-    deletePhrase(index) {
+    deletePhrase(index: number) {
         this.phrases.splice(index, 1);
     }
 }

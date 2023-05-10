@@ -1,4 +1,13 @@
+import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
+
 class Phrase {
+    id: string;
+    title: string;
+    text: string;
+    symbol: null;
+    frequency: number;
+    position: number;
+
     constructor() {
         // generate a random id
         const randomId = () => {
@@ -18,7 +27,7 @@ class Phrase {
     }
 
     // Construct from a Firebase document
-    static fromDocument(doc) {
+    static fromDocument(doc: QueryDocumentSnapshot<DocumentData>) {
         const data = doc.data();
         const phrase = new Phrase();
         phrase.id = doc.id;

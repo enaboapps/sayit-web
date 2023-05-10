@@ -6,6 +6,10 @@
 //     }
 
 class Setting {
+    id: string;
+    name: string;
+    value: string;
+
     constructor() {
         // generate a random id
         const randomId = () => {
@@ -21,7 +25,7 @@ class Setting {
         this.value = "";
     }
 
-    static fromDocument(doc) {
+    static fromDocument(doc: { data: () => any; id: string; }) {
         const data = doc.data();
         const setting = new Setting();
         setting.id = doc.id;

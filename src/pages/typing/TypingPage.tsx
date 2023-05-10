@@ -11,7 +11,7 @@ import './TypingPage.css';
 function TypingPage() {
     const [text, setText] = React.useState("");
 
-    const handleTextChange = (event) => {
+    const handleTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
         setText(event.target.value);
     }
 
