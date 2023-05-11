@@ -10,6 +10,10 @@
 }
 
 .header h1 {
+  position: absolute;
+  left: 40px;
+  top: 40px;
+  font-size: 30pt;
   margin: 0;
 }
 

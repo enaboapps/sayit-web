@@ -1,4 +1,7 @@
 .menu-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     background-color: yellow;
     justify-content: center;
     color: #2070ba;
@@ -14,8 +17,10 @@
     color: #2070ba;
 }
 
-.menu-close-button-container {
+.flyout {
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: flex-end;
     margin-bottom: 10px;
+    transition: all 0.3s ease-in-out;
 }

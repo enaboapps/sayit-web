@@ -25,12 +25,10 @@ function Flyout(props: FlyoutProps) {
 
     function items() {
         return (
-            <div>
-                <div className='menu-close-button-container'>
-                    <button className="menu-button" onClick={handleFlyoutClick}>
-                        <p>X</p>
-                    </button>
-                </div>
+            <div className="flyout" id="flyout">
+                <button className="menu-button" onClick={handleFlyoutClick}>
+                    <p>X</p>
+                </button>
                 {children}
             </div>
         );
