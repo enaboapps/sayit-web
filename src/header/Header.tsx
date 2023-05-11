@@ -21,7 +21,9 @@ function Header() {
     return (
         <div className="header">
             <div className="header-left">
-                <h1>SayIt!</h1>
+                <a href="/">
+                    <h1>SayIt!</h1>
+                </a>
             </div>
             <div className="header-right">
                 <Flyout children={<MenuChildren />} onClose={closeFlyout} />
@@ -34,11 +36,8 @@ function MenuChildren() {
     const signedIn = Auth.isSignedIn();
     return (
         <div className="menu-children">
-            <Link to="/type">Type</Link>
-            <Link to="/boards">Phrases</Link>
-            <Link to="/settings">Settings</Link>
             {signedIn ? (
-                <Link to="/account">Account</Link>
+                <><Link to="/type">Type</Link><Link to="/boards">Phrases</Link><Link to="/settings">Settings</Link><Link to="/account">Account</Link></>
             ) : (
                 <Link to="/sign-in">Sign In</Link>
             )}

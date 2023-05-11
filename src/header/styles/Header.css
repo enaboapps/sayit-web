@@ -9,6 +9,11 @@
   border-bottom-right-radius: 40px;
 }
 
+.header a {
+  color: yellow;
+  text-decoration: none;
+}
+
 .header h1 {
   position: absolute;
   left: 40px;
