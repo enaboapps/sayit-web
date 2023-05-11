@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import './styles/Header.css';
 import Flyout from './Flyout';
 import Auth from '../business-logic/backend/Auth';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function Header() {
     const signedIn = Auth.isSignedIn();
@@ -33,7 +34,20 @@ function Header() {
 }
 
 function MenuChildren() {
-    const signedIn = Auth.isSignedIn();
+    const [signedIn, setSignedIn] = React.useState(false);
+    React.useEffect(() => {
+        const auth = Auth.getAuth();
+        if (!auth) {
+            return;
+        } else {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    setSignedIn(true);
+                }
+            });
+            return unsubscribe;
+        }
+    }, []);
     return (
         <div className="menu-children">
             {signedIn ? (

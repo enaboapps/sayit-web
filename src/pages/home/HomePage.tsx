@@ -4,13 +4,27 @@ import Auth from "../../business-logic/backend/Auth";
 import { Link } from "react-router-dom";
 import "../../global.css";
 import './HomePage.css';
+import { onAuthStateChanged } from "firebase/auth";
 
 // This is the home page of the app. It is the first page that the user sees when they visit the app.
 // If the user is signed in, they will see a welcome message and a grid of links to the other pages.
 // If the user is not signed in, they will see a message telling them to sign in.
 
 function HomePage() {
-    const signedIn = Auth.isSignedIn();
+    const [signedIn, setSignedIn] = React.useState(false);
+    React.useEffect(() => {
+        const auth = Auth.getAuth();
+        if (!auth) {
+            return;
+        } else {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    setSignedIn(true);
+                }
+            });
+            return unsubscribe;
+        }
+    }, []);
     return (
         <BaseLayout>
             <div className="container">
