@@ -94,3 +94,32 @@ a:hover {
 .spacer {
     flex: 1;
 }
+
+/* Styling the select element */
+select {
+    /* Customizing the appearance */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 8px 16px;
+    border: 2px solid #204d74;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #204d74;
+    font-size: 14px;
+    background-image: linear-gradient(45deg, transparent 50%, #333 50%), linear-gradient(135deg, #204d74 50%, transparent 50%);
+    background-position: calc(100% - 12px) center, calc(100% - 8px) center;
+    background-size: 8px 8px, 8px 8px;
+    background-repeat: no-repeat;
+}
+
+/* Styling the dropdown list */
+select::-ms-expand {
+    display: none;
+}
+
+/* Styling the selected option */
+select option:checked {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
