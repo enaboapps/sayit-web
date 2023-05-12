@@ -5,6 +5,8 @@
 //         value: "setting value"
 //     }
 
+import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+
 class Setting {
     id: string;
     name: string;
@@ -25,7 +27,7 @@ class Setting {
         this.value = "";
     }
 
-    static fromDocument(doc: { data: () => any; id: string; }) {
+    static fromDocument(doc: QueryDocumentSnapshot<DocumentData>) {
         const data = doc.data();
         const setting = new Setting();
         setting.id = doc.id;
