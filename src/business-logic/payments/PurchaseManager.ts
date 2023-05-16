@@ -5,7 +5,7 @@ import Firebase from '../backend/Firebase';
 import { addDoc, collection, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import Auth from '../backend/Auth';
 
-class PaymentRecorder {
+class PurchaseManager {
     // Create a session for a payment
     async createSession(priceId: string, successUrl: string, cancelUrl: string) {
         const db = Firebase.getDb();
@@ -72,4 +72,4 @@ class PaymentRecorder {
     }
 }
 
-export default new PaymentRecorder();
+export default new PurchaseManager();

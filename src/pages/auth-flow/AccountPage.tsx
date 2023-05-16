@@ -4,7 +4,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import "../../global.css";
 import BaseLayout from "../../layout/BaseLayout";
 import { useNavigate } from "react-router-dom";
-import PaymentRecorder from "../../business-logic/payments/PaymentRecorder";
+import PurchaseManager from "../../business-logic/payments/PurchaseManager";
 
 function AccountPage() {
     const navigate = useNavigate();
@@ -21,7 +21,7 @@ function AccountPage() {
             }
         });
         async function checkPro() {
-            const pro = await PaymentRecorder.isPro();
+            const pro = await PurchaseManager.isPro();
             setShowingUpgrade(!pro);
         }
         checkPro();

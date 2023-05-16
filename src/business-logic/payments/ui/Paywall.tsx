@@ -3,7 +3,7 @@
 // It uses Stripe to process payments
 
 import React from 'react';
-import PaymentRecorder from '../PaymentRecorder';
+import PurchaseManager from '../PurchaseManager';
 import BaseLayout from '../../../layout/BaseLayout';
 import '../../../global.css';
 
@@ -19,7 +19,7 @@ function Paywall() {
         const cancelUrl = host + "/paywall/cancel";
         const priceId = "price_1N7N6qHFy05HLttR4MUcrhzC";
         console.log("Creating session with priceId: " + priceId);
-        const session = await PaymentRecorder.createSession(priceId, successUrl, cancelUrl);
+        const session = await PurchaseManager.createSession(priceId, successUrl, cancelUrl);
     }
 
     function whatYouGet() {
