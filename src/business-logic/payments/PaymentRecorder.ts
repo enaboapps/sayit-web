@@ -1,25 +1,11 @@
 // This class is used to record payments in Firebase.
 // It uses firestore-stripe-payments to record payments.
 
-import { getStripePayments, createCheckoutSession, getProducts } from '@stripe/firestore-stripe-payments';
 import Firebase from '../backend/Firebase';
-import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import Auth from '../backend/Auth';
 
 class PaymentRecorder {
-    // Get the Firestore Stripe Payments instance
-    getStripePayments() {
-        const app = Firebase.getApp();
-        if (app) {
-            const stripePayments = getStripePayments(app, {
-                customersCollection: 'customers',
-                productsCollection: 'products',
-            });
-            return stripePayments;
-        }
-        return null;
-    }
-
     // Create a session for a payment
     async createSession(priceId: string, successUrl: string, cancelUrl: string) {
         const db = Firebase.getDb();
@@ -51,20 +37,14 @@ class PaymentRecorder {
         const db = Firebase.getDb();
         let pro = false;
         if (db) {
-            await getDoc(doc(db, 'customers', Auth.getCurrentUserId() || ''))
-                .then((doc) => {
-                    if (doc.exists()) {
-                        const data = doc.data();
-                        if (data) {
-                            const { isPro } = data;
-                            if (isPro) {
-                                pro = true;
-                            } else {
-                                pro = false;
-                            }
-                        }
-                    }
-                });
+            const col = collection(db, 'customers', Auth.getCurrentUserId() || '');
+            const docRef = await getDoc(doc(col));
+            if (docRef.exists()) {
+                const data = docRef.data();
+                if (data) {
+                    pro = data.isPro;
+                }
+            }
         }
         return pro;
     }
@@ -74,7 +54,7 @@ class PaymentRecorder {
         const db = Firebase.getDb();
         if (db) {
             const docRef = doc(db, 'customers', Auth.getCurrentUserId() || '');
-            await updateDoc(docRef, {
+            await setDoc(docRef, {
                 isPro: true,
             })
                 .then(() => {
