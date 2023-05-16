@@ -13,6 +13,9 @@ import SignInPage from './pages/auth-flow/SignInPage';
 import SignUpPage from './pages/auth-flow/SignUpPage';
 import ResetPasswordPage from './pages/auth-flow/ResetPasswordPage';
 import AccountPage from './pages/auth-flow/AccountPage';
+import Paywall from './business-logic/payments/ui/Paywall';
+import PaymentSuccess from './business-logic/payments/ui/PaymentSuccess';
+import PaymentCancel from './business-logic/payments/ui/PaymentCancel';
 
 function App() {
   return (
@@ -32,6 +35,9 @@ function App() {
           <Route path="/sign-up" element={<SignUpPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/paywall" element={<Paywall />} />
+          <Route path="/paywall/success" element={<PaymentSuccess />} />
+          <Route path="/paywall/cancel" element={<PaymentCancel />} />
         </Routes>
       </Router>
     </div>
