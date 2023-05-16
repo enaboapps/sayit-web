@@ -3,18 +3,15 @@
 import React, { useEffect } from 'react';
 import BaseLayout from '../../../layout/BaseLayout';
 import '../../../global.css';
+import PaymentRecorder from '../PaymentRecorder';
 
 function PaymentSuccess() {
     // Retrieve the customer 
     useEffect(() => {
-        async function fetchData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionId = urlParams.get('session_id');
-            const stripe = (window as any).Stripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-            const session = await stripe.checkout.sessions.retrieve(sessionId);
-            console.log(session);
+        async function setPro() {
+            await PaymentRecorder.setPro();
         }
-        fetchData();
+        setPro();
     }, []);
 
     return (

@@ -3,7 +3,7 @@
 
 import { getStripePayments, createCheckoutSession, getProducts } from '@stripe/firestore-stripe-payments';
 import Firebase from '../backend/Firebase';
-import { addDoc, collection, doc, onSnapshot } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import Auth from '../backend/Auth';
 
 class PaymentRecorder {
@@ -48,17 +48,42 @@ class PaymentRecorder {
 
     // Function to check if the user is pro
     async isPro() {
-        const auth = Firebase.getAuth();
-        const currentUser = auth?.currentUser;
-        if (currentUser) {
-            await currentUser.getIdToken(true);
-            const token = await currentUser.getIdTokenResult();
-            console.log(token);
-            if (token.claims.stripeRole) {
-                return true;
-            }
+        const db = Firebase.getDb();
+        let pro = false;
+        if (db) {
+            await getDoc(doc(db, 'customers', Auth.getCurrentUserId() || ''))
+                .then((doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        if (data) {
+                            const { isPro } = data;
+                            if (isPro) {
+                                pro = true;
+                            } else {
+                                pro = false;
+                            }
+                        }
+                    }
+                });
         }
-        return false;
+        return pro;
+    }
+
+    // Function to set the user as pro
+    async setPro() {
+        const db = Firebase.getDb();
+        if (db) {
+            const docRef = doc(db, 'customers', Auth.getCurrentUserId() || '');
+            await updateDoc(docRef, {
+                isPro: true,
+            })
+                .then(() => {
+                    console.log('User is now pro');
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+        }
     }
 
     // This function redirects the user to the Stripe checkout page
