@@ -51,8 +51,10 @@ class PaymentRecorder {
         const auth = Firebase.getAuth();
         const currentUser = auth?.currentUser;
         if (currentUser) {
+            await currentUser.getIdToken(true);
             const token = await currentUser.getIdTokenResult();
-            if (token.claims.stripeRole === 'pro') {
+            console.log(token);
+            if (token.claims.stripeRole) {
                 return true;
             }
         }
