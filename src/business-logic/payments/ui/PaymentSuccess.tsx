@@ -3,13 +3,13 @@
 import React, { useEffect } from 'react';
 import BaseLayout from '../../../layout/BaseLayout';
 import '../../../global.css';
-import PurchaseManager from '../PurchaseManager';
+import getPurchaseManager from '../PurchaseManager';
 
 function PaymentSuccess() {
     // Retrieve the customer 
     useEffect(() => {
         async function setPro() {
-            await PurchaseManager.setPro();
+            await getPurchaseManager().setPro();
         }
         setPro();
     }, []);

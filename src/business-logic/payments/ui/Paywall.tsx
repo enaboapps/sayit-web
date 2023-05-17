@@ -3,7 +3,7 @@
 // It uses Stripe to process payments
 
 import React from 'react';
-import PurchaseManager from '../PurchaseManager';
+import getPurchaseManager from '../PurchaseManager';
 import BaseLayout from '../../../layout/BaseLayout';
 import '../../../global.css';
 
@@ -20,7 +20,7 @@ function Paywall() {
 
     React.useEffect(() => {
         async function getPrice() {
-            const price = await PurchaseManager.getPrice(priceId);
+            const price = await getPurchaseManager().getPrice(priceId);
             setPrice(price);
         }
         getPrice();
@@ -32,7 +32,7 @@ function Paywall() {
         const successUrl = host + "/paywall/success";
         const cancelUrl = host + "/paywall/cancel";
         console.log("Creating session with priceId: " + priceId);
-        const session = await PurchaseManager.createSession(priceId, successUrl, cancelUrl);
+        const session = await getPurchaseManager().createSession(priceId, successUrl, cancelUrl);
     }
 
     function priceElement() {

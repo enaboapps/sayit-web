@@ -60,6 +60,21 @@ class PurchaseManager {
         }
     }
 
+    // Function to retrieve a session
+    async retrieveSession(sessionId: string) {
+        const stripe = this.getStripe();
+        const session = await stripe.checkout.sessions.retrieve(sessionId, {
+            expand: ["status"],
+        });
+        return session;
+    }
+
+    // Function to check if a session is paid
+    async isPaid(sessionId: string) {
+        const session = await this.retrieveSession(sessionId);
+        return session.payment_status === "paid";
+    }
+
     // Function to check if the user is pro
     async isPro() {
         const db = Firebase.getDb();
@@ -100,4 +115,13 @@ class PurchaseManager {
     }
 }
 
-export default new PurchaseManager();
+let purchaseManager: PurchaseManager | null = null;
+
+function getPurchaseManager() {
+    if (!purchaseManager) {
+        purchaseManager = new PurchaseManager();
+    }
+    return purchaseManager;
+}
+
+export default getPurchaseManager;
