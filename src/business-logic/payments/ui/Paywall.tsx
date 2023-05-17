@@ -12,14 +12,39 @@ function Paywall() {
     // enabled or disabled boolean
     const [buttonState, setButtonState] = React.useState(true);
 
+    // State of the price
+    // null or price object
+    const [price, setPrice] = React.useState("");
+
+    const priceId = "price_1N8h7yHFy05HLttR0rmb6NeO";
+
+    React.useEffect(() => {
+        async function getPrice() {
+            const price = await PurchaseManager.getPrice(priceId);
+            setPrice(price);
+        }
+        getPrice();
+    }, []);
+
     async function handleBuyClick() {
         setButtonState(false);
         const host = "https://" + window.location.host;
         const successUrl = host + "/paywall/success";
         const cancelUrl = host + "/paywall/cancel";
-        const priceId = "price_1N7N6qHFy05HLttR4MUcrhzC";
         console.log("Creating session with priceId: " + priceId);
         const session = await PurchaseManager.createSession(priceId, successUrl, cancelUrl);
+    }
+
+    function priceElement() {
+        if (price === "") {
+            return null;
+        }
+        return (
+            <div className="settings-item">
+                <label>Price</label>
+                <p>{price}</p>
+            </div>
+        );
     }
 
     function whatYouGet() {
@@ -37,6 +62,7 @@ function Paywall() {
             <div className="container">
                 <h1>Upgrade to Pro</h1>
                 {whatYouGet()}
+                {priceElement()}
                 <button className="btn-default" onClick={handleBuyClick} disabled={!buttonState}>Buy</button>
             </div>
         </BaseLayout>

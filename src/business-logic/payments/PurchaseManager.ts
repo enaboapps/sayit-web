@@ -4,8 +4,36 @@
 import Firebase from '../backend/Firebase';
 import { addDoc, collection, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import Auth from '../backend/Auth';
+import Stripe from 'stripe';
 
 class PurchaseManager {
+    // Function to return a Stripe object
+    getStripe() {
+        const key = "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";
+        return new Stripe(key, {
+            apiVersion: "2022-11-15", // Stripe API version
+            maxNetworkRetries: 3,
+        });
+    }
+
+    // Function to get a price from Stripe
+    async getPrice(priceId: string) {
+        const stripe = this.getStripe();
+        const price = await stripe.prices.retrieve(priceId, {
+            expand: ["product"],
+        });
+        // This is returned in the following format:
+        // 1.00 will be returned as 100
+        // Format it to 1.00
+        const amount = price.unit_amount || 0;
+        const formattedPrice = (amount / 100).toFixed(2);
+        // Return the formatted price and the currency
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: price.currency,
+        }).format(Number(formattedPrice));
+    }
+
     // Create a session for a payment
     async createSession(priceId: string, successUrl: string, cancelUrl: string) {
         const db = Firebase.getDb();
