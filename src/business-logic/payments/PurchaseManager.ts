@@ -65,8 +65,8 @@ class PurchaseManager {
         const db = Firebase.getDb();
         let pro = false;
         if (db) {
-            const col = collection(db, 'customers', Auth.getCurrentUserId() || '');
-            const docRef = await getDoc(doc(col));
+            const col = collection(db, 'customers');
+            const docRef = await getDoc(doc(col, Auth.getCurrentUserId() || ''));
             if (docRef.exists()) {
                 const data = docRef.data();
                 if (data) {
