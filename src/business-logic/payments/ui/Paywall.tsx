@@ -32,7 +32,7 @@ function Paywall() {
         const successUrl = host + "/paywall/success";
         const cancelUrl = host + "/paywall/cancel";
         console.log("Creating session with priceId: " + priceId);
-        const session = await getPurchaseManager().createSession(priceId, successUrl, cancelUrl);
+        const session = await getPurchaseManager().createSession('payment', priceId, successUrl, cancelUrl);
     }
 
     function priceElement() {

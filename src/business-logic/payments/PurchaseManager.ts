@@ -1,10 +1,12 @@
-// This class is used to record payments in Firebase.
-// It uses firestore-stripe-payments to record payments.
+// This class is used to manage purchases
+// It is used to create a session, retrieve a session, check if a session is paid, check if the user is pro, and set the user as pro
+// It is also used to redirect the user to the Stripe checkout page
 
 import Firebase from '../backend/Firebase';
-import { addDoc, collection, doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import Auth from '../backend/Auth';
 import Stripe from 'stripe';
+import { setSessionId } from './stripeSessionStorage';
 
 class PurchaseManager {
     // Function to return a Stripe object
@@ -35,29 +37,26 @@ class PurchaseManager {
     }
 
     // Create a session for a payment
-    async createSession(priceId: string, successUrl: string, cancelUrl: string) {
-        const db = Firebase.getDb();
-        if (db) {
-            const collectionRef = collection(db, 'customers', Auth.getCurrentUserId() || '', 'checkout_sessions');
-            const docRef = await addDoc(collectionRef, {
-                mode: "payment",
-                price: priceId,
-                success_url: successUrl,
-                cancel_url: cancelUrl,
-            });
-            onSnapshot(docRef, (doc) => {
-                const data = doc.data();
-                if (data) {
-                    const { error, url } = data;
-                    if (error) {
-                        console.log(error);
-                    }
-                    if (url) {
-                        this.redirectToCheckout(url);
-                    }
-                }
-            });
+    async createSession(sessionMode: Stripe.Checkout.SessionCreateParams.Mode, priceId: string, successUrl: string, cancelUrl: string) {
+        const stripe = this.getStripe();
+        const session = await stripe.checkout.sessions.create({
+            mode: sessionMode,
+            line_items: [
+                {
+                    price: priceId,
+                    quantity: 1,
+                },
+            ],
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+        });
+        // Redirect the user to the Stripe checkout page and store the session ID
+        if (session && session.url && session.id) {
+            setSessionId(session.id);
+            this.redirectToCheckout(session.url);
         }
+        // Return the session
+        return session;
     }
 
     // Function to retrieve a session
