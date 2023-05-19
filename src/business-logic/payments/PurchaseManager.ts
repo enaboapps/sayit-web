@@ -7,6 +7,7 @@ import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import Auth from '../backend/Auth';
 import Stripe from 'stripe';
 import { setSessionId } from './stripeSessionStorage';
+import { getProStatus, setProStatus } from './proBrowserStorage';
 
 // Test credentials for Stripe:
 const stripeTestKey = "sk_test_51N5QMCHFy05HLttRx6ciQZMvLkpmsoXwLAAEIz1HPhFVTk9bOQ0KhV0xK6v9PeR8hiPsjOMEey1Rc6PQNH53ohNH00GRpWzSen";
@@ -107,6 +108,11 @@ class PurchaseManager {
 
     // Function to check if the user is pro
     async isPro() {
+        // First, check the browser storage
+        if (getProStatus()) {
+            return true;
+        }
+
         const db = Firebase.getDb();
         let pro = false;
         if (db) {
@@ -116,6 +122,7 @@ class PurchaseManager {
                 const data = docRef.data();
                 if (data) {
                     pro = data.isPro;
+                    setProStatus(pro);
                 }
             }
         }
@@ -124,6 +131,9 @@ class PurchaseManager {
 
     // Function to set the user as pro
     async setPro(customerId: string, type: string) {
+        // First, set the pro status in the browser storage
+        setProStatus(true);
+
         const db = Firebase.getDb();
         if (db) {
             const docRef = doc(db, 'customers', Auth.getCurrentUserId() || '');
