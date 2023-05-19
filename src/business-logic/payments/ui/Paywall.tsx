@@ -74,6 +74,7 @@ function Paywall() {
     return (
         <BaseLayout>
             <div className="container">
+                <h1>Upgrade to Pro</h1>
                 {error != "" && (
                     <div>
                         <h1>Payment Error</h1>
