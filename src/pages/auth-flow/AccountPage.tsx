@@ -18,6 +18,7 @@ function AccountPage() {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (!user) {
                 navigate("/sign-in");
+                return;
             }
         });
         async function checkPro() {
