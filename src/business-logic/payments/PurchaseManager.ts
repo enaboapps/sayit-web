@@ -8,11 +8,20 @@ import Auth from '../backend/Auth';
 import Stripe from 'stripe';
 import { setSessionId } from './stripeSessionStorage';
 
+// Test credentials for Stripe:
+const stripeTestKey = "sk_test_51N5QMCHFy05HLttRx6ciQZMvLkpmsoXwLAAEIz1HPhFVTk9bOQ0KhV0xK6v9PeR8hiPsjOMEey1Rc6PQNH53ohNH00GRpWzSen";
+const stripeOTPTestPriceId = "price_1N5QTOHFy05HLttR9XqlArL1";
+const stripeSubTestPriceId = "price_1N9SelHFy05HLttRs2ddf9xs";
+
+// Live credentials for Stripe:
+const stripeLiveKey = "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";
+const stripeOTPLivePriceId = "price_1N8h7yHFy05HLttR0rmb6NeO";
+const stripeSubLivePriceId = "price_1N8h4THFy05HLttRCKTj2wlT";
+
 class PurchaseManager {
     // Function to return a Stripe object
     getStripe() {
-        const key = "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";
-        return new Stripe(key, {
+        return new Stripe(stripeTestKey, {
             apiVersion: "2022-11-15", // Stripe API version
             maxNetworkRetries: 3,
         });
@@ -34,6 +43,26 @@ class PurchaseManager {
             style: "currency",
             currency: price.currency,
         }).format(Number(formattedPrice));
+    }
+
+    // Function to get the price for a subscription
+    async getSubPrice() {
+        return await this.getPrice(stripeSubTestPriceId);
+    }
+
+    // Function to get the price for a one-time purchase
+    async getOTPPrice() {
+        return await this.getPrice(stripeOTPTestPriceId);
+    }
+
+    // Function to start a checkout session for a subscription
+    async startSubCheckoutSession(successUrl: string, cancelUrl: string) {
+        return await this.createSession("subscription", stripeSubTestPriceId, successUrl, cancelUrl);
+    }
+
+    // Function to start a checkout session for a one-time purchase
+    async startOTPCheckoutSession(successUrl: string, cancelUrl: string) {
+        return await this.createSession("payment", stripeOTPTestPriceId, successUrl, cancelUrl);
     }
 
     // Create a session for a payment
@@ -62,16 +91,18 @@ class PurchaseManager {
     // Function to retrieve a session
     async retrieveSession(sessionId: string) {
         const stripe = this.getStripe();
-        const session = await stripe.checkout.sessions.retrieve(sessionId, {
-            expand: ["status"],
-        });
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
         return session;
     }
 
     // Function to check if a session is paid
-    async isPaid(sessionId: string) {
-        const session = await this.retrieveSession(sessionId);
+    async isPaid(session: Stripe.Checkout.Session) {
         return session.payment_status === "paid";
+    }
+
+    // Function to check if a session is paid and is a subscription
+    async isPaidSub(session: Stripe.Checkout.Session) {
+        return session.payment_status === "paid" && session.mode === "subscription";
     }
 
     // Function to check if the user is pro
@@ -92,11 +123,13 @@ class PurchaseManager {
     }
 
     // Function to set the user as pro
-    async setPro() {
+    async setPro(customerId: string, type: string) {
         const db = Firebase.getDb();
         if (db) {
             const docRef = doc(db, 'customers', Auth.getCurrentUserId() || '');
             await setDoc(docRef, {
+                customerId: customerId,
+                type: type,
                 isPro: true,
             })
                 .then(() => {

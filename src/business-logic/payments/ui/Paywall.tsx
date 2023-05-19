@@ -1,58 +1,72 @@
 // This page displays the paywall for the app
-// It will display the paywall in a list
-// It uses Stripe to process payments
+// It will display the one-time payment option and the subscription option
+// and their respective prices
 
 import React from 'react';
 import getPurchaseManager from '../PurchaseManager';
 import BaseLayout from '../../../layout/BaseLayout';
 import '../../../global.css';
+import './styles/Paywall.css';
 
 function Paywall() {
-    // State of the button
-    // enabled or disabled boolean
-    const [buttonState, setButtonState] = React.useState(true);
+    // Error state
+    const [error, setError] = React.useState("");
 
-    // State of the price
-    // null or price object
-    const [price, setPrice] = React.useState("");
+    // One-time payment state
+    const [oneTimePaymentPrice, setOneTimePaymentPrice] = React.useState("");
+    const [oneTimePaymentLoading, setOneTimePaymentLoading] = React.useState(false);
 
-    const priceId = "price_1N8h7yHFy05HLttR0rmb6NeO";
+    // Subscription state
+    const [subscriptionPrice, setSubscriptionPrice] = React.useState("");
+    const [subscriptionLoading, setSubscriptionLoading] = React.useState(false);
 
+    // Retrieve the prices
     React.useEffect(() => {
-        async function getPrice() {
-            const price = await getPurchaseManager().getPrice(priceId);
-            setPrice(price);
+        async function getPrices() {
+            const oneTimePrice = await getPurchaseManager().getOTPPrice();
+            const subscriptionPrice = await getPurchaseManager().getSubPrice();
+            if (oneTimePrice) {
+                setOneTimePaymentPrice(oneTimePrice);
+            }
+            if (subscriptionPrice) {
+                setSubscriptionPrice(subscriptionPrice);
+            }
         }
-        getPrice();
+        getPrices();
     }, []);
 
-    async function handleBuyClick() {
-        setButtonState(false);
-        const host = "https://" + window.location.host;
-        const successUrl = host + "/paywall/success";
-        const cancelUrl = host + "/paywall/cancel";
-        console.log("Creating session with priceId: " + priceId);
-        const session = await getPurchaseManager().createSession('payment', priceId, successUrl, cancelUrl);
-    }
+    // define success and cancel urls
+    const successUrl = window.location.origin + "/payment/success";
+    const cancelUrl = window.location.origin + "/payment/cancel";
 
-    function priceElement() {
-        if (price === "") {
-            return null;
+    // One-time payment handler
+    const handleOneTimePayment = async () => {
+        if (subscriptionLoading || oneTimePaymentLoading) {
+            return;
         }
-        return (
-            <div className="settings-item">
-                <label>Price</label>
-                <p>{price}</p>
-            </div>
-        );
+        setOneTimePaymentLoading(true);
+        await getPurchaseManager().startOTPCheckoutSession(successUrl, cancelUrl);
+        setOneTimePaymentLoading(false);
     }
 
-    function whatYouGet() {
+    // Subscription handler
+    const handleSubscription = async () => {
+        if (subscriptionLoading || oneTimePaymentLoading) {
+            return;
+        }
+        setSubscriptionLoading(true);
+        await getPurchaseManager().startSubCheckoutSession(successUrl, cancelUrl);
+        setSubscriptionLoading(false);
+    }
+
+    const whatYouGet = () => {
         return (
-            <div className="settings-item">
-                <label>What you get</label>
-                <p>AI integration</p>
-                <p>Unlimited number of Phrase Boards and Phrases</p>
+            <div className="what-you-get">
+                <h2>What you get</h2>
+                <p>By paying for the app, you get access to all the features of the app, including:</p>
+                <ul>AI features such as Phrase Generation and Typing Aids</ul>
+                <ul>Unlimited access to the app</ul>
+                <ul>Access to all future features</ul>
             </div>
         );
     }
@@ -60,10 +74,33 @@ function Paywall() {
     return (
         <BaseLayout>
             <div className="container">
-                <h1>Upgrade to Pro</h1>
-                {whatYouGet()}
-                {priceElement()}
-                <button className="btn-default" onClick={handleBuyClick} disabled={!buttonState}>Buy</button>
+                {error != "" && (
+                    <div>
+                        <h1>Payment Error</h1>
+                        <p>{error}</p>
+                    </div>
+                ) || (
+                    <div>
+                        {whatYouGet()}
+                        <h1>Payment Options</h1>
+                        <div className="grid">
+                            <button className='card' onClick={handleOneTimePayment}>
+                                <h2>One-time Payment</h2>
+                                <p>{oneTimePaymentPrice}</p>
+                                {oneTimePaymentLoading && (
+                                    <p>Loading...</p>
+                                )}
+                            </button>
+                            <button className='card' onClick={handleSubscription}>
+                                <h2>Subscription</h2>
+                                <p>{subscriptionPrice} / month</p>
+                                {subscriptionLoading && (
+                                    <p>Loading...</p>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </BaseLayout>
     );
