@@ -36,8 +36,8 @@ function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/paywall" element={<Paywall />} />
-          <Route path="/paywall/success" element={<PaymentSuccess />} />
-          <Route path="/paywall/cancel" element={<PaymentCancel />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
         </Routes>
       </Router>
     </div>
