@@ -54,6 +54,7 @@ function SavePhrasePopover(props: SavePhrasePopoverProps) {
     return (
         <div className="popover-content">
             <h1>Save Phrase</h1>
+            {isSaving && <p>Saving...</p>}
             <div className="form">
                 <div className="form-group">
                     <label>Phrase Board</label>
