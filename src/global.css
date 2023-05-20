@@ -1,4 +1,7 @@
 .container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     justify-content: center;
     max-width: 800px;
     margin: 0 auto;
@@ -133,4 +136,24 @@ select option:checked {
     background-color: #f5f5f5;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Top bar */
+.top-bar {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    align-items: center;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #204d74;
+    color: yellow;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.top-bar h1 {
+    margin: 0;
+    margin-right: 20px;
+    padding-left: 12px;
 }

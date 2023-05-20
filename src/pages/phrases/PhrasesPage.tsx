@@ -49,6 +49,18 @@ function PhrasesPage() {
         navigate(`/boards/${id}/phrases/add`);
     }
 
+    // Top bar with the title and the back button
+    function topBar() {
+        return (
+            <div className="top-bar">
+                <button className="btn-default" onClick={() => navigate("/boards")}>
+                    Back
+                </button>
+                <h1>Phrases</h1>
+            </div>
+        );
+    }
+
     function editingBanner() {
         return (
             <div className="editing-banner">
@@ -76,7 +88,7 @@ function PhrasesPage() {
     return (
         <BaseLayout>
             <div className="container">
-                <h1>Phrases</h1>
+                {topBar()}
                 {loading && <p>Loading...</p>}
                 {!loading && (
                     <PhraseDataGrid
