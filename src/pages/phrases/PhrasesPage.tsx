@@ -11,9 +11,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../../global.css';
 import getSpeechServiceInstance from '../../speech/SpeechService';
 import Phrase from '../../business-logic/phrases/models/Phrase';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 function PhrasesPage() {
     const [phrases, setPhrases] = useState([] as Phrase[]);
+    const [boardName, setBoardName] = useState("");
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [editable, setEditable] = useState(false);
@@ -22,6 +24,11 @@ function PhrasesPage() {
     useEffect(() => {
         async function fetchData() {
             if (id) {
+                await getPhraseStoreInstance().getPhraseBoard(id, (phraseBoard) => {
+                    if (phraseBoard) {
+                        setBoardName(phraseBoard.name);
+                    }
+                });
                 await getPhraseStoreInstance().getPhrases(id, (phrases) => {
                     if (phrases) {
                         setPhrases(phrases);
@@ -53,10 +60,10 @@ function PhrasesPage() {
     function topBar() {
         return (
             <div className="top-bar">
-                <button className="btn-default" onClick={() => navigate("/boards")}>
-                    Back
+                <button onClick={() => navigate("/boards")}>
+                    <ArrowBackIcon />
                 </button>
-                <h1>Phrases</h1>
+                <h1>{boardName}</h1>
             </div>
         );
     }
