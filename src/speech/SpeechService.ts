@@ -18,10 +18,16 @@ class SpeechService {
     async speak(text: string) {
         console.log(`Speaking: ${text}`);
         this.utterance.text = text;
-        await getSpeechSettings().getVoice((voice: SpeechSynthesisVoice | null) => {
-            this.utterance.voice = voice;
-            this.synth.speak(this.utterance);
-        });
+        let voice = await getSpeechSettings().getVoice();
+        if (voice === "") {
+            if (this.getVoices().length > 0) {
+                voice = this.getVoices()[0].name;
+            }
+        }
+        this.utterance.voice = this.synth.getVoices().filter((v) => {
+            return v.name === voice;
+        })[0];
+        this.synth.speak(this.utterance);
     }
 
     // Stop speaking

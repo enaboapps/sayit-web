@@ -19,9 +19,8 @@ function SettingsLandingPage() {
             console.log(voices);
             setVoices(voices);
             const speechSettings = getSpeechSettings();
-            await speechSettings.getVoice((voice: SpeechSynthesisVoice | null) => (
-                setVoice(voice?.name || "")
-            ));
+            const voice = await speechSettings.getVoice();
+            setVoice(voice);
         }
         fetchData();
     }, []);

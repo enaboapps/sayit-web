@@ -4,39 +4,14 @@ import getSettingsManager from '../settings/SettingsManager';
 import Setting from '../settings/models/Setting';
 import getSpeechServiceInstance from './SpeechService';
 
-export type GetVoiceCallback = { (voice: SpeechSynthesisVoice | null): void; };
-
 class SpeechSettings {
     voiceKey = "voice";
-    currentVoice: string | SpeechSynthesisVoice | undefined;
+    currentVoice = "";
 
-
-
-    async getVoice(callback: GetVoiceCallback) {
-        if (!this.currentVoice) {
-            const settingsManager = getSettingsManager();
-            await settingsManager.getSettingByName(this.voiceKey, (voice: Setting | null) => {
-                if (voice) {
-                    this.currentVoice = voice.value;
-                }
-            });
-        }
-        const speechService = getSpeechServiceInstance();
-        const voices = speechService.getVoices();
-        if (voices.length === 0) {
-            return;
-        }
-        if (!this.currentVoice) {
-            this.currentVoice = voices[0];
-            callback(this.currentVoice);
-            return;
-        }
-        const voice = voices.find((voice) => {
-            return voice.name === this.currentVoice;
-        });
-        if (voice) {
-            callback(voice);
-        }
+    async getVoice() {
+        const settingsManager = getSettingsManager();
+        await settingsManager.getSettingByName(this.voiceKey, callback => (v: Setting) => this.currentVoice = v.value);
+        return this.currentVoice;
     }
 
     async setVoice(voice: string) {
