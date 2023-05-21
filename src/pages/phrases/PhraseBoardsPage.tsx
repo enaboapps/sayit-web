@@ -52,6 +52,14 @@ function PhraseBoardsPage() {
         );
     }
 
+    function topBar() {
+        return (
+            <div className="top-bar">
+                <h1>Phrase Boards</h1>
+            </div>
+        );
+    }
+
     function bottomBar() {
         return (
             <div className="bottom-bar">
@@ -70,7 +78,7 @@ function PhraseBoardsPage() {
     return (
         <BaseLayout>
             <div className="container">
-                <h1>Phrase Boards</h1>
+                {topBar()}
                 {loading && <div>Loading...</div>}
                 {!loading && (
                     <PhraseDataGrid
