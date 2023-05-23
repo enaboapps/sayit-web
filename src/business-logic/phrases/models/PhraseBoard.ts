@@ -1,8 +1,10 @@
 import { QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
+import { Symbol } from "../../symbols/models/Symbol";
 
 class PhraseBoard {
     id: string;
     name: string;
+    symbol: Symbol | null;
     position: number;
     phrases: any;
 
@@ -18,6 +20,7 @@ class PhraseBoard {
         };
         this.id = randomId(); 
         this.name = "";
+        this.symbol = null;
         this.position = 0;
     }
 
@@ -27,6 +30,9 @@ class PhraseBoard {
         const phraseBoard = new PhraseBoard();
         phraseBoard.id = doc.id;
         phraseBoard.name = data.name;
+        if (data.symbolId) {
+            phraseBoard.symbol = new Symbol(data.symbolId)
+        }
         phraseBoard.position = data.position;
         return phraseBoard;
     }
@@ -35,6 +41,7 @@ class PhraseBoard {
     toDocument() {
         return {
             name: this.name,
+            symbolId: this.symbol?.id,
             position: this.position,
         };
     }

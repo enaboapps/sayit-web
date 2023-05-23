@@ -1,10 +1,11 @@
 import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore";
+import { Symbol } from "../../symbols/models/Symbol";
 
 class Phrase {
     id: string;
     title: string;
     text: string;
-    symbol: null;
+    symbol: Symbol | null;
     frequency: number;
     position: number;
 
@@ -33,7 +34,9 @@ class Phrase {
         phrase.id = doc.id;
         phrase.title = data.title;
         phrase.text = data.text;
-        phrase.symbol = data.symbol;
+        if (data.symbolId) {
+            phrase.symbol = new Symbol(data.symbolId)
+        }
         phrase.frequency = data.frequency;
         phrase.position = data.position;
         return phrase;
@@ -42,7 +45,9 @@ class Phrase {
     // Construct a json object for Firebase
     toDocument() {
         return {
+            title: this.title,
             text: this.text,
+            symbolId: this.symbol?.id,
             position: this.position,
         };
     }

@@ -87,6 +87,7 @@ function PhraseBoardsPage() {
                         renderItem={(item) => (
                             <PhraseBoardTile
                                 name={item.name}
+                                symbol={item.symbol}
                                 onClick={() => handlePhraseBoardClick(item)}
                             />
                         )}

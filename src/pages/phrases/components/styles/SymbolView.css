@@ -1,0 +1,16 @@
+.symbol-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background-color: grey;
+}
+
+/* Set image size */
+.symbol-view img {
+    width: 88%;
+    height: 88%;
+}

@@ -6,14 +6,17 @@
 
 import React from 'react';
 import './styles/PhraseDataTile.css';
+import { Symbol } from '../../../business-logic/symbols/models/Symbol';
+import SymbolView from './SymbolView';
 
 type PhraseBoardTileProps = {
     name: string;
+    symbol?: Symbol;
     onClick?: () => void;
 };
 
 function PhraseBoardTile(props: PhraseBoardTileProps) {
-    const { name, onClick } = props;
+    const { name, symbol, onClick } = props;
     const handleClick = () => {
         if (onClick) {
             onClick();
@@ -21,6 +24,7 @@ function PhraseBoardTile(props: PhraseBoardTileProps) {
     }
     return (
         <div className="phrase-card" onClick={handleClick}>
+            {symbol && <SymbolView symbol={symbol} />}
             <p>
                 {name}
             </p>
