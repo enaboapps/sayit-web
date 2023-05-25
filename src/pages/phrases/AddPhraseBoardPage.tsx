@@ -6,15 +6,17 @@ import BaseLayout from '../../layout/BaseLayout';
 import '../../global.css';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
-import { render } from '@testing-library/react';
+import { Symbol } from '../../business-logic/symbols/models/Symbol';
+import SymbolChooser from './components/SymbolChooser';
 
 function AddPhraseBoardPage() {
     const [name, setName] = useState("");
+    const [symbol, setSymbol] = useState(new Symbol(0));
     const navigate = useNavigate();
 
     const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
-        const success = await getPhraseStoreInstance().createPhraseBoard(name);
+        const success = await getPhraseStoreInstance().createPhraseBoard(name, symbol);
         if (success) {
             navigate("/boards");
         } else {
@@ -49,6 +51,15 @@ function AddPhraseBoardPage() {
                         />
                     </div>
                 </form>
+                <SymbolChooser
+                    symbolId={symbol?.id}
+                    onSymbolChange={(symbol) => {
+                        setSymbol(symbol);
+                    }}
+                    onSymbolRemove={() => {
+                        setSymbol(new Symbol(0));
+                    }}
+                />
                 {bottomBar()}
             </div>
         </BaseLayout>

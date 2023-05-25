@@ -30,8 +30,8 @@ class PhraseBoard {
         const phraseBoard = new PhraseBoard();
         phraseBoard.id = doc.id;
         phraseBoard.name = data.name;
-        if (data.symbolId) {
-            phraseBoard.symbol = new Symbol(data.symbolId)
+        if (data.symbolId && data.symbolId !== 0) {
+            phraseBoard.symbol = new Symbol(data.symbolId);
         }
         phraseBoard.position = data.position;
         return phraseBoard;
@@ -39,9 +39,22 @@ class PhraseBoard {
 
     // Construct a json object for Firebase
     toDocument() {
+        let symbolId = null;
+        if (this.symbol) {
+            symbolId = this.symbol.id;
+        }
+        if (symbolId) {
+            return {
+                id: this.id,
+                name: this.name,
+                symbolId: symbolId,
+                position: this.position,
+            };
+        }
         return {
+            id: this.id,
             name: this.name,
-            symbolId: this.symbol?.id,
+            symbolId: 0,
             position: this.position,
         };
     }

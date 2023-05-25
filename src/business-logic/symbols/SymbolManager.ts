@@ -2,19 +2,9 @@
 
 import getCloudStorageManager from "../backend/CloudStorageManager";
 import { Symbol } from "./models/Symbol";
-import { openDB, IDBPDatabase } from 'idb';
 
 class SymbolsManager {
-    private dbPromise: Promise<IDBPDatabase>;
     private cloudStorageManager = getCloudStorageManager();
-
-    constructor() {
-        this.dbPromise = openDB('symbols-db', 1, {
-            upgrade(db) {
-                db.createObjectStore('symbols', { keyPath: 'id' });
-            },
-        });
-    }
 
     async search(keyword: string): Promise<Symbol[]> {
         const symbols: Symbol[] = [];
@@ -40,51 +30,22 @@ class SymbolsManager {
     }
 
 
-    async addSymbol(id: number, blob: Blob): Promise<void> {
-        const db = await this.dbPromise;
-        const tx = db.transaction('symbols', 'readwrite');
+    async addSymbol(id: number, imageURL: string): Promise<void> {
         const symbol = new Symbol(id);
-        tx.store.add(symbol);
-        await tx.done;
-        const file = new File([blob], `${id}.png`, { type: 'image/png' });
-        await this.cloudStorageManager.uploadFile(`symbols/${id}.png`, file);
+        symbol.imageURL = imageURL;
+        // upload the image to cloud storage
+        const response = await fetch(imageURL);
+        const blob = await response.blob();
+        await this.cloudStorageManager.uploadFile(`symbols/${id}.png`, blob);
     }
 
-    async getImageURL(id: number): Promise<string | undefined> {
+    async getImageURL(id: number) {
         const url = await this.cloudStorageManager.getFileURL(`symbols/${id}.png`);
         return url;
     }
 
-    async getSymbol(id: number): Promise<Symbol | undefined> {
-        const db = await this.dbPromise;
-        let symbol = await db.get('symbols', id);
-        if (!symbol) {
-            symbol = new Symbol(id);
-            const url = await this.cloudStorageManager.getFileURL(`symbols/${id}.png`);
-            if (url) {
-
-            }
-        }
-        return symbol;
-    }
-
-    async updateSymbol(symbol: Symbol): Promise<void> {
-        const db = await this.dbPromise;
-        const tx = db.transaction('symbols', 'readwrite');
-        tx.store.put(symbol);
-        await tx.done;
-    }
-
-    async deleteSymbol(id: number): Promise<void> {
-        const db = await this.dbPromise;
-        const tx = db.transaction('symbols', 'readwrite');
-        tx.store.delete(id);
-        await tx.done;
-    }
-
-    async getAllSymbols(): Promise<Symbol[]> {
-        const db = await this.dbPromise;
-        return db.getAll('symbols');
+    async getSymbol(id: number) {
+        return new Symbol(id);
     }
 }
 

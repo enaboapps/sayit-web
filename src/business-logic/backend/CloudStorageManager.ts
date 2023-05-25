@@ -10,19 +10,30 @@ class CloudStorageManager {
     private auth = Firebase.getAuth();
     private storage = getStorage();
 
-    async uploadFile(name: string, file: File) {
+    async uploadFile(name: string, blob: Blob, reference: BucketReference = BucketReference.privateRef) {
         let uid = "";
+
         if (this.auth) {
             uid = this.auth.currentUser?.uid || "";
         }
-        const firebasePath = `${uid}/data/${name}`;
+
+        let firebasePath = "/data/" + name;
+        if (reference === BucketReference.privateRef && uid) {
+            firebasePath = `${uid}${firebasePath}`;
+        }
+
         const storageRef = ref(this.storage, firebasePath);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        uploadTask.on(
-            "state_changed",
+        const uploadTask = uploadBytesResumable(storageRef, blob);
+        uploadTask.on("state_changed",
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 console.log(`Upload is ${progress}% done`);
+            },
+            (error) => {
+                console.error(error);
+            },
+            () => {
+                console.log("Upload is complete");
             }
         );
         await uploadTask;

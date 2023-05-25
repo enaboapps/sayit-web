@@ -5,12 +5,15 @@
 import React, { useState } from 'react';
 import BaseLayout from '../../layout/BaseLayout';
 import '../../global.css';
+import { Symbol } from '../../business-logic/symbols/models/Symbol';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
+import SymbolChooser from './components/SymbolChooser';
 
 function AddPhrasePage() {
     const [phrase, setPhrase] = useState("");
     const { id } = useParams();
+    const [symbol, setSymbol] = useState(new Symbol(0));
 
     const navigate = useNavigate();
 
@@ -21,7 +24,7 @@ function AddPhrasePage() {
     async function handleAddPhrase() {
         const phraseStore = getPhraseStoreInstance();
         if (id) {
-            await phraseStore.createPhrase(id, phrase);
+            await phraseStore.createPhrase(id, phrase, symbol);
             navigate(`/boards/${id}/phrases`);
         }
     }
@@ -52,6 +55,15 @@ function AddPhrasePage() {
                         />
                     </div>
                 </div>
+                <SymbolChooser
+                    symbolId={symbol.id}
+                    onSymbolChange={(symbol) => {
+                        setSymbol(symbol);
+                    }}
+                    onSymbolRemove={() => {
+                        setSymbol(new Symbol(0));
+                    }}
+                />
             </div>
             {bottomBar()}
         </BaseLayout>

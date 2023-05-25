@@ -1,6 +1,5 @@
 // This is a model of a Symbol object:
 
-import getCloudStorageManager from "../../backend/CloudStorageManager";
 import getSymbolsManager from "../SymbolManager";
 
 export class Symbol {
@@ -11,7 +10,11 @@ export class Symbol {
         this.id = id;
     }
 
-    async getImageURL(): Promise<string | undefined> {
+    setURL(url: string) {
+        this.imageURL = url;
+    }
+
+    async getImageURL() {
         if (!this.imageURL) {
             const symbolsManager = getSymbolsManager();
             this.imageURL = await symbolsManager.getImageURL(this.id);

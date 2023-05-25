@@ -8,10 +8,13 @@ import '../../global.css';
 import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate, useParams } from 'react-router-dom';
 import PhraseBoard from '../../business-logic/phrases/models/PhraseBoard';
+import SymbolChooser from './components/SymbolChooser';
+import { Symbol } from '../../business-logic/symbols/models/Symbol';
 
 function EditPhraseBoardPage() {
     const [phraseBoard, setPhraseBoard] = useState({} as PhraseBoard);
     const [name, setName] = useState("");
+    const [symbol, setSymbol] = useState({} as Symbol | null);
     const navigate = useNavigate();
     const { id } = useParams();
 
@@ -22,6 +25,7 @@ function EditPhraseBoardPage() {
                     if (phraseBoard) {
                         setPhraseBoard(phraseBoard);
                         setName(phraseBoard.name);
+                        setSymbol(phraseBoard.symbol);
                     }
                 });
             }
@@ -32,6 +36,7 @@ function EditPhraseBoardPage() {
     const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
         phraseBoard.name = name;
+        phraseBoard.symbol = symbol;
         const success = await getPhraseStoreInstance().updatePhraseBoard(phraseBoard);
         if (success) {
             navigate("/boards");
@@ -83,6 +88,15 @@ function EditPhraseBoardPage() {
                         />
                     </div>
                 </form>
+                <SymbolChooser
+                    symbolId={symbol?.id}
+                    onSymbolChange={(symbol) => {
+                        setSymbol(symbol);
+                    }}
+                    onSymbolRemove={() => {
+                        setSymbol(null);
+                    }}
+                />
                 {bottomBar()}
             </div>
         </BaseLayout>

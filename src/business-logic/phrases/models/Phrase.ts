@@ -34,8 +34,8 @@ class Phrase {
         phrase.id = doc.id;
         phrase.title = data.title;
         phrase.text = data.text;
-        if (data.symbolId) {
-            phrase.symbol = new Symbol(data.symbolId)
+        if (data.symbolId && data.symbolId !== 0) {
+            phrase.symbol = new Symbol(data.symbolId);
         }
         phrase.frequency = data.frequency;
         phrase.position = data.position;
@@ -44,10 +44,26 @@ class Phrase {
 
     // Construct a json object for Firebase
     toDocument() {
+        let symbolId = null;
+        if (this.symbol) {
+            symbolId = this.symbol.id;
+        }
+        if (symbolId) {
+            return {
+                id: this.id,
+                title: this.title,
+                text: this.text,
+                symbolId: symbolId,
+                frequency: this.frequency,
+                position: this.position,
+            };
+        }
         return {
+            id: this.id,
             title: this.title,
             text: this.text,
-            symbolId: this.symbol?.id,
+            symbolId: 0,
+            frequency: this.frequency,
             position: this.position,
         };
     }

@@ -14,9 +14,11 @@ function SymbolView(props: SymbolViewProps) {
 
     useEffect(() => {
         async function fetchData() {
-            const url = await symbol.getImageURL();
-            if (url) {
-                setUrl(url);
+            if (symbol && symbol.id !== 0) {
+                const u = await symbol.getImageURL();
+                if (u) {
+                    setUrl(u);
+                }
             }
         }
         fetchData();

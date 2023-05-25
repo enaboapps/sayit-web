@@ -7,6 +7,7 @@ import Firebase from '../backend/Firebase';
 import Auth from '../backend/Auth';
 import PhraseBoard from './models/PhraseBoard';
 import Phrase from './models/Phrase';
+import { Symbol } from '../symbols/models/Symbol';
 
 class PhraseStore {
     // Variables to keep track of the number of phrase boards and phrases
@@ -35,10 +36,13 @@ class PhraseStore {
 
     // Create a new phrase board
     // Returns true if the phrase board was successfully created, false otherwise
-    async createPhraseBoard(name: string) {
+    async createPhraseBoard(name: string, symbol?: Symbol) {
         const col = this.getCollection();
         const phraseBoard = new PhraseBoard();
         phraseBoard.name = name;
+        if (symbol) {
+            phraseBoard.symbol = symbol;
+        }
         phraseBoard.position = this.phraseBoardCount + 1;
         var success = false;
         if (col) {
@@ -133,13 +137,16 @@ class PhraseStore {
 
     // Create a new phrase
     // Returns true if the phrase was successfully created, false otherwise
-    async createPhrase(phraseBoardId: string, text: string) {
+    async createPhrase(phraseBoardId: string, text: string, symbol?: Symbol) {
         const col = this.getCollection();
         var success = false;
         if (col) {
             const phraseCol = collection(col, phraseBoardId, "phrases");
             const phrase = new Phrase();
             phrase.text = text;
+            if (symbol) {
+                phrase.symbol = symbol;
+            }
             phrase.position = this.phraseCount + 1;
             await addDoc(phraseCol, phrase.toDocument())
                 .then((docRef) => {
