@@ -104,6 +104,7 @@ function PhrasesPage() {
                         renderItem={(phrase) => (
                             <PhraseTile
                                 text={phrase.text}
+                                symbol={phrase.symbol}
                                 onClick={() => handlePhraseClick(phrase)}
                             />
                         )}
