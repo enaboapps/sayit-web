@@ -253,6 +253,15 @@ class PhraseStore {
         }
         return success;
     }
+
+    // Get the number of Phrase Boards 
+    async getPhraseBoardCount(callback: (count: number) => void) {
+        const col = this.getCollection();
+        if (col) {
+            const querySnapshot = await getDocs(col);
+            callback(querySnapshot.size);
+        }
+    }
 }
 
 let phraseStoreInstance: PhraseStore | null = null;

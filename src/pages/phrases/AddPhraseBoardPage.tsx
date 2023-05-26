@@ -8,6 +8,7 @@ import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
 import { Symbol } from '../../business-logic/symbols/models/Symbol';
 import SymbolChooser from './components/SymbolChooser';
+import getPurchaseManager from '../../business-logic/payments/PurchaseManager';
 
 function AddPhraseBoardPage() {
     const [name, setName] = useState("");
@@ -16,6 +17,14 @@ function AddPhraseBoardPage() {
 
     const handleSubmit = async (event: { preventDefault: () => void; }) => {
         event.preventDefault();
+        // check if pro and less than 1 board
+        const pro = await getPurchaseManager().isPro();
+        await getPhraseStoreInstance().getPhraseBoardCount(async (count) => {
+            if (!pro && count >= 1) {
+                alert("You must be a pro user to create more than one phrase board");
+                return;
+            }
+        });
         const success = await getPhraseStoreInstance().createPhraseBoard(name, symbol);
         if (success) {
             navigate("/boards");

@@ -9,6 +9,7 @@ import getPhraseStoreInstance from '../../business-logic/phrases/PhraseStore';
 import { useNavigate } from 'react-router-dom';
 import '../../global.css';
 import PhraseBoard from '../../business-logic/phrases/models/PhraseBoard';
+import getPurchaseManager from '../../business-logic/payments/PurchaseManager';
 
 
 function PhraseBoardsPage() {
@@ -40,8 +41,15 @@ function PhraseBoardsPage() {
         }
     }
 
-    function openAddPhraseBoardPage() {
-        navigate("/boards/add");
+    async function openAddPhraseBoardPage() {
+        // If pro user or under 1 phrase board, allow adding
+        const purchaseManager = getPurchaseManager();
+        const isPro = await purchaseManager.isPro();
+        if (isPro || phraseBoards.length < 1) {
+            navigate(`/boards/add`);
+        } else {
+            alert("You must be a Pro user to add more than one phrase board");
+        }
     }
 
     function editingBanner() {
