@@ -22,7 +22,7 @@ const stripeSubLivePriceId = "price_1N8h4THFy05HLttRCKTj2wlT";
 class PurchaseManager {
     // Function to return a Stripe object
     getStripe() {
-        return new Stripe(stripeTestKey, {
+        return new Stripe(stripeLiveKey, {
             apiVersion: "2022-11-15", // Stripe API version
             maxNetworkRetries: 3,
         });
@@ -48,22 +48,22 @@ class PurchaseManager {
 
     // Function to get the price for a subscription
     async getSubPrice() {
-        return await this.getPrice(stripeSubTestPriceId);
+        return await this.getPrice(stripeSubLivePriceId);
     }
 
     // Function to get the price for a one-time purchase
     async getOTPPrice() {
-        return await this.getPrice(stripeOTPTestPriceId);
+        return await this.getPrice(stripeOTPLivePriceId);
     }
 
     // Function to start a checkout session for a subscription
     async startSubCheckoutSession(successUrl: string, cancelUrl: string) {
-        return await this.createSession("subscription", stripeSubTestPriceId, successUrl, cancelUrl);
+        return await this.createSession("subscription", stripeSubLivePriceId, successUrl, cancelUrl);
     }
 
     // Function to start a checkout session for a one-time purchase
     async startOTPCheckoutSession(successUrl: string, cancelUrl: string) {
-        return await this.createSession("payment", stripeOTPTestPriceId, successUrl, cancelUrl);
+        return await this.createSession("payment", stripeOTPLivePriceId, successUrl, cancelUrl);
     }
 
     // Create a session for a payment
@@ -113,6 +113,11 @@ class PurchaseManager {
             return true;
         }
 
+        // If not, check the subscription status in the database
+        if (await this.isSubscriber()) {
+            return true;
+        }
+
         const db = Firebase.getDb();
         let pro = false;
         if (db) {
@@ -150,6 +155,59 @@ class PurchaseManager {
                 });
         }
     }
+
+    // Function to check if the user is a subscriber
+    async isSubscriber() {
+        // first get the customer ID from firestore
+        const db = Firebase.getDb();
+        let customerId = '';
+        if (db) {
+            const col = collection(db, 'customers');
+            const docRef = await getDoc(doc(col, Auth.getCurrentUserId() || ''));
+            if (docRef.exists()) {
+                const data = docRef.data();
+                if (data) {
+                    customerId = data.customerId;
+                }
+            }
+        }
+        // Then check if the customer is a subscriber
+        const stripe = this.getStripe();
+        const customer = await stripe.customers.retrieve(customerId);
+        if (customer as Stripe.Customer) {
+            const customerData = customer as Stripe.Customer;
+            if (customerData.subscriptions) {
+                const subscriptions = customerData.subscriptions.data;
+                if (subscriptions && subscriptions.length > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Function to go to customer portal
+    async goToCustomerPortal() {
+        const db = Firebase.getDb();
+        let customerId = '';
+        if (db) {
+            const col = collection(db, 'customers');
+            const docRef = await getDoc(doc(col, Auth.getCurrentUserId() || ''));
+            if (docRef.exists()) {
+                const data = docRef.data();
+                if (data) {
+                    customerId = data.customerId;
+                }
+            }
+        }
+        const stripe = this.getStripe();
+        const portalSession = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: window.location.href,
+        });
+        window.location.assign(portalSession.url);
+    }
+
 
     // This function redirects the user to the Stripe checkout page
     redirectToCheckout(url: string) {

@@ -10,6 +10,7 @@ function AccountPage() {
     const navigate = useNavigate();
     const signedIn = Auth.isSignedIn();
     const [showingUpgrade, setShowingUpgrade] = React.useState(false);
+    const [sub, setSub] = React.useState(false);
     React.useEffect(() => {
         const auth = Auth.getAuth();
         if (!auth) {
@@ -26,6 +27,11 @@ function AccountPage() {
             setShowingUpgrade(!pro);
         }
         checkPro();
+        async function checkSub() {
+            const sub = await getPurchaseManager().isSubscriber();
+            setSub(sub);
+        }
+        checkSub();
     }, []);
     if (!signedIn) {
         navigate("/sign-in");
@@ -33,6 +39,9 @@ function AccountPage() {
     }
     const signOut = async () => {
         await Auth.signOut();
+    };
+    const goToCustomerPortal = async () => {
+        await getPurchaseManager().goToCustomerPortal();
     };
     return (
         <BaseLayout>
@@ -45,6 +54,13 @@ function AccountPage() {
                         <h2>Upgrade to Pro</h2>
                         <p>Upgrade to Pro to get access to AI integration and unlimited Phrase Boards and Phrases</p>
                         <button className="btn-default" onClick={() => navigate("/paywall")}>Upgrade</button>
+                    </div>
+                )}
+                {sub && (
+                    <div>
+                        <h2>Subscription</h2>
+                        <p>You are subscribed to SayIt! Pro</p>
+                        <button className="btn-default" onClick={goToCustomerPortal}>Manage Subscription</button>
                     </div>
                 )}
             </div>
