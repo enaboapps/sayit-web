@@ -12,7 +12,7 @@
     cursor: pointer;
     transition: all 0.3s ease-in-out;
     overflow: hidden;
-    height: 80px;
+    height: 110px;
 }
 
 .phrase-card:hover {
@@ -23,4 +23,13 @@
 .phrase-card p {
     margin: 0;
     font-size: 22pt;
+    font-weight: bold;
+}
+
+.phrase-card .text {
+    display: block;
+    align-items: start;
+    padding-bottom: 10px;
+    height: 30px;
+    overflow: hidden;
 }

@@ -25,9 +25,9 @@ function PhraseBoardTile(props: PhraseBoardTileProps) {
     return (
         <div className="phrase-card" onClick={handleClick}>
             {symbol && <SymbolView symbol={symbol} />}
-            <p>
-                {name}
-            </p>
+            <div className="text">
+                <p>{name}</p>
+            </div>
         </div>
     );
 }
