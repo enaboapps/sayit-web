@@ -10,6 +10,7 @@ import './TypingPage.css';
 import getSpeechServiceInstance from '../../speech/SpeechService';
 import SavePhrasePopover from './SavePhrasePopover';
 import { Popover } from '@mui/material';
+import AI from '../../business-logic/ai/AI';
 
 function TypingPage() {
     const [text, setText] = React.useState("");
@@ -31,21 +32,47 @@ function TypingPage() {
         getSpeechServiceInstance().speak(text);
     }
 
+    const handleAskAI = async () => {
+        const ai = new AI();
+        const response = await ai.ask(text);
+        console.log(response);
+    }
+
+    const handleFillInGaps = async () => {
+    }
+
+    const handleFleshOutMessage = async () => {
+    }
+
     return (
         <BaseLayout>
             <div className="container">
                 <textarea className="text-area" value={text} onChange={handleTextChange} />
                 {text.length > 0 && (
-                    <div className="button-container">
-                        <button className="btn-default" onClick={handleSpeakText}>
-                            Speak
-                        </button>
-                        <button className="btn-default" onClick={handleClearText}>
-                            Clear
-                        </button>
-                        <button className="btn-default" onClick={handleSaveText}>
-                            Save
-                        </button>
+                    <div className="button-container-wrapper">
+                        <div className="button-container">
+                            <button className="btn-default" onClick={handleSpeakText}>
+                                Speak
+                            </button>
+                            <button className="btn-default" onClick={handleClearText}>
+                                Clear
+                            </button>
+                            <button className="btn-default" onClick={handleSaveText}>
+                                Save
+                            </button>
+                        </div>
+                        <div className="button-container">
+                            <button className="btn-default" onClick={handleAskAI}>
+                                Ask AI
+                            </button>
+                            <button className="btn-default" onClick={handleFillInGaps}>
+                                Fill in gaps
+                            </button>
+                            <button className="btn-default" onClick={handleFleshOutMessage}>
+                                Flesh out message
+                            </button>
+                        </div>
+
                     </div>
                 )}
             </div>

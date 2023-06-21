@@ -18,3 +18,10 @@ textarea:focus {
     display: flex;
     justify-content: space-between;
 }
+
+.button-container-wrapper {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
