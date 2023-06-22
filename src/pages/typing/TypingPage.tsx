@@ -9,12 +9,13 @@ import '../../global.css';
 import './TypingPage.css';
 import getSpeechServiceInstance from '../../speech/SpeechService';
 import SavePhrasePopover from './SavePhrasePopover';
-import { Popover } from '@mui/material';
+import { Popover, CircularProgress } from '@mui/material';
 import AI from '../../business-logic/ai/AI';
 
 function TypingPage() {
     const [text, setText] = React.useState("");
     const [showingAddPhrase, setShowingAddPhrase] = React.useState(false);
+    const [aiInProgress, setAIInProgress] = React.useState(false);
 
     const handleTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
         setText(event.target.value);
@@ -33,21 +34,27 @@ function TypingPage() {
     }
 
     const handleAskAI = async () => {
+        setAIInProgress(true);
         const ai = new AI();
         const response = await ai.ask(text);
         setText(response);
+        setAIInProgress(false);
     }
 
     const handleFillInGaps = async () => {
+        setAIInProgress(true);
         const ai = new AI();
         const response = await ai.fillInGaps(text);
         setText(response);
+        setAIInProgress(false);
     }
 
     const handleFleshOutMessage = async () => {
+        setAIInProgress(true);
         const ai = new AI();
         const response = await ai.fleshOut(text);
         setText(response);
+        setAIInProgress(false);
     }
 
     return (
@@ -57,28 +64,32 @@ function TypingPage() {
                 {text.length > 0 && (
                     <div className="button-container-wrapper">
                         <div className="button-container">
-                            <button className="btn-default" onClick={handleSpeakText}>
+                            <button className="btn-default" onClick={handleSpeakText} disabled={aiInProgress}>
                                 Speak
                             </button>
-                            <button className="btn-default" onClick={handleClearText}>
+                            <button className="btn-default" onClick={handleClearText} disabled={aiInProgress}>
                                 Clear
                             </button>
-                            <button className="btn-default" onClick={handleSaveText}>
+                            <button className="btn-default" onClick={handleSaveText} disabled={aiInProgress}>
                                 Save
                             </button>
                         </div>
                         <div className="button-container">
-                            <button className="btn-default" onClick={handleAskAI}>
+                            <button className="btn-default" onClick={handleAskAI} disabled={aiInProgress}>
                                 Ask AI
                             </button>
-                            <button className="btn-default" onClick={handleFillInGaps}>
+                            <button className="btn-default" onClick={handleFillInGaps} disabled={aiInProgress}>
                                 Fill in gaps
                             </button>
-                            <button className="btn-default" onClick={handleFleshOutMessage}>
+                            <button className="btn-default" onClick={handleFleshOutMessage} disabled={aiInProgress}>
                                 Flesh out message
                             </button>
                         </div>
-
+                    </div>
+                )}
+                {aiInProgress && (
+                    <div className="spinner-container">
+                        <CircularProgress size={40} />
                     </div>
                 )}
             </div>
