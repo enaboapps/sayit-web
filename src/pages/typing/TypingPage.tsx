@@ -35,13 +35,19 @@ function TypingPage() {
     const handleAskAI = async () => {
         const ai = new AI();
         const response = await ai.ask(text);
-        console.log(response);
+        setText(response);
     }
 
     const handleFillInGaps = async () => {
+        const ai = new AI();
+        const response = await ai.fillInGaps(text);
+        setText(response);
     }
 
     const handleFleshOutMessage = async () => {
+        const ai = new AI();
+        const response = await ai.fleshOut(text);
+        setText(response);
     }
 
     return (

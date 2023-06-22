@@ -13,13 +13,33 @@ class AI {
             throw new Error('Network response was not ok');
         }
 
-        const json: { choices?: {message: string}[] } = await response.json() as { choices?: {message: string}[] };
-        
-        // Check if choices exists in the response and has at least one element
-        if (json.choices && json.choices.length > 0) {
-            return json.choices[0].message;
+        const json: { answer: string } = await response.json() as { answer: string };
+
+        if (json.answer) {
+            // Remove the quotes using regex
+            return json.answer.replace(/['"]+/g, '');
         }
-        
+
+        return '';
+    }
+
+    async fillInGaps(text: string): Promise<string> {
+        let command = "Fill in the gaps in the following text: \n\n\"\"\"\n" + text + "\n\"\"\"\n\n\"\"\"\n";
+        command += "Don't return with quotes, just the text.\n";
+        const response = await this.ask(command);
+        if (response) {
+            return response;
+        }
+        return '';
+    }
+
+    async fleshOut(text: string): Promise<string> {
+        let command = "Flesh out the following text so that it makes sense: \n\n\"\"\"\n" + text + "\n\"\"\"\n\n\"\"\"\n";
+        command += "Don't return with quotes, just the text.\n";
+        const response = await this.ask(command);
+        if (response) {
+            return response;
+        }
         return '';
     }
 }

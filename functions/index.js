@@ -24,6 +24,6 @@ exports.askOpenAI = functions.https.onRequest((req, res) => {
             messages: messages,
         });
 
-        res.json({ answer: chatCompletion.data.choices[0].message });
+        res.json({ answer: chatCompletion.data.choices[0].message.content });
     });
 });
