@@ -62,29 +62,13 @@ function TypingPage() {
             <div className="container">
                 <textarea className="text-area" value={text} onChange={handleTextChange} />
                 {text.length > 0 && (
-                    <div className="button-container-wrapper">
-                        <div className="button-container">
-                            <button className="btn-default" onClick={handleSpeakText} disabled={aiInProgress}>
-                                Speak
-                            </button>
-                            <button className="btn-default" onClick={handleClearText} disabled={aiInProgress}>
-                                Clear
-                            </button>
-                            <button className="btn-default" onClick={handleSaveText} disabled={aiInProgress}>
-                                Save
-                            </button>
-                        </div>
-                        <div className="button-container">
-                            <button className="btn-default" onClick={handleAskAI} disabled={aiInProgress}>
-                                Ask AI
-                            </button>
-                            <button className="btn-default" onClick={handleFillInGaps} disabled={aiInProgress}>
-                                Fill in gaps
-                            </button>
-                            <button className="btn-default" onClick={handleFleshOutMessage} disabled={aiInProgress}>
-                                Flesh out message
-                            </button>
-                        </div>
+                    <div className="grid-container">
+                        <button className="flat-button" style={{ borderTopLeftRadius: 20 }} onClick={handleSpeakText}>Speak</button>
+                        <button className="flat-button" onClick={handleClearText}>Clear</button>
+                        <button className="flat-button" style={{ borderTopRightRadius: 20 }} onClick={handleSaveText}>Save</button>
+                        <button className="flat-button" style={{ borderBottomLeftRadius: 20 }} onClick={handleAskAI}>Ask AI</button>
+                        <button className="flat-button" onClick={handleFillInGaps}>Fill in Gaps</button>
+                        <button className="flat-button" style={{ borderBottomRightRadius: 20 }} onClick={handleFleshOutMessage}>Flesh Out</button>
                     </div>
                 )}
                 {aiInProgress && (
