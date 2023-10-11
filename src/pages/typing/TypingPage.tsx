@@ -37,9 +37,9 @@ function TypingPage() {
                 <textarea className="text-area" value={text} onChange={handleTextChange} />
                 {text.length > 0 && (
                     <div className="grid-container">
-                        <button className="flat-button" style={{ borderTopLeftRadius: 20 }} onClick={handleSpeakText}>Speak</button>
+                        <button className="flat-button" style={{ borderTopLeftRadius: 20, borderBottomLeftRadius: 20 }} onClick={handleSpeakText}>Speak</button>
                         <button className="flat-button" onClick={handleClearText}>Clear</button>
-                        <button className="flat-button" style={{ borderTopRightRadius: 20 }} onClick={handleSaveText}>Save</button>
+                        <button className="flat-button" style={{ borderTopRightRadius: 20, borderBottomRightRadius: 20 }} onClick={handleSaveText}>Save</button>
                     </div>
                 )}
             </div>
