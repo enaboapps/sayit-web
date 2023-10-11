@@ -9,13 +9,11 @@ import '../../global.css';
 import './TypingPage.css';
 import getSpeechServiceInstance from '../../speech/SpeechService';
 import SavePhrasePopover from './SavePhrasePopover';
-import { Popover, CircularProgress } from '@mui/material';
-import AI from '../../business-logic/ai/AI';
+import { Popover } from '@mui/material';
 
 function TypingPage() {
     const [text, setText] = React.useState("");
     const [showingAddPhrase, setShowingAddPhrase] = React.useState(false);
-    const [aiInProgress, setAIInProgress] = React.useState(false);
 
     const handleTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
         setText(event.target.value);
@@ -33,30 +31,6 @@ function TypingPage() {
         getSpeechServiceInstance().speak(text);
     }
 
-    const handleAskAI = async () => {
-        setAIInProgress(true);
-        const ai = new AI();
-        const response = await ai.ask(text);
-        setText(response);
-        setAIInProgress(false);
-    }
-
-    const handleFillInGaps = async () => {
-        setAIInProgress(true);
-        const ai = new AI();
-        const response = await ai.fillInGaps(text);
-        setText(response);
-        setAIInProgress(false);
-    }
-
-    const handleFleshOutMessage = async () => {
-        setAIInProgress(true);
-        const ai = new AI();
-        const response = await ai.fleshOut(text);
-        setText(response);
-        setAIInProgress(false);
-    }
-
     return (
         <BaseLayout>
             <div className="container">
@@ -66,14 +40,6 @@ function TypingPage() {
                         <button className="flat-button" style={{ borderTopLeftRadius: 20 }} onClick={handleSpeakText}>Speak</button>
                         <button className="flat-button" onClick={handleClearText}>Clear</button>
                         <button className="flat-button" style={{ borderTopRightRadius: 20 }} onClick={handleSaveText}>Save</button>
-                        <button className="flat-button" style={{ borderBottomLeftRadius: 20 }} onClick={handleAskAI}>Ask AI</button>
-                        <button className="flat-button" onClick={handleFillInGaps}>Fill in Gaps</button>
-                        <button className="flat-button" style={{ borderBottomRightRadius: 20 }} onClick={handleFleshOutMessage}>Flesh Out</button>
-                    </div>
-                )}
-                {aiInProgress && (
-                    <div className="spinner-container">
-                        <CircularProgress size={40} />
                     </div>
                 )}
             </div>
