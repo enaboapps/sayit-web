@@ -20,7 +20,9 @@ function SettingsLandingPage() {
             setVoices(voices);
             const speechSettings = getSpeechSettings();
             const voice = await speechSettings.getVoice();
-            setVoice(voice);
+            if (voice) {
+                setVoice(voice);
+            }
         }
         fetchData();
     }, []);

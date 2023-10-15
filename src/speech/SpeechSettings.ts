@@ -10,8 +10,14 @@ class SpeechSettings {
 
     async getVoice() {
         const settingsManager = getSettingsManager();
-        await settingsManager.getSettingByName(this.voiceKey, callback => (v: Setting) => this.currentVoice = v.value);
-        return this.currentVoice;
+        if (this.currentVoice) {
+            return this.currentVoice;
+        }
+        const voiceSetting = await settingsManager.getSettingByName(this.voiceKey);
+        if (voiceSetting) {
+            this.currentVoice = voiceSetting.value;
+            return this.currentVoice;
+        }
     }
 
     async setVoice(voice: string) {

@@ -67,18 +67,18 @@ class SettingsManager {
 
     // Get a setting by name
     // Returns the setting if it exists, null otherwise
-    async getSettingByName(name: unknown, callback: (arg0: Setting | null) => void) {
+    async getSettingByName(name: string) {
         const col = this.getCollection();
         if (col) {
             const q = query(col, where("name", "==", name));
             const querySnapshot = await getDocs(q);
             if (querySnapshot.empty) {
                 console.log("No matching documents.");
-                callback(null);
+                return null;
             }
             const d = querySnapshot.docs[0];
             const setting = Setting.fromDocument(d);
-            callback(setting);
+            return setting;
         }
     }
 
