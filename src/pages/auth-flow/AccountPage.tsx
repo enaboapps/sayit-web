@@ -52,7 +52,7 @@ function AccountPage() {
                 {showingUpgrade && (
                     <div>
                         <h2>Upgrade to Pro</h2>
-                        <p>Upgrade to Pro to get access to AI integration and unlimited Phrase Boards and Phrases</p>
+                        <p>Upgrade to Pro to get access to unlimited Phrase Boards and Phrases</p>
                         <button className="btn-default" onClick={() => navigate("/paywall")}>Upgrade</button>
                     </div>
                 )}

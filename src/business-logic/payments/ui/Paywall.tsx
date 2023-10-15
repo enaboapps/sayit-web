@@ -64,7 +64,6 @@ function Paywall() {
             <div className="what-you-get">
                 <h2>What you get</h2>
                 <p>By paying for the app, you get access to all the features of the app, including:</p>
-                <ul>AI features such as Phrase Generation and Typing Aids</ul>
                 <ul>Unlimited access to the app</ul>
                 <ul>Access to all future features</ul>
             </div>

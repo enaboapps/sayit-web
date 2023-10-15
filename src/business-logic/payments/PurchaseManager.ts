@@ -171,6 +171,9 @@ class PurchaseManager {
                 }
             }
         }
+        if (!customerId) {
+            return false;
+        }
         // Then check if the customer is a subscriber
         const stripe = this.getStripe();
         const customer = await stripe.customers.retrieve(customerId);
