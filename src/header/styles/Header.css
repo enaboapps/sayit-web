@@ -14,11 +14,19 @@
   text-decoration: none;
 }
 
-.header h1 {
+.header-left h1 {
   position: absolute;
   left: 40px;
-  top: 40px;
+  top: 25px;
   font-size: 30pt;
+  margin: 0;
+}
+
+.header-left p {
+  position: absolute;
+  left: 40px;
+  top: 70px;
+  font-size: 10pt;
   margin: 0;
 }
 

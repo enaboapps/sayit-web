@@ -19,12 +19,15 @@ function Header() {
         }
         flyout.classList.remove("open");
     };
+    const appVersion = process.env.REACT_APP_VERSION;
+    console.log(`App version: ${appVersion}`);
     return (
         <div className="header">
             <div className="header-left">
                 <a href="/">
                     <h1>SayIt!</h1>
                 </a>
+                <p className="version">v{appVersion}</p>
             </div>
             <div className="header-right">
                 <Flyout children={<MenuChildren />} onClose={closeFlyout} />
