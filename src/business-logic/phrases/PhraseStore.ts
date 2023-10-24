@@ -111,6 +111,10 @@ class PhraseStore {
             querySnapshot.forEach((doc) => {
                 phraseBoards.push(PhraseBoard.fromDocument(doc));
             });
+            // Order the phrase boards by their position
+            phraseBoards.sort((a, b) => {
+                return a.position - b.position;
+            });
             callback(phraseBoards);
         }
     }
