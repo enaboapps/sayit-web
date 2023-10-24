@@ -57,11 +57,19 @@ function EditPhraseBoardPage() {
         }
     };
 
+    function handleDownloadAllPhrases() {
+        getPhraseStoreInstance().downloadPhrases(phraseBoard.id);
+    }
+
     function bottomBar() {
         return (
             <div className="bottom-bar">
                 <button className="btn-default" type='submit' onClick={handleSubmit}>
                     Save
+                </button>
+                <div className="spacer"></div>
+                <button className="btn-default" onClick={handleDownloadAllPhrases}>
+                    Download All Phrases
                 </button>
                 <div className="spacer"></div>
                 <button className="btn-danger" onClick={handleDelete}>

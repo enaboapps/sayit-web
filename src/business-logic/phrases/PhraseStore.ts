@@ -238,6 +238,41 @@ class PhraseStore {
         }
     }
 
+    // Download all phrases in a phrase board as a text file
+    async downloadPhrases(phraseBoardId: string) {
+        const col = this.getCollection();
+        if (col) {
+            const phraseCol = collection(col, phraseBoardId, "phrases");
+            await getDocs(phraseCol)
+                .then((querySnapshot) => {
+                    const phrases: Phrase[] = [];
+                    querySnapshot.forEach((doc) => {
+                        console.log(doc.id, " => ", doc.data());
+                        phrases.push(Phrase.fromDocument(doc));
+                    });
+                    this.phraseCount = phrases.length;
+                    // Order the phrases by their position
+                    phrases.sort((a, b) => {
+                        return a.position - b.position;
+                    });
+                    var text = "";
+                    for (var i = 0; i < phrases.length; i++) {
+                        text += phrases[i].text;
+                        text += "\n\n";
+                    }
+                    const element = document.createElement("a");
+                    const file = new Blob([text], {type: 'text/plain'});
+                    element.href = URL.createObjectURL(file);
+                    element.download = "phrases.txt";
+                    document.body.appendChild(element); // Required for this to work in FireFox
+                    element.click();
+                })
+                .catch((error) => {
+                    console.log("Error getting documents: ", error);
+                });
+        }
+    }
+
     // Update a phrase
     async updatePhrase(phraseBoardId: string, phraseId: string, phrase: Phrase) {
         const col = this.getCollection();
