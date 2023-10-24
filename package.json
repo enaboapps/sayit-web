@@ -1,6 +1,6 @@
 {
   "name": "sayit-web",
-  "version": "1.0.1 Beta",
+  "version": "1.0.2 Beta",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.0",
