@@ -27,6 +27,13 @@ function TypingPage() {
         setShowingAddPhrase(true);
     }
 
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevents the default action of the Enter key
+            handleClearText();
+        }
+    }
+
     const handleSpeakText = () => {
         getSpeechServiceInstance().speak(text);
     }
@@ -34,7 +41,7 @@ function TypingPage() {
     return (
         <BaseLayout>
             <div className="container">
-                <textarea className="text-area" value={text} onChange={handleTextChange} />
+                <textarea className="text-area" value={text} onChange={handleTextChange} onKeyDown={handleKeyDown} placeholder="Type what you want to say here..." />
                 {text.length > 0 && (
                     <div className="grid-container">
                         <button className="flat-button" style={{ borderTopLeftRadius: 20, borderBottomLeftRadius: 20 }} onClick={handleSpeakText}>Speak</button>
