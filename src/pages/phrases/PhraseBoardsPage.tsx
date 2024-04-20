@@ -91,7 +91,7 @@ function PhraseBoardsPage() {
                 {!loading && (
                     <PhraseDataGrid
                         data={phraseBoards}
-                        itemsPerPage={9}
+                        itemsPerPage={4}
                         renderItem={(item) => (
                             <PhraseBoardTile
                                 name={item.name}

@@ -100,7 +100,7 @@ function PhrasesPage() {
                 {!loading && (
                     <PhraseDataGrid
                         data={phrases}
-                        itemsPerPage={9}
+                        itemsPerPage={4}
                         renderItem={(phrase) => (
                             <PhraseTile
                                 text={phrase.text}
