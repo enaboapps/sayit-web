@@ -14,8 +14,8 @@ function SettingsLandingPage() {
 
     useEffect(() => {
         async function fetchData() {
-            const speechService = getSpeechServiceInstance();
-            const voices = speechService.getVoices();
+            const speechService = await getSpeechServiceInstance();
+            const voices = await speechService.getVoices();
             console.log(voices);
             setVoices(voices);
             const speechSettings = getSpeechSettings();
@@ -29,9 +29,9 @@ function SettingsLandingPage() {
 
     async function handleVoiceChange(event: React.ChangeEvent<HTMLSelectElement>) {
         setVoice(event.target.value);
-        const speechSettings = getSpeechSettings();
-        await speechSettings.setVoice(event.target.value);
-        await getSpeechServiceInstance().speak("This is a test");
+        const speechService = await getSpeechServiceInstance();
+        await speechService.setVoice(event.target.value);
+        await speechService.speak("This is a test");
     }
 
     function voiceOptions() {

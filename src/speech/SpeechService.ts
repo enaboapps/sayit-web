@@ -3,31 +3,42 @@
 import getSpeechSettings from "./SpeechSettings";
 
 class SpeechService {
-    // The SpeechSynthesisUtterance object is used to store data that will be spoken
-    utterance;
-
-    // The SpeechSynthesis object is used to speak the utterance
-    synth;
+    private synth: SpeechSynthesis;
+    voicesLoaded: Promise<void>;
 
     constructor() {
-        this.utterance = new SpeechSynthesisUtterance();
         this.synth = window.speechSynthesis;
+        this.voicesLoaded = new Promise<void>((resolve) => {
+            if (typeof window.speechSynthesis !== 'undefined' && window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = () => resolve();
+            } else {
+                resolve();
+            }
+        });
+    }
+
+    // Set the voice to use
+    async setVoice(voiceName: string) {
+        const voices = await this.getVoices();
+        const voice = voices.find((v) => v.name === voiceName);
+        if (voice) {
+            const speechSettings = getSpeechSettings();
+            await speechSettings.setVoice(voiceName);
+        }
     }
 
     // Speak the given text
     async speak(text: string) {
         console.log(`Speaking: ${text}`);
-        this.utterance.text = text;
-        let voice = await getSpeechSettings().getVoice();
-        if (voice === "") {
-            if (this.getVoices().length > 0) {
-                voice = this.getVoices()[0].name;
-            }
+        const voices = await this.getVoices();
+        const speechSettings = getSpeechSettings();
+        const voiceName = await speechSettings.getVoice();
+        const voice = voices.find((v) => v.name === voiceName);
+        const utterThis = new SpeechSynthesisUtterance(text);
+        if (voice) {
+            utterThis.voice = voice;
         }
-        this.utterance.voice = this.synth.getVoices().filter((v) => {
-            return v.name === voice;
-        })[0];
-        this.synth.speak(this.utterance);
+        this.synth.speak(utterThis);
     }
 
     // Stop speaking
@@ -36,7 +47,8 @@ class SpeechService {
     }
 
     // Get the list of voices
-    getVoices() {
+    async getVoices() {
+        await this.voicesLoaded;
         return this.synth.getVoices();
     }
 }
@@ -44,9 +56,10 @@ class SpeechService {
 let speechService: SpeechService | null = null;   // singleton
 
 // Get the singleton instance of SpeechService
-function getSpeechServiceInstance() {
+async function getSpeechServiceInstance() {
     if (speechService == null) {
         speechService = new SpeechService();
+        await speechService.voicesLoaded;
     }
     return speechService;
 }

@@ -47,8 +47,8 @@ function PhrasesPage() {
         if (editing) {
             navigate(`/boards/${id}/phrases/edit/${phrase.id}`);
         } else {
-            const speechService = getSpeechServiceInstance();
-            await speechService.speak(phrase.text);
+            const speechService = await getSpeechServiceInstance();
+            speechService.speak(phrase.text);
         }
     }
 

@@ -35,7 +35,9 @@ function TypingPage() {
     }
 
     const handleSpeakText = () => {
-        getSpeechServiceInstance().speak(text);
+        getSpeechServiceInstance().then((speechService) => {
+            speechService.speak(text);
+        });
     }
 
     return (

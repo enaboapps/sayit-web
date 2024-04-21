@@ -1,8 +1,6 @@
 // This class manages the settings for the app speech
 
 import getSettingsManager from '../settings/SettingsManager';
-import Setting from '../settings/models/Setting';
-import getSpeechServiceInstance from './SpeechService';
 
 class SpeechSettings {
     voiceKey = "voice";
