@@ -54,7 +54,7 @@ export default function AccountPage() {
             </p>
             <button
               onClick={handleResetPassword}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-gray-600 hover:text-gray-800"
             >
               Reset Password
             </button>

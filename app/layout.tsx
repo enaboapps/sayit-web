@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import FlyoutMenu from "./components/FlyoutMenu";
+import AnimatedBackground from "./components/AnimatedBackground";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +17,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <div className="min-h-screen bg-gray-100">
+          <AnimatedBackground />
+          <div className="min-h-screen">
             <header className="bg-white shadow">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex justify-between items-center">

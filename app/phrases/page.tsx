@@ -115,7 +115,7 @@ export default function PhrasesPage() {
   }
 
   if (authLoading || loading) {
-    return <div>Loading...</div>
+    return <div className="text-black">Loading...</div>
   }
 
   if (error) {
@@ -123,16 +123,16 @@ export default function PhrasesPage() {
   }
 
   if (!user) {
-    return <div>Please log in to view your phrases</div>
+    return <div className="text-black">Please log in to view your phrases</div>
   }
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">My Phrases</h1>
+        <h1 className="text-2xl font-bold text-black">My Phrases</h1>
         <button
           onClick={handleAddPhrase}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200"
+          className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
         >
           Add Phrase
         </button>
@@ -142,13 +142,13 @@ export default function PhrasesPage() {
         <div className="flex items-center space-x-2 mb-6">
           <button
             onClick={prevBoard}
-            className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+            className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
             aria-label="Previous board"
           >
-            <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+            <ChevronLeftIcon className="h-5 w-5 text-black" />
           </button>
 
-          <div className="flex-1 flex items-center justify-between bg-white rounded-lg shadow-sm p-3 min-h-[60px]">
+          <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px]">
             <div className="flex items-center space-x-3">
               {selectedBoard?.symbol && (
                 <img 
@@ -158,8 +158,8 @@ export default function PhrasesPage() {
                 />
               )}
               <div>
-                <h2 className="font-medium">{selectedBoard?.name}</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="font-medium text-black">{selectedBoard?.name}</h2>
+                <p className="text-sm text-black">
                   {phrases.length} {phrases.length === 1 ? 'phrase' : 'phrases'}
                 </p>
               </div>
@@ -172,8 +172,8 @@ export default function PhrasesPage() {
                     setCurrentIndex(index)
                     setSelectedBoard(boards[index])
                   }}
-                  className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
-                    index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    index === currentIndex ? 'bg-gray-600 scale-125' : 'bg-gray-300'
                   }`}
                   aria-label={`Go to board ${index + 1}`}
                 />
@@ -183,10 +183,10 @@ export default function PhrasesPage() {
 
           <button
             onClick={nextBoard}
-            className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+            className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
             aria-label="Next board"
           >
-            <ChevronRightIcon className="h-5 w-5 text-gray-600" />
+            <ChevronRightIcon className="h-5 w-5 text-black" />
           </button>
         </div>
       )}

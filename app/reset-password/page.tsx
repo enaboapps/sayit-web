@@ -23,23 +23,23 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto p-4">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Reset Password</h1>
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-lg p-8">
         {success ? (
           <div className="text-center">
-            <p className="text-green-600 mb-4">
+            <p className="text-green-600 mb-6">
               Password reset email sent! Please check your inbox.
             </p>
             <Link
               href="/sign-in"
-              className="text-blue-600 hover:text-blue-800"
+              className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
             >
               Return to Sign In
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
@@ -49,7 +49,8 @@ export default function ResetPasswordPage() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your email"
                 required
               />
             </div>
@@ -61,7 +62,7 @@ export default function ResetPasswordPage() {
                 Remember your password?{' '}
                 <Link
                   href="/sign-in"
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
                 >
                   Sign in
                 </Link>
@@ -69,7 +70,7 @@ export default function ResetPasswordPage() {
             </div>
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
             >
               Send Reset Link
             </button>

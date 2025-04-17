@@ -98,7 +98,8 @@ export default function EditPhrasePage({ params }: { params: { id: string } }) {
               id="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+              placeholder="Enter your phrase"
               required
             />
           </div>
@@ -107,7 +108,7 @@ export default function EditPhrasePage({ params }: { params: { id: string } }) {
             <button
               type="submit"
               disabled={saving}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>

@@ -61,7 +61,7 @@ export default function FlyoutMenu() {
             href="/"
             className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
               pathname === '/'
-                ? 'bg-blue-50 text-blue-600'
+                ? 'bg-gray-50 text-gray-600'
                 : 'text-gray-700 hover:bg-gray-100'
             }`}
             onClick={() => setIsOpen(false)}
@@ -78,7 +78,7 @@ export default function FlyoutMenu() {
                 href="/type"
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
                   pathname === '/type'
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-gray-50 text-gray-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 onClick={() => setIsOpen(false)}
@@ -93,7 +93,7 @@ export default function FlyoutMenu() {
                 href="/phrases"
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
                   pathname === '/phrases'
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-gray-50 text-gray-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 onClick={() => setIsOpen(false)}
@@ -108,7 +108,7 @@ export default function FlyoutMenu() {
                 href="/account"
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
                   pathname === '/account'
-                    ? 'bg-blue-50 text-blue-600'
+                    ? 'bg-gray-50 text-gray-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 onClick={() => setIsOpen(false)}
@@ -124,7 +124,7 @@ export default function FlyoutMenu() {
               href="/sign-in"
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
                 pathname === '/sign-in'
-                  ? 'bg-blue-50 text-blue-600'
+                  ? 'bg-gray-50 text-gray-600'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
               onClick={() => setIsOpen(false)}
@@ -139,4 +139,4 @@ export default function FlyoutMenu() {
       </div>
     </>
   );
-} 
+}
