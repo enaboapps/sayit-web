@@ -1,15 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '../../lib/hooks/useAuth'
-import { Phrase } from '../lib/models/Phrase'
-import { PhraseBoard } from '../lib/models/PhraseBoard'
-import phraseStore from '../lib/stores/PhraseStore'
-import PhraseTile from '../components/phrases/PhraseTile'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import { Phrase } from '@/app/lib/models/Phrase'
+import { PhraseBoard } from '@/app/lib/models/PhraseBoard'
+import phraseStore from '@/app/lib/stores/PhraseStore'
+import PhraseTile from '@/app/components/phrases/PhraseTile'
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 
 export default function PhrasesPage() {
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
   const [boards, setBoards] = useState<PhraseBoard[]>([])
   const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null)
   const [phrases, setPhrases] = useState<Phrase[]>([])
@@ -65,7 +67,6 @@ export default function PhrasesPage() {
 
   const handlePhrasePress = (phrase: Phrase) => {
     console.log('Phrase pressed:', phrase)
-    // Handle phrase press (e.g., speak the phrase)
   }
 
   const handleAddPhrase = async () => {
@@ -74,32 +75,12 @@ export default function PhrasesPage() {
       return
     }
     
-    console.log('Adding new phrase to board:', selectedBoard.id)
-    try {
-      await phraseStore.createPhrase(user.uid, selectedBoard.id, 'New phrase text')
-      const updatedPhrases = await phraseStore.getPhrases(user.uid, selectedBoard.id)
-      setPhrases(updatedPhrases)
-    } catch (err) {
-      console.error('Error adding phrase:', err)
-      setError('Failed to add phrase')
-    }
+    router.push(`/phrases/add?boardId=${selectedBoard.id}`)
   }
 
-  const handleDeletePhrase = async (phrase: Phrase) => {
-    if (!user || !selectedBoard || !phrase.id) {
-      console.error('Cannot delete phrase: no user, board, or phrase ID')
-      return
-    }
-    
-    console.log('Deleting phrase:', phrase.id)
-    try {
-      await phraseStore.deletePhrase(user.uid, selectedBoard.id, phrase.id)
-      const updatedPhrases = await phraseStore.getPhrases(user.uid, selectedBoard.id)
-      setPhrases(updatedPhrases)
-    } catch (err) {
-      console.error('Error deleting phrase:', err)
-      setError('Failed to delete phrase')
-    }
+  const handleEditPhrase = (phrase: Phrase) => {
+    if (!selectedBoard) return
+    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`)
   }
 
   const nextBoard = () => {
@@ -191,13 +172,13 @@ export default function PhrasesPage() {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {phrases.map((phrase) => (
           <PhraseTile
             key={phrase.id}
             phrase={phrase}
             onPress={() => handlePhrasePress(phrase)}
-            onDelete={() => handleDeletePhrase(phrase)}
+            onEdit={() => handleEditPhrase(phrase)}
           />
         ))}
       </div>

@@ -1,25 +1,44 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/app/contexts/AuthContext'
+import phraseStore from '@/app/lib/stores/PhraseStore'
 
 export default function AddPhrasePage() {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user } = useAuth()
+  const boardId = searchParams.get('boardId')
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/sign-in')
+      return
+    }
+    if (!boardId) {
+      router.push('/phrases')
+      return
+    }
+  }, [user, boardId, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user || !boardId) return
+
     setLoading(true)
+    setError(null)
 
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Creating phrase:', text)
+      await phraseStore.createPhrase(user.uid, boardId, text)
       router.push('/phrases')
     } catch (error) {
       console.error('Error creating phrase:', error)
+      setError('Failed to create phrase')
     } finally {
       setLoading(false)
     }
@@ -54,6 +73,12 @@ export default function AddPhrasePage() {
               required
             />
           </div>
+
+          {error && (
+            <div className="mb-4 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <button

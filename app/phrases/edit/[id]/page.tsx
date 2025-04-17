@@ -1,67 +1,94 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { Phrase } from '@/app/lib/models/Phrase'
+import phraseStore from '@/app/lib/stores/PhraseStore'
+import { use } from 'react'
 
-interface Phrase {
-  id: string
-  text: string
-  symbol?: {
-    url: string
-    name: string
-  }
-}
-
-export default function EditPhrasePage({ params }: { params: { id: string } }) {
+export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
   const [phrase, setPhrase] = useState<Phrase | null>(null)
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user } = useAuth()
+  const boardId = searchParams.get('boardId')
 
   useEffect(() => {
+    if (!user) {
+      router.push('/sign-in')
+      return
+    }
+    if (!boardId) {
+      router.push('/phrases')
+      return
+    }
+
     const fetchPhrase = async () => {
       try {
-        // TODO: Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        // Simulate fetching a phrase
-        const mockPhrase: Phrase = {
-          id: params.id,
-          text: 'Hello, how are you?',
-        }
-        setPhrase(mockPhrase)
-        setText(mockPhrase.text)
+        const fetchedPhrase = await phraseStore.getPhrase(user.uid, boardId, resolvedParams.id)
+        setPhrase(fetchedPhrase)
+        setText(fetchedPhrase.text)
       } catch (error) {
         console.error('Error fetching phrase:', error)
+        setError('Failed to load phrase')
       } finally {
         setLoading(false)
       }
     }
 
     fetchPhrase()
-  }, [params.id])
+  }, [resolvedParams.id, user, boardId, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user || !boardId || !phrase) return
+
     setSaving(true)
+    setError(null)
 
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Updating phrase:', { id: params.id, text })
+      await phraseStore.updatePhrase(user.uid, boardId, {
+        ...phrase,
+        text
+      })
       router.push('/phrases')
     } catch (error) {
       console.error('Error updating phrase:', error)
+      setError('Failed to update phrase')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!user || !boardId || !phrase) return
+
+    setDeleting(true)
+    setError(null)
+
+    try {
+      await phraseStore.deletePhrase(user.uid, boardId, phrase.id)
+      router.push('/phrases')
+    } catch (error) {
+      console.error('Error deleting phrase:', error)
+      setError('Failed to delete phrase')
+    } finally {
+      setDeleting(false)
     }
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+        <div className="text-gray-600">Loading...</div>
       </div>
     )
   }
@@ -69,7 +96,7 @@ export default function EditPhrasePage({ params }: { params: { id: string } }) {
   if (!phrase) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-600">Phrase not found</p>
+        <div className="text-red-600">Phrase not found</div>
       </div>
     )
   }
@@ -104,7 +131,22 @@ export default function EditPhrasePage({ params }: { params: { id: string } }) {
             />
           </div>
 
+          {error && (
+            <div className="mb-4 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center text-red-600 hover:text-red-700 transition-colors duration-200"
+            >
+              <TrashIcon className="h-5 w-5 mr-2" />
+              {deleting ? 'Deleting...' : 'Delete Phrase'}
+            </button>
             <button
               type="submit"
               disabled={saving}
