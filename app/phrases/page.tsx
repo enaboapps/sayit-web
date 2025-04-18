@@ -18,6 +18,7 @@ export default function PhrasesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isEditMode, setIsEditMode] = useState(false)
 
   useEffect(() => {
     console.log('Auth state changed:', { user, authLoading })
@@ -125,6 +126,14 @@ export default function PhrasesPage() {
             >
               Add Phrase
             </button>
+            {phrases.length > 0 && (
+              <button
+                onClick={() => setIsEditMode(!isEditMode)}
+                className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+              >
+                {isEditMode ? 'Done' : 'Edit'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -150,7 +159,13 @@ export default function PhrasesPage() {
                 <ChevronLeftIcon className="h-5 w-5 text-black" />
               </button>
 
-              <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px]">
+              <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px] cursor-pointer hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+                onClick={() => {
+                  if (isEditMode && selectedBoard) {
+                    router.push(`/phrases/boards/edit/${selectedBoard.id}`)
+                  }
+                }}
+              >
                 <div className="flex items-center space-x-3">
                   {selectedBoard?.symbol && (
                     <img 
@@ -167,13 +182,9 @@ export default function PhrasesPage() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => selectedBoard && router.push(`/phrases/boards/edit/${selectedBoard.id}`)}
-                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                    title="Edit board"
-                  >
-                    <PencilIcon className="h-5 w-5" />
-                  </button>
+                  {isEditMode && (
+                    <PencilIcon className="h-5 w-5 text-gray-500" />
+                  )}
                   <div className="flex space-x-1">
                     {boards.map((_, index) => (
                       <button
@@ -207,7 +218,7 @@ export default function PhrasesPage() {
                   key={phrase.id}
                   phrase={phrase}
                   onPress={() => handlePhrasePress(phrase)}
-                  onEdit={() => handleEditPhrase(phrase)}
+                  onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
                 />
               ))}
             </div>
