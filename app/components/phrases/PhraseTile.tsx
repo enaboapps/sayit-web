@@ -1,7 +1,9 @@
 'use client'
 
-import { Phrase } from '@/app/lib/models/Phrase'
+import { Phrase } from '@/lib/models/Phrase'
 import { PencilIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
+import symbolsManager from '@/lib/services/SymbolsManager'
 
 interface PhraseTileProps {
   phrase: Phrase
@@ -10,6 +12,37 @@ interface PhraseTileProps {
 }
 
 export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps) {
+  const [symbolUrl, setSymbolUrl] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    const loadSymbol = async () => {
+      if (!phrase.symbol) {
+        setSymbolUrl(null)
+        return
+      }
+
+      setIsLoading(true)
+      try {
+        // Get the symbol ID
+        const symbolId = phrase.symbol.id
+        
+        // Get the URL from the symbol manager
+        const url = await symbolsManager.getImageURL(symbolId)
+        if (url) {
+          setSymbolUrl(url)
+        }
+      } catch (error) {
+        console.error('Error loading symbol:', error)
+        setSymbolUrl(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSymbol()
+  }, [phrase.symbol])
+
   const handleClick = (e: React.MouseEvent) => {
     if (onEdit) {
       // In edit mode, clicking anywhere on the tile should edit
@@ -22,7 +55,7 @@ export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps)
 
   return (
     <div 
-      className={`relative bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5 ${
+      className={`relative bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5 flex flex-col items-center justify-center ${
         onEdit ? 'ring-2 ring-gray-300' : ''
       }`}
       onClick={handleClick}
@@ -32,13 +65,24 @@ export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps)
           <PencilIcon className="h-5 w-5 text-gray-500" />
         </div>
       )}
-      {phrase.symbol && (
-        <div className="mb-3">
-          <img src={phrase.symbol.url} alt={phrase.symbol.name} className="w-12 h-12" />
+      <div className="flex flex-col items-center justify-center w-full">
+        {isLoading && (
+          <div className="mb-3">
+            <div className="w-12 h-12 bg-gray-200 animate-pulse rounded" />
+          </div>
+        )}
+        {!isLoading && symbolUrl && (
+          <div className="mb-3">
+            <img 
+              src={symbolUrl} 
+              alt={`Symbol for ${phrase.text}`} 
+              className="w-12 h-12 object-contain"
+            />
+          </div>
+        )}
+        <div className="text-center">
+          <p className="text-black text-lg font-medium">{phrase.text}</p>
         </div>
-      )}
-      <div className="text-center">
-        <p className="text-black text-lg font-medium">{phrase.text}</p>
       </div>
     </div>
   )

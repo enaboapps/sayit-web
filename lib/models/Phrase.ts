@@ -1,8 +1,5 @@
-export interface Symbol {
-  id: string
-  name: string
-  url: string
-}
+import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
+import { Symbol } from './Symbol'
 
 export interface PhraseData {
   id?: string
@@ -48,18 +45,50 @@ export class Phrase {
     return id
   }
 
+  static fromDocument(doc: QueryDocumentSnapshot<DocumentData>): Phrase {
+    const data = doc.data()
+    const phrase = new Phrase({
+      id: doc.id,
+      title: data.title || '',
+      text: data.text || '',
+      userId: data.userId || '',
+      frequency: data.frequency || 0,
+      position: data.position || 0,
+      createdAt: data.createdAt?.toDate(),
+      updatedAt: data.updatedAt?.toDate()
+    })
+
+    // Handle symbol data
+    if (data.symbolId && data.symbolId !== 0) {
+      phrase.symbol = new Symbol(data.symbolId)
+    } else if (data.symbol) {
+      // If we have symbol data, create a new Symbol instance
+      const symbolId = typeof data.symbol === 'number' ? data.symbol : data.symbol.id
+      if (symbolId) {
+        phrase.symbol = new Symbol(symbolId)
+      }
+    }
+
+    return phrase
+  }
+
   toDocument(): PhraseData {
-    return {
+    const document: PhraseData = {
       id: this.id,
       title: this.title,
       text: this.text,
       userId: this.userId,
-      symbol: this.symbol || undefined,
       frequency: this.frequency,
       position: this.position,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     }
+
+    if (this.symbol) {
+      document.symbol = this.symbol
+    }
+
+    return document
   }
 
   toJSON(): PhraseData {
