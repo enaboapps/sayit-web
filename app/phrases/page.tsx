@@ -7,7 +7,7 @@ import { Phrase } from '@/app/lib/models/Phrase'
 import { PhraseBoard } from '@/app/lib/models/PhraseBoard'
 import phraseStore from '@/app/lib/stores/PhraseStore'
 import PhraseTile from '@/app/components/phrases/PhraseTile'
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline'
 
 export default function PhrasesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -108,79 +108,111 @@ export default function PhrasesPage() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-black">My Phrases</h1>
-        <button
-          onClick={handleAddPhrase}
-          className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
-        >
-          Add Phrase
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">My Phrases</h1>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => router.push('/phrases/boards/add')}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+            >
+              New Board
+            </button>
+            <button
+              onClick={handleAddPhrase}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+            >
+              Add Phrase
+            </button>
+          </div>
+        </div>
 
-      {boards.length > 0 && (
-        <div className="flex items-center space-x-2 mb-6">
-          <button
-            onClick={prevBoard}
-            className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
-            aria-label="Previous board"
-          >
-            <ChevronLeftIcon className="h-5 w-5 text-black" />
-          </button>
+        {boards.length === 0 ? (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-medium text-gray-900 mb-4">No boards yet</h2>
+            <p className="text-gray-600 mb-6">Create your first board to start adding phrases</p>
+            <button
+              onClick={() => router.push('/phrases/boards/add')}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+            >
+              Create Board
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2 mb-6">
+              <button
+                onClick={prevBoard}
+                className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+                aria-label="Previous board"
+              >
+                <ChevronLeftIcon className="h-5 w-5 text-black" />
+              </button>
 
-          <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px]">
-            <div className="flex items-center space-x-3">
-              {selectedBoard?.symbol && (
-                <img 
-                  src={selectedBoard.symbol.url} 
-                  alt={selectedBoard.symbol.name}
-                  className="w-8 h-8 object-contain"
-                />
-              )}
-              <div>
-                <h2 className="font-medium text-black">{selectedBoard?.name}</h2>
-                <p className="text-sm text-black">
-                  {phrases.length} {phrases.length === 1 ? 'phrase' : 'phrases'}
-                </p>
+              <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px]">
+                <div className="flex items-center space-x-3">
+                  {selectedBoard?.symbol && (
+                    <img 
+                      src={selectedBoard.symbol.url} 
+                      alt={selectedBoard.symbol.name}
+                      className="w-8 h-8 object-contain"
+                    />
+                  )}
+                  <div>
+                    <h2 className="font-medium text-black">{selectedBoard?.name}</h2>
+                    <p className="text-sm text-black">
+                      {phrases.length} {phrases.length === 1 ? 'phrase' : 'phrases'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => selectedBoard && router.push(`/phrases/boards/edit/${selectedBoard.id}`)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                    title="Edit board"
+                  >
+                    <PencilIcon className="h-5 w-5" />
+                  </button>
+                  <div className="flex space-x-1">
+                    {boards.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setCurrentIndex(index)
+                          setSelectedBoard(boards[index])
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                          index === currentIndex ? 'bg-gray-600 scale-125' : 'bg-gray-300'
+                        }`}
+                        aria-label={`Go to board ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              <button
+                onClick={nextBoard}
+                className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+                aria-label="Next board"
+              >
+                <ChevronRightIcon className="h-5 w-5 text-black" />
+              </button>
             </div>
-            <div className="flex space-x-1">
-              {boards.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setCurrentIndex(index)
-                    setSelectedBoard(boards[index])
-                  }}
-                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                    index === currentIndex ? 'bg-gray-600 scale-125' : 'bg-gray-300'
-                  }`}
-                  aria-label={`Go to board ${index + 1}`}
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {phrases.map((phrase) => (
+                <PhraseTile
+                  key={phrase.id}
+                  phrase={phrase}
+                  onPress={() => handlePhrasePress(phrase)}
+                  onEdit={() => handleEditPhrase(phrase)}
                 />
               ))}
             </div>
-          </div>
-
-          <button
-            onClick={nextBoard}
-            className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
-            aria-label="Next board"
-          >
-            <ChevronRightIcon className="h-5 w-5 text-black" />
-          </button>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {phrases.map((phrase) => (
-          <PhraseTile
-            key={phrase.id}
-            phrase={phrase}
-            onPress={() => handlePhrasePress(phrase)}
-            onEdit={() => handleEditPhrase(phrase)}
-          />
-        ))}
+          </>
+        )}
       </div>
     </div>
   )
