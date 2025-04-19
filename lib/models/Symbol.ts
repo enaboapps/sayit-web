@@ -1,21 +1,28 @@
 import cloudStorageManager from '../services/CloudStorageManager';
 
 export class Symbol {
-    id: number;
-    imageURL?: string;
+    id: string;
+    name: string | null;
+    url: string | null;
 
-    constructor(id: number) {
+    constructor(id: string, name: string | null, url: string | null) {
         this.id = id;
+        this.name = name;
+        this.url = url;
     }
 
-    setURL(url: string) {
-        this.imageURL = url;
+    setURL(url: string | null) {
+        this.url = url;
+    }
+
+    static fromId(id: number): Symbol | null {
+        return new Symbol(id.toString(), null, null);
     }
 
     async getImageURL() {
-        if (!this.imageURL) {
-            this.imageURL = await cloudStorageManager.getFileURL(`symbols/${this.id}.png`);
+        if (!this.url) {
+            this.url = await cloudStorageManager.getFileURL(`symbols/${this.id}.png`);
         }
-        return this.imageURL;
+        return this.url;
     }
 } 

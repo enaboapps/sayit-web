@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Auth from '../lib/auth'
+import { authService } from '@/lib/auth'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -21,16 +21,16 @@ export default function SignUpPage() {
       return
     }
 
-    if (!Auth.isPasswordStrongEnough(password)) {
+    if (!authService.isPasswordStrongEnough(password)) {
       setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number')
       return
     }
 
-    const result = await Auth.signUpWithEmailAndPassword(email, password)
-    if (result === null) {
+    try {
+      await authService.signUp(email, password)
       router.push('/')
-    } else {
-      setError(result)
+    } catch (error) {
+      setError((error as Error).message)
     }
   }
 

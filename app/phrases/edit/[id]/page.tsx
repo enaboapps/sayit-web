@@ -4,14 +4,18 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/app/contexts/AuthContext'
-import { Phrase } from '@/app/lib/models/Phrase'
-import phraseStore from '@/app/lib/stores/PhraseStore'
+import { Phrase } from '@/lib/models/Phrase'
+import { Symbol } from '@/lib/models/Symbol'
+import { phraseStore } from '@/lib/stores/phraseStore'
+import SymbolModal from '@/app/components/symbols/SymbolModal'
 import { use } from 'react'
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const [phrase, setPhrase] = useState<Phrase | null>(null)
   const [text, setText] = useState('')
+  const [symbol, setSymbol] = useState<Symbol | null>(null)
+  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -20,6 +24,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   const searchParams = useSearchParams()
   const { user } = useAuth()
   const boardId = searchParams.get('boardId')
+  const { getPhrase, updatePhrase, deletePhrase } = phraseStore()
 
   useEffect(() => {
     if (!user) {
@@ -33,9 +38,16 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
     const fetchPhrase = async () => {
       try {
-        const fetchedPhrase = await phraseStore.getPhrase(user.uid, boardId, resolvedParams.id)
-        setPhrase(fetchedPhrase)
-        setText(fetchedPhrase.text)
+        const fetchedPhrase = await getPhrase(user.uid, boardId, resolvedParams.id)
+        setPhrase(fetchedPhrase || null)
+        setText(fetchedPhrase?.text || '')
+        if (fetchedPhrase?.symbol) {
+          const symbol = Symbol.fromId(fetchedPhrase.symbol)
+          if (symbol) {
+            await symbol.getImageURL()
+            setSymbol(symbol)
+          }
+        }
       } catch (error) {
         console.error('Error fetching phrase:', error)
         setError('Failed to load phrase')
@@ -55,10 +67,13 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     setError(null)
 
     try {
-      await phraseStore.updatePhrase(user.uid, boardId, {
+      if (!phrase.id) throw new Error('Phrase ID is missing')
+      const updatedPhrase = new Phrase({
         ...phrase,
-        text
+        text,
+        symbol: symbol?.id ? parseInt(symbol.id) : null
       })
+      await updatePhrase(user.uid, boardId, phrase.id, updatedPhrase, symbol?.url || null)
       router.push('/phrases')
     } catch (error) {
       console.error('Error updating phrase:', error)
@@ -75,7 +90,8 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     setError(null)
 
     try {
-      await phraseStore.deletePhrase(user.uid, boardId, phrase.id)
+      if (!phrase.id) throw new Error('Phrase ID is missing')
+      await deletePhrase(phrase.id, boardId, user.uid)
       router.push('/phrases')
     } catch (error) {
       console.error('Error deleting phrase:', error)
@@ -131,6 +147,19 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             />
           </div>
 
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Symbol
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsSymbolModalOpen(true)}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+            >
+              {symbol ? `Symbol ${symbol.id} selected` : 'Select a symbol'}
+            </button>
+          </div>
+
           {error && (
             <div className="mb-4 text-red-600 text-sm">
               {error}
@@ -156,6 +185,12 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             </button>
           </div>
         </form>
+
+        <SymbolModal
+          isOpen={isSymbolModalOpen}
+          onClose={() => setIsSymbolModalOpen(false)}
+          onSymbolSelect={setSymbol}
+        />
       </div>
     </div>
   )

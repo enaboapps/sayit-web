@@ -17,27 +17,13 @@ export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps)
 
   useEffect(() => {
     const loadSymbol = async () => {
-      if (!phrase.symbol) {
-        setSymbolUrl(null)
-        return
-      }
-
       setIsLoading(true)
-      try {
-        // Get the symbol ID
-        const symbolId = phrase.symbol.id
-        
-        // Get the URL from the symbol manager
-        const url = await symbolsManager.getImageURL(symbolId)
-        if (url) {
-          setSymbolUrl(url)
-        }
-      } catch (error) {
-        console.error('Error loading symbol:', error)
-        setSymbolUrl(null)
-      } finally {
-        setIsLoading(false)
+      var url = null
+      if (phrase.getSymbol()) {
+        url = await phrase.getSymbol()?.getImageURL()
       }
+      setSymbolUrl(url ?? null)
+      setIsLoading(false)
     }
 
     loadSymbol()

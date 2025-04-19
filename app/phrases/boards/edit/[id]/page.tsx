@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/app/contexts/AuthContext'
-import { PhraseBoard } from '@/app/lib/models/PhraseBoard'
-import phraseStore from '@/app/lib/stores/PhraseStore'
+import { phraseStore } from '@/lib/stores/phraseStore'
+import { PhraseBoard } from '@/lib/models/PhraseBoard'
 import { use } from 'react'
 
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {

@@ -3,10 +3,11 @@ import { Symbol } from './Symbol'
 
 export interface PhraseData {
   id?: string
-  title: string
+  title?: string
   text: string
-  userId: string
-  symbol?: Symbol
+  userId?: string
+  boardId?: string
+  symbol?: number | null
   frequency?: number
   position?: number
   createdAt?: Date
@@ -18,7 +19,8 @@ export class Phrase {
   title: string
   text: string
   userId: string
-  symbol: Symbol | null
+  boardId: string
+  symbol?: number | null
   frequency: number
   position: number
   createdAt?: Date
@@ -26,9 +28,10 @@ export class Phrase {
 
   constructor(data: PhraseData) {
     this.id = data.id || this.generateRandomId()
-    this.title = data.title
+    this.title = data.title || ''
     this.text = data.text
-    this.userId = data.userId
+    this.userId = data.userId || ''
+    this.boardId = data.boardId || ''
     this.symbol = data.symbol || null
     this.frequency = data.frequency || 0
     this.position = data.position || 0
@@ -52,6 +55,7 @@ export class Phrase {
       title: data.title || '',
       text: data.text || '',
       userId: data.userId || '',
+      boardId: data.boardId || '',
       frequency: data.frequency || 0,
       position: data.position || 0,
       createdAt: data.createdAt?.toDate(),
@@ -59,17 +63,18 @@ export class Phrase {
     })
 
     // Handle symbol data
-    if (data.symbolId && data.symbolId !== 0) {
-      phrase.symbol = new Symbol(data.symbolId)
-    } else if (data.symbol) {
-      // If we have symbol data, create a new Symbol instance
-      const symbolId = typeof data.symbol === 'number' ? data.symbol : data.symbol.id
-      if (symbolId) {
-        phrase.symbol = new Symbol(symbolId)
-      }
+    if (data.symbol) {
+      phrase.symbol = data.symbol
     }
 
     return phrase
+  }
+
+  getSymbol(): Symbol | null {
+    if (!this.symbol) {
+      return null
+    }
+    return Symbol.fromId(this.symbol)
   }
 
   toDocument(): PhraseData {
@@ -78,6 +83,7 @@ export class Phrase {
       title: this.title,
       text: this.text,
       userId: this.userId,
+      boardId: this.boardId,
       frequency: this.frequency,
       position: this.position,
       createdAt: this.createdAt,

@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { Phrase } from '@/app/lib/models/Phrase'
-import { PhraseBoard } from '@/app/lib/models/PhraseBoard'
-import phraseStore from '@/app/lib/stores/PhraseStore'
+import { Phrase } from '@/lib/models/Phrase'
+import { PhraseBoard } from '@/lib/models/PhraseBoard'
+import { phraseStore } from '@/lib/stores/phraseStore'
 import PhraseTile from '@/app/components/phrases/PhraseTile'
 import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline'
 
@@ -35,32 +35,33 @@ export default function PhrasesPage() {
     }
 
     console.log('Fetching phrase boards for user:', user.uid)
-    phraseStore.getAllPhraseBoards(user.uid)
-      .then((fetchedBoards) => {
-        console.log('Boards fetched successfully:', fetchedBoards)
-        setBoards(fetchedBoards)
-        if (fetchedBoards.length > 0) {
-          setSelectedBoard(fetchedBoards[0])
+    phraseStore.getState().fetchBoards(user.uid)
+      .then(() => {
+        const boards = phraseStore.getState().boards
+        setBoards(boards)
+        if (boards.length > 0) {
+          setSelectedBoard(boards[0])
         }
         setLoading(false)
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error('Error fetching boards:', err)
         setError('Failed to load phrase boards')
         setLoading(false)
       })
-  }, [user, authLoading])
+  }, [user])
 
   useEffect(() => {
     if (!user || !selectedBoard) return
 
     console.log('Fetching phrases for board:', selectedBoard.id)
-    phraseStore.getPhrases(user.uid, selectedBoard.id)
-      .then((fetchedPhrases) => {
-        console.log('Phrases fetched successfully:', fetchedPhrases)
-        setPhrases(fetchedPhrases)
+    phraseStore.getState().fetchPhrases(user.uid)
+      .then(() => {
+        const allPhrases = phraseStore.getState().phrases
+        const boardPhrases = allPhrases.filter(phrase => phrase.boardId === selectedBoard.id)
+        setPhrases(boardPhrases)
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error('Error fetching phrases:', err)
         setError('Failed to load phrases')
       })
@@ -169,8 +170,8 @@ export default function PhrasesPage() {
                 <div className="flex items-center space-x-3">
                   {selectedBoard?.symbol && (
                     <img 
-                      src={selectedBoard.symbol.url} 
-                      alt={selectedBoard.symbol.name}
+                      src={selectedBoard.symbol.url ?? ''} 
+                      alt={selectedBoard.symbol.name ?? ''}
                       className="w-8 h-8 object-contain"
                     />
                   )}

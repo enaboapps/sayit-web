@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Auth from '../lib/auth'
+import { authService } from '@/lib/auth'
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('')
@@ -14,11 +14,11 @@ export default function ResetPasswordPage() {
     setError(null)
     setSuccess(false)
 
-    const result = await Auth.sendPasswordResetEmail(email)
-    if (result === null) {
+    try {
+      await authService.sendPasswordResetEmail(email)
       setSuccess(true)
-    } else {
-      setError(result)
+    } catch (error) {
+      setError((error as Error).message)
     }
   }
 

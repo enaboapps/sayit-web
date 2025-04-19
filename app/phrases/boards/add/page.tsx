@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/app/contexts/AuthContext'
-import phraseStore from '@/app/lib/stores/PhraseStore'
+import { phraseStore } from '@/lib/stores/phraseStore'
 
 export default function AddBoardPage() {
   const [name, setName] = useState('')

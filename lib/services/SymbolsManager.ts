@@ -18,9 +18,9 @@ class SymbolsManager {
                 if (picto) {
                     const id = picto["id"] as number;
                     const imageUrl = picto["image_url"] as string;
+                    const name = picto["name"] as string || '';
                     if (id && imageUrl) {
-                        const symbol = new Symbol(id);
-                        symbol.setURL(imageUrl);
+                        const symbol = new Symbol(id.toString(), name, imageUrl);
                         symbols.push(symbol);
                     }
                 }
@@ -44,11 +44,16 @@ class SymbolsManager {
     }
 
     async getImageURL(id: number): Promise<string> {
+        if (isNaN(id)) {
+            console.error('Invalid symbol ID:', id);
+            return '';
+        }
         return await cloudStorageManager.getFileURL(`symbols/${id}.png`);
     }
 
     async getSymbol(id: number): Promise<Symbol> {
-        return new Symbol(id);
+        const url = await this.getImageURL(id);
+        return new Symbol(id.toString(), '', url);
     }
 }
 

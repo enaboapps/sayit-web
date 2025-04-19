@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Auth from '../lib/auth'
+import { authService } from '@/lib/auth'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
@@ -15,11 +15,11 @@ export default function SignInPage() {
     e.preventDefault()
     setError(null)
 
-    const result = await Auth.signInWithEmailAndPassword(email, password)
-    if (result === null) {
+    try {
+      await authService.signIn(email, password)
       router.push('/')
-    } else {
-      setError(result)
+    } catch (error) {
+      setError((error as Error).message)
     }
   }
 

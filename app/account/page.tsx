@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Auth from '../lib/auth'
+import { authService } from '@/lib/auth'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function AccountPage() {
@@ -15,11 +15,11 @@ export default function AccountPage() {
     setError(null)
     setSuccess(null)
 
-    const result = await Auth.signOut()
-    if (result === null) {
+    try {
+      await authService.signOut()
       router.push('/')
-    } else {
-      setError(result)
+    } catch (error) {
+      setError((error as Error).message)
     }
   }
 
@@ -29,11 +29,11 @@ export default function AccountPage() {
 
     if (!user?.email) return
 
-    const result = await Auth.sendPasswordResetEmail(user.email)
-    if (result === null) {
+    try {
+      await authService.sendPasswordResetEmail(user.email)
       setSuccess('Password reset email sent! Please check your inbox.')
-    } else {
-      setError(result)
+    } catch (error) {
+      setError((error as Error).message)
     }
   }
 
