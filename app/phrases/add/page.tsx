@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Symbol } from '@/lib/models/Symbol'
 import SymbolModal from '@/app/components/symbols/SymbolModal'
 import { phraseStore } from '@/lib/stores/phraseStore'
@@ -80,14 +80,40 @@ export default function AddPhrasePage() {
               onClick={() => setIsSymbolModalOpen(true)}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
             >
-              {symbol ? `Symbol ${symbol.id} selected` : 'Select a symbol'}
+              {symbol ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden">
+                      <img
+                        src={symbol.url ?? ''}
+                        alt={`Symbol ${symbol.id}`}
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </div>
+                    <span>Selected symbol</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSymbol(null)
+                    }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                'Select a symbol'
+              )}
             </button>
+            <p className="mt-1 text-sm text-gray-500">Optional - Select a symbol to represent this phrase</p>
           </div>
 
           <button
             type="submit"
             disabled={loading || !boardId}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Adding...' : 'Add Phrase'}
           </button>
