@@ -9,9 +9,10 @@ interface PhraseTileProps {
   phrase: Phrase
   onPress: () => void
   onEdit?: () => void
+  className?: string
 }
 
-export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps) {
+export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: PhraseTileProps) {
   const [symbolUrl, setSymbolUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -41,20 +42,20 @@ export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps)
 
   return (
     <div 
-      className={`relative bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5 flex flex-col items-center justify-center ${
+      className={`relative bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 flex flex-col items-center justify-center h-full ${
         onEdit ? 'ring-2 ring-gray-300' : ''
-      }`}
+      } ${className}`}
       onClick={handleClick}
     >
       {onEdit && (
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-2 right-2">
           <PencilIcon className="h-5 w-5 text-gray-500" />
         </div>
       )}
-      <div className="flex flex-col items-center justify-center w-full">
+      <div className="flex flex-col items-center justify-center w-full h-full">
         {isLoading && (
           <div className="mb-3">
-            <div className="w-12 h-12 bg-gray-200 animate-pulse rounded" />
+            <div className="w-16 h-16 bg-gray-200 animate-pulse rounded" />
           </div>
         )}
         {!isLoading && symbolUrl && (
@@ -62,12 +63,12 @@ export default function PhraseTile({ phrase, onPress, onEdit }: PhraseTileProps)
             <img 
               src={symbolUrl} 
               alt={`Symbol for ${phrase.text}`} 
-              className="w-12 h-12 object-contain"
+              className="w-16 h-16 object-contain"
             />
           </div>
         )}
         <div className="text-center">
-          <p className="text-black text-lg font-medium">{phrase.text}</p>
+          <p className="text-black text-xl font-medium">{phrase.text}</p>
         </div>
       </div>
     </div>

@@ -215,7 +215,14 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       const docRef = doc(col, boardId)
       const docSnap = await getDoc(docRef)
       if (docSnap.exists()) {
-        return PhraseBoard.fromDocument(docSnap)
+        const data = docSnap.data() as DocumentData
+        return new PhraseBoard({
+          id: docSnap.id,
+          name: data.name || '',
+          userId: data.userId || userId,
+          symbol: data.symbol ? data.symbol : undefined,
+          position: data.position || 0
+        })
       }
       return null
     } catch (error) {

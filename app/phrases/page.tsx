@@ -131,19 +131,17 @@ export default function PhrasesPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Phrases</h1>
-        </div>
-
-        {boards.length === 0 ? (
-          <div className="text-center py-12">
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {boards.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
             <h2 className="text-xl font-medium text-gray-900 mb-4">No boards yet</h2>
             <p className="text-gray-600 mb-6">Create your first board to start adding phrases</p>
           </div>
-        ) : (
-          <>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col">
+          <div className="flex-none">
             <BoardCarousel
               boards={boards}
               selectedBoard={selectedBoard}
@@ -159,20 +157,40 @@ export default function PhrasesPage() {
               }}
               onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
             />
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {phrases.map((phrase) => (
-                <PhraseTile
-                  key={phrase.id}
-                  phrase={phrase}
-                  onPress={() => handlePhrasePress(phrase)}
-                  onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+          <div className="flex-1 p-1 overflow-auto">
+            {loadingPhrases ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
+                {phrases.map((phrase) => (
+                  <PhraseTile
+                    key={phrase.id}
+                    phrase={phrase}
+                    onPress={() => handlePhrasePress(phrase)}
+                    onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
+                    className="aspect-square"
+                  />
+                ))}
+                {isEditMode && (
+                  <button
+                    onClick={handleAddPhrase}
+                    className="aspect-square flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 transition-colors duration-200"
+                    aria-label="Add new phrase"
+                  >
+                    <span className="text-gray-500 text-lg">+ Add Phrase</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <PhrasesBottomBar
         onAddPhrase={handleAddPhrase}
         onAddBoard={handleAddBoard}

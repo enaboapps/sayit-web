@@ -27,9 +27,9 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
     const fetchBoard = async () => {
       try {
-        const fetchedBoard = await phraseStore.getPhraseBoard(user.uid, resolvedParams.id)
+        const fetchedBoard = await phraseStore.getState().getPhraseBoard(user.uid, resolvedParams.id)
         setBoard(fetchedBoard)
-        setName(fetchedBoard.name)
+        setName(fetchedBoard?.name || '')
       } catch (error) {
         console.error('Error fetching board:', error)
         setError('Failed to load board')
@@ -49,10 +49,12 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
     setError(null)
 
     try {
-      await phraseStore.updatePhraseBoard(user.uid, {
+      const updatedBoard = new PhraseBoard({
         ...board,
-        name
+        name,
+        symbol: board.symbol || undefined
       })
+      await phraseStore.getState().updatePhraseBoard(user.uid, updatedBoard)
       router.push('/phrases')
     } catch (error) {
       console.error('Error updating board:', error)
@@ -73,7 +75,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
     setError(null)
 
     try {
-      await phraseStore.deletePhraseBoard(user.uid, board.id)
+      await phraseStore.getState().deletePhraseBoard(user.uid, resolvedParams.id)
       router.push('/phrases')
     } catch (error) {
       console.error('Error deleting board:', error)

@@ -31,45 +31,45 @@ export default function BoardCarousel({
   if (boards.length === 0) return null
 
   return (
-    <div className="flex items-center space-x-2 mb-6">
+    <div className="flex items-center bg-white mb-2">
       <button
         onClick={onPrevBoard}
-        className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+        className="p-2 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
         aria-label="Previous board"
       >
         <ChevronLeftIcon className="h-5 w-5 text-black" />
       </button>
 
       <div 
-        className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px] cursor-pointer hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+        className="flex-1 flex items-center justify-between p-2 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
         onClick={() => {
           if (isEditMode && selectedBoard) {
             onEditBoard(selectedBoard.id ?? '')
           }
         }}
       >
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {selectedBoard?.symbol && (
             <img 
               src={selectedBoard.symbol.url ?? ''} 
               alt={selectedBoard.symbol.name ?? ''}
-              className="w-8 h-8 object-contain"
+              className="w-6 h-6 object-contain"
             />
           )}
           <div>
-            <h2 className="font-medium text-black">{selectedBoard?.name}</h2>
-            <p className="text-sm text-black">
+            <h2 className="font-medium text-black text-sm">{selectedBoard?.name}</h2>
+            <p className="text-xs text-black">
               {isLoadingPhrases ? (
-                <span className="inline-block w-16 h-4 bg-gray-200 rounded animate-pulse" />
+                <span className="inline-block w-16 h-3 bg-gray-200 rounded animate-pulse" />
               ) : (
                 `${phrasesCount} ${phrasesCount === 1 ? 'phrase' : 'phrases'}`
               )}
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           {isEditMode && (
-            <PencilIcon className="h-5 w-5 text-gray-500" />
+            <PencilIcon className="h-4 w-4 text-gray-500" />
           )}
           <div className="flex space-x-1">
             {boards.map((_, index) => (
@@ -79,8 +79,8 @@ export default function BoardCarousel({
                   e.stopPropagation()
                   onSelectBoard(index)
                 }}
-                className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                  index === currentIndex ? 'bg-gray-600 scale-125' : 'bg-gray-300'
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                  index === currentIndex ? 'bg-gray-600' : 'bg-gray-300'
                 }`}
                 aria-label={`Go to board ${index + 1}`}
               />
@@ -91,7 +91,7 @@ export default function BoardCarousel({
 
       <button
         onClick={onNextBoard}
-        className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
+        className="p-2 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
         aria-label="Next board"
       >
         <ChevronRightIcon className="h-5 w-5 text-black" />
