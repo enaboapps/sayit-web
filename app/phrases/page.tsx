@@ -9,6 +9,8 @@ import { PhraseBoard } from '@/lib/models/PhraseBoard'
 import PhraseTile from '@/app/components/phrases/PhraseTile'
 import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline'
 import PhrasesBottomBar from '@/app/components/phrases/PhrasesBottomBar'
+import BoardCarousel from '@/app/components/phrases/BoardCarousel'
+import PhrasesSkeleton from '@/app/components/phrases/PhrasesSkeleton'
 
 export default function PhrasesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -17,6 +19,7 @@ export default function PhrasesPage() {
   const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null)
   const [phrases, setPhrases] = useState<Phrase[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingPhrases, setLoadingPhrases] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -56,15 +59,19 @@ export default function PhrasesPage() {
     if (!user || !selectedBoard) return
 
     console.log('Fetching phrases for board:', selectedBoard.id)
+    setLoadingPhrases(true)
+    setPhrases([]) // Clear existing phrases while loading
     phraseStore.getState().fetchPhrases(user.uid)
       .then(() => {
         const allPhrases = phraseStore.getState().phrases
         const boardPhrases = allPhrases.filter((phrase: Phrase) => phrase.boardId === selectedBoard.id)
         setPhrases(boardPhrases)
+        setLoadingPhrases(false)
       })
       .catch((err: Error) => {
         console.error('Error fetching phrases:', err)
         setError('Failed to load phrases')
+        setLoadingPhrases(false)
       })
   }, [user, selectedBoard])
 
@@ -112,7 +119,7 @@ export default function PhrasesPage() {
   }
 
   if (authLoading || loading) {
-    return <div className="text-black">Loading...</div>
+    return <PhrasesSkeleton />
   }
 
   if (error) {
@@ -137,52 +144,21 @@ export default function PhrasesPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center space-x-2 mb-6">
-              <button
-                onClick={prevBoard}
-                className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
-                aria-label="Previous board"
-              >
-                <ChevronLeftIcon className="h-5 w-5 text-black" />
-              </button>
-
-              <div className="flex-1 flex items-center justify-between bg-white rounded-xl shadow-md p-4 min-h-[60px] cursor-pointer hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
-                onClick={() => {
-                  if (isEditMode && selectedBoard) {
-                    router.push(`/phrases/boards/edit/${selectedBoard.id}`)
-                  }
-                }}
-              >
-                <div className="flex items-center space-x-3">
-                  {selectedBoard?.symbol && (
-                    <img 
-                      src={selectedBoard.symbol.url ?? ''} 
-                      alt={selectedBoard.symbol.name ?? ''}
-                      className="w-8 h-8 object-contain"
-                    />
-                  )}
-                  <div>
-                    <h2 className="font-medium text-black">{selectedBoard?.name}</h2>
-                    <p className="text-sm text-black">
-                      {phrases.length} {phrases.length === 1 ? 'phrase' : 'phrases'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {isEditMode && (
-                    <PencilIcon className="h-5 w-5 text-gray-500" />
-                  )}
-                </div>
-              </div>
-
-              <button
-                onClick={nextBoard}
-                className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:-translate-y-0.5"
-                aria-label="Next board"
-              >
-                <ChevronRightIcon className="h-5 w-5 text-black" />
-              </button>
-            </div>
+            <BoardCarousel
+              boards={boards}
+              selectedBoard={selectedBoard}
+              currentIndex={currentIndex}
+              isEditMode={isEditMode}
+              phrasesCount={phrases.length}
+              isLoadingPhrases={loadingPhrases}
+              onPrevBoard={prevBoard}
+              onNextBoard={nextBoard}
+              onSelectBoard={(index) => {
+                setCurrentIndex(index)
+                setSelectedBoard(boards[index])
+              }}
+              onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {phrases.map((phrase) => (
