@@ -67,8 +67,8 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
             />
           </div>
         )}
-        <div className="text-center">
-          <p className="text-black text-xl font-medium">{phrase.text}</p>
+        <div className="text-center w-full">
+          <p className="text-black text-xl font-medium line-clamp-3 px-2">{phrase.text}</p>
         </div>
       </div>
     </div>
