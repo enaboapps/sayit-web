@@ -1,9 +1,8 @@
 import { create } from 'zustand'
 import { Phrase, PhraseData } from '../models/Phrase'
-import { PhraseBoard, PhraseBoardData } from '../models/PhraseBoard'
-import { Symbol } from '../models/Symbol'
+import { PhraseBoard } from '../models/PhraseBoard'
 import { db } from '../config/firebase'
-import { collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, DocumentData, getDoc, updateDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, DocumentData, getDoc, updateDoc } from 'firebase/firestore'
 import symbolsManager from '../services/SymbolsManager'
 
 interface PhraseStore {
@@ -100,7 +99,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
         text: phrase.text || '',
         userId: phrase.userId || '',
         boardId: boardId,
-        symbol: phrase.symbol ? phrase.symbol : undefined,
+        symbol: phrase.symbol ? phrase.symbol : null,
         frequency: 0,
         position: 0,
         createdAt: new Date(),
