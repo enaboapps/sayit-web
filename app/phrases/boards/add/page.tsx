@@ -21,7 +21,7 @@ export default function AddBoardPage() {
     setError(null)
 
     try {
-      await phraseStore.createPhraseBoard(user.uid, name)
+      await phraseStore.getState().createPhraseBoard(user.uid, name)
       router.push('/phrases')
     } catch (error) {
       console.error('Error creating board:', error)
@@ -55,19 +55,18 @@ export default function AddBoardPage() {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
-              placeholder="Enter board name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           {error && (
-            <div className="mb-4 text-red-600 text-sm">
+            <div className="mb-4 text-red-500 text-sm">
               {error}
             </div>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex justify-end">
             <button
               type="submit"
               disabled={loading}
