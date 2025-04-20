@@ -3,7 +3,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./contexts/AuthContext";
-import FlyoutMenu from "./components/FlyoutMenu";
+import Sidebar from "./components/Sidebar";
 import AnimatedBackground from "./components/AnimatedBackground";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -18,18 +18,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <AnimatedBackground />
-          <div className="min-h-screen">
-            <header className="bg-white shadow">
-              <div className="px-4 sm:px-6 lg:px-8 py-4">
-                <div className="flex justify-between items-center">
-                  <h1 className="text-2xl font-bold text-gray-900">SayIt!</h1>
-                  <FlyoutMenu />
-                </div>
-              </div>
-            </header>
-            <main className="px-4 sm:px-6 lg:px-8 py-8">
-              {children}
-            </main>
+          <div className="min-h-screen flex">
+            <Sidebar />
+            <div className="flex-1 pl-16">
+              <main className="px-4 sm:px-6 lg:px-8 py-8">
+                {children}
+              </main>
+            </div>
           </div>
         </AuthProvider>
       </body>
