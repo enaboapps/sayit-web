@@ -7,7 +7,7 @@ export default function Home() {
   const { user } = useAuth();
 
   return (
-    <div className="text-center">
+    <div className="text-center p-4">
       <h1 className="text-4xl font-bold text-gray-900 mb-4">
         Welcome to SayIt!
       </h1>

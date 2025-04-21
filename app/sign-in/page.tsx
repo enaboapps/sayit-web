@@ -24,7 +24,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="max-w-md mx-auto p-4 pt-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Sign In</h1>
       <div className="bg-white rounded-xl shadow-lg p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
