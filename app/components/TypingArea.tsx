@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { Tooltip } from 'react-tooltip'
+import { useSettings } from '../contexts/SettingsContext'
 
 interface TypingAreaProps {
   onPhraseSelect?: (phrase: string) => void
@@ -11,6 +12,7 @@ interface TypingAreaProps {
 
 export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingAreaProps) {
   const [text, setText] = useState(initialText)
+  const { settings } = useSettings()
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('typingAreaVisible')
@@ -18,6 +20,20 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
     }
     return true
   })
+
+  useEffect(() => {
+    console.log('Current text size:', settings.textSize)
+  }, [settings.textSize])
+
+  const textSizeClasses = {
+    small: 'text-sm',
+    medium: 'text-lg',
+    large: 'text-2xl',
+    xlarge: 'text-4xl'
+  }
+
+  const currentTextSizeClass = textSizeClasses[settings.textSize]
+  console.log('Applied text size class:', currentTextSizeClass)
 
   useEffect(() => {
     setText(initialText)
@@ -44,12 +60,19 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
     <div className="flex flex-col">
       {isVisible && (
         <div className="flex">
-          <textarea
-            className="flex-1 h-40 bg-white text-gray-900 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none p-4"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type your message here..."
-          />
+          <div className="flex-1 relative">
+            <textarea
+              className={`w-full h-40 bg-white text-gray-900 ${currentTextSizeClass} placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none p-4 overflow-auto`}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type your message here..."
+              style={{ 
+                minHeight: '10rem',
+                maxHeight: '10rem',
+                lineHeight: '1.5'
+              }}
+            />
+          </div>
           <div className="w-16 flex flex-col">
             <button
               onClick={handleSpeak}
