@@ -11,6 +11,7 @@ import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/
 import PhrasesBottomBar from '@/app/components/phrases/PhrasesBottomBar'
 import BoardCarousel from '@/app/components/phrases/BoardCarousel'
 import PhrasesSkeleton from '@/app/components/phrases/PhrasesSkeleton'
+import TypingArea from '@/app/components/TypingArea'
 
 export default function PhrasesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -23,6 +24,7 @@ export default function PhrasesPage() {
   const [error, setError] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [typingText, setTypingText] = useState('')
 
   useEffect(() => {
     console.log('Auth state changed:', { user, authLoading })
@@ -76,7 +78,7 @@ export default function PhrasesPage() {
   }, [user, selectedBoard])
 
   const handlePhrasePress = (phrase: Phrase) => {
-    console.log('Phrase pressed:', phrase)
+    setTypingText(phrase.text)
   }
 
   const handleAddPhrase = async () => {
@@ -118,6 +120,10 @@ export default function PhrasesPage() {
     setIsEditMode(!isEditMode)
   }
 
+  const handlePhraseSelect = (phrase: string) => {
+    setTypingText(phrase)
+  }
+
   if (authLoading || loading) {
     return <PhrasesSkeleton />
   }
@@ -141,6 +147,9 @@ export default function PhrasesPage() {
         </div>
       ) : (
         <div className="flex-1 flex flex-col">
+          <div>
+            <TypingArea initialText={typingText} onPhraseSelect={handlePhraseSelect} />
+          </div>
           <div className="flex-none">
             <BoardCarousel
               boards={boards}
@@ -160,32 +169,38 @@ export default function PhrasesPage() {
           </div>
 
           <div className="flex-1 p-1 overflow-auto">
-            {loadingPhrases ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
-                {[...Array(10)].map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
-                {phrases.map((phrase) => (
-                  <PhraseTile
-                    key={phrase.id}
-                    phrase={phrase}
-                    onPress={() => handlePhrasePress(phrase)}
-                    onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
-                    className="aspect-square"
-                  />
-                ))}
-                {isEditMode && (
-                  <button
-                    onClick={handleAddPhrase}
-                    className="aspect-square flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 transition-colors duration-200"
-                    aria-label="Add new phrase"
-                  >
-                    <span className="text-gray-500 text-lg">+ Add Phrase</span>
-                  </button>
-                )}
+            {!loading && (
+              <div className="flex flex-col h-full">
+                <div className="flex-1 p-1 overflow-auto">
+                  {loadingPhrases ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
+                      {[...Array(10)].map((_, i) => (
+                        <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
+                      {phrases.map((phrase) => (
+                        <PhraseTile
+                          key={phrase.id}
+                          phrase={phrase}
+                          onPress={() => handlePhrasePress(phrase)}
+                          onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
+                          className="aspect-square"
+                        />
+                      ))}
+                      {isEditMode && (
+                        <button
+                          onClick={handleAddPhrase}
+                          className="aspect-square flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 transition-colors duration-200"
+                          aria-label="Add new phrase"
+                        >
+                          <span className="text-gray-500 text-lg">+ Add Phrase</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

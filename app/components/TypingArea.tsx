@@ -1,0 +1,94 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { Tooltip } from 'react-tooltip'
+
+interface TypingAreaProps {
+  onPhraseSelect?: (phrase: string) => void
+  initialText?: string
+}
+
+export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingAreaProps) {
+  const [text, setText] = useState(initialText)
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('typingAreaVisible')
+      return saved ? JSON.parse(saved) : true
+    }
+    return true
+  })
+
+  useEffect(() => {
+    setText(initialText)
+  }, [initialText])
+
+  useEffect(() => {
+    localStorage.setItem('typingAreaVisible', JSON.stringify(isVisible))
+  }, [isVisible])
+
+  const handleClear = () => {
+    setText('')
+  }
+
+  const handleSpeak = () => {
+    // TODO: Implement speech functionality
+    console.log('Speaking:', text)
+  }
+
+  const toggleVisibility = () => {
+    setIsVisible(!isVisible)
+  }
+
+  return (
+    <div className="flex flex-col">
+      {isVisible && (
+        <div className="flex">
+          <textarea
+            className="flex-1 h-40 bg-white text-gray-900 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none p-4"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type your message here..."
+          />
+          <div className="w-16 flex flex-col">
+            <button
+              onClick={handleSpeak}
+              className="h-20 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 border-l border-gray-300"
+              data-tooltip-id="speak-tooltip"
+              data-tooltip-content="Speak"
+            >
+              <div className="flex items-center justify-center h-full">
+                <ChatBubbleLeftIcon className="w-8 h-8 text-gray-600" />
+              </div>
+            </button>
+            <button
+              onClick={handleClear}
+              className="h-20 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 border-l border-gray-300"
+              data-tooltip-id="clear-tooltip"
+              data-tooltip-content="Clear"
+            >
+              <div className="flex items-center justify-center h-full">
+                <XMarkIcon className="w-8 h-8 text-gray-600" />
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+      <button
+        onClick={toggleVisibility}
+        className="h-8 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center"
+        data-tooltip-id="toggle-tooltip"
+        data-tooltip-content={isVisible ? "Hide typing area" : "Show typing area"}
+      >
+        {isVisible ? (
+          <ChevronUpIcon className="w-5 h-5 text-gray-600" />
+        ) : (
+          <ChevronDownIcon className="w-5 h-5 text-gray-600" />
+        )}
+      </button>
+      <Tooltip id="speak-tooltip" />
+      <Tooltip id="clear-tooltip" />
+      <Tooltip id="toggle-tooltip" />
+    </div>
+  )
+} 

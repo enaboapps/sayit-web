@@ -15,21 +15,7 @@ export default function Home() {
         A communication app for everyone
       </p>
       {user ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
-          <Link
-            href="/type"
-            className="group bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 text-gray-900"
-          >
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors">Type</h2>
-              <p className="text-gray-600 mb-6">
-                Type messages and communicate with others
-              </p>
-              <div className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200">
-                Start Typing
-              </div>
-            </div>
-          </Link>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto px-4">
           <Link
             href="/phrases"
             className="group bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 text-gray-900"
@@ -37,7 +23,7 @@ export default function Home() {
             <div className="text-center">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors">Phrases</h2>
               <p className="text-gray-600 mb-6">
-                Save and manage your favorite phrases
+                Access your saved phrases and boards
               </p>
               <div className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200">
                 View Phrases
