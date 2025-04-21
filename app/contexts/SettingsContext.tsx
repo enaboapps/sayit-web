@@ -6,6 +6,10 @@ type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
 
 interface Settings {
   textSize: TextSize;
+  speechRate: number;
+  speechPitch: number;
+  speechVolume: number;
+  speechVoice: string; // Store the voice URI
   // Add more settings here as needed
 }
 
@@ -16,6 +20,10 @@ interface SettingsContextType {
 
 const defaultSettings: Settings = {
   textSize: 'medium',
+  speechRate: 1.0,
+  speechPitch: 1.0,
+  speechVolume: 1.0,
+  speechVoice: '', // Default to system default voice
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { Tooltip } from 'react-tooltip'
 import { useSettings } from '../contexts/SettingsContext'
+import { useTTS } from '@/lib/hooks/useTTS'
 
 interface TypingAreaProps {
   onPhraseSelect?: (phrase: string) => void
@@ -13,6 +14,7 @@ interface TypingAreaProps {
 export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingAreaProps) {
   const [text, setText] = useState(initialText)
   const { settings } = useSettings()
+  const { speak, isSpeaking, isAvailable } = useTTS()
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('typingAreaVisible')
@@ -48,8 +50,14 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
   }
 
   const handleSpeak = () => {
-    // TODO: Implement speech functionality
-    console.log('Speaking:', text)
+    if (text.trim()) {
+      speak(text, {
+        rate: settings.speechRate || 1.0,
+        pitch: settings.speechPitch || 1.0,
+        volume: settings.speechVolume || 1.0,
+        voiceURI: settings.speechVoice
+      })
+    }
   }
 
   const toggleVisibility = () => {
@@ -76,12 +84,17 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
           <div className="w-16 flex flex-col">
             <button
               onClick={handleSpeak}
-              className="h-20 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 border-l border-gray-300"
+              className={`h-20 transition-colors duration-200 border-l border-gray-300 ${
+                isSpeaking 
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              }`}
               data-tooltip-id="speak-tooltip"
-              data-tooltip-content="Speak"
+              data-tooltip-content={isSpeaking ? "Stop speaking" : "Speak text"}
+              disabled={!isAvailable || !text.trim()}
             >
               <div className="flex items-center justify-center h-full">
-                <ChatBubbleLeftIcon className="w-8 h-8 text-gray-600" />
+                <ChatBubbleLeftIcon className="w-8 h-8" />
               </div>
             </button>
             <button
