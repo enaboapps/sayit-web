@@ -1,0 +1,162 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/app/contexts/AuthContext'
+import { phraseStore } from '@/lib/stores/phraseStore'
+import { PhraseBoard } from '@/lib/models/PhraseBoard'
+import { use } from 'react'
+
+export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const [board, setBoard] = useState<PhraseBoard | null>(null)
+  const [name, setName] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/sign-in')
+      return
+    }
+
+    const fetchBoard = async () => {
+      try {
+        const fetchedBoard = await phraseStore.getState().getPhraseBoard(user.uid, resolvedParams.id)
+        setBoard(fetchedBoard)
+        setName(fetchedBoard?.name || '')
+      } catch (error) {
+        console.error('Error fetching board:', error)
+        setError('Failed to load board')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBoard()
+  }, [resolvedParams.id, user, router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !board) return
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      const updatedBoard = new PhraseBoard({
+        ...board,
+        name,
+        symbol: board.symbol || undefined
+      })
+      await phraseStore.getState().updatePhraseBoard(user.uid, updatedBoard)
+      router.push('/phrases')
+    } catch (error) {
+      console.error('Error updating board:', error)
+      setError('Failed to update board')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!user || !board) return
+
+    if (!confirm('Are you sure you want to delete this board? All phrases in this board will be deleted.')) {
+      return
+    }
+
+    setDeleting(true)
+    setError(null)
+
+    try {
+      await phraseStore.getState().deletePhraseBoard(user.uid, resolvedParams.id)
+      router.push('/phrases')
+    } catch (error) {
+      console.error('Error deleting board:', error)
+      setError('Failed to delete board')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!board) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-red-600">Board not found</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <button
+            onClick={() => router.push('/phrases')}
+            className="flex items-center text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            Back to Phrases
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900 mt-4">Edit Board</h1>
+        </div>
+
+        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+          <div className="mb-4">
+            <label htmlFor="name" className="block text-gray-700 text-sm font-bold mb-2">
+              Board Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+              placeholder="Enter board name"
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="mb-4 text-red-600 text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex items-center text-red-600 hover:text-red-700 transition-colors duration-200"
+            >
+              <TrashIcon className="h-5 w-5 mr-2" />
+              {deleting ? 'Deleting...' : 'Delete Board'}
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+} 
