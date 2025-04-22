@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { Tooltip } from 'react-tooltip'
 import { useSettings } from '../contexts/SettingsContext'
@@ -13,6 +13,7 @@ interface TypingAreaProps {
 
 export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingAreaProps) {
   const [text, setText] = useState(initialText)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { settings } = useSettings()
   const { speak, isSpeaking, isAvailable } = useTTS()
   const [isVisible, setIsVisible] = useState(() => {
@@ -47,6 +48,7 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
 
   const handleClear = () => {
     setText('')
+    textareaRef.current?.focus()
   }
 
   const handleSpeak = () => {
@@ -57,6 +59,7 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
         volume: settings.speechVolume || 1.0,
         voiceURI: settings.speechVoice
       })
+      textareaRef.current?.focus()
     }
   }
 
@@ -70,6 +73,7 @@ export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingA
         <div className="flex">
           <div className="flex-1 relative">
             <textarea
+              ref={textareaRef}
               className={`w-full h-40 bg-white text-gray-900 ${currentTextSizeClass} placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none p-4 overflow-auto`}
               value={text}
               onChange={(e) => setText(e.target.value)}
