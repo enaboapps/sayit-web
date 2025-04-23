@@ -3,6 +3,7 @@
 import { Phrase } from '@/lib/models/Phrase';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface PhraseTileProps {
   phrase: Phrase
@@ -55,15 +56,17 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
       )}
       <div className="flex flex-col items-center justify-center w-full h-full">
         {url && !imageError && (
-          <div className="mb-3">
-            <img
+          <div className="mb-3 relative w-16 h-16">
+            <Image
               src={url}
               alt={`Symbol for ${phrase.text}`}
-              className="w-16 h-16 object-contain"
+              fill
+              className="object-contain"
               onError={() => {
                 console.error('Error loading image:', url);
                 setImageError(true);
               }}
+              unoptimized={url.startsWith('blob:')}
             />
           </div>
         )}

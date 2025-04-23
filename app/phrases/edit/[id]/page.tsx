@@ -9,6 +9,7 @@ import { Symbol } from '@/lib/models/Symbol';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import SymbolModal from '@/app/components/symbols/SymbolModal';
 import { use } from 'react';
+import Image from 'next/image';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -148,11 +149,13 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
               {symbol ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden">
-                      <img
+                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden relative">
+                      <Image
                         src={symbol.url ?? ''}
                         alt={`Symbol ${symbol.id}`}
-                        className="w-full h-full object-contain p-1"
+                        fill
+                        className="object-contain p-1"
+                        unoptimized={symbol.url?.startsWith('blob:')}
                       />
                     </div>
                     <span>Selected symbol</span>

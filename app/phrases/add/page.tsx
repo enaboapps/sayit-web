@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Symbol } from '@/lib/models/Symbol';
@@ -8,8 +8,9 @@ import SymbolModal from '@/app/components/symbols/SymbolModal';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { PhraseData } from '@/lib/models/Phrase';
+import Image from 'next/image';
 
-export default function AddPhrasePage() {
+function AddPhraseForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const boardId = searchParams.get('boardId');
@@ -88,11 +89,13 @@ export default function AddPhrasePage() {
               {symbol ? (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden">
-                      <img
+                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden relative">
+                      <Image
                         src={symbol.url || ''}
                         alt={`Symbol ${symbol.id}`}
-                        className="w-full h-full object-contain p-1"
+                        fill
+                        className="object-contain p-1"
+                        unoptimized={symbol.url?.startsWith('blob:')}
                       />
                     </div>
                     <span>Selected symbol</span>
@@ -137,5 +140,13 @@ export default function AddPhrasePage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function AddPhrasePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AddPhraseForm />
+    </Suspense>
   );
 }

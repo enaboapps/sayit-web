@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Symbol } from '@/lib/models/Symbol';
 import symbolsManager from '@/lib/services/SymbolsManager';
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 interface SymbolSearchProps {
   onSymbolSelect: (symbol: Symbol) => void
@@ -129,11 +130,13 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
                   : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
               }`}
             >
-              <div className="w-full h-full flex items-center justify-center p-4">
-                <img
+              <div className="w-full h-full flex items-center justify-center p-4 relative">
+                <Image
                   src={symbol.url ?? ''}
                   alt={`Symbol ${symbol.id}`}
-                  className="w-full h-full object-contain"
+                  fill
+                  className="object-contain"
+                  unoptimized={symbol.url?.startsWith('blob:')}
                 />
               </div>
             </button>
