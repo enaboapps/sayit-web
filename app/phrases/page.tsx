@@ -7,11 +7,11 @@ import { phraseStore } from '@/lib/stores/phraseStore'
 import { Phrase } from '@/lib/models/Phrase'
 import { PhraseBoard } from '@/lib/models/PhraseBoard'
 import PhraseTile from '@/app/components/phrases/PhraseTile'
-import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline'
 import PhrasesBottomBar from '@/app/components/phrases/PhrasesBottomBar'
 import BoardCarousel from '@/app/components/phrases/BoardCarousel'
 import PhrasesSkeleton from '@/app/components/phrases/PhrasesSkeleton'
 import TypingArea from '@/app/components/TypingArea'
+import { databaseService } from '@/lib/services/DatabaseService'
 
 export default function PhrasesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -40,8 +40,8 @@ export default function PhrasesPage() {
       return
     }
 
-    console.log('Fetching phrase boards for user:', user.uid)
-    phraseStore.getState().fetchBoards(user.uid)
+    console.log('Fetching phrase boards for user:', user.id)
+    phraseStore.getState().fetchBoards(user.id)
       .then(() => {
         const boards = phraseStore.getState().boards
         setBoards(boards)
@@ -63,12 +63,27 @@ export default function PhrasesPage() {
     console.log('Fetching phrases for board:', selectedBoard.id)
     setLoadingPhrases(true)
     setPhrases([]) // Clear existing phrases while loading
-    phraseStore.getState().fetchPhrases(user.uid)
+    phraseStore.getState().fetchPhrases(user.id)
       .then(() => {
         const allPhrases = phraseStore.getState().phrases
-        const boardPhrases = allPhrases.filter((phrase: Phrase) => phrase.boardId === selectedBoard.id)
-        setPhrases(boardPhrases)
-        setLoadingPhrases(false)
+        // Get the full board data to access the phrase_board_phrases relationship
+        if (selectedBoard.id) {
+          databaseService.getPhraseBoard(selectedBoard.id)
+            .then(boardData => {
+              if (boardData?.phrase_board_phrases) {
+                const boardPhraseIds = boardData.phrase_board_phrases.map((p: { phrase: { id: string } }) => p.phrase.id)
+                const boardPhrases = allPhrases.filter(phrase => boardPhraseIds.includes(phrase.id))
+                console.log('Filtered phrases for board:', boardPhrases)
+                setPhrases(boardPhrases)
+              }
+              setLoadingPhrases(false)
+            })
+            .catch(err => {
+              console.error('Error fetching board data:', err)
+              setError('Failed to load phrases')
+              setLoadingPhrases(false)
+            })
+        }
       })
       .catch((err: Error) => {
         console.error('Error fetching phrases:', err)

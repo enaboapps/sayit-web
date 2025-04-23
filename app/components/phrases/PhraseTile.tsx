@@ -13,23 +13,25 @@ interface PhraseTileProps {
 }
 
 export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: PhraseTileProps) {
-  const [symbolUrl, setSymbolUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [url, setUrl] = useState<string | null>(null)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
-    const loadSymbol = async () => {
-      setIsLoading(true)
-      var url = null
-      if (phrase.getSymbol()) {
-        url = await phrase.getSymbol()?.getImageURL()
+    const fetchImageUrl = async () => {
+      const symbol = await phrase.getSymbol()?.getImageURL()
+      if (symbol) {
+        setUrl(symbol)
       }
-      setSymbolUrl(url ?? null)
-      setIsLoading(false)
     }
+    fetchImageUrl()
+  }, [phrase])
 
-    loadSymbol()
-  }, [phrase.symbol])
-
+  console.log('PhraseTile rendering:', {
+    phraseId: phrase.id,
+    symbolId: phrase.symbol_id,
+    symbolUrl: url
+  })
+  
   const handleClick = (e: React.MouseEvent) => {
     if (onEdit) {
       // In edit mode, clicking anywhere on the tile should edit
@@ -53,17 +55,16 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
         </div>
       )}
       <div className="flex flex-col items-center justify-center w-full h-full">
-        {isLoading && (
-          <div className="mb-3">
-            <div className="w-16 h-16 bg-gray-200 animate-pulse rounded" />
-          </div>
-        )}
-        {!isLoading && symbolUrl && (
+        {url && !imageError && (
           <div className="mb-3">
             <img 
-              src={symbolUrl} 
+              src={url} 
               alt={`Symbol for ${phrase.text}`} 
               className="w-16 h-16 object-contain"
+              onError={() => {
+                console.error('Error loading image:', url)
+                setImageError(true)
+              }}
             />
           </div>
         )}

@@ -7,6 +7,8 @@ import { Symbol } from '@/lib/models/Symbol'
 import SymbolModal from '@/app/components/symbols/SymbolModal'
 import { phraseStore } from '@/lib/stores/phraseStore'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { storageService } from '@/lib/services/StorageService'
+import { PhraseData } from '@/lib/models/Phrase'
 
 export default function AddPhrasePage() {
   const router = useRouter()
@@ -17,28 +19,32 @@ export default function AddPhrasePage() {
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const addPhrase = phraseStore((state) => state.addPhrase)
   const user = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!text.trim() || !boardId) return
+    if (!user?.user?.id || !boardId) return
 
     setLoading(true)
-    setError(null)
     try {
-      await addPhrase({
-        userId: user.user?.uid || '',
+      const phraseData: PhraseData = {
         text,
-        symbol: symbol?.id ? parseInt(symbol.id) : null
-      }, boardId, symbol?.url ?? null)
-      router.back()
-    } catch (err) {
-      setError('Failed to create phrase')
-      console.error('Error creating phrase:', err)
+        userId: user.user.id,
+        symbol_id: symbol?.id || undefined
+      }
+      await phraseStore.getState().addPhrase(phraseData, boardId, symbol?.url || null)
+      router.push(`/phrases?boardId=${boardId}`)
+    } catch (error) {
+      console.error('Error adding phrase:', error)
+      setError('Failed to add phrase')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSymbolSelect = (selectedSymbol: Symbol) => {
+    setSymbol(selectedSymbol)
+    setIsSymbolModalOpen(false)
   }
 
   return (
@@ -85,7 +91,7 @@ export default function AddPhrasePage() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden">
                       <img
-                        src={symbol.url ?? ''}
+                        src={symbol.url || ''}
                         alt={`Symbol ${symbol.id}`}
                         className="w-full h-full object-contain p-1"
                       />
@@ -128,7 +134,7 @@ export default function AddPhrasePage() {
         <SymbolModal
           isOpen={isSymbolModalOpen}
           onClose={() => setIsSymbolModalOpen(false)}
-          onSymbolSelect={setSymbol}
+          onSymbolSelect={handleSymbolSelect}
         />
       </div>
     </div>

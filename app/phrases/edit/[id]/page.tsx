@@ -38,11 +38,12 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
     const fetchPhrase = async () => {
       try {
-        const fetchedPhrase = await getPhrase(user.uid, boardId, resolvedParams.id)
+        const userId = user.id || ''
+        const fetchedPhrase = await getPhrase(userId, boardId, resolvedParams.id)
         setPhrase(fetchedPhrase || null)
         setText(fetchedPhrase?.text || '')
-        if (fetchedPhrase?.symbol) {
-          const symbol = Symbol.fromId(fetchedPhrase.symbol)
+        if (fetchedPhrase?.symbol_id) {
+          const symbol = Symbol.fromId(fetchedPhrase.symbol_id)
           if (symbol) {
             await symbol.getImageURL()
             setSymbol(symbol)
@@ -71,9 +72,9 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
       const updatedPhrase = new Phrase({
         ...phrase,
         text,
-        symbol: symbol?.id ? parseInt(symbol.id) : null
+        symbol_id: symbol?.id || null
       })
-      await updatePhrase(user.uid, boardId, phrase.id, updatedPhrase, symbol?.url || null)
+      await updatePhrase(phrase.id, updatedPhrase, symbol?.url || null)
       router.push('/phrases')
     } catch (error) {
       console.error('Error updating phrase:', error)
@@ -91,7 +92,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
     try {
       if (!phrase.id) throw new Error('Phrase ID is missing')
-      await deletePhrase(phrase.id, boardId, user.uid)
+      await deletePhrase(phrase.id, boardId, user.id)
       router.push('/phrases')
     } catch (error) {
       console.error('Error deleting phrase:', error)
@@ -151,10 +152,9 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Symbol
             </label>
-            <button
-              type="button"
+            <div
               onClick={() => setIsSymbolModalOpen(true)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200 cursor-pointer"
             >
               {symbol ? (
                 <div className="flex items-center justify-between">
@@ -182,7 +182,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
               ) : (
                 'Select a symbol'
               )}
-            </button>
+            </div>
             <p className="mt-1 text-sm text-gray-500">Optional - Select a symbol to represent this phrase</p>
           </div>
 
