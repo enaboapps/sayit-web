@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from 'firebase/auth'
+import { User } from '@supabase/supabase-js'
 import { authService } from '@/lib/auth'
 
 interface AuthContextType {
@@ -19,12 +19,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged((user) => {
+    const { data: { subscription } } = authService.onAuthStateChanged((user) => {
       setUser(user)
       setLoading(false)
     })
 
-    return () => unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   return (

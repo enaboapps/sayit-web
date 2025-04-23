@@ -1,51 +1,85 @@
-import { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore'
 import { Symbol } from './Symbol'
+import { databaseService, PhraseBoard as DatabasePhraseBoard } from '../services/DatabaseService'
+import { Phrase } from './Phrase'
 
 export interface PhraseBoardData {
   id?: string
   name: string
   userId: string
-  symbol?: Symbol
   position: number
+  phrases?: Phrase[]
 }
 
 export class PhraseBoard {
   id?: string
   name: string
   userId: string
-  symbol: Symbol | null
   position: number
+  phrases: Phrase[]
 
   constructor(data: PhraseBoardData) {
     this.id = data.id
     this.name = data.name
     this.userId = data.userId
-    this.symbol = data.symbol || null
-    this.position = data.position
+    this.position = data.position || 0
+    this.phrases = data.phrases || []
   }
 
-  static fromDocument(doc: QueryDocumentSnapshot<DocumentData>): PhraseBoard {
-    const data = doc.data()
+  static async fromSupabase(data: DatabasePhraseBoard & { phrases?: { phrase: any }[] }): Promise<PhraseBoard> {
+    const phrases = data.phrases?.map(p => p.phrase) || []
     return new PhraseBoard({
-      id: doc.id,
-      name: data.name || '',
-      userId: data.userId || '',
-      symbol: data.symbol ? new Symbol(data.symbol.id, data.symbol.name, data.symbol.url) : undefined,
-      position: data.position || 0
+      id: data.id,
+      name: data.name,
+      userId: data.user_id,
+      position: data.position || 0,
+      phrases: await Promise.all(phrases.map(p => Phrase.fromSupabase(p)))
     })
   }
 
-  toDocument(): PhraseBoardData {
-    return {
-      id: this.id,
-      name: this.name,
-      userId: this.userId,
-      symbol: this.symbol || undefined,
-      position: this.position
+  async save(): Promise<void> {
+    if (this.id) {
+      await databaseService.updatePhraseBoard(this.id, {
+        name: this.name,
+        user_id: this.userId,
+        position: this.position
+      })
+    } else {
+      const result = await databaseService.addPhraseBoard({
+        name: this.name,
+        user_id: this.userId,
+        position: this.position
+      })
+      this.id = result.id
+    }
+  }
+
+  async delete(): Promise<void> {
+    if (this.id) {
+      await databaseService.deletePhraseBoard(this.id)
+    }
+  }
+
+  async addPhrase(phrase: Phrase): Promise<void> {
+    if (this.id && phrase.id) {
+      await databaseService.addPhraseToBoard(phrase.id, this.id)
+      this.phrases.push(phrase)
+    }
+  }
+
+  async removePhrase(phrase: Phrase): Promise<void> {
+    if (this.id && phrase.id) {
+      await databaseService.removePhraseFromBoard(phrase.id, this.id)
+      this.phrases = this.phrases.filter(p => p.id !== phrase.id)
     }
   }
 
   toJSON(): PhraseBoardData {
-    return this.toDocument()
+    return {
+      id: this.id,
+      name: this.name,
+      userId: this.userId,
+      position: this.position,
+      phrases: this.phrases
+    }
   }
 } 

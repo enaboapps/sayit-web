@@ -1,56 +1,55 @@
-import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    User,
-    UserCredential,
-    AuthError,
-    sendPasswordResetEmail,
-} from 'firebase/auth'
-import { auth } from '@/lib/config/firebase'
+import { supabase } from './supabase'
+import { User } from '@supabase/supabase-js'
 
 export const authService = {
     signUp: async (email: string, password: string) => {
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-            return userCredential
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+            })
+            if (error) throw error
+            return data
         } catch (error) {
-            const authError = error as AuthError
-            throw new Error(authError.message)
+            throw new Error(error instanceof Error ? error.message : 'An error occurred during sign up')
         }
     },
     signIn: async (email: string, password: string) => {
         try {
-            const userCredential = await signInWithEmailAndPassword(auth, email, password)
-            return userCredential
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            })
+            if (error) throw error
+            return data
         } catch (error) {
-            const authError = error as AuthError
-            throw new Error(authError.message)
+            throw new Error(error instanceof Error ? error.message : 'An error occurred during sign in')
         }
     },
     sendPasswordResetEmail: async (email: string) => {
         try {
-            await sendPasswordResetEmail(auth, email)
+            const { error } = await supabase.auth.resetPasswordForEmail(email)
+            if (error) throw error
         } catch (error) {
-            const authError = error as AuthError
-            throw new Error(authError.message)
+            throw new Error(error instanceof Error ? error.message : 'An error occurred while sending password reset email')
         }
     },
     signOut: async () => {
-        await signOut(auth)
+        await supabase.auth.signOut()
     },
     isPasswordStrongEnough: (password: string) => {
         return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)
     },
     onAuthStateChanged: (callback: (user: User | null) => void) => {
-        return onAuthStateChanged(auth, callback)
+        return supabase.auth.onAuthStateChange((event, session) => {
+            callback(session?.user ?? null)
+        })
     },
     getCurrentUser: () => {
-        return auth.currentUser
+        return supabase.auth.getUser().then(({ data: { user } }) => user)
     },
     getAuth: () => {
-        return auth
+        return supabase.auth
     }
 }
 

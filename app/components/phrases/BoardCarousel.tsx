@@ -49,13 +49,6 @@ export default function BoardCarousel({
         }}
       >
         <div className="flex items-center space-x-2">
-          {selectedBoard?.symbol && (
-            <img 
-              src={selectedBoard.symbol.url ?? ''} 
-              alt={selectedBoard.symbol.name ?? ''}
-              className="w-6 h-6 object-contain"
-            />
-          )}
           <div>
             <h2 className="font-medium text-black text-sm">{selectedBoard?.name}</h2>
             <p className="text-xs text-black">
