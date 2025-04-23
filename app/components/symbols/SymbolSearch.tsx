@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Symbol } from '@/lib/models/Symbol'
 import symbolsManager from '@/lib/services/SymbolsManager'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -17,7 +17,7 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const searchTimeout = useRef<NodeJS.Timeout | null>(null)
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchTerm.trim()) {
       setSymbols([])
       return
@@ -35,7 +35,7 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [searchTerm])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

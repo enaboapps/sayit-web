@@ -17,7 +17,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   const [symbol, setSymbol] = useState<Symbol | null>(null)
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -57,7 +56,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     }
 
     fetchPhrase()
-  }, [resolvedParams.id, user, boardId, router])
+  }, [resolvedParams.id, user, boardId, router, getPhrase])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -186,11 +185,10 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             <button
               type="button"
               onClick={handleDelete}
-              disabled={deleting}
               className="flex items-center text-red-600 hover:text-red-700 transition-colors duration-200"
             >
               <TrashIcon className="h-5 w-5 mr-2" />
-              {deleting ? 'Deleting...' : 'Delete Phrase'}
+              Delete Phrase
             </button>
             <button
               type="submit"
