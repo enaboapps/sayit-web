@@ -1,6 +1,12 @@
 import { storageService } from './StorageService'
 import { Symbol } from '../models/Symbol';
 
+interface Picto {
+    id: number;
+    image_url: string;
+    name?: string;
+}
+
 class SymbolsManager {
     private readonly GLOBAL_SYMBOLS_API_URL = 'https://globalsymbols.com/api/v1/labels/search';
 
@@ -15,11 +21,11 @@ class SymbolsManager {
             const json = await response.json();
             
             for (const item of json) {
-                const picto = item["picto"] as { [key: string]: any };
+                const picto = item["picto"] as Picto;
                 if (picto) {
-                    const id = picto["id"] as number;
-                    const imageUrl = picto["image_url"] as string;
-                    const name = picto["name"] as string || '';
+                    const id = picto.id;
+                    const imageUrl = picto.image_url;
+                    const name = picto.name || '';
                     if (id && imageUrl) {
                         const symbol = new Symbol(id.toString(), name, imageUrl);
                         symbols.push(symbol);

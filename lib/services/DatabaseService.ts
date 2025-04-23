@@ -29,7 +29,7 @@ export interface DatabasePhraseBoard {
   updated_at: string
 }
 
-export interface DatabaseService {
+export interface IDatabaseService {
   getPhrases(userId: string): Promise<Phrase[]>
   addPhrase(phrase: Omit<Phrase, 'id' | 'created_at' | 'updated_at'>): Promise<Phrase>
   updatePhrase(id: string, updates: Partial<Omit<Phrase, 'id' | 'created_at' | 'updated_at'>>): Promise<Phrase>
@@ -39,12 +39,12 @@ export interface DatabaseService {
   addPhraseBoard(board: Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>): Promise<PhraseBoard>
   updatePhraseBoard(id: string, updates: Partial<PhraseBoard>): Promise<PhraseBoard>
   deletePhraseBoard(id: string): Promise<void>
-  getPhraseBoard(id: string): Promise<(PhraseBoard & { phrases?: { phrase: any }[] }) | null>
+  getPhraseBoard(id: string): Promise<(PhraseBoard & { phrases?: { phrase: Phrase }[] }) | null>
   addPhraseToBoard(phraseId: string, boardId: string): Promise<void>
   removePhraseFromBoard(phraseId: string, boardId: string): Promise<void>
 }
 
-export class DatabaseService implements DatabaseService {
+export class DatabaseService implements IDatabaseService {
   private async ensureAuth() {
     try {
       console.log('Checking authentication...')

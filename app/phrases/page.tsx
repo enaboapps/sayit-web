@@ -130,10 +130,6 @@ export default function PhrasesPage() {
     setIsEditMode(!isEditMode)
   }
 
-  const handlePhraseSelect = (phrase: string) => {
-    setTypingText(phrase)
-  }
-
   if (authLoading || loading) {
     return <PhrasesSkeleton />
   }

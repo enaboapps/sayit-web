@@ -1,4 +1,4 @@
-import { databaseService, PhraseBoard as DatabasePhraseBoard } from '../services/DatabaseService'
+import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase } from '../services/DatabaseService'
 import { Phrase } from './Phrase'
 
 export interface PhraseBoardData {
@@ -24,7 +24,7 @@ export class PhraseBoard {
     this.phrases = data.phrases || []
   }
 
-  static async fromSupabase(data: DatabasePhraseBoard & { phrases?: { phrase: any }[] }): Promise<PhraseBoard> {
+  static async fromSupabase(data: DatabasePhraseBoard & { phrases?: { phrase: DatabasePhrase }[] }): Promise<PhraseBoard> {
     const phrases = data.phrases?.map(p => p.phrase) || []
     return new PhraseBoard({
       id: data.id,

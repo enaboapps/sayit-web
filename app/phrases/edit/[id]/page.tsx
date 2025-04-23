@@ -81,20 +81,14 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   }
 
   const handleDelete = async () => {
-    if (!user || !boardId || !phrase) return
-
-    setDeleting(true)
-    setError(null)
+    if (!phrase || !boardId || !phrase.id) return
 
     try {
-      if (!phrase.id) throw new Error('Phrase ID is missing')
-      await deletePhrase(phrase.id, boardId, user.id)
+      await deletePhrase(phrase.id, boardId)
       router.push('/phrases')
     } catch (error) {
       console.error('Error deleting phrase:', error)
       setError('Failed to delete phrase')
-    } finally {
-      setDeleting(false)
     }
   }
 

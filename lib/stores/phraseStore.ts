@@ -12,7 +12,7 @@ interface PhraseStore {
   fetchPhrases: (userId: string) => Promise<void>
   fetchBoards: (userId: string) => Promise<void>
   addPhrase: (phrase: PhraseData, boardId: string, symbolUrl: string | null) => Promise<void>
-  deletePhrase: (phraseId: string, boardId: string, userId: string) => Promise<void>
+  deletePhrase: (phraseId: string, boardId: string) => Promise<void>
   updatePhrase: (phraseId: string, phrase: Phrase, symbolUrl: string | null) => Promise<void>
   getPhrase: (userId: string, boardId: string, phraseId: string) => Promise<Phrase | null>
   createPhraseBoard: (userId: string, name: string) => Promise<void>
@@ -71,7 +71,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       throw err
     }
   },
-  deletePhrase: async (phraseId: string, boardId: string, userId: string) => {
+  deletePhrase: async (phraseId: string, boardId: string) => {
     set((state) => ({ ...state, loading: true, error: null }))
     try {
       await databaseService.deletePhrase(phraseId)
