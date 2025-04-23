@@ -42,88 +42,38 @@ export interface IDatabaseService {
 
 export class DatabaseService implements IDatabaseService {
   private async ensureAuth() {
-    try {
-      console.log('Checking authentication...');
-      const session = await getCurrentSession();
-      console.log('Session:', session);
-
-      if (!session) {
-        console.error('No active session found');
-        throw new Error('Not authenticated');
-      }
-
-      const user = session.user;
-      console.log('User:', user);
-
-      if (!user) {
-        console.error('No user found in session');
-        throw new Error('Not authenticated');
-      }
-
-      console.log('Authentication successful');
-      return user;
-    } catch (error) {
-      console.error('Authentication error:', error);
-      throw error;
+    const session = await getCurrentSession();
+    if (!session?.user) {
+      throw new Error('Not authenticated');
     }
+    return session.user;
   }
 
   async getPhrases(userId: string): Promise<Phrase[]> {
-    console.log('Fetching phrases for user:', userId);
+    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrases')
       .select('*')
-      .eq('user_id', userId)
-      .order('position', { ascending: true });
+      .eq('user_id', userId);
 
-    if (error) {
-      console.error('Error fetching phrases:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data || [];
   }
 
   async addPhrase(phrase: Omit<Phrase, 'id' | 'created_at' | 'updated_at'>): Promise<Phrase> {
-    try {
-      const user = await this.ensureAuth();
-      console.log('Adding phrase for user:', user.id);
+    const user = await this.ensureAuth();
+    const { data, error } = await supabase
+      .from('phrases')
+      .insert([{ ...phrase, user_id: user.id }])
+      .select()
+      .single();
 
-      const phraseWithUserId = {
-        ...phrase,
-        user_id: user.id,
-        frequency: phrase.frequency || 0,
-        position: phrase.position || 0,
-      };
-
-      console.log('Phrase data being inserted:', phraseWithUserId);
-
-      const { data, error } = await supabase
-        .from('phrases')
-        .insert([phraseWithUserId])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error adding phrase:', error);
-        console.error('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        });
-        throw error;
-      }
-
-      console.log('Successfully added phrase:', data);
-      return data;
-    } catch (error) {
-      console.error('Error in addPhrase:', error);
-      throw error;
-    }
+    if (error) throw error;
+    return data;
   }
 
   async updatePhrase(id: string, updates: Partial<Omit<Phrase, 'id' | 'created_at' | 'updated_at'>>): Promise<Phrase> {
-    console.log('Updating phrase:', id, updates);
+    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrases')
       .update(updates)
@@ -131,109 +81,62 @@ export class DatabaseService implements IDatabaseService {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating phrase:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data;
   }
 
   async deletePhrase(id: string): Promise<void> {
-    console.log('Deleting phrase:', id);
+    await this.ensureAuth();
     const { error } = await supabase
       .from('phrases')
       .delete()
       .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting phrase:', error);
-      throw error;
-    }
+    if (error) throw error;
   }
 
   async getPhrase(id: string): Promise<Phrase | null> {
-    console.log('Fetching phrase:', id);
+    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrases')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching phrase:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data;
   }
 
   async getPhraseBoards(userId: string): Promise<DatabasePhraseBoard[]> {
-    try {
-      console.log('Getting phrase boards for user:', userId);
-      const { data, error } = await supabase
-        .from('phrase_boards')
-        .select('*, phrases!phrase_board_phrases(phrase:phrases(*))')
-        .eq('user_id', userId)
-        .order('position', { ascending: true });
+    await this.ensureAuth();
+    const { data, error } = await supabase
+      .from('phrase_boards')
+      .select(`
+        *,
+        phrases:phrase_board_phrases(
+          phrase:phrases(*)
+        )
+      `)
+      .eq('user_id', userId);
 
-      if (error) {
-        console.error('Error fetching phrase boards:', error);
-        console.error('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        });
-        throw error;
-      }
-
-      console.log('Successfully fetched phrase boards:', data);
-      return data || [];
-    } catch (error) {
-      console.error('Error in getPhraseBoards:', error);
-      throw error;
-    }
+    if (error) throw error;
+    return data || [];
   }
 
   async addPhraseBoard(board: Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>): Promise<PhraseBoard> {
-    try {
-      const user = await this.ensureAuth();
-      console.log('Adding phrase board for user:', user.id);
+    const user = await this.ensureAuth();
+    const { data, error } = await supabase
+      .from('phrase_boards')
+      .insert([{ ...board, user_id: user.id }])
+      .select()
+      .single();
 
-      const boardWithUserId = {
-        ...board,
-        user_id: user.id,
-        position: board.position || 0,
-      };
-
-      console.log('Board data being inserted:', boardWithUserId);
-
-      const { data, error } = await supabase
-        .from('phrase_boards')
-        .insert([boardWithUserId])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error adding phrase board:', error);
-        console.error('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        });
-        throw error;
-      }
-
-      console.log('Successfully added phrase board:', data);
-      return data;
-    } catch (error) {
-      console.error('Error in addPhraseBoard:', error);
-      throw error;
-    }
+    if (error) throw error;
+    return data;
   }
 
   async updatePhraseBoard(id: string, updates: Partial<Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>>): Promise<PhraseBoard> {
-    console.log('Updating phrase board:', id, updates);
+    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrase_boards')
       .update(updates)
@@ -241,65 +144,55 @@ export class DatabaseService implements IDatabaseService {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating phrase board:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data;
   }
 
   async deletePhraseBoard(id: string): Promise<void> {
-    console.log('Deleting phrase board:', id);
+    await this.ensureAuth();
     const { error } = await supabase
       .from('phrase_boards')
       .delete()
       .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting phrase board:', error);
-      throw error;
-    }
+    if (error) throw error;
   }
 
   async getPhraseBoard(id: string): Promise<DatabasePhraseBoard | null> {
-    console.log('Fetching phrase board:', id);
+    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrase_boards')
-      .select('*, phrases!phrase_board_phrases(phrase:phrases(*))')
+      .select(`
+        *,
+        phrases:phrase_board_phrases(
+          phrase:phrases(*)
+        )
+      `)
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error('Error fetching phrase board:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data;
   }
 
   async addPhraseToBoard(phraseId: string, boardId: string): Promise<void> {
-    console.log('Adding phrase to board:', phraseId, boardId);
+    await this.ensureAuth();
     const { error } = await supabase
       .from('phrase_board_phrases')
       .insert([{ phrase_id: phraseId, board_id: boardId }]);
 
-    if (error) {
-      console.error('Error adding phrase to board:', error);
-      throw error;
-    }
+    if (error) throw error;
   }
 
   async removePhraseFromBoard(phraseId: string, boardId: string): Promise<void> {
-    console.log('Removing phrase from board:', phraseId, boardId);
+    await this.ensureAuth();
     const { error } = await supabase
       .from('phrase_board_phrases')
       .delete()
       .eq('phrase_id', phraseId)
       .eq('board_id', boardId);
 
-    if (error) {
-      console.error('Error removing phrase from board:', error);
-      throw error;
-    }
+    if (error) throw error;
   }
 }
 
