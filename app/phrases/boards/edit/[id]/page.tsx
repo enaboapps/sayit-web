@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { phraseStore } from '@/lib/stores/phraseStore'
@@ -53,7 +53,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
         ...board,
         name
       })
-      await phraseStore.getState().updatePhraseBoard(user.id, updatedBoard)
+      await phraseStore.getState().updatePhraseBoard(user.id, resolvedParams.id, updatedBoard)
       router.push('/phrases')
     } catch (error) {
       console.error('Error updating board:', error)

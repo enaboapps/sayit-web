@@ -17,7 +17,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   const [symbol, setSymbol] = useState<Symbol | null>(null)
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -64,7 +63,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     e.preventDefault()
     if (!user || !boardId || !phrase) return
 
-    setSaving(true)
     setError(null)
 
     try {
@@ -79,8 +77,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     } catch (error) {
       console.error('Error updating phrase:', error)
       setError('Failed to update phrase')
-    } finally {
-      setSaving(false)
     }
   }
 

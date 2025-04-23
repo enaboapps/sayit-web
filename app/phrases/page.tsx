@@ -122,11 +122,6 @@ export default function PhrasesPage() {
     setSelectedBoard(boards[(currentIndex - 1 + boards.length) % boards.length])
   }
 
-  const handleSettings = () => {
-    // TODO: Implement settings functionality
-    console.log('Settings clicked')
-  }
-
   const handleAddBoard = () => {
     router.push('/phrases/boards/add')
   }
@@ -163,7 +158,7 @@ export default function PhrasesPage() {
       ) : (
         <div className="flex-1 flex flex-col">
           <div>
-            <TypingArea initialText={typingText} onPhraseSelect={handlePhraseSelect} />
+            <TypingArea initialText={typingText} />
           </div>
           <div className="flex-none">
             <BoardCarousel

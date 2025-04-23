@@ -3,7 +3,6 @@
 import { Phrase } from '@/lib/models/Phrase'
 import { PencilIcon } from '@heroicons/react/24/outline'
 import { useEffect, useState } from 'react'
-import symbolsManager from '@/lib/services/SymbolsManager'
 
 interface PhraseTileProps {
   phrase: Phrase
@@ -32,7 +31,7 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
     symbolUrl: url
   })
   
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = () => {
     if (onEdit) {
       // In edit mode, clicking anywhere on the tile should edit
       onEdit()

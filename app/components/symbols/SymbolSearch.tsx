@@ -73,7 +73,7 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
         clearTimeout(searchTimeout.current)
       }
     }
-  }, [searchTerm])
+  }, [searchTerm, handleSearch])
 
   return (
     <div className="w-full max-w-2xl mx-auto">

@@ -7,11 +7,10 @@ import { useSettings } from '../contexts/SettingsContext'
 import { useTTS } from '@/lib/hooks/useTTS'
 
 interface TypingAreaProps {
-  onPhraseSelect?: (phrase: string) => void
   initialText?: string
 }
 
-export default function TypingArea({ onPhraseSelect, initialText = '' }: TypingAreaProps) {
+export default function TypingArea({ initialText = '' }: TypingAreaProps) {
   const [text, setText] = useState(initialText)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { settings } = useSettings()

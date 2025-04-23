@@ -67,7 +67,7 @@ export default function SettingsPage() {
               <h3 className="font-medium text-yellow-800 mb-2">Mobile Device Detected</h3>
               <p className="text-yellow-700">
                 On mobile devices, all voice settings (voice selection, rate, pitch, and volume) 
-                are managed through your device settings. Please go to your device's accessibility 
+                are managed through your device&apos;s accessibility 
                 or text-to-speech settings to adjust these options.
               </p>
             </div>

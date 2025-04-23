@@ -1,4 +1,3 @@
-import { Symbol } from './Symbol'
 import { databaseService, PhraseBoard as DatabasePhraseBoard } from '../services/DatabaseService'
 import { Phrase } from './Phrase'
 

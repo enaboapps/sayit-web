@@ -25,7 +25,7 @@ export function useTTS() {
 
     // Get initial voices
     setVoices(tts.getVoices());
-  }, []);
+  }, [tts]);
 
   const speak = useCallback((text: string, options?: {
     rate?: number;
@@ -38,19 +38,19 @@ export function useTTS() {
       return;
     }
     tts.speak(text, options);
-  }, [isAvailable]);
+  }, [isAvailable, tts]);
 
   const stop = useCallback(() => {
     tts.stop();
-  }, []);
+  }, [tts]);
 
   const pause = useCallback(() => {
     tts.pause();
-  }, []);
+  }, [tts]);
 
   const resume = useCallback(() => {
     tts.resume();
-  }, []);
+  }, [tts]);
 
   return {
     speak,

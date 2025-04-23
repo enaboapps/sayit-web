@@ -21,7 +21,7 @@ export default function AddBoardPage() {
     setError(null)
 
     try {
-      await phraseStore.getState().createPhraseBoard(user.uid, name)
+      await phraseStore.getState().createPhraseBoard(user.id, name)
       router.push('/phrases')
     } catch (error) {
       console.error('Error creating board:', error)

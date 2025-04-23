@@ -1,4 +1,4 @@
-import { supabase, getCurrentSession, getCurrentUser } from '../supabase'
+import { supabase, getCurrentSession } from '../supabase'
 
 export interface Phrase {
   id: string

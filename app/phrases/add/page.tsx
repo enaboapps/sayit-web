@@ -7,7 +7,6 @@ import { Symbol } from '@/lib/models/Symbol'
 import SymbolModal from '@/app/components/symbols/SymbolModal'
 import { phraseStore } from '@/lib/stores/phraseStore'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { storageService } from '@/lib/services/StorageService'
 import { PhraseData } from '@/lib/models/Phrase'
 
 export default function AddPhrasePage() {
