@@ -1,27 +1,27 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { authService } from '@/lib/auth'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authService } from '@/lib/auth';
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     try {
-      await authService.signIn(email, password)
-      router.push('/')
+      await authService.signIn(email, password);
+      router.push('/');
     } catch (error) {
-      setError((error as Error).message)
+      setError((error as Error).message);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto p-4 pt-8">
@@ -82,5 +82,5 @@ export default function SignInPage() {
         </form>
       </div>
     </div>
-  )
-} 
+  );
+}

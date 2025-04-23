@@ -161,4 +161,4 @@ export class TextToSpeech {
   public isAvailable(): boolean {
     return typeof window !== 'undefined' && 'speechSynthesis' in window;
   }
-} 
+}

@@ -24,11 +24,11 @@ export default function SettingsPage() {
     if (isSpeaking) {
       stop();
     } else {
-      speak("This is a preview of the current voice settings.", {
+      speak('This is a preview of the current voice settings.', {
         rate: speechRate,
         pitch: speechPitch,
         volume: speechVolume,
-        voiceURI: speechVoice
+        voiceURI: speechVoice,
       });
     }
   };
@@ -36,7 +36,7 @@ export default function SettingsPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8 text-gray-900">Settings</h1>
-      
+
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4 text-gray-900">Text Size</h2>
         <div className="space-y-4">
@@ -66,8 +66,8 @@ export default function SettingsPage() {
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
               <h3 className="font-medium text-yellow-800 mb-2">Mobile Device Detected</h3>
               <p className="text-yellow-700">
-                On mobile devices, all voice settings (voice selection, rate, pitch, and volume) 
-                are managed through your device&apos;s accessibility 
+                On mobile devices, all voice settings (voice selection, rate, pitch, and volume)
+                are managed through your device&apos;s accessibility
                 or text-to-speech settings to adjust these options.
               </p>
             </div>
@@ -187,4 +187,4 @@ export default function SettingsPage() {
       </section>
     </div>
   );
-} 
+}

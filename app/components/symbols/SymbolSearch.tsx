@@ -1,79 +1,79 @@
-'use client'
+'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Symbol } from '@/lib/models/Symbol'
-import symbolsManager from '@/lib/services/SymbolsManager'
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Symbol } from '@/lib/models/Symbol';
+import symbolsManager from '@/lib/services/SymbolsManager';
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface SymbolSearchProps {
   onSymbolSelect: (symbol: Symbol) => void
 }
 
 export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [symbols, setSymbols] = useState<Symbol[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedIndex, setSelectedIndex] = useState(-1)
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [symbols, setSymbols] = useState<Symbol[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!searchTerm.trim()) {
-      setSymbols([])
-      return
+      setSymbols([]);
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
     try {
-      const results = await symbolsManager.search(searchTerm)
-      setSymbols(results)
-      setSelectedIndex(-1)
+      const results = await symbolsManager.search(searchTerm);
+      setSymbols(results);
+      setSelectedIndex(-1);
     } catch (err) {
-      setError('Failed to search for symbols')
-      console.error('Error searching symbols:', err)
+      setError('Failed to search for symbols');
+      console.error('Error searching symbols:', err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [searchTerm])
+  }, [searchTerm]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch()
+      handleSearch();
     } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex(prev => Math.min(prev + 1, symbols.length - 1))
+      e.preventDefault();
+      setSelectedIndex(prev => Math.min(prev + 1, symbols.length - 1));
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex(prev => Math.max(prev - 1, 0))
+      e.preventDefault();
+      setSelectedIndex(prev => Math.max(prev - 1, 0));
     } else if (e.key === 'Escape') {
-      setSearchTerm('')
-      setSymbols([])
+      setSearchTerm('');
+      setSymbols([]);
     }
-  }
+  };
 
   const handleSymbolClick = (symbol: Symbol) => {
-    onSymbolSelect(symbol)
-  }
+    onSymbolSelect(symbol);
+  };
 
   useEffect(() => {
     if (selectedIndex >= 0 && selectedIndex < symbols.length) {
-      const symbol = symbols[selectedIndex]
-      onSymbolSelect(symbol)
+      const symbol = symbols[selectedIndex];
+      onSymbolSelect(symbol);
     }
-  }, [selectedIndex, symbols, onSymbolSelect])
+  }, [selectedIndex, symbols, onSymbolSelect]);
 
   useEffect(() => {
     if (searchTimeout.current) {
-      clearTimeout(searchTimeout.current)
+      clearTimeout(searchTimeout.current);
     }
-    searchTimeout.current = setTimeout(handleSearch, 300)
+    searchTimeout.current = setTimeout(handleSearch, 300);
     return () => {
       if (searchTimeout.current) {
-        clearTimeout(searchTimeout.current)
+        clearTimeout(searchTimeout.current);
       }
-    }
-  }, [searchTerm, handleSearch])
+    };
+  }, [searchTerm, handleSearch]);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -151,5 +151,5 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

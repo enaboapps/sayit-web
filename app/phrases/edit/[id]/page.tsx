@@ -1,102 +1,102 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeftIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { useAuth } from '@/app/contexts/AuthContext'
-import { Phrase } from '@/lib/models/Phrase'
-import { Symbol } from '@/lib/models/Symbol'
-import { phraseStore } from '@/lib/stores/phraseStore'
-import SymbolModal from '@/app/components/symbols/SymbolModal'
-import { use } from 'react'
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeftIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { Phrase } from '@/lib/models/Phrase';
+import { Symbol } from '@/lib/models/Symbol';
+import { phraseStore } from '@/lib/stores/phraseStore';
+import SymbolModal from '@/app/components/symbols/SymbolModal';
+import { use } from 'react';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
-  const [phrase, setPhrase] = useState<Phrase | null>(null)
-  const [text, setText] = useState('')
-  const [symbol, setSymbol] = useState<Symbol | null>(null)
-  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { user } = useAuth()
-  const boardId = searchParams.get('boardId')
-  const { getPhrase, updatePhrase, deletePhrase } = phraseStore()
+  const resolvedParams = use(params);
+  const [phrase, setPhrase] = useState<Phrase | null>(null);
+  const [text, setText] = useState('');
+  const [symbol, setSymbol] = useState<Symbol | null>(null);
+  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const boardId = searchParams.get('boardId');
+  const { getPhrase, updatePhrase, deletePhrase } = phraseStore();
 
   useEffect(() => {
     if (!user) {
-      router.push('/sign-in')
-      return
+      router.push('/sign-in');
+      return;
     }
     if (!boardId) {
-      router.push('/phrases')
-      return
+      router.push('/phrases');
+      return;
     }
 
     const fetchPhrase = async () => {
       try {
-        const userId = user.id || ''
-        const fetchedPhrase = await getPhrase(userId, boardId, resolvedParams.id)
-        setPhrase(fetchedPhrase || null)
-        setText(fetchedPhrase?.text || '')
+        const userId = user.id || '';
+        const fetchedPhrase = await getPhrase(userId, boardId, resolvedParams.id);
+        setPhrase(fetchedPhrase || null);
+        setText(fetchedPhrase?.text || '');
         if (fetchedPhrase?.symbol_id) {
-          const symbol = Symbol.fromId(fetchedPhrase.symbol_id)
+          const symbol = Symbol.fromId(fetchedPhrase.symbol_id);
           if (symbol) {
-            await symbol.getImageURL()
-            setSymbol(symbol)
+            await symbol.getImageURL();
+            setSymbol(symbol);
           }
         }
       } catch (error) {
-        console.error('Error fetching phrase:', error)
-        setError('Failed to load phrase')
+        console.error('Error fetching phrase:', error);
+        setError('Failed to load phrase');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchPhrase()
-  }, [resolvedParams.id, user, boardId, router, getPhrase])
+    fetchPhrase();
+  }, [resolvedParams.id, user, boardId, router, getPhrase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !boardId || !phrase) return
+    e.preventDefault();
+    if (!user || !boardId || !phrase) return;
 
-    setError(null)
+    setError(null);
 
     try {
-      if (!phrase.id) throw new Error('Phrase ID is missing')
+      if (!phrase.id) throw new Error('Phrase ID is missing');
       const updatedPhrase = new Phrase({
         ...phrase,
         text,
-        symbol_id: symbol?.id || null
-      })
-      await updatePhrase(phrase.id, updatedPhrase, symbol?.url || null)
-      router.push('/phrases')
+        symbol_id: symbol?.id || null,
+      });
+      await updatePhrase(phrase.id, updatedPhrase, symbol?.url || null);
+      router.push('/phrases');
     } catch (error) {
-      console.error('Error updating phrase:', error)
-      setError('Failed to update phrase')
+      console.error('Error updating phrase:', error);
+      setError('Failed to update phrase');
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!phrase || !boardId || !phrase.id) return
+    if (!phrase || !boardId || !phrase.id) return;
 
     try {
-      await deletePhrase(phrase.id, boardId)
-      router.push('/phrases')
+      await deletePhrase(phrase.id, boardId);
+      router.push('/phrases');
     } catch (error) {
-      console.error('Error deleting phrase:', error)
-      setError('Failed to delete phrase')
+      console.error('Error deleting phrase:', error);
+      setError('Failed to delete phrase');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-gray-600">Loading...</div>
       </div>
-    )
+    );
   }
 
   if (!phrase) {
@@ -104,7 +104,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-red-600">Phrase not found</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -160,8 +160,8 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
                   <button
                     type="button"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      setSymbol(null)
+                      e.stopPropagation();
+                      setSymbol(null);
                     }}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
@@ -207,5 +207,5 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
         />
       </div>
     </div>
-  )
-} 
+  );
+}

@@ -1,50 +1,50 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Symbol } from '@/lib/models/Symbol'
-import SymbolModal from '@/app/components/symbols/SymbolModal'
-import { phraseStore } from '@/lib/stores/phraseStore'
-import { useAuth } from '@/lib/hooks/useAuth'
-import { PhraseData } from '@/lib/models/Phrase'
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Symbol } from '@/lib/models/Symbol';
+import SymbolModal from '@/app/components/symbols/SymbolModal';
+import { phraseStore } from '@/lib/stores/phraseStore';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { PhraseData } from '@/lib/models/Phrase';
 
 export default function AddPhrasePage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const boardId = searchParams.get('boardId')
-  const [text, setText] = useState('')
-  const [symbol, setSymbol] = useState<Symbol | null>(null)
-  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const user = useAuth()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const boardId = searchParams.get('boardId');
+  const [text, setText] = useState('');
+  const [symbol, setSymbol] = useState<Symbol | null>(null);
+  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const user = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user?.user?.id || !boardId) return
+    e.preventDefault();
+    if (!user?.user?.id || !boardId) return;
 
-    setLoading(true)
+    setLoading(true);
     try {
       const phraseData: PhraseData = {
         text,
         userId: user.user.id,
-        symbol_id: symbol?.id || undefined
-      }
-      await phraseStore.getState().addPhrase(phraseData, boardId, symbol?.url || null)
-      router.push(`/phrases?boardId=${boardId}`)
+        symbol_id: symbol?.id || undefined,
+      };
+      await phraseStore.getState().addPhrase(phraseData, boardId, symbol?.url || null);
+      router.push(`/phrases?boardId=${boardId}`);
     } catch (error) {
-      console.error('Error adding phrase:', error)
-      setError('Failed to add phrase')
+      console.error('Error adding phrase:', error);
+      setError('Failed to add phrase');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSymbolSelect = (selectedSymbol: Symbol) => {
-    setSymbol(selectedSymbol)
-    setIsSymbolModalOpen(false)
-  }
+    setSymbol(selectedSymbol);
+    setIsSymbolModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -100,8 +100,8 @@ export default function AddPhrasePage() {
                   <button
                     type="button"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      setSymbol(null)
+                      e.stopPropagation();
+                      setSymbol(null);
                     }}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
@@ -137,5 +137,5 @@ export default function AddPhrasePage() {
         />
       </div>
     </div>
-  )
-} 
+  );
+}

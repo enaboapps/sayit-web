@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "./contexts/AuthContext";
-import { SettingsProvider } from "./contexts/SettingsContext";
-import Sidebar from "./components/Sidebar";
-import AnimatedBackground from "./components/AnimatedBackground";
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { AuthProvider } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
+import Sidebar from './components/Sidebar';
+import AnimatedBackground from './components/AnimatedBackground';
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ['latin'] });
 
 export default function RootLayout({
   children,

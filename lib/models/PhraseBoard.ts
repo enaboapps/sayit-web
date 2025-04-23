@@ -1,38 +1,46 @@
-import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase } from '../services/DatabaseService'
-import { Phrase } from './Phrase'
+import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase } from '../services/DatabaseService';
+import { Phrase } from './Phrase';
 
 export interface PhraseBoardData {
   id?: string
   name: string
   userId: string
-  position: number
+  position?: number
   phrases?: Phrase[]
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export class PhraseBoard {
-  id?: string
-  name: string
-  userId: string
-  position: number
-  phrases: Phrase[]
+  id?: string;
+  name: string;
+  userId: string;
+  position: number;
+  phrases: Phrase[];
+  createdAt?: Date;
+  updatedAt?: Date;
 
   constructor(data: PhraseBoardData) {
-    this.id = data.id
-    this.name = data.name
-    this.userId = data.userId
-    this.position = data.position || 0
-    this.phrases = data.phrases || []
+    this.id = data.id;
+    this.name = data.name;
+    this.userId = data.userId;
+    this.position = data.position || 0;
+    this.phrases = data.phrases || [];
+    this.createdAt = data.createdAt;
+    this.updatedAt = data.updatedAt;
   }
 
   static async fromSupabase(data: DatabasePhraseBoard & { phrases?: { phrase: DatabasePhrase }[] }): Promise<PhraseBoard> {
-    const phrases = data.phrases?.map(p => p.phrase) || []
+    const phrases = data.phrases?.map(p => p.phrase) || [];
     return new PhraseBoard({
       id: data.id,
       name: data.name,
       userId: data.user_id,
       position: data.position || 0,
-      phrases: await Promise.all(phrases.map(p => Phrase.fromSupabase(p)))
-    })
+      phrases: await Promise.all(phrases.map(p => Phrase.fromSupabase(p))),
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    });
   }
 
   async save(): Promise<void> {
@@ -40,35 +48,37 @@ export class PhraseBoard {
       await databaseService.updatePhraseBoard(this.id, {
         name: this.name,
         user_id: this.userId,
-        position: this.position
-      })
+        position: this.position,
+      });
     } else {
       const result = await databaseService.addPhraseBoard({
         name: this.name,
         user_id: this.userId,
-        position: this.position
-      })
-      this.id = result.id
+        position: this.position,
+      });
+      this.id = result.id;
+      this.createdAt = new Date(result.created_at);
+      this.updatedAt = new Date(result.updated_at);
     }
   }
 
   async delete(): Promise<void> {
     if (this.id) {
-      await databaseService.deletePhraseBoard(this.id)
+      await databaseService.deletePhraseBoard(this.id);
     }
   }
 
   async addPhrase(phrase: Phrase): Promise<void> {
     if (this.id && phrase.id) {
-      await databaseService.addPhraseToBoard(phrase.id, this.id)
-      this.phrases.push(phrase)
+      await databaseService.addPhraseToBoard(phrase.id, this.id);
+      this.phrases.push(phrase);
     }
   }
 
   async removePhrase(phrase: Phrase): Promise<void> {
     if (this.id && phrase.id) {
-      await databaseService.removePhraseFromBoard(phrase.id, this.id)
-      this.phrases = this.phrases.filter(p => p.id !== phrase.id)
+      await databaseService.removePhraseFromBoard(phrase.id, this.id);
+      this.phrases = this.phrases.filter(p => p.id !== phrase.id);
     }
   }
 
@@ -78,7 +88,9 @@ export class PhraseBoard {
       name: this.name,
       userId: this.userId,
       position: this.position,
-      phrases: this.phrases
-    }
+      phrases: this.phrases,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+    };
   }
-} 
+}

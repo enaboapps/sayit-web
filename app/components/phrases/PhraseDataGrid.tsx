@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 interface Phrase {
   id: string
@@ -18,31 +18,31 @@ interface PhraseDataGridProps {
 }
 
 export default function PhraseDataGrid({ data, itemsPerPage, renderItem }: PhraseDataGridProps) {
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (!data || !Array.isArray(data)) {
-    return null
+    return null;
   }
 
-  const totalPages = Math.ceil(data.length / itemsPerPage)
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(data.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
 
-  const showPreviousButton = currentPage > 1
-  const showNextButton = currentPage < totalPages
+  const showPreviousButton = currentPage > 1;
+  const showNextButton = currentPage < totalPages;
 
   const goToPreviousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+      setCurrentPage(currentPage - 1);
     }
-  }
+  };
 
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+      setCurrentPage(currentPage + 1);
     }
-  }
+  };
 
   return (
     <div>
@@ -70,5 +70,5 @@ export default function PhraseDataGrid({ data, itemsPerPage, renderItem }: Phras
         )}
       </div>
     </div>
-  )
-} 
+  );
+}

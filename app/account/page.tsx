@@ -1,41 +1,41 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { authService } from '@/lib/auth'
-import { useAuth } from '../contexts/AuthContext'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/lib/auth';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AccountPage() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const { user } = useAuth();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSignOut = async () => {
-    setError(null)
-    setSuccess(null)
+    setError(null);
+    setSuccess(null);
 
     try {
-      await authService.signOut()
-      router.push('/')
+      await authService.signOut();
+      router.push('/');
     } catch (error) {
-      setError((error as Error).message)
+      setError((error as Error).message);
     }
-  }
+  };
 
   const handleResetPassword = async () => {
-    setError(null)
-    setSuccess(null)
+    setError(null);
+    setSuccess(null);
 
-    if (!user?.email) return
+    if (!user?.email) return;
 
     try {
-      await authService.sendPasswordResetEmail(user.email)
-      setSuccess('Password reset email sent! Please check your inbox.')
+      await authService.sendPasswordResetEmail(user.email);
+      setSuccess('Password reset email sent! Please check your inbox.');
     } catch (error) {
-      setError((error as Error).message)
+      setError((error as Error).message);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4">
@@ -79,5 +79,5 @@ export default function AccountPage() {
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

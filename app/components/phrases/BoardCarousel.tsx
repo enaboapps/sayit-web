@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline'
-import { PhraseBoard } from '@/lib/models/PhraseBoard'
+import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { PhraseBoard } from '@/lib/models/PhraseBoard';
 
 interface BoardCarouselProps {
   boards: PhraseBoard[]
@@ -28,7 +28,7 @@ export default function BoardCarousel({
   onSelectBoard,
   onEditBoard,
 }: BoardCarouselProps) {
-  if (boards.length === 0) return null
+  if (boards.length === 0) return null;
 
   return (
     <div className="flex items-center bg-white mb-2">
@@ -40,11 +40,11 @@ export default function BoardCarousel({
         <ChevronLeftIcon className="h-5 w-5 text-black" />
       </button>
 
-      <div 
+      <div
         className="flex-1 flex items-center justify-between p-2 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
         onClick={() => {
           if (isEditMode && selectedBoard) {
-            onEditBoard(selectedBoard.id ?? '')
+            onEditBoard(selectedBoard.id ?? '');
           }
         }}
       >
@@ -69,8 +69,8 @@ export default function BoardCarousel({
               <button
                 key={index}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  onSelectBoard(index)
+                  e.stopPropagation();
+                  onSelectBoard(index);
                 }}
                 className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
                   index === currentIndex ? 'bg-gray-600' : 'bg-gray-300'
@@ -90,5 +90,5 @@ export default function BoardCarousel({
         <ChevronRightIcon className="h-5 w-5 text-black" />
       </button>
     </div>
-  )
-} 
+  );
+}

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,7 +13,7 @@ export default function Sidebar() {
       <div className="p-4 border-b border-gray-200 flex justify-center">
         <h2 className="text-xl font-semibold text-gray-800">S</h2>
       </div>
-      
+
       <nav className="p-4 space-y-4">
         <Link
           href="/"
@@ -92,4 +92,4 @@ export default function Sidebar() {
       </nav>
     </div>
   );
-} 
+}

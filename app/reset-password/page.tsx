@@ -1,26 +1,26 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { authService } from '@/lib/auth'
+import { useState } from 'react';
+import Link from 'next/link';
+import { authService } from '@/lib/auth';
 
 export default function ResetPasswordPage() {
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(false)
+    e.preventDefault();
+    setError(null);
+    setSuccess(false);
 
     try {
-      await authService.sendPasswordResetEmail(email)
-      setSuccess(true)
+      await authService.sendPasswordResetEmail(email);
+      setSuccess(true);
     } catch (error) {
-      setError((error as Error).message)
+      setError((error as Error).message);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto p-4 pt-8">
@@ -78,5 +78,5 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
-  )
-} 
+  );
+}

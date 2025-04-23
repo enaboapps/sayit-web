@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
-import { useAuth } from '@/app/contexts/AuthContext'
-import { phraseStore } from '@/lib/stores/phraseStore'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { phraseStore } from '@/lib/stores/phraseStore';
 
 export default function AddBoardPage() {
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const { user } = useAuth()
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user) return
+    e.preventDefault();
+    if (!user) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
-      await phraseStore.getState().createPhraseBoard(user.id, name)
-      router.push('/phrases')
+      await phraseStore.getState().createPhraseBoard(user.id, name);
+      router.push('/phrases');
     } catch (error) {
-      console.error('Error creating board:', error)
-      setError('Failed to create board')
+      console.error('Error creating board:', error);
+      setError('Failed to create board');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -78,5 +78,5 @@ export default function AddBoardPage() {
         </form>
       </div>
     </div>
-  )
-} 
+  );
+}

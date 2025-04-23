@@ -1,145 +1,145 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/app/contexts/AuthContext'
-import { phraseStore } from '@/lib/stores/phraseStore'
-import { Phrase } from '@/lib/models/Phrase'
-import { PhraseBoard } from '@/lib/models/PhraseBoard'
-import PhraseTile from '@/app/components/phrases/PhraseTile'
-import PhrasesBottomBar from '@/app/components/phrases/PhrasesBottomBar'
-import BoardCarousel from '@/app/components/phrases/BoardCarousel'
-import PhrasesSkeleton from '@/app/components/phrases/PhrasesSkeleton'
-import TypingArea from '@/app/components/TypingArea'
-import { databaseService } from '@/lib/services/DatabaseService'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { phraseStore } from '@/lib/stores/phraseStore';
+import { Phrase } from '@/lib/models/Phrase';
+import { PhraseBoard } from '@/lib/models/PhraseBoard';
+import PhraseTile from '@/app/components/phrases/PhraseTile';
+import PhrasesBottomBar from '@/app/components/phrases/PhrasesBottomBar';
+import BoardCarousel from '@/app/components/phrases/BoardCarousel';
+import PhrasesSkeleton from '@/app/components/phrases/PhrasesSkeleton';
+import TypingArea from '@/app/components/TypingArea';
+import { databaseService } from '@/lib/services/DatabaseService';
 
 export default function PhrasesPage() {
-  const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
-  const [boards, setBoards] = useState<PhraseBoard[]>([])
-  const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null)
-  const [phrases, setPhrases] = useState<Phrase[]>([])
-  const [loading, setLoading] = useState(true)
-  const [loadingPhrases, setLoadingPhrases] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [typingText, setTypingText] = useState('')
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [boards, setBoards] = useState<PhraseBoard[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null);
+  const [phrases, setPhrases] = useState<Phrase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingPhrases, setLoadingPhrases] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [typingText, setTypingText] = useState('');
 
   useEffect(() => {
-    console.log('Auth state changed:', { user, authLoading })
-    
+    console.log('Auth state changed:', { user, authLoading });
+
     if (authLoading) {
-      console.log('Auth is still loading...')
-      return
+      console.log('Auth is still loading...');
+      return;
     }
 
     if (!user) {
-      console.log('No user found, redirecting to login...')
+      console.log('No user found, redirecting to login...');
       // TODO: Redirect to login page
-      return
+      return;
     }
 
-    console.log('Fetching phrase boards for user:', user.id)
+    console.log('Fetching phrase boards for user:', user.id);
     phraseStore.getState().fetchBoards(user.id)
       .then(() => {
-        const boards = phraseStore.getState().boards
-        setBoards(boards)
+        const boards = phraseStore.getState().boards;
+        setBoards(boards);
         if (boards.length > 0) {
-          setSelectedBoard(boards[0])
+          setSelectedBoard(boards[0]);
         }
-        setLoading(false)
+        setLoading(false);
       })
       .catch((err: Error) => {
-        console.error('Error fetching boards:', err)
-        setError('Failed to load phrase boards')
-        setLoading(false)
-      })
-  }, [user, authLoading])
+        console.error('Error fetching boards:', err);
+        setError('Failed to load phrase boards');
+        setLoading(false);
+      });
+  }, [user, authLoading]);
 
   useEffect(() => {
-    if (!user || !selectedBoard) return
+    if (!user || !selectedBoard) return;
 
-    console.log('Fetching phrases for board:', selectedBoard.id)
-    setLoadingPhrases(true)
-    setPhrases([]) // Clear existing phrases while loading
+    console.log('Fetching phrases for board:', selectedBoard.id);
+    setLoadingPhrases(true);
+    setPhrases([]); // Clear existing phrases while loading
     phraseStore.getState().fetchPhrases(user.id)
       .then(() => {
-        const allPhrases = phraseStore.getState().phrases
+        const allPhrases = phraseStore.getState().phrases;
         // Get the full board data to access the phrase_board_phrases relationship
         if (selectedBoard.id) {
           databaseService.getPhraseBoard(selectedBoard.id)
             .then(boardData => {
               if (boardData?.phrase_board_phrases) {
-                const boardPhraseIds = boardData.phrase_board_phrases.map((p: { phrase: { id: string } }) => p.phrase.id)
-                const boardPhrases = allPhrases.filter(phrase => boardPhraseIds.includes(phrase.id))
-                console.log('Filtered phrases for board:', boardPhrases)
-                setPhrases(boardPhrases)
+                const boardPhraseIds = boardData.phrase_board_phrases.map((p: { phrase: { id: string } }) => p.phrase.id);
+                const boardPhrases = allPhrases.filter(phrase => boardPhraseIds.includes(phrase.id));
+                console.log('Filtered phrases for board:', boardPhrases);
+                setPhrases(boardPhrases);
               }
-              setLoadingPhrases(false)
+              setLoadingPhrases(false);
             })
             .catch(err => {
-              console.error('Error fetching board data:', err)
-              setError('Failed to load phrases')
-              setLoadingPhrases(false)
-            })
+              console.error('Error fetching board data:', err);
+              setError('Failed to load phrases');
+              setLoadingPhrases(false);
+            });
         }
       })
       .catch((err: Error) => {
-        console.error('Error fetching phrases:', err)
-        setError('Failed to load phrases')
-        setLoadingPhrases(false)
-      })
-  }, [user, selectedBoard])
+        console.error('Error fetching phrases:', err);
+        setError('Failed to load phrases');
+        setLoadingPhrases(false);
+      });
+  }, [user, selectedBoard]);
 
   const handlePhrasePress = (phrase: Phrase) => {
-    setTypingText(phrase.text)
-  }
+    setTypingText(phrase.text);
+  };
 
   const handleAddPhrase = async () => {
     if (!user || !selectedBoard) {
-      console.error('Cannot add phrase: no user or board selected')
-      return
+      console.error('Cannot add phrase: no user or board selected');
+      return;
     }
-    
-    router.push(`/phrases/add?boardId=${selectedBoard.id}`)
-  }
+
+    router.push(`/phrases/add?boardId=${selectedBoard.id}`);
+  };
 
   const handleEditPhrase = (phrase: Phrase) => {
-    if (!selectedBoard) return
-    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`)
-  }
+    if (!selectedBoard) return;
+    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`);
+  };
 
   const nextBoard = () => {
-    if (boards.length === 0) return
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % boards.length)
-    setSelectedBoard(boards[(currentIndex + 1) % boards.length])
-  }
+    if (boards.length === 0) return;
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % boards.length);
+    setSelectedBoard(boards[(currentIndex + 1) % boards.length]);
+  };
 
   const prevBoard = () => {
-    if (boards.length === 0) return
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + boards.length) % boards.length)
-    setSelectedBoard(boards[(currentIndex - 1 + boards.length) % boards.length])
-  }
+    if (boards.length === 0) return;
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + boards.length) % boards.length);
+    setSelectedBoard(boards[(currentIndex - 1 + boards.length) % boards.length]);
+  };
 
   const handleAddBoard = () => {
-    router.push('/phrases/boards/add')
-  }
+    router.push('/phrases/boards/add');
+  };
 
   const handleEdit = () => {
-    setIsEditMode(!isEditMode)
-  }
+    setIsEditMode(!isEditMode);
+  };
 
   if (authLoading || loading) {
-    return <PhrasesSkeleton />
+    return <PhrasesSkeleton />;
   }
 
   if (error) {
-    return <div className="text-red-500 p-4">{error}</div>
+    return <div className="text-red-500 p-4">{error}</div>;
   }
 
   if (!user) {
-    return <div className="text-black">Please log in to view your phrases</div>
+    return <div className="text-black">Please log in to view your phrases</div>;
   }
 
   return (
@@ -167,8 +167,8 @@ export default function PhrasesPage() {
               onPrevBoard={prevBoard}
               onNextBoard={nextBoard}
               onSelectBoard={(index) => {
-                setCurrentIndex(index)
-                setSelectedBoard(boards[index])
+                setCurrentIndex(index);
+                setSelectedBoard(boards[index]);
               }}
               onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
             />
@@ -219,5 +219,5 @@ export default function PhrasesPage() {
         isEditMode={isEditMode}
       />
     </div>
-  )
-} 
+  );
+}

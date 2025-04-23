@@ -1,95 +1,95 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { useAuth } from '@/app/contexts/AuthContext'
-import { phraseStore } from '@/lib/stores/phraseStore'
-import { PhraseBoard } from '@/lib/models/PhraseBoard'
-import { use } from 'react'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { phraseStore } from '@/lib/stores/phraseStore';
+import { PhraseBoard } from '@/lib/models/PhraseBoard';
+import { use } from 'react';
 
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
-  const [board, setBoard] = useState<PhraseBoard | null>(null)
-  const [name, setName] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const { user } = useAuth()
+  const resolvedParams = use(params);
+  const [board, setBoard] = useState<PhraseBoard | null>(null);
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user) {
-      router.push('/sign-in')
-      return
+      router.push('/sign-in');
+      return;
     }
 
     const fetchBoard = async () => {
       try {
-        const fetchedBoard = await phraseStore.getState().getPhraseBoard(user.id, resolvedParams.id)
-        setBoard(fetchedBoard)
-        setName(fetchedBoard?.name || '')
+        const fetchedBoard = await phraseStore.getState().getPhraseBoard(user.id, resolvedParams.id);
+        setBoard(fetchedBoard);
+        setName(fetchedBoard?.name || '');
       } catch (error) {
-        console.error('Error fetching board:', error)
-        setError('Failed to load board')
+        console.error('Error fetching board:', error);
+        setError('Failed to load board');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchBoard()
-  }, [resolvedParams.id, user, router])
+    fetchBoard();
+  }, [resolvedParams.id, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !board) return
+    e.preventDefault();
+    if (!user || !board) return;
 
-    setSaving(true)
-    setError(null)
+    setSaving(true);
+    setError(null);
 
     try {
       const updatedBoard = new PhraseBoard({
         ...board,
-        name
-      })
-      await phraseStore.getState().updatePhraseBoard(user.id, resolvedParams.id, updatedBoard)
-      router.push('/phrases')
+        name,
+      });
+      await phraseStore.getState().updatePhraseBoard(user.id, resolvedParams.id, updatedBoard);
+      router.push('/phrases');
     } catch (error) {
-      console.error('Error updating board:', error)
-      setError('Failed to update board')
+      console.error('Error updating board:', error);
+      setError('Failed to update board');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!user || !board) return
+    if (!user || !board) return;
 
     if (!confirm('Are you sure you want to delete this board? All phrases in this board will be deleted.')) {
-      return
+      return;
     }
 
-    setDeleting(true)
-    setError(null)
+    setDeleting(true);
+    setError(null);
 
     try {
-      await phraseStore.getState().deletePhraseBoard(user.id, resolvedParams.id)
-      router.push('/phrases')
+      await phraseStore.getState().deletePhraseBoard(user.id, resolvedParams.id);
+      router.push('/phrases');
     } catch (error) {
-      console.error('Error deleting board:', error)
-      setError('Failed to delete board')
+      console.error('Error deleting board:', error);
+      setError('Failed to delete board');
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-gray-600">Loading...</div>
       </div>
-    )
+    );
   }
 
   if (!board) {
@@ -97,7 +97,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-red-600">Board not found</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -157,5 +157,5 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
         </form>
       </div>
     </div>
-  )
-} 
+  );
+}

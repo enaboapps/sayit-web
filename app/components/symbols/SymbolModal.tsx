@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { Fragment } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import { Symbol } from '@/lib/models/Symbol'
-import SymbolSearch from './SymbolSearch'
+import { Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Symbol } from '@/lib/models/Symbol';
+import SymbolSearch from './SymbolSearch';
 
 interface SymbolModalProps {
   isOpen: boolean
@@ -14,9 +14,9 @@ interface SymbolModalProps {
 
 export default function SymbolModal({ isOpen, onClose, onSymbolSelect }: SymbolModalProps) {
   const handleSymbolSelect = (symbol: Symbol) => {
-    onSymbolSelect(symbol)
-    onClose()
-  }
+    onSymbolSelect(symbol);
+    onClose();
+  };
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
@@ -69,5 +69,5 @@ export default function SymbolModal({ isOpen, onClose, onSymbolSelect }: SymbolM
         </div>
       </Dialog>
     </Transition.Root>
-  )
-} 
+  );
+}

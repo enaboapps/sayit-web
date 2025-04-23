@@ -1,38 +1,38 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { authService } from '@/lib/auth'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authService } from '@/lib/auth';
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
-      return
+      setError('Passwords do not match');
+      return;
     }
 
     if (!authService.isPasswordStrongEnough(password)) {
-      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number')
-      return
+      setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number');
+      return;
     }
 
     try {
-      await authService.signUp(email, password)
-      router.push('/')
+      await authService.signUp(email, password);
+      router.push('/');
     } catch (error) {
-      setError((error as Error).message)
+      setError((error as Error).message);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto p-4 pt-8">
@@ -104,5 +104,5 @@ export default function SignUpPage() {
         </form>
       </div>
     </div>
-  )
-} 
+  );
+}

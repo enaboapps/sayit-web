@@ -1,54 +1,54 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useRef } from 'react'
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
-import { Tooltip } from 'react-tooltip'
-import { useSettings } from '../contexts/SettingsContext'
-import { useTTS } from '@/lib/hooks/useTTS'
+import { useState, useEffect, useRef } from 'react';
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { Tooltip } from 'react-tooltip';
+import { useSettings } from '../contexts/SettingsContext';
+import { useTTS } from '@/lib/hooks/useTTS';
 
 interface TypingAreaProps {
   initialText?: string
 }
 
 export default function TypingArea({ initialText = '' }: TypingAreaProps) {
-  const [text, setText] = useState(initialText)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { settings } = useSettings()
-  const { speak, isSpeaking, isAvailable } = useTTS()
+  const [text, setText] = useState(initialText);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { settings } = useSettings();
+  const { speak, isSpeaking, isAvailable } = useTTS();
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('typingAreaVisible')
-      return saved ? JSON.parse(saved) : true
+      const saved = localStorage.getItem('typingAreaVisible');
+      return saved ? JSON.parse(saved) : true;
     }
-    return true
-  })
+    return true;
+  });
 
   useEffect(() => {
-    console.log('Current text size:', settings.textSize)
-  }, [settings.textSize])
+    console.log('Current text size:', settings.textSize);
+  }, [settings.textSize]);
 
   const textSizeClasses = {
     small: 'text-sm',
     medium: 'text-lg',
     large: 'text-2xl',
-    xlarge: 'text-4xl'
-  }
+    xlarge: 'text-4xl',
+  };
 
-  const currentTextSizeClass = textSizeClasses[settings.textSize]
-  console.log('Applied text size class:', currentTextSizeClass)
-
-  useEffect(() => {
-    setText(initialText)
-  }, [initialText])
+  const currentTextSizeClass = textSizeClasses[settings.textSize];
+  console.log('Applied text size class:', currentTextSizeClass);
 
   useEffect(() => {
-    localStorage.setItem('typingAreaVisible', JSON.stringify(isVisible))
-  }, [isVisible])
+    setText(initialText);
+  }, [initialText]);
+
+  useEffect(() => {
+    localStorage.setItem('typingAreaVisible', JSON.stringify(isVisible));
+  }, [isVisible]);
 
   const handleClear = () => {
-    setText('')
-    textareaRef.current?.focus()
-  }
+    setText('');
+    textareaRef.current?.focus();
+  };
 
   const handleSpeak = () => {
     if (text.trim()) {
@@ -56,15 +56,15 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
         rate: settings.speechRate || 1.0,
         pitch: settings.speechPitch || 1.0,
         volume: settings.speechVolume || 1.0,
-        voiceURI: settings.speechVoice
-      })
-      textareaRef.current?.focus()
+        voiceURI: settings.speechVoice,
+      });
+      textareaRef.current?.focus();
     }
-  }
+  };
 
   const toggleVisibility = () => {
-    setIsVisible(!isVisible)
-  }
+    setIsVisible(!isVisible);
+  };
 
   return (
     <div className="flex flex-col">
@@ -77,10 +77,10 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Type your message here..."
-              style={{ 
+              style={{
                 minHeight: '10rem',
                 maxHeight: '10rem',
-                lineHeight: '1.5'
+                lineHeight: '1.5',
               }}
             />
           </div>
@@ -88,12 +88,12 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
             <button
               onClick={handleSpeak}
               className={`h-20 transition-colors duration-200 border-l border-gray-300 ${
-                isSpeaking 
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                isSpeaking
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
               }`}
               data-tooltip-id="speak-tooltip"
-              data-tooltip-content={isSpeaking ? "Stop speaking" : "Speak text"}
+              data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
               disabled={!isAvailable || !text.trim()}
             >
               <div className="flex items-center justify-center h-full">
@@ -117,7 +117,7 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
         onClick={toggleVisibility}
         className="h-8 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center"
         data-tooltip-id="toggle-tooltip"
-        data-tooltip-content={isVisible ? "Hide typing area" : "Show typing area"}
+        data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
       >
         {isVisible ? (
           <ChevronUpIcon className="w-5 h-5 text-gray-600" />
@@ -129,5 +129,5 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
       <Tooltip id="clear-tooltip" />
       <Tooltip id="toggle-tooltip" />
     </div>
-  )
-} 
+  );
+}

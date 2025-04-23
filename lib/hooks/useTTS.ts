@@ -9,7 +9,7 @@ export function useTTS() {
 
   useEffect(() => {
     setIsAvailable(tts.isAvailable());
-    
+
     // Set up callbacks
     tts.setCallbacks({
       onStart: () => setIsSpeaking(true),
@@ -20,7 +20,7 @@ export function useTTS() {
       },
       onVoicesChanged: (newVoices) => {
         setVoices(newVoices);
-      }
+      },
     });
 
     // Get initial voices
@@ -59,6 +59,6 @@ export function useTTS() {
     resume,
     isSpeaking,
     isAvailable,
-    voices
+    voices,
   };
-} 
+}
