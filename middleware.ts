@@ -16,34 +16,21 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({
             name,
             value,
-            ...options,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
+            ...options
           });
         },
         remove(name: string, options: CookieOptions) {
           response.cookies.set({
             name,
             value: '',
-            ...options,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
+            ...options
           });
         },
       },
     },
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session && !['/sign-in', '/sign-up'].includes(request.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/sign-in', request.url));
-  }
-
-  if (session && ['/sign-in', '/sign-up'].includes(request.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL('/phrases', request.url));
-  }
-
+  await supabase.auth.getSession();
   return response;
 }
 
