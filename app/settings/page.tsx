@@ -60,6 +60,27 @@ export default function SettingsPage() {
       </section>
 
       <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">Enter Key Behavior</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-white rounded-xl shadow-lg border border-gray-100">
+            <div>
+              <h3 className="font-medium text-gray-900">When Enter is Pressed</h3>
+              <p className="text-gray-600">Choose what happens when you press Enter in the typing area</p>
+            </div>
+            <select
+              value={settings.enterKeyBehavior}
+              onChange={(e) => updateSetting('enterKeyBehavior', e.target.value as 'newline' | 'speak' | 'clear')}
+              className="px-4 py-2 border border-gray-300 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
+            >
+              <option value="newline">New Line</option>
+              <option value="speak">Speak Text</option>
+              <option value="clear">Clear Text</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4 text-gray-900">Speech Settings</h2>
         <div className="space-y-4">
           {isMobile ? (

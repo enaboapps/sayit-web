@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
+type EnterKeyBehavior = 'newline' | 'speak' | 'clear';
 
 interface Settings {
   textSize: TextSize;
@@ -10,6 +11,7 @@ interface Settings {
   speechPitch: number;
   speechVolume: number;
   speechVoice: string; // Store the voice URI
+  enterKeyBehavior: EnterKeyBehavior;
   // Add more settings here as needed
 }
 
@@ -24,6 +26,7 @@ const defaultSettings: Settings = {
   speechPitch: 1.0,
   speechVolume: 1.0,
   speechVoice: '', // Default to system default voice
+  enterKeyBehavior: 'newline', // Default to newline
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
