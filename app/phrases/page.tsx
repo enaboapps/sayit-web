@@ -212,6 +212,7 @@ export default function PhrasesPage() {
         onAddPhrase={handleAddPhrase}
         onAddBoard={handleAddBoard}
         onEdit={handleEdit}
+        boardPresent={boards.length > 0}
         isEditMode={isEditMode}
       />
     </div>

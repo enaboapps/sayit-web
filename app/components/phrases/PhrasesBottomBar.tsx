@@ -7,6 +7,7 @@ interface PhrasesBottomBarProps {
   onAddPhrase: () => void
   onAddBoard: () => void
   onEdit: () => void
+  boardPresent: boolean
   isEditMode: boolean
 }
 
@@ -14,6 +15,7 @@ export default function PhrasesBottomBar({
   onAddPhrase,
   onAddBoard,
   onEdit,
+  boardPresent,
   isEditMode,
 }: PhrasesBottomBarProps) {
   return (
@@ -29,15 +31,17 @@ export default function PhrasesBottomBar({
           <span className="font-medium">New Board</span>
         </div>
 
-        <div
-          onClick={onAddPhrase}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
-          data-tooltip-id="add-phrase-tooltip"
-          data-tooltip-content="Add a new phrase to the current board"
-        >
-          <MessageSquare className="w-5 h-5" />
-          <span className="font-medium">Add to Board</span>
-        </div>
+        {boardPresent && (
+          <div
+            onClick={onAddPhrase}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
+            data-tooltip-id="add-phrase-tooltip"
+            data-tooltip-content="Add a new phrase to the current board"
+          >
+            <MessageSquare className="w-5 h-5" />
+            <span className="font-medium">Add to Board</span>
+          </div>
+        )}
 
         <div
           onClick={onEdit}
