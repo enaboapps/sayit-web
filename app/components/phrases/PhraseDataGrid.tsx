@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Button from '@/app/components/ui/Button';
 
 interface Phrase {
   id: string
@@ -53,20 +54,20 @@ export default function PhraseDataGrid({ data, itemsPerPage, renderItem }: Phras
       </div>
       <div className="mt-4 flex justify-center space-x-4">
         {showPreviousButton && (
-          <button
+          <Button
             onClick={goToPreviousPage}
-            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+            variant="default"
           >
             Previous
-          </button>
+          </Button>
         )}
         {showNextButton && (
-          <button
+          <Button
             onClick={goToNextPage}
-            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+            variant="default"
           >
             Next
-          </button>
+          </Button>
         )}
       </div>
     </div>

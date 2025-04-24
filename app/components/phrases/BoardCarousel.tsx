@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline';
+import Button from '@/app/components/ui/Button';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
 
 interface BoardCarouselProps {
@@ -32,13 +33,14 @@ export default function BoardCarousel({
 
   return (
     <div className="flex items-center bg-white mb-2">
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onPrevBoard}
-        className="p-2 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
         aria-label="Previous board"
       >
         <ChevronLeftIcon className="h-5 w-5 text-black" />
-      </button>
+      </Button>
 
       <div
         className="flex-1 flex items-center justify-between p-2 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
@@ -66,8 +68,10 @@ export default function BoardCarousel({
           )}
           <div className="flex space-x-1">
             {boards.map((_, index) => (
-              <button
+              <Button
                 key={index}
+                variant="ghost"
+                size="icon"
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectBoard(index);
@@ -76,19 +80,22 @@ export default function BoardCarousel({
                   index === currentIndex ? 'bg-gray-600' : 'bg-gray-300'
                 }`}
                 aria-label={`Go to board ${index + 1}`}
-              />
+              >
+                <span className="sr-only">Board {index + 1}</span>
+              </Button>
             ))}
           </div>
         </div>
       </div>
 
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onNextBoard}
-        className="p-2 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
         aria-label="Next board"
       >
         <ChevronRightIcon className="h-5 w-5 text-black" />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -10,6 +10,8 @@ import { phraseStore } from '@/lib/stores/phraseStore';
 import SymbolModal from '@/app/components/symbols/SymbolModal';
 import { use } from 'react';
 import Image from 'next/image';
+import Input from '@/app/components/ui/Input';
+import Button from '@/app/components/ui/Button';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -113,42 +115,40 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.push('/phrases')}
-            className="flex items-center text-gray-600 hover:text-gray-900"
+            className="flex items-center"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Back to Phrases
-          </button>
+          </Button>
           <h1 className="text-3xl font-bold text-gray-900 mt-4">Edit Phrase</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-          <div className="mb-4">
-            <label htmlFor="text" className="block text-gray-700 text-sm font-bold mb-2">
-              Phrase Text
-            </label>
-            <input
-              type="text"
-              id="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200"
-              placeholder="Enter your phrase"
-              required
-            />
-          </div>
+          <Input
+            id="text"
+            type="text"
+            label="Phrase Text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Enter your phrase"
+            required
+          />
 
           <div className="mb-6">
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Symbol
             </label>
-            <div
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => setIsSymbolModalOpen(true)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition-all duration-200 cursor-pointer"
+              className="w-full justify-start"
             >
               {symbol ? (
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden relative">
                       <Image
@@ -161,46 +161,47 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
                     </div>
                     <span>Selected symbol</span>
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSymbol(null);
                     }}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <XMarkIcon className="h-5 w-5" />
-                  </button>
+                  </Button>
                 </div>
               ) : (
                 'Select a symbol'
               )}
-            </div>
+            </Button>
             <p className="mt-1 text-sm text-gray-500">Optional - Select a symbol to represent this phrase</p>
           </div>
 
           {error && (
-            <div className="mb-4 text-red-600 text-sm">
+            <div className="mb-4 text-red-500 text-sm">
               {error}
             </div>
           )}
 
           <div className="flex items-center justify-between">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleDelete}
-              className="flex items-center text-red-600 hover:text-red-700 transition-colors duration-200"
+              className="text-red-600 hover:text-red-700"
             >
               <TrashIcon className="h-5 w-5 mr-2" />
               Delete Phrase
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading}
-              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Updating...' : 'Update Phrase'}
-            </button>
+            </Button>
           </div>
         </form>
 
