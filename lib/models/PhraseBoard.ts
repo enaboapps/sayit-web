@@ -1,4 +1,4 @@
-import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase, PhraseBoardPhrase } from '../services/DatabaseService';
+import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase } from '../services/DatabaseService';
 import { Phrase } from './Phrase';
 
 export interface PhraseBoardData {

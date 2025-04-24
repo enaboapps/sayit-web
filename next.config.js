@@ -3,9 +3,9 @@ const nextConfig = {
   images: {
     domains: [
       'globalsymbols.com',
-      'equjsqktsqooirullrpy.supabase.co'
+      'equjsqktsqooirullrpy.supabase.co',
     ],
   },
-}
+};
 
 export default nextConfig;

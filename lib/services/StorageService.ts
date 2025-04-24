@@ -25,15 +25,14 @@ export class StorageService implements IStorageService {
 
       const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
       const filePath = `${user.id}/${symbolId}.${extension}`;
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('symbols')
         .upload(filePath, file, {
           contentType: file.type,
-          upsert: true
+          upsert: true,
         });
 
       if (error) {
-        console.error('Error uploading symbol:', error);
         throw error;
       }
 
@@ -43,7 +42,6 @@ export class StorageService implements IStorageService {
 
       return publicUrl;
     } catch (error) {
-      console.error('Error in uploadSymbol:', error);
       throw error;
     }
   }
@@ -62,14 +60,12 @@ export class StorageService implements IStorageService {
         .from('symbols')
         .getPublicUrl(filePath);
       
-      // Check if the file exists by making a HEAD request
       try {
         const response = await fetch(publicUrl, { method: 'HEAD' });
         if (response.ok) {
           return publicUrl;
         }
-      } catch (error) {
-        // Continue to next extension
+      } catch {
         continue;
       }
     }

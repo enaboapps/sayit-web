@@ -16,14 +16,14 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({
             name,
             value,
-            ...options
+            ...options,
           });
         },
         remove(name: string, options: CookieOptions) {
           response.cookies.set({
             name,
             value: '',
-            ...options
+            ...options,
           });
         },
       },

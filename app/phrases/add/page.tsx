@@ -32,7 +32,7 @@ function AddPhraseForm() {
         userId: user.user.id,
         symbol_id: symbol?.id || undefined,
       };
-      await phraseStore.getState().addPhrase(phraseData, boardId, symbol?.url || null);
+      await phraseStore.getState().addPhrase(phraseData, boardId);
       router.push(`/phrases?boardId=${boardId}`);
     } catch (error) {
       console.error('Error adding phrase:', error);

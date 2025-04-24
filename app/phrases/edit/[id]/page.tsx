@@ -73,7 +73,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
         text,
         symbol_id: symbol?.id || null,
       });
-      await updatePhrase(phrase.id, updatedPhrase, symbol?.url || null);
+      await updatePhrase(phrase.id, updatedPhrase);
       router.push('/phrases');
     } catch (error) {
       console.error('Error updating phrase:', error);

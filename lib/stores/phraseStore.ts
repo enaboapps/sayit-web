@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { Phrase, PhraseData } from '../models/Phrase';
 import { PhraseBoard, PhraseBoardData } from '../models/PhraseBoard';
 import { databaseService, Phrase as DatabasePhrase } from '../services/DatabaseService';
-import { storageService } from '../services/StorageService';
 
 interface PhraseStore {
   phrases: Phrase[]
@@ -11,9 +10,9 @@ interface PhraseStore {
   error: string | null
   fetchPhrases: (userId: string) => Promise<void>
   fetchBoards: (userId: string) => Promise<void>
-  addPhrase: (phraseData: Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>, boardId: string, symbolUrl: string | null) => Promise<void>
+  addPhrase: (phraseData: Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>, boardId: string) => Promise<void>
   deletePhrase: (phraseId: string, boardId: string) => Promise<void>
-  updatePhrase: (phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>, symbolUrl: string | null) => Promise<void>
+  updatePhrase: (phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>
   getPhrase: (userId: string, boardId: string, phraseId: string) => Promise<Phrase | null>
   createPhraseBoard: (userId: string, name: string) => Promise<void>
   getPhraseBoard: (userId: string, boardId: string) => Promise<PhraseBoard | null>
@@ -50,7 +49,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       throw err;
     }
   },
-  addPhrase: async (phraseData: Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>, boardId: string, symbolUrl: string | null) => {
+  addPhrase: async (phraseData: Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>, boardId: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
       const dbPhraseData: Omit<DatabasePhrase, 'id' | 'created_at' | 'updated_at'> = {
@@ -84,7 +83,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       throw err;
     }
   },
-  updatePhrase: async (phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>, symbolUrl: string | null) => {
+  updatePhrase: async (phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
       const dbPhraseData: Partial<Omit<DatabasePhrase, 'id' | 'created_at' | 'updated_at'>> = {

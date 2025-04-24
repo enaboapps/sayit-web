@@ -34,7 +34,7 @@ export class Symbol {
         try {
           this.url = await this.storage.getFileURL(`${this.id}.${extension}`);
           if (this.url) return this.url;
-        } catch (error) {
+        } catch {
           continue;
         }
       }
