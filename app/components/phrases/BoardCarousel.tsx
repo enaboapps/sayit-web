@@ -58,6 +58,8 @@ export default function BoardCarousel({
             <p className="text-xs text-black">
               {isLoadingPhrases ? (
                 <span className="inline-block w-16 h-3 bg-gray-200 rounded animate-pulse" />
+              ) : phrasesCount === 0 ? (
+                <span className="text-gray-500">Empty board</span>
               ) : (
                 `${phrasesCount} ${phrasesCount === 1 ? 'phrase' : 'phrases'}`
               )}

@@ -173,6 +173,13 @@ export default function PhrasesPage() {
                         <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
                       ))}
                     </div>
+                  ) : phrases.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center p-8">
+                      <div className="text-center">
+                        <h2 className="text-xl font-medium text-gray-900 mb-4">No phrases yet</h2>
+                        <p className="text-gray-600">Add your first phrase to get started</p>
+                      </div>
+                    </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
                       {phrases.map((phrase) => (
