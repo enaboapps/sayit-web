@@ -33,14 +33,16 @@ export default function BoardCarousel({
 
   return (
     <div className="flex items-center bg-white mb-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onPrevBoard}
-        aria-label="Previous board"
-      >
-        <ChevronLeftIcon className="h-5 w-5 text-black" />
-      </Button>
+      {boards.length > 1 && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onPrevBoard}
+          aria-label="Previous board"
+        >
+          <ChevronLeftIcon className="h-5 w-5 text-black" />
+        </Button>
+      )}
 
       <div
         className="flex-1 flex items-center justify-between p-2 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
@@ -66,36 +68,40 @@ export default function BoardCarousel({
           {isEditMode && (
             <PencilIcon className="h-4 w-4 text-gray-500" />
           )}
-          <div className="flex space-x-1">
-            {boards.map((_, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelectBoard(index);
-                }}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                  index === currentIndex ? 'bg-gray-600' : 'bg-gray-300'
-                }`}
-                aria-label={`Go to board ${index + 1}`}
-              >
-                <span className="sr-only">Board {index + 1}</span>
-              </Button>
-            ))}
-          </div>
+          {boards.length > 1 && (
+            <div className="flex space-x-1">
+              {boards.map((_, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectBoard(index);
+                  }}
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                    index === currentIndex ? 'bg-gray-600' : 'bg-gray-300'
+                  }`}
+                  aria-label={`Go to board ${index + 1}`}
+                >
+                  <span className="sr-only">Board {index + 1}</span>
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onNextBoard}
-        aria-label="Next board"
-      >
-        <ChevronRightIcon className="h-5 w-5 text-black" />
-      </Button>
+      {boards.length > 1 && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNextBoard}
+          aria-label="Next board"
+        >
+          <ChevronRightIcon className="h-5 w-5 text-black" />
+        </Button>
+      )}
     </div>
   );
 }
