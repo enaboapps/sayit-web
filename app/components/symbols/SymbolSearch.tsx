@@ -56,8 +56,8 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
   const handleSymbolClick = async (symbol: Symbol) => {
     try {
       setIsLoading(true);
-      const uploadedSymbol = await symbolsManager.handleSelectedSymbol(symbol);
-      onSymbolSelect(uploadedSymbol);
+      await symbolsManager.handleSelectedSymbol(symbol);
+      onSymbolSelect(symbol);
     } catch (error) {
       console.error('Error handling symbol selection:', error);
       setError('Failed to process symbol');
