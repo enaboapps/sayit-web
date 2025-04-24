@@ -67,6 +67,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
     try {
       if (!phrase.id) throw new Error('Phrase ID is missing');
+      
       const updatedPhrase = new Phrase({
         ...phrase,
         text,

@@ -62,9 +62,6 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       };
       const newPhrase = await databaseService.addPhrase(dbPhraseData);
       await databaseService.addPhraseToBoard(newPhrase.id, boardId);
-      if (symbolUrl) {
-        await storageService.uploadSymbol(newPhrase.id, symbolUrl);
-      }
       const phraseInstance = await Phrase.fromSupabase(newPhrase);
       set((state) => ({ ...state, phrases: [...state.phrases, phraseInstance], loading: false }));
     } catch (err) {
@@ -98,9 +95,6 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
         position: phraseData.position,
       };
       const updatedPhrase = await databaseService.updatePhrase(phraseId, dbPhraseData);
-      if (symbolUrl) {
-        await storageService.uploadSymbol(phraseId, symbolUrl);
-      }
       const phraseInstance = await Phrase.fromSupabase(updatedPhrase);
       set((state) => ({
         ...state,

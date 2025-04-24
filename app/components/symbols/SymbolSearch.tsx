@@ -53,16 +53,24 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
     }
   };
 
-  const handleSymbolClick = (symbol: Symbol) => {
-    onSymbolSelect(symbol);
+  const handleSymbolClick = async (symbol: Symbol) => {
+    try {
+      setIsLoading(true);
+      const uploadedSymbol = await symbolsManager.handleSelectedSymbol(symbol);
+      onSymbolSelect(uploadedSymbol);
+    } catch (error) {
+      console.error('Error handling symbol selection:', error);
+      setError('Failed to process symbol');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     if (selectedIndex >= 0 && selectedIndex < symbols.length) {
-      const symbol = symbols[selectedIndex];
-      onSymbolSelect(symbol);
+      handleSymbolClick(symbols[selectedIndex]);
     }
-  }, [selectedIndex, symbols, onSymbolSelect]);
+  }, [selectedIndex, symbols]);
 
   useEffect(() => {
     if (searchTimeout.current) {

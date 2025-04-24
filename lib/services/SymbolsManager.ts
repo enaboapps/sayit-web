@@ -43,34 +43,32 @@ class SymbolsManager {
     return symbols;
   }
 
+  async handleSelectedSymbol(symbol: Symbol): Promise<Symbol> {
+    console.log('Handling selected symbol:', symbol);
+    try {
+      // Download the image from the original URL
+      const imageResponse = await fetch(symbol.url || '');
+      const blob = await imageResponse.blob();
+      
+      // Upload to our storage
+      await this.uploadSymbol(symbol.id, blob);
+      
+      // Get the new storage URL
+      const storedUrl = await this.getSymbolURL(symbol.id);
+      symbol.setURL(storedUrl);
+      
+      return symbol;
+    } catch (error) {
+      console.error('Error handling selected symbol:', error);
+      throw error;
+    }
+  }
+
   async uploadSymbol(id: string, blob: Blob) {
     console.log('Starting symbol upload in SymbolsManager:', { id, blobSize: blob.size });
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    return new Promise<void>((resolve, reject) => {
-      reader.onloadend = async () => {
-        try {
-          const base64data = reader.result as string;
-          console.log('Converted blob to base64, size:', base64data.length);
-          await storageService.uploadSymbol(id, base64data);
-          console.log('Successfully uploaded symbol through SymbolsManager:', id);
-          resolve();
-        } catch (error) {
-          console.error('Error in SymbolsManager upload:', {
-            id,
-            error,
-          });
-          reject(error);
-        }
-      };
-      reader.onerror = (error) => {
-        console.error('Error reading blob:', {
-          id,
-          error,
-        });
-        reject(error);
-      };
-    });
+    const file = new File([blob], `${id}.${blob.type.split('/')[1] || 'png'}`, { type: blob.type });
+    await storageService.uploadSymbol(id, file);
+    console.log('Successfully uploaded symbol through SymbolsManager:', id);
   }
 
   async getSymbolURL(id: string) {

@@ -1,4 +1,4 @@
-import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase } from '../services/DatabaseService';
+import { databaseService, PhraseBoard as DatabasePhraseBoard, Phrase as DatabasePhrase, PhraseBoardPhrase } from '../services/DatabaseService';
 import { Phrase } from './Phrase';
 
 export interface PhraseBoardData {
@@ -30,14 +30,26 @@ export class PhraseBoard {
     this.updatedAt = data.updatedAt;
   }
 
-  static async fromSupabase(data: DatabasePhraseBoard & { phrases?: { phrase: DatabasePhrase }[] }): Promise<PhraseBoard> {
-    const phrases = data.phrases?.map(p => p.phrase) || [];
+  static async fromSupabase(data: DatabasePhraseBoard & { 
+    phrase_board_phrases?: {
+      phrase_id: string;
+      board_id: string;
+      created_at: string;
+      phrase: DatabasePhrase;
+    }[]
+  }): Promise<PhraseBoard> {
+    console.log('Converting board data:', data);
+    const phrases = data.phrase_board_phrases
+      ?.filter((p) => p.phrase) // Filter out any null phrases
+      .map((p) => p.phrase) || [];
+    console.log('Extracted phrases:', phrases);
+    
     return new PhraseBoard({
       id: data.id,
       name: data.name,
       userId: data.user_id,
       position: data.position || 0,
-      phrases: await Promise.all(phrases.map(p => Phrase.fromSupabase(p))),
+      phrases: await Promise.all(phrases.map((p) => Phrase.fromSupabase(p))),
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
     });

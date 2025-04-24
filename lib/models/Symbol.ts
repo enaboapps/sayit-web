@@ -24,62 +24,42 @@ export class Symbol {
 
   async getImageURL() {
     if (!this.url) {
-      this.url = await this.storage.getFileURL(`${this.id}.png`);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      // Try both PNG and SVG
+      const extensions = ['png', 'svg'];
+      for (const extension of extensions) {
+        try {
+          this.url = await this.storage.getFileURL(`${this.id}.${extension}`);
+          if (this.url) return this.url;
+        } catch (error) {
+          continue;
+        }
+      }
+      throw new Error('Symbol image not found');
     }
     return this.url;
   }
 
   async uploadImage(file: File): Promise<string> {
     console.log('Starting image upload for symbol:', this.id);
-    console.log('File details:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    });
-
     try {
-      console.log('Uploading to Supabase storage...');
-      const { data, error } = await this.storage.uploadSymbolImage(file, this.id);
-
-      if (error) {
-        console.error('Error uploading image:', {
-          error,
-        });
-        throw error;
-      }
-
-      console.log('Upload successful:', {
-        path: data?.path,
-        publicUrl: data?.publicUrl,
-      });
-
-      if (data?.publicUrl) {
-        this.url = data.publicUrl;
-        // Save the URL to the database
-        const { error: updateError } = await supabase
-          .from('symbols')
-          .update({ url: this.url })
-          .eq('id', this.id);
-
-        if (updateError) {
-          console.error('Error saving URL to database:', updateError);
-          throw updateError;
-        }
-      }
-
-      return this.url || '';
+      this.url = await this.storage.uploadSymbol(this.id, file);
+      return this.url;
     } catch (error) {
-      console.error('Failed to upload image:', {
-        error,
-        symbolId: this.id,
-        fileName: file.name,
-      });
+      console.error('Failed to upload image:', error);
       throw error;
     }
   }
 
   async deleteImage() {
-    await this.storage.deleteFile(`symbols/${this.id}.png`);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    await this.storage.deleteFile(`${user.id}/${this.id}.png`);
     this.url = null;
   }
 }

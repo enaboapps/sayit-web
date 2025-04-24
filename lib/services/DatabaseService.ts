@@ -20,9 +20,15 @@ export interface PhraseBoard {
   updated_at: string
 }
 
+export interface PhraseBoardPhrase {
+  phrase_id: string
+  board_id: string
+  created_at: string
+  phrase: Phrase
+}
+
 export interface DatabasePhraseBoard extends PhraseBoard {
-  phrases?: { phrase: Phrase }[]
-  phrase_board_phrases?: { phrase: Phrase }[]
+  phrase_board_phrases?: PhraseBoardPhrase[]
 }
 
 export interface IDatabaseService {
@@ -113,13 +119,18 @@ export class DatabaseService implements IDatabaseService {
       .from('phrase_boards')
       .select(`
         *,
-        phrases:phrase_board_phrases(
-          phrase:phrases(*)
+        phrase_board_phrases:phrase_board_phrases (
+          phrase_id,
+          board_id,
+          created_at,
+          phrase:phrases (*)
         )
       `)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .order('position');
 
     if (error) throw error;
+    console.log('Fetched boards:', data);
     return data || [];
   }
 
@@ -164,14 +175,18 @@ export class DatabaseService implements IDatabaseService {
       .from('phrase_boards')
       .select(`
         *,
-        phrases:phrase_board_phrases(
-          phrase:phrases(*)
+        phrase_board_phrases:phrase_board_phrases (
+          phrase_id,
+          board_id,
+          created_at,
+          phrase:phrases (*)
         )
       `)
       .eq('id', id)
       .single();
 
     if (error) throw error;
+    console.log('Fetched board:', data);
     return data;
   }
 

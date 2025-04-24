@@ -63,33 +63,22 @@ export default function PhrasesPage() {
     console.log('Fetching phrases for board:', selectedBoard.id);
     setLoadingPhrases(true);
     setPhrases([]); // Clear existing phrases while loading
-    phraseStore.getState().fetchPhrases(user.id)
-      .then(() => {
-        const allPhrases = phraseStore.getState().phrases;
-        // Get the full board data to access the phrase_board_phrases relationship
-        if (selectedBoard.id) {
-          databaseService.getPhraseBoard(selectedBoard.id)
-            .then(boardData => {
-              if (boardData?.phrase_board_phrases) {
-                const boardPhraseIds = boardData.phrase_board_phrases.map((p: { phrase: { id: string } }) => p.phrase.id);
-                const boardPhrases = allPhrases.filter(phrase => boardPhraseIds.includes(phrase.id));
-                console.log('Filtered phrases for board:', boardPhrases);
-                setPhrases(boardPhrases);
-              }
-              setLoadingPhrases(false);
-            })
-            .catch(err => {
-              console.error('Error fetching board data:', err);
-              setError('Failed to load phrases');
-              setLoadingPhrases(false);
-            });
-        }
-      })
-      .catch((err: Error) => {
-        console.error('Error fetching phrases:', err);
-        setError('Failed to load phrases');
-        setLoadingPhrases(false);
-      });
+
+    if (selectedBoard.id) {
+      databaseService.getPhraseBoard(selectedBoard.id)
+        .then(async boardData => {
+          if (boardData) {
+            const board = await PhraseBoard.fromSupabase(boardData);
+            setPhrases(board.phrases);
+          }
+          setLoadingPhrases(false);
+        })
+        .catch(err => {
+          console.error('Error fetching board data:', err);
+          setError('Failed to load phrases');
+          setLoadingPhrases(false);
+        });
+    }
   }, [user, selectedBoard]);
 
   const handlePhrasePress = (phrase: Phrase) => {
