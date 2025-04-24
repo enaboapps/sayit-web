@@ -80,16 +80,16 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   switch (settings.enterKeyBehavior) {
-                    case 'speak':
-                      handleSpeak();
-                      break;
-                    case 'clear':
-                      handleClear();
-                      break;
-                    case 'newline':
-                    default:
-                      setText(prev => prev + '\n');
-                      break;
+                  case 'speak':
+                    handleSpeak();
+                    break;
+                  case 'clear':
+                    handleClear();
+                    break;
+                  case 'newline':
+                  default:
+                    setText(prev => prev + '\n');
+                    break;
                   }
                 }
               }}
@@ -105,9 +105,9 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
             <button
               onClick={handleSpeak}
               className={`h-20 transition-colors duration-200 border-l border-gray-300 ${isSpeaking
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                }`}
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+              }`}
               data-tooltip-id="speak-tooltip"
               data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
               disabled={!isAvailable || !text.trim()}
