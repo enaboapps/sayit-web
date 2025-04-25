@@ -6,6 +6,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
 import AnimatedBackground from './components/AnimatedBackground';
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -14,6 +16,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Store the current path in localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('pwa_last_path', pathname);
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    // Check if we're launched from PWA
+    if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
+      const lastPath = localStorage.getItem('pwa_last_path');
+      if (lastPath && lastPath !== pathname && lastPath !== '/') {
+        window.location.href = lastPath;
+      }
+    }
+  }, []);
+
   return (
     <html lang="en">
       <head>
