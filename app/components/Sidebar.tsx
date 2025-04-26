@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 
@@ -11,7 +12,7 @@ export default function Sidebar() {
   return (
     <div className="fixed left-0 top-0 h-full w-16 bg-white shadow-lg z-50">
       <div className="p-4 border-b border-gray-200 flex justify-center">
-        <h2 className="text-xl font-semibold text-gray-800">S</h2>
+        <Image src="/icons/app-icon.png" alt="Logo" width={32} height={32} />
       </div>
 
       <nav className="p-4 space-y-4">
