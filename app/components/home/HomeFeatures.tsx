@@ -1,4 +1,4 @@
-import TypingArea from "@/app/components/TypingArea";
+import TypingArea from '@/app/components/TypingArea';
 
 interface HomeFeaturesProps {
   typingText: string;
