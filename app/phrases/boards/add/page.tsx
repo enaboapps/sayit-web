@@ -24,7 +24,7 @@ export default function AddBoardPage() {
 
     try {
       await phraseStore.getState().createPhraseBoard(user.id, name);
-      router.push('/phrases');
+      router.back();
     } catch (error) {
       console.error('Error creating board:', error);
       setError('Failed to create board');
@@ -39,7 +39,7 @@ export default function AddBoardPage() {
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => router.push('/phrases')}
+            onClick={() => router.back()}
             className="flex items-center"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />

@@ -1,71 +1,147 @@
 'use client';
 
-import { useAuth } from './contexts/AuthContext';
-import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { phraseStore } from '@/lib/stores/phraseStore';
+import { Phrase } from '@/lib/models/Phrase';
+import { PhraseBoard } from '@/lib/models/PhraseBoard';
+import { databaseService } from '@/lib/services/DatabaseService';
+import PhrasesSkeleton from '@/app/components/phrases/PhrasesSkeleton';
+import HomeFeatures from '@/app/components/home/HomeFeatures';
+import PhrasesInterface from '@/app/components/home/PhrasesInterface';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [boards, setBoards] = useState<PhraseBoard[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null);
+  const [phrases, setPhrases] = useState<Phrase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingPhrases, setLoadingPhrases] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [typingText, setTypingText] = useState('');
+
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('Fetching phrase boards for user:', user.id);
+    phraseStore.getState().fetchBoards(user.id)
+      .then(() => {
+        const boards = phraseStore.getState().boards;
+        setBoards(boards);
+        if (boards.length > 0) {
+          setSelectedBoard(boards[0]);
+        }
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        console.error('Error fetching boards:', err);
+        setError('Failed to load phrase boards');
+        setLoading(false);
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !selectedBoard) return;
+
+    console.log('Fetching phrases for board:', selectedBoard.id);
+    setLoadingPhrases(true);
+    setPhrases([]); // Clear existing phrases while loading
+
+    if (selectedBoard.id) {
+      databaseService.getPhraseBoard(selectedBoard.id)
+        .then(async boardData => {
+          if (boardData) {
+            const board = await PhraseBoard.fromSupabase(boardData);
+            setPhrases(board.phrases);
+          }
+          setLoadingPhrases(false);
+        })
+        .catch(err => {
+          console.error('Error fetching board data:', err);
+          setError('Failed to load phrases');
+          setLoadingPhrases(false);
+        });
+    }
+  }, [user, selectedBoard]);
+
+  const handlePhrasePress = (phrase: Phrase) => {
+    setTypingText(phrase.text);
+  };
+
+  const handleAddPhrase = async () => {
+    if (!user || !selectedBoard) {
+      console.error('Cannot add phrase: no user or board selected');
+      return;
+    }
+
+    router.push(`/phrases/add?boardId=${selectedBoard.id}`);
+  };
+
+  const handleEditPhrase = (phrase: Phrase) => {
+    if (!selectedBoard) return;
+    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`);
+  };
+
+  const nextBoard = () => {
+    if (boards.length === 0) return;
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % boards.length);
+    setSelectedBoard(boards[(currentIndex + 1) % boards.length]);
+  };
+
+  const prevBoard = () => {
+    if (boards.length === 0) return;
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + boards.length) % boards.length);
+    setSelectedBoard(boards[(currentIndex - 1 + boards.length) % boards.length]);
+  };
+
+  const handleAddBoard = () => {
+    router.push('/phrases/boards/add');
+  };
+
+  const handleEdit = () => {
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleSelectBoard = (index: number) => {
+    setCurrentIndex(index);
+    setSelectedBoard(boards[index]);
+  };
+
+  if (authLoading) {
+    return <PhrasesSkeleton />;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-4">{error}</div>;
+  }
 
   return (
-    <div className="text-center p-4">
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">
-        Welcome to SayIt!
-      </h1>
-      <p className="text-xl text-gray-600 mb-8">
-        A communication app for everyone
-      </p>
-      {user ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto px-4">
-          <Link
-            href="/phrases"
-            className="group bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 text-gray-900"
-          >
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors">Phrases</h2>
-              <p className="text-gray-600 mb-6">
-                Access your saved phrases and boards
-              </p>
-              <div className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200">
-                View Phrases
-              </div>
-            </div>
-          </Link>
-          <Link
-            href="/account"
-            className="group bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 text-gray-900"
-          >
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4 group-hover:text-gray-700 transition-colors">Account</h2>
-              <p className="text-gray-600 mb-6">
-                Manage your account settings and preferences
-              </p>
-              <div className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200">
-                Account Settings
-              </div>
-            </div>
-          </Link>
-        </div>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {!user ? (
+        <HomeFeatures typingText={typingText} />
       ) : (
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md mx-auto border border-gray-100">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
-          <p className="text-gray-600 mb-6">
-            Please sign in to access all features of SayIt!
-          </p>
-          <div className="space-x-4">
-            <Link
-              href="/sign-in"
-              className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-up"
-              className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200"
-            >
-              Sign Up
-            </Link>
-          </div>
-        </div>
+        <PhrasesInterface
+          boards={boards}
+          selectedBoard={selectedBoard}
+          phrases={phrases}
+          loading={loading}
+          loadingPhrases={loadingPhrases}
+          currentIndex={currentIndex}
+          isEditMode={isEditMode}
+          typingText={typingText}
+          onPhrasePress={handlePhrasePress}
+          onAddPhrase={handleAddPhrase}
+          onEditPhrase={handleEditPhrase}
+          onNextBoard={nextBoard}
+          onPrevBoard={prevBoard}
+          onAddBoard={handleAddBoard}
+          onEdit={handleEdit}
+          onSelectBoard={handleSelectBoard}
+        />
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 {
-  "name": "SayIt",
-  "short_name": "SayIt",
+  "name": "SayIt!",
+  "short_name": "SayIt!",
   "description": "A communication app for everyone",
   "start_url": "/?source=pwa",
   "scope": "/",

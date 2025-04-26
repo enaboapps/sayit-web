@@ -35,7 +35,7 @@ function AddPhraseForm() {
         symbol_id: symbol?.id || undefined,
       };
       await phraseStore.getState().addPhrase(phraseData, boardId);
-      router.push(`/phrases?boardId=${boardId}`);
+      router.back();
     } catch (error) {
       console.error('Error adding phrase:', error);
       setError('Failed to add phrase');
@@ -50,7 +50,7 @@ function AddPhraseForm() {
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => router.push('/phrases')}
+            onClick={() => router.back()}
             className="flex items-center"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />

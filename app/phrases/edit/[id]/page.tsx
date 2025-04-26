@@ -33,7 +33,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
       return;
     }
     if (!boardId) {
-      router.push('/phrases');
+      router.back();
       return;
     }
 
@@ -76,7 +76,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
         symbol_id: symbol?.id || null,
       });
       await updatePhrase(phrase.id, updatedPhrase);
-      router.push('/phrases');
+      router.back();
     } catch (error) {
       console.error('Error updating phrase:', error);
       setError('Failed to update phrase');
@@ -88,7 +88,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
     try {
       await deletePhrase(phrase.id, boardId);
-      router.push('/phrases');
+      router.back();
     } catch (error) {
       console.error('Error deleting phrase:', error);
       setError('Failed to delete phrase');
@@ -117,7 +117,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
         <div className="mb-8">
           <Button
             variant="ghost"
-            onClick={() => router.push('/phrases')}
+            onClick={() => router.back()}
             className="flex items-center"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
