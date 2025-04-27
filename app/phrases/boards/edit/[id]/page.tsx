@@ -56,7 +56,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
         name,
       });
       await phraseStore.getState().updatePhraseBoard(user.id, resolvedParams.id, updatedBoard);
-      router.push('/phrases');
+      router.back();
     } catch (error) {
       console.error('Error updating board:', error);
       setError('Failed to update board');
@@ -77,7 +77,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
     try {
       await phraseStore.getState().deletePhraseBoard(user.id, resolvedParams.id);
-      router.push('/phrases');
+      router.back();
     } catch (error) {
       console.error('Error deleting board:', error);
       setError('Failed to delete board');
