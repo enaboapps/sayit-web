@@ -2,15 +2,14 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Symbol } from '@/lib/models/Symbol';
-import SymbolModal from '@/app/components/symbols/SymbolModal';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { PhraseData } from '@/lib/models/Phrase';
-import Image from 'next/image';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
+import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 
 function AddPhraseForm() {
   const router = useRouter();
@@ -18,7 +17,6 @@ function AddPhraseForm() {
   const boardId = searchParams.get('boardId');
   const [text, setText] = useState('');
   const [symbol, setSymbol] = useState<Symbol | null>(null);
-  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const user = useAuth();
@@ -74,42 +72,10 @@ function AddPhraseForm() {
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Symbol
             </label>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsSymbolModalOpen(true)}
-              className="w-full justify-start"
-            >
-              {symbol ? (
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden relative">
-                      <Image
-                        src={symbol.url ?? ''}
-                        alt={`Symbol ${symbol.id}`}
-                        fill
-                        className="object-contain p-1"
-                        unoptimized={symbol.url?.startsWith('blob:')}
-                      />
-                    </div>
-                    <span>Selected symbol</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setSymbol(null);
-                    }}
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </Button>
-                </div>
-              ) : (
-                'Select a symbol'
-              )}
-            </Button>
+            <SymbolSelector
+              symbol={symbol}
+              onSymbolSelect={setSymbol}
+            />
             <p className="mt-1 text-sm text-gray-500">Optional - Select a symbol to represent this phrase</p>
           </div>
 
@@ -128,12 +94,6 @@ function AddPhraseForm() {
             </Button>
           </div>
         </form>
-
-        <SymbolModal
-          isOpen={isSymbolModalOpen}
-          onClose={() => setIsSymbolModalOpen(false)}
-          onSymbolSelect={setSymbol}
-        />
       </div>
     </div>
   );

@@ -2,23 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeftIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { Phrase } from '@/lib/models/Phrase';
 import { Symbol } from '@/lib/models/Symbol';
 import { phraseStore } from '@/lib/stores/phraseStore';
-import SymbolModal from '@/app/components/symbols/SymbolModal';
 import { use } from 'react';
-import Image from 'next/image';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
+import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [phrase, setPhrase] = useState<Phrase | null>(null);
   const [text, setText] = useState('');
   const [symbol, setSymbol] = useState<Symbol | null>(null);
-  const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -141,42 +139,10 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             <label className="block text-gray-700 text-sm font-bold mb-2">
               Symbol
             </label>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsSymbolModalOpen(true)}
-              className="w-full justify-start"
-            >
-              {symbol ? (
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg overflow-hidden relative">
-                      <Image
-                        src={symbol.url ?? ''}
-                        alt={`Symbol ${symbol.id}`}
-                        fill
-                        className="object-contain p-1"
-                        unoptimized={symbol.url?.startsWith('blob:')}
-                      />
-                    </div>
-                    <span>Selected symbol</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      setSymbol(null);
-                    }}
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </Button>
-                </div>
-              ) : (
-                'Select a symbol'
-              )}
-            </Button>
+            <SymbolSelector
+              symbol={symbol}
+              onSymbolSelect={setSymbol}
+            />
             <p className="mt-1 text-sm text-gray-500">Optional - Select a symbol to represent this phrase</p>
           </div>
 
@@ -204,12 +170,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             </Button>
           </div>
         </form>
-
-        <SymbolModal
-          isOpen={isSymbolModalOpen}
-          onClose={() => setIsSymbolModalOpen(false)}
-          onSymbolSelect={setSymbol}
-        />
       </div>
     </div>
   );
