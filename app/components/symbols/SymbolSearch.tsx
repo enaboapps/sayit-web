@@ -15,6 +15,7 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
   const [symbols, setSymbols] = useState<Symbol[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const handleSearch = useCallback(async () => {
@@ -28,6 +29,18 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
       const results = await symbolsManager.search(searchTerm);
       setSymbols(results);
       setSelectedIndex(-1);
+      
+      // Pre-fetch image URLs
+      const urls: Record<string, string> = {};
+      for (const symbol of results) {
+        try {
+          const url = await symbol.getImageURL();
+          urls[symbol.id] = url;
+        } catch {
+          // Skip if image URL can't be fetched
+        }
+      }
+      setImageUrls(urls);
     } catch {
       setSymbols([]);
     } finally {
@@ -124,13 +137,15 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
                   }`}
                 >
                   <div className="relative aspect-square">
-                    <Image
-                      src={symbol.getImageURL()}
-                      alt={symbol.name}
-                      fill
-                      className="object-contain"
-                      unoptimized={symbol.getImageURL().startsWith('blob:')}
-                    />
+                    {imageUrls[symbol.id] && (
+                      <Image
+                        src={imageUrls[symbol.id]}
+                        alt={symbol.name ?? ''}
+                        fill
+                        className="object-contain"
+                        unoptimized={imageUrls[symbol.id].startsWith('blob:')}
+                      />
+                    )}
                   </div>
                   <p className="mt-2 text-sm text-gray-600 text-center truncate">
                     {symbol.name}
