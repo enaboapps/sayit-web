@@ -69,6 +69,17 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Type to search..."
           />
+          <p className="mt-2 text-sm text-gray-500">
+            Powered by{' '}
+            <a 
+              href="https://globalsymbols.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-black hover:underline"
+            >
+              Global Symbols
+            </a>
+          </p>
         </div>
 
         {/* Symbols Grid */}
