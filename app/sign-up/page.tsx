@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/lib/auth';
 import Input from '@/app/components/ui/Input';
+import Button from '@/app/components/ui/Button';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
@@ -81,12 +82,13 @@ export default function SignUpPage() {
               </Link>
             </p>
           </div>
-          <button
+          <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+            className="w-full"
+            size="lg"
           >
             Create Account
-          </button>
+          </Button>
         </form>
       </div>
     </div>

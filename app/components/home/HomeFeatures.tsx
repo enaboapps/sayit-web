@@ -1,14 +1,16 @@
 import TypingArea from '@/app/components/TypingArea';
+import { useTTS } from '@/lib/hooks/useTTS';
+import { useRouter } from 'next/navigation';
+import Button from '@/app/components/ui/Button';
 
-interface HomeFeaturesProps {
-  typingText: string;
-}
+export default function HomeFeatures() {
+  const tts = useTTS();
+  const router = useRouter();
 
-export default function HomeFeatures({ typingText }: HomeFeaturesProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-none">
-        <TypingArea initialText={typingText} />
+        <TypingArea initialText={''} tts={tts} />
       </div>
       <div className="flex-1 flex flex-col items-center justify-center p-8">
         <div className="max-w-2xl text-center">
@@ -18,7 +20,7 @@ export default function HomeFeatures({ typingText }: HomeFeaturesProps) {
           <p className="text-xl text-gray-600 mb-8">
             A simple, powerful way to communicate with pre-recorded phrases
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div className="bg-white p-6 rounded-lg shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy to Use</h3>
               <p className="text-gray-600">
@@ -37,6 +39,22 @@ export default function HomeFeatures({ typingText }: HomeFeaturesProps) {
                 Designed to be accessible and easy to use for everyone
               </p>
             </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={() => router.push('/sign-in')}
+              size="lg"
+            >
+              Sign In
+            </Button>
+            <Button
+              onClick={() => router.push('/sign-up')}
+              variant="outline"
+              size="lg"
+            >
+              Sign Up
+            </Button>
           </div>
         </div>
       </div>

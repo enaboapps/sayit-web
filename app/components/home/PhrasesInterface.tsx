@@ -1,54 +1,127 @@
 import { useRouter } from 'next/navigation';
 import { Phrase } from '@/lib/models/Phrase';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
-import PhraseTile from '../phrases/PhraseTile';
+import PhraseDataGrid from '../phrases/PhraseDataGrid';
 import PhrasesBottomBar from '../phrases/PhrasesBottomBar';
 import BoardCarousel from '../phrases/BoardCarousel';
 import TypingArea from '../TypingArea';
+import { useTTS } from '@/lib/hooks/useTTS';
+import { useState, useEffect } from 'react';
+import { phraseStore } from '@/lib/stores/phraseStore';
+import { databaseService } from '@/lib/services/DatabaseService';
+import { useAuth } from '@/app/contexts/AuthContext';
 
-interface PhrasesInterfaceProps {
-  boards: PhraseBoard[];
-  selectedBoard: PhraseBoard | null;
-  phrases: Phrase[];
-  loading: boolean;
-  loadingPhrases: boolean;
-  currentIndex: number;
-  isEditMode: boolean;
-  typingText: string;
-  onPhrasePress: (phrase: Phrase) => void;
-  onAddPhrase: () => void;
-  onEditPhrase: (phrase: Phrase) => void;
-  onNextBoard: () => void;
-  onPrevBoard: () => void;
-  onAddBoard: () => void;
-  onEdit: () => void;
-  onSelectBoard: (index: number) => void;
-}
-
-export default function PhrasesInterface({
-  boards,
-  selectedBoard,
-  phrases,
-  loading,
-  loadingPhrases,
-  currentIndex,
-  isEditMode,
-  typingText,
-  onPhrasePress,
-  onAddPhrase,
-  onEditPhrase,
-  onNextBoard,
-  onPrevBoard,
-  onAddBoard,
-  onEdit,
-  onSelectBoard,
-}: PhrasesInterfaceProps) {
+export default function PhrasesInterface() {
   const router = useRouter();
+  const { user } = useAuth();
+  const tts = useTTS();
+  const [typingText, setTypingText] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [boards, setBoards] = useState<PhraseBoard[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null);
+  const [phrases, setPhrases] = useState<Phrase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingPhrases, setLoadingPhrases] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentBoardIndex, setCurrentBoardIndex] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('Fetching phrase boards for user:', user.id);
+    phraseStore.getState().fetchBoards(user.id)
+      .then(() => {
+        const boards = phraseStore.getState().boards;
+        setBoards(boards);
+        if (boards.length > 0) {
+          setSelectedBoard(boards[0]);
+        }
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        console.error('Error fetching boards:', err);
+        setError('Failed to load phrase boards');
+        setLoading(false);
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !selectedBoard) return;
+
+    console.log('Fetching phrases for board:', selectedBoard.id);
+    setLoadingPhrases(true);
+    setPhrases([]); // Clear existing phrases while loading
+
+    if (selectedBoard.id) {
+      databaseService.getPhraseBoard(selectedBoard.id)
+        .then(async boardData => {
+          if (boardData) {
+            const board = await PhraseBoard.fromSupabase(boardData);
+            setPhrases(board.phrases);
+          }
+          setLoadingPhrases(false);
+        })
+        .catch(err => {
+          console.error('Error fetching board data:', err);
+          setError('Failed to load phrases');
+          setLoadingPhrases(false);
+        });
+    }
+  }, [user, selectedBoard]);
+
+  const handlePhrasePress = (phrase: Phrase) => {
+    setTypingText(phrase.text);
+    tts.speak(phrase.text);
+  };
+
+  const handleEdit = () => {
+    setIsEditMode(!isEditMode);
+  };
+
+  const nextBoard = () => {
+    if (boards.length === 0) return;
+    const newIndex = (currentBoardIndex + 1) % boards.length;
+    setCurrentBoardIndex(newIndex);
+    setSelectedBoard(boards[newIndex]);
+  };
+
+  const prevBoard = () => {
+    if (boards.length === 0) return;
+    const newIndex = (currentBoardIndex - 1 + boards.length) % boards.length;
+    setCurrentBoardIndex(newIndex);
+    setSelectedBoard(boards[newIndex]);
+  };
+
+  const handleAddPhrase = async () => {
+    if (!user || !selectedBoard) {
+      console.error('Cannot add phrase: no user or board selected');
+      return;
+    }
+    router.push(`/phrases/add?boardId=${selectedBoard.id}`);
+  };
+
+  const handleEditPhrase = (phrase: Phrase) => {
+    if (!selectedBoard) return;
+    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`);
+  };
+
+  const handleAddBoard = () => {
+    router.push('/phrases/boards/add');
+  };
+
+  const handleSelectBoard = (index: number) => {
+    setCurrentBoardIndex(index);
+    setSelectedBoard(boards[index]);
+  };
+
+  if (error) {
+    return <div className="text-red-500 p-4">{error}</div>;
+  }
 
   return (
     <>
       <div className="flex-none">
-        <TypingArea initialText={typingText} />
+        <TypingArea initialText={typingText} tts={tts} />
       </div>
       {boards.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
@@ -63,13 +136,13 @@ export default function PhrasesInterface({
             <BoardCarousel
               boards={boards}
               selectedBoard={selectedBoard}
-              currentIndex={currentIndex}
+              currentIndex={currentBoardIndex}
               isEditMode={isEditMode}
               phrasesCount={phrases.length}
               isLoadingPhrases={loadingPhrases}
-              onPrevBoard={onPrevBoard}
-              onNextBoard={onNextBoard}
-              onSelectBoard={onSelectBoard}
+              onPrevBoard={prevBoard}
+              onNextBoard={nextBoard}
+              onSelectBoard={handleSelectBoard}
               onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
             />
           </div>
@@ -78,41 +151,14 @@ export default function PhrasesInterface({
             {!loading && (
               <div className="flex flex-col h-full">
                 <div className="flex-1 p-1 overflow-auto">
-                  {loadingPhrases ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
-                      {[...Array(10)].map((_, i) => (
-                        <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
-                      ))}
-                    </div>
-                  ) : phrases.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center p-8">
-                      <div className="text-center">
-                        <h2 className="text-xl font-medium text-gray-900 mb-4">No phrases yet</h2>
-                        <p className="text-gray-600">Add your first phrase to get started</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
-                      {phrases.map((phrase) => (
-                        <PhraseTile
-                          key={phrase.id}
-                          phrase={phrase}
-                          onPress={() => onPhrasePress(phrase)}
-                          onEdit={isEditMode ? () => onEditPhrase(phrase) : undefined}
-                          className="aspect-square"
-                        />
-                      ))}
-                      {isEditMode && (
-                        <button
-                          onClick={onAddPhrase}
-                          className="aspect-square flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg border-2 border-dashed border-gray-300 transition-colors duration-200"
-                          aria-label="Add new phrase"
-                        >
-                          <span className="text-gray-500 text-lg">+ Add Phrase</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <PhraseDataGrid
+                    phrases={phrases}
+                    boardId={selectedBoard?.id ?? ''}
+                    isEditMode={isEditMode}
+                    isLoading={loadingPhrases}
+                    onPhrasePress={handlePhrasePress}
+                    onEditPhrase={handleEditPhrase}
+                  />
                 </div>
               </div>
             )}
@@ -120,9 +166,9 @@ export default function PhrasesInterface({
         </div>
       )}
       <PhrasesBottomBar
-        onAddPhrase={onAddPhrase}
-        onAddBoard={onAddBoard}
-        onEdit={onEdit}
+        onAddPhrase={handleAddPhrase}
+        onAddBoard={handleAddBoard}
+        onEdit={handleEdit}
         boardPresent={boards.length > 0}
         isEditMode={isEditMode}
       />

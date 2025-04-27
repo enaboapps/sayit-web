@@ -4,17 +4,21 @@ import { useState, useEffect, useRef } from 'react';
 import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
-import { useTTS } from '@/lib/hooks/useTTS';
 
 interface TypingAreaProps {
   initialText?: string
+  tts: {
+    speak: (text: string) => void;
+    isSpeaking: boolean;
+    isAvailable: boolean;
+  }
 }
 
-export default function TypingArea({ initialText = '' }: TypingAreaProps) {
+export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
   const [text, setText] = useState(initialText);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
-  const { speak, isSpeaking, isAvailable } = useTTS();
+  const { speak, isSpeaking, isAvailable } = tts;
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('typingAreaVisible');
@@ -52,12 +56,7 @@ export default function TypingArea({ initialText = '' }: TypingAreaProps) {
 
   const handleSpeak = () => {
     if (text.trim()) {
-      speak(text, {
-        rate: settings.speechRate || 1.0,
-        pitch: settings.speechPitch || 1.0,
-        volume: settings.speechVolume || 1.0,
-        voiceURI: settings.speechVoice,
-      });
+      speak(text);
       textareaRef.current?.focus();
     }
   };

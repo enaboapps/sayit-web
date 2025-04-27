@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/lib/auth';
 import Input from '@/app/components/ui/Input';
+import Button from '@/app/components/ui/Button';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
@@ -32,12 +33,13 @@ export default function ResetPasswordPage() {
             <p className="text-green-600 mb-6">
               Password reset email sent! Please check your inbox.
             </p>
-            <Link
+            <Button
+              as={Link}
               href="/sign-in"
-              className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+              size="lg"
             >
               Return to Sign In
-            </Link>
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -64,12 +66,13 @@ export default function ResetPasswordPage() {
                 </Link>
               </p>
             </div>
-            <button
+            <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-800 transform hover:-translate-y-0.5 transition-all duration-200 font-medium"
+              className="w-full"
+              size="lg"
             >
               Send Reset Link
-            </button>
+            </Button>
           </form>
         )}
       </div>

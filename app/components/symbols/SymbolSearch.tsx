@@ -14,7 +14,6 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [symbols, setSymbols] = useState<Symbol[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -25,14 +24,12 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
     }
 
     setIsLoading(true);
-    setError(null);
     try {
       const results = await symbolsManager.search(searchTerm);
       setSymbols(results);
       setSelectedIndex(-1);
-    } catch (err) {
-      setError('Failed to search for symbols');
-      console.error('Error searching symbols:', err);
+    } catch {
+      setSymbols([]);
     } finally {
       setIsLoading(false);
     }
@@ -58,9 +55,8 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
       setIsLoading(true);
       await symbolsManager.handleSelectedSymbol(symbol);
       onSymbolSelect(symbol);
-    } catch (error) {
-      console.error('Error handling symbol selection:', error);
-      setError('Failed to process symbol');
+    } catch {
+      // Silently fail - the user can try again
     } finally {
       setIsLoading(false);
     }
@@ -99,68 +95,52 @@ export default function SymbolSearch({ onSymbolSelect }: SymbolSearchProps) {
           <MagnifyingGlassIcon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
           {searchTerm && (
             <button
-              onClick={() => setSearchTerm('')}
-              className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => {
+                setSearchTerm('');
+                setSymbols([]);
+              }}
+              className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
             >
               <XMarkIcon className="h-5 w-5" />
             </button>
           )}
         </div>
-      </div>
-
-      {error && (
-        <div className="mt-3 p-3 text-sm text-red-600 bg-red-50 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      {isLoading && (
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="w-full aspect-square bg-gray-100 rounded-xl animate-pulse">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse" />
-              </div>
+        {isLoading && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg p-4">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {!isLoading && symbols.length > 0 && (
-        <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {symbols.map((symbol, index) => (
-            <button
-              key={symbol.id}
-              onClick={() => handleSymbolClick(symbol)}
-              className={`w-full aspect-square bg-white border-2 rounded-xl transition-all duration-200 ${
-                selectedIndex === index
-                  ? 'border-blue-500 shadow-lg scale-105'
-                  : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
-              }`}
-            >
-              <div className="w-full h-full flex items-center justify-center p-4 relative">
-                <Image
-                  src={symbol.url ?? ''}
-                  alt={`Symbol ${symbol.id}`}
-                  fill
-                  className="object-contain"
-                  unoptimized={symbol.url?.startsWith('blob:')}
-                />
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {!isLoading && symbols.length === 0 && searchTerm && (
-        <div className="mt-8 text-center">
-          <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-            <MagnifyingGlassIcon className="h-12 w-12 text-gray-400" />
           </div>
-          <p className="text-gray-500 text-lg font-medium">No symbols found</p>
-          <p className="text-gray-400 mt-1">Try different search terms</p>
-        </div>
-      )}
+        )}
+        {!isLoading && symbols.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
+              {symbols.map((symbol, index) => (
+                <button
+                  key={symbol.id}
+                  onClick={() => handleSymbolClick(symbol)}
+                  className={`p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 ${
+                    index === selectedIndex ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                >
+                  <div className="relative aspect-square">
+                    <Image
+                      src={symbol.getImageURL()}
+                      alt={symbol.name}
+                      fill
+                      className="object-contain"
+                      unoptimized={symbol.getImageURL().startsWith('blob:')}
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-gray-600 text-center truncate">
+                    {symbol.name}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

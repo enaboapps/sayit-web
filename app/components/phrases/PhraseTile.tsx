@@ -18,19 +18,17 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
 
   useEffect(() => {
     const fetchImageUrl = async () => {
-      const symbol = await phrase.getSymbol()?.getImageURL();
-      if (symbol) {
-        setUrl(symbol);
+      try {
+        const symbol = await phrase.getSymbol()?.getImageURL();
+        if (symbol) {
+          setUrl(symbol);
+        }
+      } catch {
+        setImageError(true);
       }
     };
     fetchImageUrl();
   }, [phrase]);
-
-  console.log('PhraseTile rendering:', {
-    phraseId: phrase.id,
-    symbolId: phrase.symbol_id,
-    symbolUrl: url,
-  });
 
   const handleClick = () => {
     if (onEdit) {
@@ -62,10 +60,7 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
               alt={`Symbol for ${phrase.text}`}
               fill
               className="object-contain"
-              onError={() => {
-                console.error('Error loading image:', url);
-                setImageError(true);
-              }}
+              onError={() => setImageError(true)}
               unoptimized={url.startsWith('blob:')}
             />
           </div>
