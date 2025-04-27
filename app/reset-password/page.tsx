@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/lib/auth';
 import Input from '@/app/components/ui/Input';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/Button';
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('');
@@ -34,11 +34,11 @@ export default function ResetPasswordPage() {
               Password reset email sent! Please check your inbox.
             </p>
             <Button
-              as={Link}
-              href="/sign-in"
-              size="lg"
+              asChild
             >
-              Return to Sign In
+              <Link href="/sign-in" className="w-full">
+                Back to Sign In
+              </Link>
             </Button>
           </div>
         ) : (

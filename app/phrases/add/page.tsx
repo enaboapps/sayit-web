@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { PhraseData } from '@/lib/models/Phrase';
 import Image from 'next/image';
 import Input from '@/app/components/ui/Input';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/Button';
 
 function AddPhraseForm() {
   const router = useRouter();
@@ -98,7 +98,7 @@ function AddPhraseForm() {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       setSymbol(null);
                     }}

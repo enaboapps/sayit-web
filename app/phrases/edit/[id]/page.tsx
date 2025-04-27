@@ -11,7 +11,7 @@ import SymbolModal from '@/app/components/symbols/SymbolModal';
 import { use } from 'react';
 import Image from 'next/image';
 import Input from '@/app/components/ui/Input';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/Button';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -165,7 +165,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       setSymbol(null);
                     }}

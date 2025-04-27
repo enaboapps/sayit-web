@@ -1,7 +1,7 @@
 import TypingArea from '@/app/components/TypingArea';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useRouter } from 'next/navigation';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/Button';
 
 export default function HomeFeatures() {
   const tts = useTTS();

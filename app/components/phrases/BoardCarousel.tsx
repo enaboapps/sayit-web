@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeftIcon, ChevronRightIcon, PencilIcon } from '@heroicons/react/24/outline';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/Button';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
 
 interface BoardCarouselProps {
@@ -77,7 +77,7 @@ export default function BoardCarousel({
                   key={index}
                   variant="ghost"
                   size="icon"
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     e.stopPropagation();
                     onSelectBoard(index);
                   }}

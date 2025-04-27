@@ -8,7 +8,7 @@ import { phraseStore } from '@/lib/stores/phraseStore';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
-import Button from '@/app/components/ui/Button';
+import { Button } from '@/app/components/ui/Button';
 
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
