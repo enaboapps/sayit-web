@@ -105,11 +105,11 @@ export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
   return (
     <div className="flex flex-col">
       {isVisible && (
-        <div className="flex flex-col">
+        <div className="flex flex-col bg-white shadow-lg border border-gray-100 overflow-hidden">
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              className={`w-full h-40 bg-white text-gray-900 ${currentTextSizeClass} placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none p-4 overflow-auto`}
+              className={`w-full h-40 bg-transparent text-gray-900 ${currentTextSizeClass} placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none p-6 overflow-auto`}
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
@@ -140,61 +140,63 @@ export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
               }}
             />
             {error && (
-              <div className="absolute bottom-0 left-0 right-0 bg-red-100 text-red-700 p-2 text-sm">
+              <div className="absolute bottom-0 left-0 right-0 bg-red-50 text-red-700 p-3 text-sm border-t border-red-100">
                 {error}
               </div>
             )}
           </div>
-          <div className="flex border-t border-gray-300">
-            <button
-              onClick={handleSpeak}
-              className={`flex-1 h-12 transition-colors duration-200 ${
-                isSpeaking
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-              }`}
-              data-tooltip-id="speak-tooltip"
-              data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
-              disabled={!isAvailable || !text.trim()}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <ChatBubbleLeftIcon className="w-5 h-5" />
-                <span>Speak</span>
-              </div>
-            </button>
-            <button
-              onClick={handleRewrite}
-              className={`flex-1 h-12 transition-colors duration-200 ${
-                isRewriting
-                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-              }`}
-              data-tooltip-id="rewrite-tooltip"
-              data-tooltip-content={isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
-              disabled={!text.trim() || isRewriting}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <ArrowPathIcon className={`w-5 h-5 ${isRewriting ? 'animate-spin' : ''}`} />
-                <span>AI Rewrite</span>
-              </div>
-            </button>
-            <button
-              onClick={handleClear}
-              className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
-              data-tooltip-id="clear-tooltip"
-              data-tooltip-content="Clear"
-            >
-              <div className="flex items-center justify-center gap-2">
-                <XMarkIcon className="w-5 h-5 text-gray-600" />
-                <span>Clear</span>
-              </div>
-            </button>
-          </div>
+          {text.trim() && (
+            <div className="flex border-t border-gray-100 divide-x divide-gray-100">
+              <button
+                onClick={handleSpeak}
+                className={`flex-1 h-14 transition-colors duration-200 ${
+                  isSpeaking
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                    : 'bg-transparent hover:bg-gray-50 text-gray-600'
+                }`}
+                data-tooltip-id="speak-tooltip"
+                data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
+                disabled={!isAvailable || !text.trim()}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <ChatBubbleLeftIcon className="w-5 h-5" />
+                  <span>Speak</span>
+                </div>
+              </button>
+              <button
+                onClick={handleRewrite}
+                className={`flex-1 h-14 transition-colors duration-200 ${
+                  isRewriting
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                    : 'bg-transparent hover:bg-gray-50 text-gray-600'
+                }`}
+                data-tooltip-id="rewrite-tooltip"
+                data-tooltip-content={isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
+                disabled={!text.trim() || isRewriting}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <ArrowPathIcon className={`w-5 h-5 ${isRewriting ? 'animate-spin' : ''}`} />
+                  <span>AI Rewrite</span>
+                </div>
+              </button>
+              <button
+                onClick={handleClear}
+                className="flex-1 h-14 bg-transparent hover:bg-gray-50 text-gray-600 transition-colors duration-200"
+                data-tooltip-id="clear-tooltip"
+                data-tooltip-content="Clear"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <XMarkIcon className="w-5 h-5" />
+                  <span>Clear</span>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
       )}
       <button
         onClick={toggleVisibility}
-        className="h-8 bg-gray-100 hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center"
+        className="h-10 bg-white hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-gray-100"
         data-tooltip-id="toggle-tooltip"
         data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
       >
