@@ -30,7 +30,7 @@ export default function BoardSelector({
     return (
       <div className="flex items-center bg-white mb-2">
         <div
-          className="flex-1 flex items-center justify-between p-2 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
           onClick={() => {
             if (isEditMode && selectedBoard) {
               onEditBoard(selectedBoard.id ?? '');
@@ -64,7 +64,7 @@ export default function BoardSelector({
     <>
       <div className="flex items-center bg-white mb-2">
         <div
-          className="flex-1 flex items-center justify-between p-2 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
           onClick={() => setIsPopupOpen(true)}
         >
           <div className="flex items-center space-x-2">
