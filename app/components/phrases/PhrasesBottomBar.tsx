@@ -23,29 +23,29 @@ export default function PhrasesBottomBar({
       <div className="flex justify-around items-center px-6 py-4">
         <div
           onClick={onAddBoard}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
+          className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
           data-tooltip-id="new-board-tooltip"
           data-tooltip-content="Create a new board to organize your phrases"
         >
           <Plus className="w-5 h-5" />
-          <span className="font-medium">New Board</span>
+          <span className="text-xs font-medium">New Board</span>
         </div>
 
         {boardPresent && (
           <div
             onClick={onAddPhrase}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
+            className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
             data-tooltip-id="add-phrase-tooltip"
             data-tooltip-content="Add a new phrase to the current board"
           >
             <MessageSquare className="w-5 h-5" />
-            <span className="font-medium">Add to Board</span>
+            <span className="text-xs font-medium">Add to Board</span>
           </div>
         )}
 
         <div
           onClick={onEdit}
-          className={`flex items-center gap-2 cursor-pointer transition-colors duration-200 ${
+          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 ${
             isEditMode ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
           }`}
           data-tooltip-id="edit-tooltip"
@@ -56,7 +56,7 @@ export default function PhrasesBottomBar({
           ) : (
             <Pencil className="w-5 h-5" />
           )}
-          <span className="font-medium">{isEditMode ? 'Done' : 'Edit'}</span>
+          <span className="text-xs font-medium">{isEditMode ? 'Done' : 'Edit'}</span>
         </div>
 
         <Tooltip id="new-board-tooltip" place="top" />
