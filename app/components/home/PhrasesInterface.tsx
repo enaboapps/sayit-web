@@ -3,7 +3,7 @@ import { Phrase } from '@/lib/models/Phrase';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import PhraseDataGrid from '../phrases/PhraseDataGrid';
 import PhrasesBottomBar from '../phrases/PhrasesBottomBar';
-import BoardCarousel from '../phrases/BoardCarousel';
+import BoardSelector from '../phrases/BoardSelector';
 import TypingArea from '../TypingArea';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
@@ -23,7 +23,6 @@ export default function PhrasesInterface() {
   const [loading, setLoading] = useState(true);
   const [loadingPhrases, setLoadingPhrases] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentBoardIndex, setCurrentBoardIndex] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -78,20 +77,6 @@ export default function PhrasesInterface() {
     setIsEditMode(!isEditMode);
   };
 
-  const nextBoard = () => {
-    if (boards.length === 0) return;
-    const newIndex = (currentBoardIndex + 1) % boards.length;
-    setCurrentBoardIndex(newIndex);
-    setSelectedBoard(boards[newIndex]);
-  };
-
-  const prevBoard = () => {
-    if (boards.length === 0) return;
-    const newIndex = (currentBoardIndex - 1 + boards.length) % boards.length;
-    setCurrentBoardIndex(newIndex);
-    setSelectedBoard(boards[newIndex]);
-  };
-
   const handleAddPhrase = async () => {
     if (!user || !selectedBoard) {
       console.error('Cannot add phrase: no user or board selected');
@@ -109,9 +94,8 @@ export default function PhrasesInterface() {
     router.push('/phrases/boards/add');
   };
 
-  const handleSelectBoard = (index: number) => {
-    setCurrentBoardIndex(index);
-    setSelectedBoard(boards[index]);
+  const handleSelectBoard = (board: PhraseBoard) => {
+    setSelectedBoard(board);
   };
 
   if (error) {
@@ -133,15 +117,11 @@ export default function PhrasesInterface() {
       ) : (
         <div className="flex-1 flex flex-col">
           <div className="flex-none">
-            <BoardCarousel
+            <BoardSelector
               boards={boards}
               selectedBoard={selectedBoard}
-              currentIndex={currentBoardIndex}
               isEditMode={isEditMode}
-              phrasesCount={phrases.length}
               isLoadingPhrases={loadingPhrases}
-              onPrevBoard={prevBoard}
-              onNextBoard={nextBoard}
               onSelectBoard={handleSelectBoard}
               onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
             />
