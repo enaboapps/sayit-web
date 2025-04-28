@@ -10,6 +10,7 @@ export interface PhraseData {
   position?: number
   createdAt?: Date
   updatedAt?: Date
+  isAddTile?: boolean
 }
 
 export class Phrase {

@@ -12,9 +12,10 @@ interface TypingAreaProps {
     isSpeaking: boolean;
     isAvailable: boolean;
   }
+  onChange?: (text: string) => void
 }
 
-export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
+export default function TypingArea({ initialText = '', tts, onChange }: TypingAreaProps) {
   const [text, setText] = useState(initialText);
   const [isRewriting, setIsRewriting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
   const handleClear = () => {
     setText('');
     setError(null);
+    onChange?.('');
     textareaRef.current?.focus();
   };
 
@@ -89,6 +91,7 @@ export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
       }
 
       setText(data.text);
+      onChange?.(data.text);
       textareaRef.current?.focus();
     } catch (error) {
       console.error('Error rewriting text:', error);
@@ -113,6 +116,7 @@ export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
+                onChange?.(e.target.value);
                 setError(null);
               }}
               onKeyDown={(e) => {
@@ -128,6 +132,7 @@ export default function TypingArea({ initialText = '', tts }: TypingAreaProps) {
                   case 'newline':
                   default:
                     setText(prev => prev + '\n');
+                    onChange?.(text + '\n');
                     break;
                   }
                 }

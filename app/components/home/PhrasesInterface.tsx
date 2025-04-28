@@ -1,7 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { Phrase } from '@/lib/models/Phrase';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
-import PhraseDataGrid from '../phrases/PhraseDataGrid';
 import PhrasesBottomBar from '../phrases/PhrasesBottomBar';
 import BoardSelector from '../phrases/BoardSelector';
 import TypingArea from '../TypingArea';
@@ -10,6 +9,8 @@ import { useState, useEffect } from 'react';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import { databaseService } from '@/lib/services/DatabaseService';
 import { useAuth } from '@/app/contexts/AuthContext';
+import PhraseTile from '../phrases/PhraseTile';
+import ActionTile from '../phrases/ActionTile';
 
 export default function PhrasesInterface() {
   const router = useRouter();
@@ -85,6 +86,36 @@ export default function PhrasesInterface() {
     router.push(`/phrases/add?boardId=${selectedBoard.id}`);
   };
 
+  const handleAddTypingAsPhrase = async () => {
+    if (!user || !selectedBoard?.id || !typingText.trim()) {
+      console.error('Cannot add phrase: no user, board selected, or empty text');
+      return;
+    }
+
+    try {
+      const phraseData = {
+        text: typingText,
+        userId: user.id,
+        boardId: selectedBoard.id,
+      };
+
+      await phraseStore.getState().addPhrase(phraseData, selectedBoard.id);
+      setTypingText(''); // Clear the typing area after adding
+
+      // Refresh the phrases list
+      if (selectedBoard.id) {
+        const boardData = await databaseService.getPhraseBoard(selectedBoard.id);
+        if (boardData) {
+          const board = await PhraseBoard.fromSupabase(boardData);
+          setPhrases(board.phrases);
+        }
+      }
+    } catch (error) {
+      console.error('Error adding phrase:', error);
+      setError('Failed to add phrase');
+    }
+  };
+
   const handleEditPhrase = (phrase: Phrase) => {
     if (!selectedBoard) return;
     router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`);
@@ -105,7 +136,11 @@ export default function PhrasesInterface() {
   return (
     <>
       <div className="flex-none">
-        <TypingArea initialText={typingText} tts={tts} />
+        <TypingArea 
+          initialText={typingText} 
+          tts={tts} 
+          onChange={(text) => setTypingText(text)}
+        />
       </div>
       {boards.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
@@ -131,14 +166,31 @@ export default function PhrasesInterface() {
             {!loading && (
               <div className="flex flex-col h-full">
                 <div className="flex-1 p-1 overflow-auto">
-                  <PhraseDataGrid
-                    phrases={phrases}
-                    boardId={selectedBoard?.id ?? ''}
-                    isEditMode={isEditMode}
-                    isLoading={loadingPhrases}
-                    onPhrasePress={handlePhrasePress}
-                    onEditPhrase={handleEditPhrase}
-                  />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
+                    {phrases.map((phrase) => (
+                      <PhraseTile
+                        key={phrase.id}
+                        phrase={phrase}
+                        onPress={() => handlePhrasePress(phrase)}
+                        onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
+                        className="aspect-square"
+                      />
+                    ))}
+                    {typingText.trim() && (
+                      <ActionTile
+                        text="+ Add as Phrase"
+                        onClick={handleAddTypingAsPhrase}
+                        className="aspect-square"
+                      />
+                    )}
+                    {isEditMode && (
+                      <ActionTile
+                        text="+ Add Phrase"
+                        onClick={handleAddPhrase}
+                        className="aspect-square"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             )}
