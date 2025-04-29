@@ -72,7 +72,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     setIsRewriting(true);
     setError(null);
     try {
-      const response = await fetch('/api/rewrite', {
+      const response = await fetch('/api/flesh-out', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -175,13 +175,13 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                     ? 'bg-blue-500 hover:bg-blue-600 text-white'
                     : 'bg-transparent hover:bg-gray-50 text-gray-600'
                 }`}
-                data-tooltip-id="rewrite-tooltip"
-                data-tooltip-content={isRewriting ? 'Rewriting...' : 'Rewrite with AI'}
+                data-tooltip-id="flesh-out-tooltip"
+                data-tooltip-content={isRewriting ? 'Fleshing out...' : 'Flesh out with AI'}
                 disabled={!text.trim() || isRewriting}
               >
                 <div className="flex items-center justify-center gap-2">
                   <ArrowPathIcon className={`w-5 h-5 ${isRewriting ? 'animate-spin' : ''}`} />
-                  <span>AI Rewrite</span>
+                  <span>Flesh Out</span>
                 </div>
               </button>
               <button
@@ -212,7 +212,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
         )}
       </button>
       <Tooltip id="speak-tooltip" />
-      <Tooltip id="rewrite-tooltip" />
+      <Tooltip id="flesh-out-tooltip" />
       <Tooltip id="clear-tooltip" />
       <Tooltip id="toggle-tooltip" />
     </div>

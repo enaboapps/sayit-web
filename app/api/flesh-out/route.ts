@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateText } from '@/lib/deepinfra';
+import { fleshOut } from '@/lib/deepinfra';
 
 export const config = {
   runtime: 'nodejs',
@@ -30,16 +30,16 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Attempting to rewrite text:', text);
-    const prompt = `Rewrite the following text in a clear and concise way: "${text}"`;
+    console.log('Attempting to flesh out text:', text);
+    const prompt = text;
     
     try {
-      const rewrittenText = await generateText(prompt, {
+      const fleshedOutText = await fleshOut(prompt, {
         maxTokens: 200,
         temperature: 0.7,
       });
-      console.log('Successfully generated text:', rewrittenText);
-      return NextResponse.json({ text: rewrittenText });
+      console.log('Successfully generated text:', fleshedOutText);
+      return NextResponse.json({ text: fleshedOutText });
     } catch (genError) {
       console.error('Error generating text:', genError);
       return NextResponse.json(
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       );
     }
   } catch (error) {
-    console.error('Error in rewrite API:', error);
+    console.error('Error in flesh out API:', error);
     return NextResponse.json(
       { error: 'Server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 },
