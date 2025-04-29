@@ -9,7 +9,7 @@ const deepinfra = createDeepInfra({
   apiKey: process.env.DEEPINFRA_API_KEY,
 });
 
-const systemPrompt = `
+const systemPromptForTextGeneration = `
 You are an AAC (Augmentative and Alternative Communication) app that helps users communicate more effectively.
 
 Your role is to:
@@ -32,6 +32,26 @@ Guidelines:
 Remember: Your goal is to help users express themselves more effectively while maintaining their voice and intent.
 `;
 
+const systemPromptForBoardGeneration = `
+You are an AAC app that generates a board based on the user's input.
+
+A board is a list of phrases that are related to the user's input.
+
+The input might be a situation, an object, an action, etc.
+
+The board will be a list of phrases that are related to the user's input.
+
+The board will be returned in a JSON array of strings.
+
+Example:
+
+Input: "I want to buy a car"
+
+Output: ["How much is the car?", "What is the color of the car?", "What is the price of the car?"]
+
+Only return the JSON array, nothing else.
+`;
+
 /**
  * Generate text using the DeepInfra API.
  * @param prompt The input prompt for the text generation.
@@ -47,7 +67,8 @@ export async function generateText(prompt: string, options?: {
   try {
     const { text } = await aiGenerateText({
       model: deepinfra('google/gemma-3-27b-it'),
-      prompt: `${systemPrompt}\n\n${prompt}`,
+      system: systemPromptForTextGeneration,
+      prompt,
       maxTokens: options?.maxTokens || 100,
       temperature: options?.temperature || 0.7,
       topP: options?.topP || 0.9,
@@ -60,3 +81,23 @@ export async function generateText(prompt: string, options?: {
     throw error;
   }
 } 
+
+/**
+ * Generate a board using the DeepInfra API.
+ * @param prompt The input prompt for the board generation.
+ * @returns The generated board.
+ */
+export async function generateBoard(prompt: string): Promise<string[]> {
+  try {
+    const { text } = await aiGenerateText({
+      model: deepinfra('google/gemma-3-27b-it'),
+      system: systemPromptForBoardGeneration,
+      prompt,
+    });
+
+    return JSON.parse(text);
+  } catch (error) {
+    console.error('Error generating board:', error);
+    throw error;
+  }
+}
