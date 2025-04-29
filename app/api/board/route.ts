@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateBoard } from '@/lib/deepinfra';
+import { generate } from '@/lib/deepinfra';
 
 export const config = {
   runtime: 'nodejs',
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     console.log('Attempting to generate board for text:', text);
     
     try {
-      const board = await generateBoard(text);
+      const board = await generate('board', text);
       console.log('Successfully generated board:', board);
       return NextResponse.json({ board });
     } catch (genError) {

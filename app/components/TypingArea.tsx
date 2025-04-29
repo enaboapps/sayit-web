@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
+import FleshOutPopup from './flesh-out/FleshOutPopup';
 
 interface TypingAreaProps {
   initialText?: string
@@ -17,8 +18,8 @@ interface TypingAreaProps {
 
 export default function TypingArea({ initialText = '', tts, onChange }: TypingAreaProps) {
   const [text, setText] = useState(initialText);
-  const [isRewriting, setIsRewriting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
   const { speak, isSpeaking, isAvailable } = tts;
@@ -66,39 +67,16 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     }
   };
 
-  const handleRewrite = async () => {
+  const handleFleshOut = () => {
     if (!text.trim()) return;
-    
-    setIsRewriting(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/flesh-out', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
+    setShowFleshOutPopup(true);
+  };
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (!data.text) {
-        throw new Error('No text returned from server');
-      }
-
-      setText(data.text);
-      onChange?.(data.text);
-      textareaRef.current?.focus();
-    } catch (error) {
-      console.error('Error rewriting text:', error);
-      setError(error instanceof Error ? error.message : 'Failed to rewrite text');
-    } finally {
-      setIsRewriting(false);
-    }
+  const handleApplyFleshedOutText = (newText: string) => {
+    setText(newText);
+    onChange?.(newText);
+    setShowFleshOutPopup(false);
+    textareaRef.current?.focus();
   };
 
   const toggleVisibility = () => {
@@ -169,18 +147,14 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                 </div>
               </button>
               <button
-                onClick={handleRewrite}
-                className={`flex-1 h-14 transition-colors duration-200 ${
-                  isRewriting
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                    : 'bg-transparent hover:bg-gray-50 text-gray-600'
-                }`}
+                onClick={handleFleshOut}
+                className="flex-1 h-14 bg-transparent hover:bg-gray-50 text-gray-600 transition-colors duration-200"
                 data-tooltip-id="flesh-out-tooltip"
-                data-tooltip-content={isRewriting ? 'Fleshing out...' : 'Flesh out with AI'}
-                disabled={!text.trim() || isRewriting}
+                data-tooltip-content="Flesh out with AI"
+                disabled={!text.trim()}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <ArrowPathIcon className={`w-5 h-5 ${isRewriting ? 'animate-spin' : ''}`} />
+                  <ArrowPathIcon className="w-5 h-5" />
                   <span>Flesh Out</span>
                 </div>
               </button>
@@ -215,6 +189,14 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       <Tooltip id="flesh-out-tooltip" />
       <Tooltip id="clear-tooltip" />
       <Tooltip id="toggle-tooltip" />
+
+      {showFleshOutPopup && (
+        <FleshOutPopup
+          initialText={text}
+          onClose={() => setShowFleshOutPopup(false)}
+          onApply={handleApplyFleshedOutText}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fleshOut } from '@/lib/deepinfra';
+import { generate } from '@/lib/deepinfra';
 
 export const config = {
   runtime: 'nodejs',
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { text } = await request.json();
+    const { text, mode } = await request.json();
     
     if (!text) {
       return NextResponse.json(
@@ -30,11 +30,10 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Attempting to flesh out text:', text);
-    const prompt = text;
+    console.log('Attempting to flesh out text:', text, 'with mode:', mode);
     
     try {
-      const fleshedOutText = await fleshOut(prompt, {
+      const fleshedOutText = await generate(mode || 'fleshOut', text, {
         maxTokens: 200,
         temperature: 0.7,
       });
