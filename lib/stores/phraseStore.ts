@@ -165,10 +165,20 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
   deletePhraseBoard: async (userId: string, boardId: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
+      // First get the board to get its phrases
+      const board = await databaseService.getPhraseBoard(boardId);
+      if (board?.phrase_board_phrases) {
+        // Delete all phrases associated with this board
+        await Promise.all(
+          board.phrase_board_phrases.map((p) => databaseService.deletePhrase(p.phrase_id))
+        );
+      }
+      // Then delete the board
       await databaseService.deletePhraseBoard(boardId);
       set((state) => ({
         ...state,
         boards: state.boards.filter((b) => b.id !== boardId),
+        phrases: state.phrases.filter((p) => !board?.phrase_board_phrases?.some((bp) => bp.phrase_id === p.id)),
         loading: false,
       }));
     } catch (err) {
