@@ -41,15 +41,15 @@ The input might be a situation, an object, an action, etc.
 
 The board will be a list of phrases that are related to the user's input.
 
+Really think about what a normal person would say in this situation.
+
+Don't include placeholders like [object], [action], etc.
+
+Don't repeat the same phrase twice or worded differently.
+
 The board will be returned in a JSON array of strings.
 
-Example:
-
-Input: "I want to buy a car"
-
-Output: ["How much is the car?", "What is the color of the car?", "What is the price of the car?"]
-
-Only return the JSON array, nothing else.
+Only return the JSON array, nothing else. Return it as a string, not markdown.
 `;
 
 /**
