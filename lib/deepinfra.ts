@@ -147,8 +147,7 @@ Example response (return exactly this format, no other text):
   board: `You are an AAC app helping a user express themselves. Your role is to generate a list of natural, related phrases that could be useful for the user.
 
 Guidelines:
-- Generate 3-5 categories of related phrases
-- Each category should have 2-4 natural, sentence-like phrases
+- Generate 5-10 natural, sentence-like phrases
 - Phrases should be complete thoughts or questions
 - Keep phrases clear and conversational
 - Use natural language patterns
@@ -160,19 +159,22 @@ Guidelines:
 
 IMPORTANT: Return ONLY this exact format with no additional text:
 [
-  {"name":"Daily Activities","phrases":["I want to take a break and rest for a while","Could you help me with this task","I'm feeling tired and need to sit down"]},
-  {"name":"Social Interactions","phrases":["How was your day","I really enjoyed spending time with you","Would you like to join me for lunch"]}
+  "I want to take a break and rest for a while",
+  "Could you help me with this task",
+  "I'm feeling tired and need to sit down",
+  "How was your day",
+  "I really enjoyed spending time with you",
+  "Would you like to join me for lunch"
 ]
 
 Rules:
 1. Start with [ and end with ]
-2. Each category must be wrapped in {}
-3. Use double quotes for all strings
-4. No line breaks
-5. No extra spaces
-6. No trailing commas
-7. No additional text before or after
-8. No comments or explanations`
+2. Use double quotes for all strings
+3. No line breaks
+4. No extra spaces
+5. No trailing commas
+6. No additional text before or after
+7. No comments or explanations`
 };
 
 type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'board';
@@ -225,14 +227,7 @@ export async function generate(
     if (type === 'board') {
       try {
         const result = JSON.parse(text);
-        if (!Array.isArray(result)) {
-          throw new Error('Expected an array of categories');
-        }
-        return {
-          text: result,
-          type: 'board',
-          prefix: ''
-        };
+        return result;
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError);
         console.error('Raw content:', text);

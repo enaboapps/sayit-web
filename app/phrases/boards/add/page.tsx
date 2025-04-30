@@ -16,7 +16,7 @@ export default function AddBoardPage() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generatedPhrases, setGeneratedPhrases] = useState<{name: string, phrases: string[]}[]>([]);
+  const [generatedPhrases, setGeneratedPhrases] = useState<string[]>([]); 
   const [generating, setGenerating] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
@@ -43,7 +43,10 @@ export default function AddBoardPage() {
       }
 
       const data = await response.json();
-      setGeneratedPhrases(data.text);
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response format');
+      }
+      setGeneratedPhrases(data);
     } catch (error) {
       console.error('Error generating phrases:', error);
       setError('Failed to generate phrases');
@@ -52,24 +55,8 @@ export default function AddBoardPage() {
     }
   };
 
-  const handleDeletePhrase = (categoryIndex: number, phraseIndex: number) => {
-    setGeneratedPhrases(prev => {
-      // Create a deep copy of the phrases array
-      const newPhrases = prev.map(category => ({
-        name: category.name,
-        phrases: [...category.phrases]
-      }));
-      
-      // Remove the specific phrase
-      newPhrases[categoryIndex].phrases.splice(phraseIndex, 1);
-      
-      // Remove category if it's empty
-      if (newPhrases[categoryIndex].phrases.length === 0) {
-        newPhrases.splice(categoryIndex, 1);
-      }
-      
-      return newPhrases;
-    });
+  const handleDeletePhrase = (index: number) => {
+    setGeneratedPhrases(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleDeleteAll = () => {
@@ -99,13 +86,11 @@ export default function AddBoardPage() {
       // Add generated phrases to the board
       if (generatedPhrases.length > 0) {
         await Promise.all(
-          generatedPhrases.flatMap(category => 
-            category.phrases.map(phrase => 
-              phraseStore.getState().addPhrase({
-                text: phrase,
-                userId: user.id,
-              }, newBoard.id as string),
-            ),
+          generatedPhrases.map(phrase => 
+            phraseStore.getState().addPhrase({
+              text: phrase,
+              userId: user.id,
+            }, newBoard.id as string),
           ),
         );
       }
