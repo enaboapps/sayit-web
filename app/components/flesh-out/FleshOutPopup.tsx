@@ -22,23 +22,29 @@ export default function FleshOutPopup({ initialText, onClose, onApply }: FleshOu
     setIsGenerating(true);
     setError(null);
     try {
+      const requestBody = { 
+        text: initialText,
+        mode: newMode 
+      };
+      console.log('Sending request with body:', requestBody);
+      
       const response = await fetch('/api/flesh-out', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          text: initialText,
-          mode: newMode 
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        console.error('Error response:', errorData);
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Received response:', data);
+      
       if (!data.text) {
         throw new Error('No text returned from server');
       }

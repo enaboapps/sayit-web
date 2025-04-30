@@ -21,11 +21,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const { text, mode } = await request.json();
+    const body = await request.json();
+    console.log('Received request body:', body);
+    
+    const { text, mode } = body;
     
     if (!text) {
+      console.error('No text provided in request');
       return NextResponse.json(
         { error: 'Text is required' },
+        { status: 400 },
+      );
+    }
+
+    if (!mode) {
+      console.error('No mode provided in request');
+      return NextResponse.json(
+        { error: 'Mode is required' },
         { status: 400 },
       );
     }
@@ -33,12 +45,14 @@ export async function POST(request: Request) {
     console.log('Attempting to flesh out text:', text, 'with mode:', mode);
     
     try {
-      const fleshedOutText = await generate(mode || 'fleshOut', text, {
+      const result = await generate(mode, text, {
         maxTokens: 200,
         temperature: 0.7,
       });
-      console.log('Successfully generated text:', fleshedOutText);
-      return NextResponse.json({ text: fleshedOutText });
+      
+      console.log('Successfully generated text:', result);
+      
+      return NextResponse.json(result);
     } catch (genError) {
       console.error('Error generating text:', genError);
       return NextResponse.json(

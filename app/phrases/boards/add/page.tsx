@@ -8,6 +8,7 @@ import { phraseStore } from '@/lib/stores/phraseStore';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
+import { GeneratedPhrases } from '@/app/components/phrases/GeneratedPhrases';
 import { Collapsible } from '@/components/ui/Collapsible';
 
 export default function AddBoardPage() {
@@ -15,7 +16,7 @@ export default function AddBoardPage() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generatedPhrases, setGeneratedPhrases] = useState<string[]>([]);
+  const [generatedPhrases, setGeneratedPhrases] = useState<{name: string, phrases: string[]}[]>([]);
   const [generating, setGenerating] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
@@ -42,13 +43,37 @@ export default function AddBoardPage() {
       }
 
       const data = await response.json();
-      setGeneratedPhrases(data.board);
+      setGeneratedPhrases(data.text);
     } catch (error) {
       console.error('Error generating phrases:', error);
       setError('Failed to generate phrases');
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleDeletePhrase = (categoryIndex: number, phraseIndex: number) => {
+    setGeneratedPhrases(prev => {
+      // Create a deep copy of the phrases array
+      const newPhrases = prev.map(category => ({
+        name: category.name,
+        phrases: [...category.phrases]
+      }));
+      
+      // Remove the specific phrase
+      newPhrases[categoryIndex].phrases.splice(phraseIndex, 1);
+      
+      // Remove category if it's empty
+      if (newPhrases[categoryIndex].phrases.length === 0) {
+        newPhrases.splice(categoryIndex, 1);
+      }
+      
+      return newPhrases;
+    });
+  };
+
+  const handleDeleteAll = () => {
+    setGeneratedPhrases([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,11 +99,13 @@ export default function AddBoardPage() {
       // Add generated phrases to the board
       if (generatedPhrases.length > 0) {
         await Promise.all(
-          generatedPhrases.map(phrase => 
-            phraseStore.getState().addPhrase({
-              text: phrase,
-              userId: user.id,
-            }, newBoard.id as string),
+          generatedPhrases.flatMap(category => 
+            category.phrases.map(phrase => 
+              phraseStore.getState().addPhrase({
+                text: phrase,
+                userId: user.id,
+              }, newBoard.id as string),
+            ),
           ),
         );
       }
@@ -94,80 +121,69 @@ export default function AddBoardPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <Button
-            variant="ghost"
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="flex items-center mb-6">
+          <button
             onClick={() => router.back()}
-            className="flex items-center"
+            className="mr-4 p-2 hover:bg-gray-200 rounded-full"
           >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Back to Phrases
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mt-4">Create New Board</h1>
+            <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
+          </button>
+          <h1 className="text-2xl font-bold text-gray-900">Create New Board</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-          <Input
-            id="name"
-            type="text"
-            label="Board Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter board name"
-            required
-          />
-
-          <div className="mt-6">
-            <Collapsible 
-              title="AI-Assisted Phrase Generation (Optional)"
-              defaultOpen={false}
-            >
-              <div className="space-y-4">
-                <p className="text-sm text-gray-500">
-                  Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
-                </p>
-
-                <Textarea
-                  id="prompt"
-                  label="Generation Prompt"
-                  value={prompt}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt(e.target.value)}
-                  placeholder="Describe the types of phrases you'd like to generate"
-                  rows={3}
-                />
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGeneratePhrases}
-                  disabled={!prompt || generating}
-                  className="w-full"
-                >
-                  {generating ? 'Generating...' : 'Generate Suggested Phrases'}
-                </Button>
-
-                {generatedPhrases.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Generated Phrases</h3>
-                    <ul className="space-y-2">
-                      {generatedPhrases.map((phrase, index) => (
-                        <li key={index} className="p-2 bg-gray-50 rounded text-black">
-                          {phrase}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </Collapsible>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Board Name
+            </label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter board name"
+              required
+            />
           </div>
 
-          {error && (
-            <div className="mb-4 text-red-500 text-sm">
-              {error}
+          <Collapsible 
+            title="AI-Assisted Phrase Generation (Optional)"
+            defaultOpen={false}
+          >
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
+              </p>
+
+              <div>
+                <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
+                  Generation Prompt
+                </label>
+                <div className="space-y-4">
+                  <Textarea
+                    id="prompt"
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Describe what kind of phrases you want to generate"
+                    rows={4}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleGeneratePhrases}
+                    disabled={!prompt || generating}
+                  >
+                    {generating ? 'Generating...' : 'Generate Phrases'}
+                  </Button>
+                </div>
+              </div>
+
+              <GeneratedPhrases
+                phrases={generatedPhrases}
+                onDeletePhrase={handleDeletePhrase}
+                onDeleteAll={handleDeleteAll}
+              />
             </div>
-          )}
+          </Collapsible>
 
           <div className="flex justify-end mt-6">
             <Button
