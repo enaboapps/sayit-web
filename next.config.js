@@ -3,9 +3,15 @@ import withPWA from 'next-pwa';
 
 const nextConfig = {
   images: {
-    domains: [
-      'globalsymbols.com',
-      'equjsqktsqooirullrpy.supabase.co',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'globalsymbols.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'equjsqktsqooirullrpy.supabase.co',
+      },
     ],
   },
 };
