@@ -10,6 +10,7 @@ import { Button } from '@/app/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
 import { GeneratedPhrases } from '@/app/components/phrases/GeneratedPhrases';
 import { Collapsible } from '@/components/ui/Collapsible';
+import SubscriptionWrapper from '@/app/components/SubscriptionWrapper';
 
 export default function AddBoardPage() {
   const [name, setName] = useState('');
@@ -135,39 +136,59 @@ export default function AddBoardPage() {
             title="AI-Assisted Phrase Generation (Optional)"
             defaultOpen={false}
           >
-            <div className="space-y-4">
-              <p className="text-sm text-gray-500">
-                Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
-              </p>
-
-              <div>
-                <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
-                  Generation Prompt
-                </label>
-                <div className="space-y-4">
-                  <Textarea
-                    id="prompt"
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe what kind of phrases you want to generate"
-                    rows={4}
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleGeneratePhrases}
-                    disabled={!prompt || generating}
+            <SubscriptionWrapper
+              fallback={
+                <div className="bg-gray-50 p-6 rounded-lg text-center my-4">
+                  <svg className="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Pro Feature</h3>
+                  <p className="text-gray-600 mb-6">
+                    AI-Assisted Phrase Generation is a premium feature that helps you create relevant phrases quickly using AI.
+                  </p>
+                  <Button 
+                    onClick={() => router.push('/pricing')}
+                    className="w-full"
                   >
-                    {generating ? 'Generating...' : 'Generate Phrases'}
+                    Upgrade to Pro
                   </Button>
                 </div>
-              </div>
+              }
+            >
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">
+                  Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
+                </p>
 
-              <GeneratedPhrases
-                phrases={generatedPhrases}
-                onDeletePhrase={handleDeletePhrase}
-                onDeleteAll={handleDeleteAll}
-              />
-            </div>
+                <div>
+                  <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
+                    Generation Prompt
+                  </label>
+                  <div className="space-y-4">
+                    <Textarea
+                      id="prompt"
+                      value={prompt}
+                      onChange={(e) => setPrompt(e.target.value)}
+                      placeholder="Describe what kind of phrases you want to generate"
+                      rows={4}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleGeneratePhrases}
+                      disabled={!prompt || generating}
+                    >
+                      {generating ? 'Generating...' : 'Generate Phrases'}
+                    </Button>
+                  </div>
+                </div>
+
+                <GeneratedPhrases
+                  phrases={generatedPhrases}
+                  onDeletePhrase={handleDeletePhrase}
+                  onDeleteAll={handleDeleteAll}
+                />
+              </div>
+            </SubscriptionWrapper>
           </Collapsible>
 
           <div className="flex justify-end mt-6">
