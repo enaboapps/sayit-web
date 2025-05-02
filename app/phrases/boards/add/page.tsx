@@ -199,6 +199,12 @@ export default function AddBoardPage() {
               {loading ? 'Creating...' : 'Create Board'}
             </Button>
           </div>
+          
+          {error && (
+            <div className="p-4 bg-red-50 rounded-lg text-red-700 mt-4">
+              {error}
+            </div>
+          )}
         </form>
       </div>
     </div>

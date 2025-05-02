@@ -212,7 +212,7 @@ export async function generate(
   type: GenerationType,
   prompt: string,
   options?: GenerationOptions
-): Promise<any> {
+): Promise<string[] | Record<string, unknown>> {
   try {
     const { text } = await aiGenerateText({
       model: deepinfra('google/gemma-3-27b-it'),

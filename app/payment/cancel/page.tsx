@@ -39,7 +39,7 @@ export default function PaymentCancelPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ 
-                  type: "spring",
+                  type: 'spring',
                   stiffness: 260,
                   damping: 20,
                   delay: 0.3

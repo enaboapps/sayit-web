@@ -122,12 +122,12 @@ export default function PricingPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
-                      "AI-powered \"Flesh Out\" feature",
-                      "AI-assisted phrase generation",
-                      "Smart phrase suggestions",
-                      "Express feelings, needs, wants, and thoughts with AI",
-                      "Priority customer support",
-                      "Future AI features included"
+                      'AI-powered "Flesh Out" feature',
+                      'AI-assisted phrase generation',
+                      'Smart phrase suggestions',
+                      'Express feelings, needs, wants, and thoughts with AI',
+                      'Priority customer support',
+                      'Future AI features included'
                     ].map((feature, index) => (
                       <div key={index} className="flex items-start">
                         <div className="flex-shrink-0 mt-1">

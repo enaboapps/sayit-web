@@ -2,13 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/contexts/AuthContext';
 import { Button } from '@/app/components/ui/Button';
 import { motion } from 'framer-motion';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
@@ -41,7 +39,7 @@ export default function PaymentSuccessPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ 
-                  type: "spring",
+                  type: 'spring',
                   stiffness: 260,
                   damping: 20,
                   delay: 0.3
