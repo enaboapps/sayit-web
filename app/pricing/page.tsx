@@ -10,11 +10,11 @@ export default function PricingPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [price, setPrice] = useState<string>('$19.99');
+  const [price, setPrice] = useState<string>('');
   const [loadingPrice, setLoadingPrice] = useState(true);
   
   // Use the specific price ID
-  const priceId = 'price_1N9SelHFy05HLttRs2ddf9xs';
+  const priceId = 'price_1RKLysHFy05HLttRWb8mpW03';
 
   // Fetch the actual price from Stripe
   useEffect(() => {
