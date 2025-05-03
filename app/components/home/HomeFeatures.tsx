@@ -2,6 +2,7 @@ import TypingArea from '@/app/components/TypingArea';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/ui/Button';
+import Link from 'next/link';
 
 export default function HomeFeatures() {
   const tts = useTTS();
@@ -41,7 +42,7 @@ export default function HomeFeatures() {
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Button
               onClick={() => router.push('/sign-in')}
               size="lg"
@@ -55,6 +56,12 @@ export default function HomeFeatures() {
             >
               Sign Up
             </Button>
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
+              Privacy Policy
+            </Link>
           </div>
         </div>
       </div>

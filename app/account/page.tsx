@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { authService } from '@/lib/auth';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -173,6 +174,15 @@ export default function AccountPage() {
                       </Button>
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Legal</h2>
+                  <div className="space-y-2">
+                    <Link href="/privacy" className="text-gray-600 hover:text-gray-900 block">
+                      Privacy Policy
+                    </Link>
+                  </div>
                 </div>
 
                 {error && (

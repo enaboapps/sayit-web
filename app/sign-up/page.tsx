@@ -71,6 +71,12 @@ export default function SignUpPage() {
           {error && (
             <div className="text-red-600 text-sm">{error}</div>
           )}
+          <div className="text-xs text-gray-500 mt-4">
+            By creating an account, you agree to our{' '}
+            <Link href="/privacy" className="text-gray-700 hover:underline">
+              Privacy Policy
+            </Link>
+          </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{' '}
