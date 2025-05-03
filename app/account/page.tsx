@@ -28,13 +28,13 @@ export default function AccountPage() {
       if (!user) return;
       
       try {
-        const { data: profile, error } = await supabase
+        const { data: profile, error: supabaseError } = await supabase
           .from('profiles')
           .select('subscription_status, subscription_cancel_at_period_end, stripe_customer_id')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (supabaseError) throw supabaseError;
 
         if (profile) {
           setSubscription({
@@ -86,7 +86,8 @@ export default function AccountPage() {
       });
       const { url } = await response.json();
       window.location.href = url;
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       setError('Failed to load subscription portal');
     }
   };
