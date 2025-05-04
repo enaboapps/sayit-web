@@ -7,7 +7,7 @@ import { Dropdown } from '@/app/components/ui/Dropdown';
 
 // Import types from SettingsContext
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
-type EnterKeyBehavior = 'newline' | 'speak' | 'clear';
+type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
 // Import TTSSettings dynamically with SSR disabled
 const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
@@ -68,7 +68,8 @@ export default function SettingsPage() {
               options={[
                 { value: 'newline', label: 'New Line' },
                 { value: 'speak', label: 'Speak Text' },
-                { value: 'clear', label: 'Clear Text' }
+                { value: 'clear', label: 'Clear Text' },
+                { value: 'speakAndClear', label: 'Speak & Clear Text' }
               ]}
               value={settings.enterKeyBehavior}
               onChange={(value) => updateSetting('enterKeyBehavior', value as EnterKeyBehavior)}
