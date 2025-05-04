@@ -78,21 +78,4 @@ If the ElevenLabs API key is not provided, the application will fall back to usi
 
 ## Deployment
 
-The easiest way to deploy the app is to use the [Vercel Platform](https://vercel.com) from the creators of Next.js.
-
-## License
-
-This project is privately owned and not open for public contributions.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To deploy a production build, push to the `production` branch.
