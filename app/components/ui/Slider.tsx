@@ -69,8 +69,8 @@ export function Slider({
         <div 
           key={i} 
           className={cn(
-            "absolute w-1 h-2 -translate-x-1/2 bottom-0 transition-all duration-300",
-            isActive ? trackColor : "bg-gray-300"
+            'absolute w-1 h-2 -translate-x-1/2 bottom-0 transition-all duration-300',
+            isActive ? trackColor : 'bg-gray-300'
           )}
           style={{ left: `${tickPercentage}%` }}
         />
@@ -175,8 +175,8 @@ export function Slider({
             {label}
           </label>
           <span className={cn(
-            "text-sm px-2 py-1 rounded-md transition-all duration-300",
-            isHovering || isDragging ? "bg-black text-white" : "text-gray-500"
+            'text-sm px-2 py-1 rounded-md transition-all duration-300',
+            isHovering || isDragging ? 'bg-black text-white' : 'text-gray-500'
           )}>
             {formattedValueLabel}
           </span>
@@ -189,8 +189,8 @@ export function Slider({
       <div 
         ref={sliderRef}
         className={cn(
-          "h-8 relative rounded-full cursor-pointer my-2 py-3",
-          disabled ? "opacity-50 cursor-not-allowed" : ""
+          'h-8 relative rounded-full cursor-pointer my-2 py-3',
+          disabled ? 'opacity-50 cursor-not-allowed' : ''
         )}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
@@ -199,8 +199,8 @@ export function Slider({
         {/* Background track */}
         <div 
           className={cn(
-            "absolute h-2 w-full rounded-full bg-gray-200",
-            error ? "bg-red-100" : ""
+            'absolute h-2 w-full rounded-full bg-gray-200',
+            error ? 'bg-red-100' : ''
           )} 
           style={{ top: '50%', transform: 'translateY(-50%)' }}
         />
@@ -208,10 +208,10 @@ export function Slider({
         {/* Active track */}
         <div 
           className={cn(
-            "absolute h-2 rounded-full transition-all",
-            disabled ? "bg-gray-400" : trackColor,
-            error ? "bg-red-500" : "",
-            isHovering || isDragging ? "h-3" : "h-2" // Slight height increase on hover
+            'absolute h-2 rounded-full transition-all',
+            disabled ? 'bg-gray-400' : trackColor,
+            error ? 'bg-red-500' : '',
+            isHovering || isDragging ? 'h-3' : 'h-2' // Slight height increase on hover
           )} 
           style={{ 
             width: `${percentage}%`, 
@@ -231,16 +231,16 @@ export function Slider({
         <div 
           ref={thumbRef}
           className={cn(
-            "absolute rounded-full shadow-md transform -translate-x-1/2 border-2 transition-all duration-200",
+            'absolute rounded-full shadow-md transform -translate-x-1/2 border-2 transition-all duration-200',
             disabled ? 
-              "border-gray-400 bg-white cursor-not-allowed w-5 h-5" : 
+              'border-gray-400 bg-white cursor-not-allowed w-5 h-5' : 
               cn(
-                "border-gray-100 cursor-grab",
+                'border-gray-100 cursor-grab',
                 thumbColor, 
-                isDragging ? "cursor-grabbing scale-110 w-7 h-7" : 
-                isHovering ? "scale-105 w-6 h-6" : "w-5 h-5"
+                isDragging ? 'cursor-grabbing scale-110 w-7 h-7' : 
+                  isHovering ? 'scale-105 w-6 h-6' : 'w-5 h-5'
               ),
-            error ? "border-red-500" : ""
+            error ? 'border-red-500' : ''
           )}
           style={{ 
             left: `${percentage}%`,
@@ -256,8 +256,8 @@ export function Slider({
         >
           {/* Optional inner circle for thumb */}
           <div className={cn(
-            "absolute inset-0 m-auto rounded-full transition-all",
-            isDragging ? "w-2 h-2 bg-white" : "w-1 h-1 bg-gray-100"
+            'absolute inset-0 m-auto rounded-full transition-all',
+            isDragging ? 'w-2 h-2 bg-white' : 'w-1 h-1 bg-gray-100'
           )} />
         </div>
 
@@ -273,11 +273,11 @@ export function Slider({
           >
             {value}
             <div className="absolute w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"
-                 style={{ 
-                   left: '50%', 
-                   top: '100%', 
-                   transform: 'translateX(-50%)' 
-                 }} />
+              style={{ 
+                left: '50%', 
+                top: '100%', 
+                transform: 'translateX(-50%)' 
+              }} />
           </div>
         )}
       </div>

@@ -51,9 +51,9 @@ export function Dropdown<T = string>({
       <Listbox value={value} onChange={onChange} disabled={disabled}>
         <div className="relative">
           <Listbox.Button className={cn(
-            "relative w-full py-2 pl-3 pr-10 text-left bg-white border border-gray-300 rounded-md shadow-sm cursor-default focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base transition-all duration-200",
-            disabled && "opacity-50 cursor-not-allowed bg-gray-100",
-            error && "border-red-500 focus:ring-red-500 focus:border-red-500"
+            'relative w-full py-2 pl-3 pr-10 text-left bg-white border border-gray-300 rounded-md shadow-sm cursor-default focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-base transition-all duration-200',
+            disabled && 'opacity-50 cursor-not-allowed bg-gray-100',
+            error && 'border-red-500 focus:ring-red-500 focus:border-red-500'
           )}>
             <span className="block truncate text-gray-900">
               {selectedOption ? selectedOption.label : placeholder}
@@ -77,9 +77,9 @@ export function Dropdown<T = string>({
                   key={optionIdx}
                   className={({ active }) =>
                     cn(
-                      "cursor-default select-none relative py-2 pl-3 pr-9",
-                      active ? "text-white bg-black" : "text-gray-900",
-                      option.disabled && "opacity-50 cursor-not-allowed text-gray-500"
+                      'cursor-default select-none relative py-2 pl-3 pr-9',
+                      active ? 'text-white bg-black' : 'text-gray-900',
+                      option.disabled && 'opacity-50 cursor-not-allowed text-gray-500'
                     )
                   }
                   value={option.value}
@@ -92,8 +92,8 @@ export function Dropdown<T = string>({
                       ) : (
                         <span
                           className={cn(
-                            "block truncate",
-                            selected ? "font-medium" : "font-normal"
+                            'block truncate',
+                            selected ? 'font-medium' : 'font-normal'
                           )}
                         >
                           {option.label}
@@ -102,8 +102,8 @@ export function Dropdown<T = string>({
                       {selected ? (
                         <span
                           className={cn(
-                            "absolute inset-y-0 right-0 flex items-center pr-4",
-                            active ? "text-white" : "text-black"
+                            'absolute inset-y-0 right-0 flex items-center pr-4',
+                            active ? 'text-white' : 'text-black'
                           )}
                         >
                           <CheckIcon className="w-5 h-5" aria-hidden="true" />

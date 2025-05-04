@@ -125,7 +125,7 @@ export class ElevenLabsTTS {
         voiceId = this.voices[0].voice_id;
         console.log(`Using first available voice: ${voiceId} (${this.voices[0].name})`);
       } else {
-        voiceId = "21m00Tcm4TlvDq8ikWAM"; // Default voice - Rachel
+        voiceId = '21m00Tcm4TlvDq8ikWAM'; // Default voice - Rachel
         console.log(`Using default Rachel voice: ${voiceId}`);
       }
     } else {
@@ -145,7 +145,7 @@ export class ElevenLabsTTS {
       const audioData = await this.elevenLabsClient.generate({
         voice: voiceId,
         text: text,
-        model_id: "eleven_multilingual_v2",
+        model_id: 'eleven_multilingual_v2',
         voice_settings: {
           stability,
           similarity_boost: similarityBoost

@@ -3,7 +3,11 @@
 import { useSettings } from '../contexts/SettingsContext';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Dropdown, DropdownOption } from '@/app/components/ui/Dropdown';
+import { Dropdown } from '@/app/components/ui/Dropdown';
+
+// Import types from SettingsContext
+type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
+type EnterKeyBehavior = 'newline' | 'speak' | 'clear';
 
 // Import TTSSettings dynamically with SSR disabled
 const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
@@ -19,7 +23,7 @@ const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
 
 export default function SettingsPage() {
   const { settings, updateSetting } = useSettings();
-  const [isMobile, setIsMobile] = useState(false);
+  const [, setIsMobile] = useState(false);
 
   useEffect(() => {
     setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
@@ -45,7 +49,7 @@ export default function SettingsPage() {
                 { value: 'xlarge', label: 'Extra Large' }
               ]}
               value={settings.textSize}
-              onChange={(value) => updateSetting('textSize', value)}
+              onChange={(value) => updateSetting('textSize', value as TextSize)}
               className="w-48"
             />
           </div>
@@ -67,7 +71,7 @@ export default function SettingsPage() {
                 { value: 'clear', label: 'Clear Text' }
               ]}
               value={settings.enterKeyBehavior}
-              onChange={(value) => updateSetting('enterKeyBehavior', value)}
+              onChange={(value) => updateSetting('enterKeyBehavior', value as EnterKeyBehavior)}
               className="w-48"
             />
           </div>

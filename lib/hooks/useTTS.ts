@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { TTSProvider, TTSVoice, TTSProviderType } from '../tts-provider';
+import { useSubscription } from '@/app/hooks/useSubscription';
 
 export function useTTS() {
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
@@ -22,6 +23,9 @@ export function useTTS() {
   
   // Use ref to avoid dependency issues in callbacks
   const ttsRef = useRef<TTSProvider | null>(null);
+  
+  // Get subscription status
+  const { isActive: hasSubscription } = useSubscription();
 
   useEffect(() => {
     // Initialize only once
@@ -65,8 +69,51 @@ export function useTTS() {
       return;
     }
 
+    // Check if current provider is ElevenLabs or the voice is an ElevenLabs voice
+    const voice = options?.voiceId 
+      ? voices.find(v => v.id === options.voiceId) 
+      : null;
+    
+    const isElevenLabsVoice = voice?.provider === 'elevenlabs';
+    const currentProvider = ttsRef.current.getCurrentProvider();
+    const usingElevenLabs = isElevenLabsVoice || currentProvider === 'elevenlabs';
+    
+    // If trying to use ElevenLabs without a subscription, force browser TTS
+    if (usingElevenLabs && !hasSubscription) {
+      console.log('Forcing browser TTS for non-subscribers');
+      
+      // Find a browser voice to use instead
+      const browserVoices = voices.filter(v => v.provider === 'browser');
+      const fallbackVoice = browserVoices.length > 0 ? browserVoices[0].id : undefined;
+      
+      // Temporarily switch to browser provider if needed
+      const originalProvider = ttsRef.current.getCurrentProvider();
+      if (originalProvider === 'elevenlabs') {
+        ttsRef.current.setProvider('browser');
+      }
+      
+      // Use browser TTS with fallback voice and ignore ElevenLabs specific settings
+      ttsRef.current.speak(text, {
+        voiceId: fallbackVoice,
+        rate: options?.rate || 1.0,
+        pitch: options?.pitch || 1.0,
+        volume: options?.volume || 1.0
+      });
+      
+      // Update local state to reflect the temporary provider change
+      if (originalProvider === 'elevenlabs') {
+        setStatus({
+          ...status,
+          activeProvider: 'browser'
+        });
+      }
+      
+      return;
+    }
+
+    // Normal operation (either browser TTS or ElevenLabs for subscribers)
     ttsRef.current.speak(text, options);
-  }, [isAvailable]);
+  }, [isAvailable, voices, hasSubscription, status]);
 
   const stop = useCallback(() => {
     if (!ttsRef.current) return;
@@ -86,6 +133,8 @@ export function useTTS() {
   const switchProvider = useCallback((newProvider: TTSProviderType) => {
     if (!ttsRef.current) return;
     
+    // If trying to switch to ElevenLabs without subscription, still allow UI to show it
+    // but actual speak calls will be redirected to browser TTS
     ttsRef.current.setProvider(newProvider);
     setProvider(newProvider);
     setStatus(ttsRef.current.getStatus());
@@ -95,6 +144,13 @@ export function useTTS() {
     if (!ttsRef.current) return [];
     return ttsRef.current.getVoicesByProvider(providerType);
   }, []);
+
+  // Helper to check if a provider is actually available (considering subscription)
+  const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
+    if (providerType === 'browser') return true;
+    if (providerType === 'elevenlabs') return hasSubscription && status.elevenLabsAvailable;
+    return false;
+  }, [hasSubscription, status]);
 
   return {
     isAvailable,
@@ -107,6 +163,8 @@ export function useTTS() {
     provider,
     switchProvider,
     getVoicesByProvider,
-    status
+    status,
+    hasSubscription,
+    isProviderAvailable
   };
 }
