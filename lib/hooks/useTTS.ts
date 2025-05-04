@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { TTSProvider, TTSVoice, TTSProviderType } from '../tts-provider';
 import { useSubscription } from '@/app/hooks/useSubscription';
+import { useSettings } from '@/app/contexts/SettingsContext';
 
 export function useTTS() {
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
@@ -26,6 +27,15 @@ export function useTTS() {
   
   // Get subscription status
   const { isActive: hasSubscription } = useSubscription();
+  
+  // Get settings
+  const { settings } = useSettings();
+  
+  // Store settings in a ref to avoid dependency issues
+  const settingsRef = useRef(settings);
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
 
   useEffect(() => {
     // Initialize only once
@@ -56,7 +66,7 @@ export function useTTS() {
     }
   }, []);
 
-  const speak = useCallback((text: string, options?: {
+  const speak = useCallback((text: string, customOptions?: {
     voiceId?: string;
     rate?: number;
     pitch?: number;
@@ -69,8 +79,19 @@ export function useTTS() {
       return;
     }
 
+    // Merge settings with custom options, with custom options taking precedence
+    const currentSettings = settingsRef.current;
+    const options = {
+      voiceId: customOptions?.voiceId || currentSettings.ttsVoiceId,
+      rate: customOptions?.rate || currentSettings.speechRate,
+      pitch: customOptions?.pitch || currentSettings.speechPitch,
+      volume: customOptions?.volume || currentSettings.speechVolume,
+      stability: customOptions?.stability || currentSettings.ttsStability,
+      similarityBoost: customOptions?.similarityBoost || currentSettings.ttsSimilarityBoost
+    };
+
     // Check if current provider is ElevenLabs or the voice is an ElevenLabs voice
-    const voice = options?.voiceId 
+    const voice = options.voiceId 
       ? voices.find(v => v.id === options.voiceId) 
       : null;
     
@@ -95,9 +116,9 @@ export function useTTS() {
       // Use browser TTS with fallback voice and ignore ElevenLabs specific settings
       ttsRef.current.speak(text, {
         voiceId: fallbackVoice,
-        rate: options?.rate || 1.0,
-        pitch: options?.pitch || 1.0,
-        volume: options?.volume || 1.0
+        rate: options.rate,
+        pitch: options.pitch,
+        volume: options.volume
       });
       
       // Update local state to reflect the temporary provider change

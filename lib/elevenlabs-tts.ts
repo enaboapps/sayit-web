@@ -135,6 +135,8 @@ export class ElevenLabsTTS {
     const stability = options?.stability ?? 0.5;
     const similarityBoost = options?.similarityBoost ?? 0.5;
 
+    console.log(`ElevenLabs TTS settings - Stability: ${stability}, Similarity Boost: ${similarityBoost}`);
+
     try {
       this.callbacks.onStart?.();
       this.isSpeaking = true;
@@ -142,14 +144,18 @@ export class ElevenLabsTTS {
       console.log('ElevenLabs speaking with voice ID:', voiceId);
       
       // Generate audio with ElevenLabs SDK
+      const voiceSettings = {
+        stability,
+        similarity_boost: similarityBoost
+      };
+      
+      console.log('Sending ElevenLabs API request with settings:', JSON.stringify(voiceSettings));
+      
       const audioData = await this.elevenLabsClient.generate({
         voice: voiceId,
         text: text,
         model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability,
-          similarity_boost: similarityBoost
-        }
+        voice_settings: voiceSettings
       });
 
       // Create blob from the audio data (handle different return types)

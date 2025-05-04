@@ -117,39 +117,18 @@ export default function TTSSettings() {
           console.error('Error playing preview:', error);
           setIsPlayingPreview(false);
         });
-      } else if (hasSubscription) {
-        // If user has subscription but no preview URL is available,
-        // use the ElevenLabs API to generate a preview
-        speak(SAMPLE_TEXT, {
-          voiceId: settings.ttsVoiceId,
-          stability: settings.ttsStability,
-          similarityBoost: settings.ttsSimilarityBoost
-        });
+      } else {
+        // Use the TTS API to generate a preview
+        speak(SAMPLE_TEXT);
         
         // Reset the playing state when done
         setTimeout(() => {
           setIsPlayingPreview(false);
         }, 5000); // Assume preview takes at most 5 seconds
-      } else {
-        // For non-subscribers with no preview URL, fall back to browser TTS
-        speak(SAMPLE_TEXT, {
-          voiceId: settings.ttsVoiceId,
-          rate: settings.speechRate,
-          pitch: settings.speechPitch
-        });
-        
-        // Reset the playing state when done
-        setTimeout(() => {
-          setIsPlayingPreview(false);
-        }, 5000);
       }
     } else {
       // Browser TTS preview
-      speak(SAMPLE_TEXT, {
-        voiceId: settings.ttsVoiceId,
-        rate: settings.speechRate,
-        pitch: settings.speechPitch
-      });
+      speak(SAMPLE_TEXT);
       
       // Reset the playing state when done
       setTimeout(() => {
@@ -162,12 +141,7 @@ export default function TTSSettings() {
     isSpeaking, 
     settings.ttsProvider,
     settings.ttsVoiceId, 
-    settings.speechRate, 
-    settings.speechPitch,
-    settings.ttsStability,
-    settings.ttsSimilarityBoost,
-    providerVoices,
-    hasSubscription
+    providerVoices
   ]);
 
   // Determine button styling without recreating on every render

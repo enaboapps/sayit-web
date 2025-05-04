@@ -180,6 +180,7 @@ export class TTSProvider {
       
       // Log for debugging
       console.log('Selected ElevenLabs voice:', selectedElevenLabsVoice);
+      console.log('Voice settings - stability:', options?.stability, 'similarityBoost:', options?.similarityBoost);
       
       // If no voice was found, get the first available ElevenLabs voice
       const voiceToUse = selectedElevenLabsVoice?.id || 
