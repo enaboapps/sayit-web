@@ -4,7 +4,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { TTSProviderType } from '@/lib/tts-provider';
 
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
-type EnterKeyBehavior = 'newline' | 'speak' | 'clear';
+type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
 interface Settings {
   textSize: TextSize;

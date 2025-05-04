@@ -107,6 +107,12 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                   case 'clear':
                     handleClear();
                     break;
+                  case 'speakAndClear':
+                    if (text.trim()) {
+                      speak(text);
+                      setTimeout(() => handleClear(), 100);
+                    }
+                    break;
                   case 'newline':
                   default:
                     setText(prev => prev + '\n');
