@@ -33,9 +33,26 @@ export default function PhrasesInterface() {
       .then(() => {
         const boards = phraseStore.getState().boards;
         setBoards(boards);
-        if (boards.length > 0) {
+        
+        // Try to get the saved board ID from localStorage
+        const savedBoardId = localStorage.getItem(`${user.id}_selectedBoardId`);
+        
+        if (savedBoardId && boards.length > 0) {
+          // Find the saved board in the loaded boards
+          const savedBoard = boards.find(board => board.id === savedBoardId);
+          if (savedBoard) {
+            setSelectedBoard(savedBoard);
+          } else {
+            // If saved board not found, select first board and update localStorage
+            setSelectedBoard(boards[0]);
+            localStorage.setItem(`${user.id}_selectedBoardId`, boards[0].id || '');
+          }
+        } else if (boards.length > 0) {
+          // No saved board or no boards, select first board
           setSelectedBoard(boards[0]);
+          localStorage.setItem(`${user.id}_selectedBoardId`, boards[0].id || '');
         }
+        
         setLoading(false);
       })
       .catch((err: Error) => {
@@ -127,6 +144,10 @@ export default function PhrasesInterface() {
 
   const handleSelectBoard = (board: PhraseBoard) => {
     setSelectedBoard(board);
+    // Save the selected board ID to localStorage
+    if (user && board.id) {
+      localStorage.setItem(`${user.id}_selectedBoardId`, board.id);
+    }
   };
 
   if (error) {
