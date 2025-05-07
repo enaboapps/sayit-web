@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { Phrase } from '@/lib/models/Phrase';
-import { Symbol } from '@/lib/models/Symbol';
 import { phraseStore } from '@/lib/stores/phraseStore';
+import { Phrase } from '@/lib/models/Phrase';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
+import BackButton from '@/app/components/ui/BackButton';
+import { Symbol } from '@/lib/models/Symbol';
 import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +18,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   const [phrase, setPhrase] = useState<Phrase | null>(null);
   const [text, setText] = useState('');
   const [symbol, setSymbol] = useState<Symbol | null>(null);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -57,13 +59,14 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     };
 
     fetchPhrase();
-  }, [resolvedParams.id, user, boardId, router, getPhrase]);
+  }, [resolvedParams.id, user, router, getPhrase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !boardId || !phrase) return;
 
     setError(null);
+    setSaving(true);
 
     try {
       if (!phrase.id) throw new Error('Phrase ID is missing');
@@ -78,6 +81,8 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     } catch (error) {
       console.error('Error updating phrase:', error);
       setError('Failed to update phrase');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -95,36 +100,27 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
 
   if (!phrase) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-red-600">Phrase not found</div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-red-600 dark:text-red-400">Phrase not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Back to Phrases
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mt-4">Edit Phrase</h1>
-        </div>
+        <BackButton />
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-4">Edit Phrase</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
           <Input
             id="text"
             type="text"
@@ -135,8 +131,8 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             required
           />
 
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Symbol
             </label>
             <SymbolSelector
@@ -147,26 +143,26 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
           </div>
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm">
+            <div className="mt-4 text-red-500 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-6">
             <Button
               type="button"
               variant="ghost"
               onClick={handleDelete}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
             >
               <TrashIcon className="h-5 w-5 mr-2" />
               Delete Phrase
             </Button>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={saving}
             >
-              {loading ? 'Updating...' : 'Update Phrase'}
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>

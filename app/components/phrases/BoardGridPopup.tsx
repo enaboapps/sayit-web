@@ -38,7 +38,7 @@ export default function BoardGridPopup({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -52,10 +52,10 @@ export default function BoardGridPopup({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
                 <Dialog.Title
                   as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900 mb-4"
+                  className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 mb-4"
                 >
                   Select a Board
                 </Dialog.Title>
@@ -66,8 +66,8 @@ export default function BoardGridPopup({
                       key={board.id}
                       className={`relative p-4 rounded-lg border cursor-pointer transition-colors duration-200 ${
                         selectedBoard?.id === board.id
-                          ? 'border-black bg-gray-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-black dark:border-gray-300 bg-gray-50 dark:bg-gray-700/50'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                       onClick={() => {
                         onSelectBoard(board);
@@ -76,10 +76,10 @@ export default function BoardGridPopup({
                     >
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-medium text-gray-900">{board.name}</h4>
-                          <p className="text-sm text-gray-500">
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100">{board.name}</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {isLoadingPhrases ? (
-                              <span className="inline-block w-16 h-3 bg-gray-200 rounded animate-pulse" />
+                              <span className="inline-block w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                             ) : board.phrases.length === 0 ? (
                               'Empty board'
                             ) : (
@@ -93,9 +93,9 @@ export default function BoardGridPopup({
                               e.stopPropagation();
                               onEditBoard(board.id ?? '');
                             }}
-                            className="p-1 hover:bg-gray-100 rounded-full"
+                            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-full transition-colors duration-200"
                           >
-                            <PencilIcon className="h-4 w-4 text-gray-500" />
+                            <PencilIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                           </button>
                         )}
                       </div>

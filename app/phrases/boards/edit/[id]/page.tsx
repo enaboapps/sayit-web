@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
+import BackButton from '@/app/components/ui/BackButton';
 
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -88,36 +89,27 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
 
   if (!board) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-red-600">Board not found</div>
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-red-600 dark:text-red-400">Board not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.push('/phrases')}
-            className="flex items-center"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Back to Phrases
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mt-4">Edit Board</h1>
-        </div>
+        <BackButton />
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-4">Edit Board</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
           <Input
             id="name"
             type="text"
@@ -129,7 +121,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
           />
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm">
+            <div className="mb-4 text-red-500 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -139,7 +131,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
               type="button"
               variant="ghost"
               onClick={handleDelete}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
               disabled={deleting}
             >
               <TrashIcon className="h-5 w-5 mr-2" />

@@ -28,9 +28,9 @@ export default function BoardSelector({
   // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
-      <div className="flex items-center bg-white mb-2">
+      <div className="flex items-center bg-white dark:bg-gray-800 mb-2">
         <div
-          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
           onClick={() => {
             if (isEditMode && selectedBoard) {
               onEditBoard(selectedBoard.id ?? '');
@@ -39,12 +39,12 @@ export default function BoardSelector({
         >
           <div className="flex items-center space-x-2">
             <div>
-              <h2 className="font-medium text-black text-sm">{selectedBoard?.name}</h2>
-              <p className="text-xs text-black">
+              <h2 className="font-medium text-black dark:text-gray-100 text-sm">{selectedBoard?.name}</h2>
+              <p className="text-xs text-black dark:text-gray-300">
                 {isLoadingPhrases ? (
-                  <span className="inline-block w-16 h-3 bg-gray-200 rounded animate-pulse" />
+                  <span className="inline-block w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                 ) : selectedBoard?.phrases.length === 0 ? (
-                  <span className="text-gray-500">Empty board</span>
+                  <span className="text-gray-500 dark:text-gray-400">Empty board</span>
                 ) : (
                   `${selectedBoard?.phrases.length} ${selectedBoard?.phrases.length === 1 ? 'phrase' : 'phrases'}`
                 )}
@@ -52,7 +52,7 @@ export default function BoardSelector({
             </div>
           </div>
           {isEditMode && (
-            <PencilIcon className="h-4 w-4 text-gray-500" />
+            <PencilIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           )}
         </div>
       </div>
@@ -62,19 +62,19 @@ export default function BoardSelector({
   // If there are multiple boards, show a button to open the popup
   return (
     <>
-      <div className="flex items-center bg-white mb-2">
+      <div className="flex items-center bg-white dark:bg-gray-800 mb-2">
         <div
-          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
           onClick={() => setIsPopupOpen(true)}
         >
           <div className="flex items-center space-x-2">
             <div>
-              <h2 className="font-medium text-black text-sm">{selectedBoard?.name}</h2>
-              <p className="text-xs text-black">
+              <h2 className="font-medium text-black dark:text-gray-100 text-sm">{selectedBoard?.name}</h2>
+              <p className="text-xs text-black dark:text-gray-300">
                 {isLoadingPhrases ? (
-                  <span className="inline-block w-16 h-3 bg-gray-200 rounded animate-pulse" />
+                  <span className="inline-block w-16 h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
                 ) : selectedBoard?.phrases.length === 0 ? (
-                  <span className="text-gray-500">Empty board</span>
+                  <span className="text-gray-500 dark:text-gray-400">Empty board</span>
                 ) : (
                   `${selectedBoard?.phrases.length} ${selectedBoard?.phrases.length === 1 ? 'phrase' : 'phrases'}`
                 )}
@@ -93,7 +93,7 @@ export default function BoardSelector({
                   }
                 }}
               >
-                <PencilIcon className="h-4 w-4 text-gray-500" />
+                <PencilIcon className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               </Button>
             )}
             <Button
@@ -104,7 +104,7 @@ export default function BoardSelector({
                 setIsPopupOpen(true);
               }}
             >
-              <span className="text-gray-500">▼</span>
+              <span className="text-gray-500 dark:text-gray-400">▼</span>
             </Button>
           </div>
         </div>

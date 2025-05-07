@@ -26,11 +26,11 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="max-w-md mx-auto p-4 pt-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Reset Password</h1>
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Reset Password</h1>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         {success ? (
           <div className="text-center">
-            <p className="text-green-600 mb-6">
+            <p className="text-green-600 dark:text-green-400 mb-6">
               Password reset email sent! Please check your inbox.
             </p>
             <Button
@@ -53,14 +53,14 @@ export default function ResetPasswordPage() {
               required
             />
             {error && (
-              <div className="text-red-600 text-sm">{error}</div>
+              <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
             )}
             <div className="text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Remember your password?{' '}
                 <Link
                   href="/sign-in"
-                  className="text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
                 >
                   Sign in
                 </Link>

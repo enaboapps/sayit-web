@@ -145,85 +145,87 @@ export default function TTSSettings() {
   ]);
 
   // Determine button styling without recreating on every render
-  const browserButtonClass = settings.ttsProvider === 'browser'
-    ? 'bg-black text-white'
-    : 'bg-gray-200 text-gray-700 hover:bg-gray-300';
+  const browserButtonClass = `px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
+    settings.ttsProvider === 'browser'
+      ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+  }`;
     
-  const elevenlabsButtonClass = `${
+  const elevenlabsButtonClass = `px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
     settings.ttsProvider === 'elevenlabs'
-      ? 'bg-black text-white'
-      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+      ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
   } ${!status.elevenLabsAvailable ? 'opacity-50 cursor-not-allowed' : ''}`;
 
   return (
     <div className="space-y-6 py-6 px-4 sm:p-6">
       <div>
-        <h2 className="text-lg font-medium leading-6 text-gray-900">Text-to-Speech Settings</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Text-to-Speech Settings</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Configure your text-to-speech preferences.
         </p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">TTS Provider</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">TTS Provider</label>
           <div className="mt-1 flex space-x-4">
             <button
               type="button"
               onClick={() => handleProviderChange('browser')}
-              className={`px-4 py-2 text-sm font-medium rounded-md ${browserButtonClass}`}
+              className={browserButtonClass}
             >
               Browser TTS
               {status.browserTTSAvailable ? 
-                <span className="ml-2 text-xs px-1.5 py-0.5 bg-green-100 text-green-800 rounded-full">Available</span> : 
-                <span className="ml-2 text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded-full">Unavailable</span>
+                <span className="ml-2 text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Available</span> : 
+                <span className="ml-2 text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">Unavailable</span>
               }
             </button>
             <button
               type="button"
               onClick={() => handleProviderChange('elevenlabs')}
-              className={`px-4 py-2 text-sm font-medium rounded-md ${elevenlabsButtonClass}`}
+              className={elevenlabsButtonClass}
               disabled={!status.elevenLabsAvailable}
             >
               ElevenLabs
               {status.elevenLabsAvailable ? 
-                <span className="ml-2 text-xs px-1.5 py-0.5 bg-green-100 text-green-800 rounded-full">Available</span> : 
-                <span className="ml-2 text-xs px-1.5 py-0.5 bg-red-100 text-red-800 rounded-full">Unavailable</span>
+                <span className="ml-2 text-xs px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">Available</span> : 
+                <span className="ml-2 text-xs px-1.5 py-0.5 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">Unavailable</span>
               }
               {!hasSubscription && settings.ttsProvider === 'elevenlabs' && (
-                <span className="ml-2 text-xs px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-full">Premium</span>
+                <span className="ml-2 text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full">Premium</span>
               )}
             </button>
           </div>
           {!status.elevenLabsAvailable && (
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               ElevenLabs API key not found. Add one to your environment variables to use high-quality voices.
             </p>
           )}
           {showSubscriptionMessage && settings.ttsProvider === 'elevenlabs' && !hasSubscription && (
-            <div className="mt-2 p-3 bg-yellow-50 rounded-md border border-yellow-200">
+            <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-yellow-400 dark:text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-yellow-700">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
                     <span className="font-medium">Premium Feature:</span> Full ElevenLabs voice functionality requires a subscription. You can preview voices, but your speech will use Browser TTS instead.
                   </p>
                   <div className="mt-2">
                     <button
                       type="button"
                       onClick={() => router.push('/pricing')}
-                      className="text-sm font-medium text-yellow-700 hover:text-yellow-600 underline"
+                      className="text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:text-yellow-600 dark:hover:text-yellow-200 underline"
                     >
                       Upgrade to Pro
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowSubscriptionMessage(false)}
-                      className="ml-3 text-sm font-medium text-yellow-700 hover:text-yellow-600 underline"
+                      className="ml-3 text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:text-yellow-600 dark:hover:text-yellow-200 underline"
                     >
                       Dismiss
                     </button>
@@ -235,7 +237,7 @@ export default function TTSSettings() {
         </div>
 
         <div>
-          <label htmlFor="voice" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="voice" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Voice
           </label>
           <div className="mt-1 flex space-x-2">
@@ -255,13 +257,13 @@ export default function TTSSettings() {
               type="button"
               onClick={previewVoice}
               disabled={isPlayingPreview || providerVoices.length === 0}
-              className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50"
+              className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               aria-label="Preview Voice"
             >
               {isPlayingPreview ? (
-                <SpeakerWaveIcon className="h-5 w-5 animate-pulse" />
+                <SpeakerWaveIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               ) : (
-                <PlayCircleIcon className="h-5 w-5" />
+                <PlayCircleIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               )}
             </button>
           </div>
@@ -279,31 +281,35 @@ export default function TTSSettings() {
             ) : (
               <>
                 <div>
-                  <Slider
-                    min={0.1}
-                    max={2}
-                    step={0.1}
-                    value={settings.speechRate}
-                    onChange={(value) => updateSetting('speechRate', value)}
-                    label="Rate"
-                    showTicks
-                    description="Controls how fast the voice speaks"
-                  />
+                  <label htmlFor="rate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Speech Rate
+                  </label>
+                  <div className="mt-1">
+                    <Slider
+                      value={settings.speechRate}
+                      onChange={(value) => updateSetting('speechRate', value)}
+                      min={0.5}
+                      max={2}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Slider
-                    min={0.1}
-                    max={2}
-                    step={0.1}
-                    value={settings.speechPitch}
-                    onChange={(value) => updateSetting('speechPitch', value)}
-                    label="Pitch"
-                    showTicks
-                    trackColor="bg-gray-800"
-                    thumbColor="bg-gray-800"
-                    description="Controls the tone of the voice"
-                  />
+                  <label htmlFor="pitch" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Pitch
+                  </label>
+                  <div className="mt-1">
+                    <Slider
+                      value={settings.speechPitch}
+                      onChange={(value) => updateSetting('speechPitch', value)}
+                      min={0.5}
+                      max={2}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </>
             )}

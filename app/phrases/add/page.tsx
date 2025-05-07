@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Symbol } from '@/lib/models/Symbol';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -10,6 +9,7 @@ import { PhraseData } from '@/lib/models/Phrase';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import SymbolSelector from '@/app/components/symbols/SymbolSelector';
+import BackButton from '@/app/components/ui/BackButton';
 
 function AddPhraseForm() {
   const router = useRouter();
@@ -43,21 +43,12 @@ function AddPhraseForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="flex items-center"
-          >
-            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-            Back to Phrases
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900 mt-4">Add New Phrase</h1>
-        </div>
+        <BackButton />
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-4">Add New Phrase</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
           <Input
             id="text"
             type="text"
@@ -69,18 +60,18 @@ function AddPhraseForm() {
           />
 
           <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
               Symbol
             </label>
             <SymbolSelector
               symbol={symbol}
               onSymbolSelect={setSymbol}
             />
-            <p className="mt-1 text-sm text-gray-500">Optional - Select a symbol to represent this phrase</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional - Select a symbol to represent this phrase</p>
           </div>
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm">
+            <div className="mb-4 text-red-500 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -101,7 +92,7 @@ function AddPhraseForm() {
 
 export default function AddPhrasePage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="text-gray-900 dark:text-gray-100">Loading...</div>}>
       <AddPhraseForm />
     </Suspense>
   );

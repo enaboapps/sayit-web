@@ -3,6 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --background-gradient-1: #f3f4f6;
+  --background-gradient-2: #e5e7eb;
+  --background-gradient-3: #d1d5db;
+  --background-gradient-4: #f3f4f6;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --background-gradient-1: #1a1a1a;
+  --background-gradient-2: #2a2a2a;
+  --background-gradient-3: #3a3a3a;
+  --background-gradient-4: #1a1a1a;
 }
 
 @theme inline {
@@ -30,11 +43,5 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
