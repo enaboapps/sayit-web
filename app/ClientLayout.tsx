@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
-import AnimatedBackground from './components/AnimatedBackground';
 
 export default function ClientLayout({
   children,
@@ -34,7 +33,6 @@ export default function ClientLayout({
   return (
     <AuthProvider>
       <SettingsProvider>
-        <AnimatedBackground />
         <div className="min-h-screen flex">
           <Sidebar />
           <div className="flex-1 pl-16">

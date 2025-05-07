@@ -5,7 +5,7 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Symbol } from '@/lib/models/Symbol';
 import { Button } from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
-import Image from 'next/image';
+import SymbolImage from './SymbolImage';
 import symbolsManager from '@/lib/services/SymbolsManager';
 
 interface SymbolSearchModalProps {
@@ -45,23 +45,23 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900">
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold text-black">Select a Symbol</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Select a Symbol</h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-black"
+            className="text-gray-900 dark:text-gray-100"
           >
             <XMarkIcon className="h-6 w-6" />
           </Button>
         </div>
 
         {/* Search Bar */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <Input
             type="text"
             label="Search symbols"
@@ -69,13 +69,13 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Type to search..."
           />
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Powered by{' '}
             <a 
               href="https://globalsymbols.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-black hover:underline"
+              className="text-gray-900 dark:text-gray-100 hover:underline"
             >
               Global Symbols
             </a>
@@ -86,11 +86,11 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
         <div className="flex-1 overflow-auto p-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-gray-500">Searching symbols...</div>
+              <div className="text-gray-500 dark:text-gray-400">Searching symbols...</div>
             </div>
           ) : symbols.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-gray-500">
+              <div className="text-gray-500 dark:text-gray-400">
                 {searchTerm ? 'No symbols found' : 'Start typing to search symbols'}
               </div>
             </div>
@@ -100,25 +100,22 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
                 <Button
                   key={`symbol-${index}-${Math.random().toString(36).substring(2, 11)}`}
                   variant="outline"
-                  className="flex flex-col items-center p-4 h-auto"
+                  className="flex flex-col items-center p-4 h-auto bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                   onClick={async () => {
                     onSymbolSelect(symbol);
                     onClose();
                     await symbolsManager.handleSelectedSymbol(symbol);
                   }}
                 >
-                  <div className="w-16 h-16 relative mb-2">
-                    {symbol.url && (
-                      <Image
-                        src={symbol.url}
-                        alt={symbol.name || 'Symbol'}
-                        fill
-                        className="object-contain"
-                        unoptimized={symbol.url.startsWith('blob:')}
-                      />
-                    )}
-                  </div>
-                  <span className="text-sm text-center">{symbol.name}</span>
+                  {symbol.url && (
+                    <SymbolImage
+                      url={symbol.url}
+                      alt={symbol.name || 'Symbol'}
+                      size="md"
+                      className="mb-2"
+                    />
+                  )}
+                  <span className="text-sm text-center text-gray-900 dark:text-gray-100 font-medium">{symbol.name}</span>
                 </Button>
               ))}
             </div>

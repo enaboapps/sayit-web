@@ -18,15 +18,21 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed left-0 top-0 h-full w-16 bg-white z-50">
-      <div className="p-4 border-b border-gray-200 flex justify-center">
-        <Image src="/icons/app-icon.png" alt="Logo" width={32} height={32} />
+    <aside className="fixed left-0 top-0 h-full w-16 bg-white dark:bg-gray-900 z-50 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-center items-center">
+        <Image 
+          src="/icons/app-icon.png" 
+          alt="Logo" 
+          width={32} 
+          height={32}
+          className="rounded-lg"
+        />
       </div>
 
-      <nav className="p-4 space-y-4">
+      <nav className="flex-1 p-4 space-y-2">
         <SidebarItem
           href="/"
-          icon={<HomeIcon />}
+          icon={<HomeIcon className="w-6 h-6" />}
           title="Home"
           isActive={pathname === '/'}
         />
@@ -35,14 +41,14 @@ export default function Sidebar() {
           <>
             <SidebarItem
               href="/account"
-              icon={<UserIcon />}
+              icon={<UserIcon className="w-6 h-6" />}
               title="Account"
               isActive={pathname === '/account'}
             />
 
             <SidebarItem
               href="/settings"
-              icon={<Cog6ToothIcon />}
+              icon={<Cog6ToothIcon className="w-6 h-6" />}
               title="Settings"
               isActive={pathname === '/settings'}
             />
@@ -50,7 +56,7 @@ export default function Sidebar() {
         ) : (
           <SidebarItem
             href="/sign-in"
-            icon={<ArrowRightStartOnRectangleIcon />}
+            icon={<ArrowRightStartOnRectangleIcon className="w-6 h-6" />}
             title="Sign In"
             isActive={pathname === '/sign-in'}
           />
@@ -58,29 +64,40 @@ export default function Sidebar() {
 
         <SidebarItem
           href="/support"
-          icon={<QuestionMarkCircleIcon />}
+          icon={<QuestionMarkCircleIcon className="w-6 h-6" />}
           title="Support"
           isActive={pathname === '/support'}
         />
       </nav>
-    </div>
+    </aside>
   );
 }
 
-function SidebarItem({ href, icon, title, isActive }: { href: string; icon: React.ReactNode; title: string; isActive: boolean }) {
+interface SidebarItemProps {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  isActive: boolean;
+}
+
+function SidebarItem({ href, icon, title, isActive }: SidebarItemProps) {
   return (
-    <>
-      <Link href={href} className={`flex items-center justify-center p-2 rounded-md transition-colors ${isActive ? 'bg-gray-50 text-gray-600' : 'text-gray-700 hover:bg-gray-100'}`} title={title} data-tooltip-id={title}>
-        <div className="w-6 h-6 flex items-center justify-center">
-          {icon}
-        </div>
-      </Link>
-      <Tooltip
-        id={title}
+    <Link
+      href={href}
+      className={`flex items-center justify-center p-2 rounded-lg transition-colors ${
+        isActive
+          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+      }`}
+      data-tooltip-id={`sidebar-tooltip-${title}`}
+      data-tooltip-content={title}
+    >
+      {icon}
+      <Tooltip 
+        id={`sidebar-tooltip-${title}`}
         place="right"
-      >
-        {title}
-      </Tooltip>
-    </>
+        className="z-50"
+      />
+    </Link>
   );
 }

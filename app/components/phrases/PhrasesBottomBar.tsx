@@ -19,11 +19,11 @@ export default function PhrasesBottomBar({
   isEditMode,
 }: PhrasesBottomBarProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-sm">
+    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="flex justify-around items-center px-6 py-4">
         <div
           onClick={onAddBoard}
-          className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
+          className="flex flex-col items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer transition-colors duration-200"
           data-tooltip-id="new-board-tooltip"
           data-tooltip-content="Create a new board to organize your phrases"
         >
@@ -34,7 +34,7 @@ export default function PhrasesBottomBar({
         {boardPresent && (
           <div
             onClick={onAddPhrase}
-            className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-900 cursor-pointer transition-colors duration-200"
+            className="flex flex-col items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer transition-colors duration-200"
             data-tooltip-id="add-phrase-tooltip"
             data-tooltip-content="Add a new phrase to the current board"
           >
@@ -46,7 +46,9 @@ export default function PhrasesBottomBar({
         <div
           onClick={onEdit}
           className={`flex flex-col items-center gap-1 cursor-pointer transition-colors duration-200 ${
-            isEditMode ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
+            isEditMode 
+              ? 'text-gray-900 dark:text-gray-100' 
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
           }`}
           data-tooltip-id="edit-tooltip"
           data-tooltip-content={isEditMode ? 'Finish editing the board' : 'Edit the current board'}

@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { phraseStore } from '@/lib/stores/phraseStore';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import { Textarea } from '@/components/ui/Textarea';
+import { Textarea } from '@/app/components/ui/Textarea';
 import { GeneratedPhrases } from '@/app/components/phrases/GeneratedPhrases';
-import { Collapsible } from '@/components/ui/Collapsible';
+import { Collapsible } from '@/app/components/ui/Collapsible';
 import SubscriptionWrapper from '@/app/components/SubscriptionWrapper';
+import BackButton from '@/app/components/ui/BackButton';
 
 export default function AddBoardPage() {
   const [name, setName] = useState('');
@@ -106,21 +106,14 @@ export default function AddBoardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto p-6">
-        <div className="flex items-center mb-6">
-          <button
-            onClick={() => router.back()}
-            className="mr-4 p-2 hover:bg-gray-200 rounded-full"
-          >
-            <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">Create New Board</h1>
-        </div>
+        <BackButton />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Create New Board</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Board Name
             </label>
             <Input
@@ -138,12 +131,12 @@ export default function AddBoardPage() {
           >
             <SubscriptionWrapper
               fallback={
-                <div className="bg-gray-50 p-6 rounded-lg text-center my-4">
-                  <svg className="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg text-center my-4">
+                  <svg className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                   </svg>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Pro Feature</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Pro Feature</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
                     AI-Assisted Phrase Generation is a premium feature that helps you create relevant phrases quickly using AI.
                   </p>
                   <Button 
@@ -156,12 +149,12 @@ export default function AddBoardPage() {
               }
             >
               <div className="space-y-4">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
                 </p>
 
                 <div>
-                  <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Generation Prompt
                   </label>
                   <div className="space-y-4">
@@ -201,7 +194,7 @@ export default function AddBoardPage() {
           </div>
           
           {error && (
-            <div className="p-4 bg-red-50 rounded-lg text-red-700 mt-4">
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-700 dark:text-red-400 mt-4">
               {error}
             </div>
           )}

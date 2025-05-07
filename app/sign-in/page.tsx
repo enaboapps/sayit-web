@@ -27,8 +27,8 @@ export default function SignInPage() {
 
   return (
     <div className="max-w-md mx-auto p-4 pt-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Sign In</h1>
-      <div className="bg-white rounded-xl shadow-lg p-8">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Sign In</h1>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           <Input
             id="email"
@@ -49,18 +49,18 @@ export default function SignInPage() {
             required
           />
           {error && (
-            <div className="text-red-600 text-sm">{error}</div>
+            <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
           )}
           <div className="flex items-center justify-between">
             <Link
               href="/reset-password"
-              className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
             >
               Forgot password?
             </Link>
             <Link
               href="/sign-up"
-              className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
             >
               Create an account
             </Link>

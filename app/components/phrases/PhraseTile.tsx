@@ -3,7 +3,7 @@
 import { Phrase } from '@/lib/models/Phrase';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import SymbolImage from '@/app/components/symbols/SymbolImage';
 
 interface PhraseTileProps {
   phrase: Phrase
@@ -42,31 +42,28 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
 
   return (
     <div
-      className={`relative bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-gray-50 transition-all duration-200 flex flex-col items-center justify-center h-full ${
-        onEdit ? 'ring-2 ring-gray-300' : ''
+      className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 flex flex-col items-center justify-center h-full ${
+        onEdit ? 'ring-2 ring-gray-300 dark:ring-gray-600' : ''
       } ${className}`}
       onClick={handleClick}
     >
       {onEdit && (
         <div className="absolute top-2 right-2">
-          <PencilIcon className="h-5 w-5 text-gray-500" />
+          <PencilIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
         </div>
       )}
       <div className="flex flex-col items-center justify-center w-full h-full">
         {url && !imageError && (
-          <div className="mb-3 relative w-16 h-16">
-            <Image
-              src={url}
+          <div className="mb-3">
+            <SymbolImage
+              url={url}
               alt={`Symbol for ${phrase.text}`}
-              fill
-              className="object-contain"
-              onError={() => setImageError(true)}
-              unoptimized={url.startsWith('blob:')}
+              size="md"
             />
           </div>
         )}
         <div className="text-center w-full">
-          <p className="text-black text-xl font-medium line-clamp-3 px-2">{phrase.text}</p>
+          <p className="text-black dark:text-gray-100 text-xl font-medium line-clamp-3 px-2">{phrase.text}</p>
         </div>
       </div>
     </div>

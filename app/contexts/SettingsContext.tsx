@@ -17,7 +17,6 @@ interface Settings {
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
-  // Add more settings here as needed
 }
 
 interface SettingsContextType {

@@ -151,7 +151,7 @@ export default function PhrasesInterface() {
   };
 
   if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
+    return <div className="text-red-500 dark:text-red-400 p-4">{error}</div>;
   }
 
   return (
@@ -166,8 +166,8 @@ export default function PhrasesInterface() {
       {boards.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-medium text-gray-900 mb-4">No boards yet</h2>
-            <p className="text-gray-600 mb-6">Create your first board to start adding phrases</p>
+            <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100 mb-4">No boards yet</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first board to start adding phrases</p>
           </div>
         </div>
       ) : (
