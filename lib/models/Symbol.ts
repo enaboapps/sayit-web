@@ -28,16 +28,24 @@ export class Symbol {
       if (!user) {
         throw new Error('User not authenticated');
       }
-      // Try both PNG and SVG
-      const extensions = ['png', 'svg'];
-      for (const extension of extensions) {
-        try {
-          this.url = await this.storage.getFileURL(`${this.id}.${extension}`);
-          if (this.url) return this.url;
-        } catch {
-          continue;
-        }
+
+      // List files in the user's directory to find the matching file
+      const { data: files, error } = await supabase.storage
+        .from('symbols')
+        .list(`${user.id}`);
+
+      if (error) {
+        throw error;
       }
+
+      // Find the file that matches our symbol ID (regardless of extension)
+      const matchingFile = files?.find(file => file.name.startsWith(`${this.id}.`));
+      
+      if (matchingFile) {
+        this.url = await this.storage.getFileURL(matchingFile.name);
+        return this.url;
+      }
+
       throw new Error('Symbol image not found');
     }
     return this.url;
