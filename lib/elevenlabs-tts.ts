@@ -24,6 +24,8 @@ export class ElevenLabsTTS {
   private isSpeaking: boolean = false;
   private fallbackTTS: WebSpeechTTS;
   private elevenLabsClient: ElevenLabsClient | null = null;
+  private abortController: AbortController | null = null;
+  private lastRequestTime: number = 0;
   private callbacks: {
     onStart?: () => void;
     onEnd?: () => void;
@@ -110,8 +112,15 @@ export class ElevenLabsTTS {
       return;
     }
 
-    // Stop any ongoing speech
+    // Stop any ongoing speech and API requests
     this.stop();
+    
+    // Track request timing
+    const currentTime = Date.now();
+    this.lastRequestTime = currentTime;
+    
+    // Create a new abort controller for this request
+    this.abortController = new AbortController();
 
     // Voice ID handling
     let voiceId = options?.voiceId;
@@ -151,13 +160,30 @@ export class ElevenLabsTTS {
       
       console.log('Sending ElevenLabs API request with settings:', JSON.stringify(voiceSettings));
       
-      const audioData = await this.elevenLabsClient.generate({
-        voice: voiceId,
-        text: text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: voiceSettings
-      });
+      // Check if request was aborted before making API call
+      if (this.abortController?.signal.aborted) {
+        console.log('Speech request was aborted before API call');
+        return;
+      }
+      
+      const audioData = await this.elevenLabsClient.textToSpeech.convert(
+        voiceId!,
+        {
+          text: text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: voiceSettings
+        },
+        {
+          abortSignal: this.abortController.signal
+        }
+      );
 
+      // Check if request was aborted after API call
+      if (this.abortController?.signal.aborted) {
+        console.log('Speech request was aborted after API call');
+        return;
+      }
+      
       // Create blob from the audio data (handle different return types)
       let audioBlob: Blob;
       if (audioData instanceof Blob) {
@@ -168,10 +194,21 @@ export class ElevenLabsTTS {
         // If it's a readable stream or other format, convert to Buffer then Blob
         const chunks: Uint8Array[] = [];
         for await (const chunk of audioData) {
+          // Check if aborted during streaming
+          if (this.abortController?.signal.aborted) {
+            console.log('Speech request was aborted during streaming');
+            return;
+          }
           chunks.push(chunk instanceof Uint8Array ? chunk : Buffer.from(chunk));
         }
         const buffer = Buffer.concat(chunks);
         audioBlob = new Blob([buffer], { type: 'audio/mpeg' });
+      }
+      
+      // Final check before playing
+      if (this.abortController?.signal.aborted) {
+        console.log('Speech request was aborted before playback');
+        return;
       }
       
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -194,26 +231,61 @@ export class ElevenLabsTTS {
       };
 
       await this.audio.play();
-    } catch (error) {
+    } catch (error: any) {
       this.isSpeaking = false;
-      console.error('ElevenLabs TTS error:', error);
-      this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
       
-      // Fall back to browser TTS on error
-      this.fallbackTTS.speak(text);
+      // Don't log or fallback if the request was intentionally aborted
+      if (error?.name === 'AbortError' || this.abortController?.signal.aborted) {
+        console.log('Speech request was cancelled');
+        return;
+      }
+      
+      // Check if this is a rapid request (within 2 seconds of last request)
+      const timeSinceLastRequest = Date.now() - this.lastRequestTime;
+      const isRapidRequest = timeSinceLastRequest < 2000;
+      
+      console.error('ElevenLabs TTS error:', error);
+      
+      // Only show error and fallback if this isn't a rapid request
+      if (!isRapidRequest) {
+        this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+        // Fall back to browser TTS on error
+        this.fallbackTTS.speak(text);
+      } else {
+        console.log('Skipping fallback due to rapid request');
+      }
     }
   }
 
   public stop() {
+    // Abort any ongoing API requests
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+    
     if (this.audio) {
+      // Remove event listeners to prevent callbacks after stopping
+      this.audio.onended = null;
+      this.audio.onerror = null;
+      
       this.audio.pause();
       this.audio.currentTime = 0;
-      URL.revokeObjectURL(this.audio.src);
+      
+      // Ensure the audio source is properly cleaned up
+      const audioSrc = this.audio.src;
+      this.audio.src = '';
+      
+      // Clean up the blob URL
+      if (audioSrc && audioSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(audioSrc);
+      }
+      
       this.audio = null;
     }
     
     this.isSpeaking = false;
-    this.callbacks.onEnd?.();
+    // Don't call onEnd callback here as this is a manual stop
   }
 
   public pause() {
