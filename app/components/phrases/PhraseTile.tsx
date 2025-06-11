@@ -1,7 +1,7 @@
 'use client';
 
 import { Phrase } from '@/lib/models/Phrase';
-import { PencilIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
 import SymbolImage from '@/app/components/symbols/SymbolImage';
 
@@ -15,6 +15,7 @@ interface PhraseTileProps {
 export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: PhraseTileProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   useEffect(() => {
     const fetchImageUrl = async () => {
@@ -35,21 +36,35 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
       // In edit mode, clicking anywhere on the tile should edit
       onEdit();
     } else {
-      // Not in edit mode, use normal press behavior
+      // Not in edit mode, use normal press behavior with visual feedback
+      setIsSpeaking(true);
       onPress();
+      // Reset speaking state after a short delay
+      setTimeout(() => setIsSpeaking(false), 800);
     }
   };
 
   return (
     <div
-      className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 flex flex-col items-center justify-center h-full ${
-        onEdit ? 'ring-2 ring-gray-300 dark:ring-gray-600' : ''
+      className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 flex flex-col items-center justify-center h-full ${
+        onEdit ? 'ring-2 ring-blue-400 dark:ring-blue-600' : ''
+      } ${
+        isSpeaking ? 'ring-2 ring-green-400 dark:ring-green-600 scale-[0.98]' : ''
       } ${className}`}
       onClick={handleClick}
     >
       {onEdit && (
-        <div className="absolute top-2 right-2">
-          <PencilIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+        <div className="absolute top-2 right-2 z-10">
+          <div className="bg-blue-500 dark:bg-blue-600 rounded-full p-1.5 shadow-sm">
+            <PencilIcon className="h-4 w-4 text-white" />
+          </div>
+        </div>
+      )}
+      {isSpeaking && !onEdit && (
+        <div className="absolute top-2 right-2 z-10">
+          <div className="bg-green-500 dark:bg-green-600 rounded-full p-1.5 shadow-sm animate-pulse">
+            <SpeakerWaveIcon className="h-4 w-4 text-white" />
+          </div>
         </div>
       )}
       <div className="flex flex-col items-center justify-center w-full h-full">
@@ -63,7 +78,7 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
           </div>
         )}
         <div className="text-center w-full">
-          <p className="text-black dark:text-gray-100 text-xl font-medium line-clamp-3 px-2">{phrase.text}</p>
+          <p className="text-gray-900 dark:text-gray-100 text-lg font-semibold line-clamp-2 px-2 leading-tight">{phrase.text}</p>
         </div>
       </div>
     </div>
