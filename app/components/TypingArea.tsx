@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import FleshOutPopup from './flesh-out/FleshOutPopup';
+import SubscriptionWrapper from './SubscriptionWrapper';
 
 interface TypingAreaProps {
   initialText?: string
@@ -20,6 +21,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
   const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
+  const [isFixingText, setIsFixingText] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
   const { speak, isSpeaking, isAvailable } = tts;
@@ -77,6 +79,41 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     onChange?.(newText);
     setShowFleshOutPopup(false);
     textareaRef.current?.focus();
+  };
+
+  const handleFixText = async () => {
+    if (!text.trim() || isFixingText) return;
+    
+    setIsFixingText(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/fix-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.text && data.text !== text) {
+        setText(data.text);
+        onChange?.(data.text);
+      }
+    } catch (error) {
+      console.error('Error fixing text:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fix text');
+    } finally {
+      setIsFixingText(false);
+      textareaRef.current?.focus();
+    }
   };
 
   const toggleVisibility = () => {
@@ -164,6 +201,47 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                   <span>Flesh Out</span>
                 </div>
               </button>
+              <SubscriptionWrapper
+                fallback={
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="flex-1 h-14 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                    data-tooltip-id="fix-text-tooltip"
+                    data-tooltip-content="Fix Text (Pro feature)"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <SparklesIcon className="w-5 h-5" />
+                      <span>Fix Text</span>
+                    </div>
+                  </button>
+                }
+              >
+                <button
+                  onClick={handleFixText}
+                  className={`flex-1 h-14 transition-colors duration-200 ${
+                    isFixingText
+                      ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                      : 'bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
+                  }`}
+                  data-tooltip-id="fix-text-tooltip"
+                  data-tooltip-content="Fix grammar and spelling"
+                  disabled={!text.trim() || isFixingText}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {isFixingText ? (
+                      <>
+                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                        <span>Fixing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <SparklesIcon className="w-5 h-5" />
+                        <span>Fix Text</span>
+                      </>
+                    )}
+                  </div>
+                </button>
+              </SubscriptionWrapper>
               <button
                 onClick={handleClear}
                 className="flex-1 h-14 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
@@ -193,6 +271,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       </button>
       <Tooltip id="speak-tooltip" />
       <Tooltip id="flesh-out-tooltip" />
+      <Tooltip id="fix-text-tooltip" />
       <Tooltip id="clear-tooltip" />
       <Tooltip id="toggle-tooltip" />
 

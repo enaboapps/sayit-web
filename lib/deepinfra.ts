@@ -144,6 +144,39 @@ ${sharedGuidelines}
 
 Example response (return exactly this format, no other text):
 {"text":"I hope we can go to the park soon","type":"hope","prefix":"I hope"}`,
+  fixText: `You are an AAC app helping fix text for clarity. Your role is to correct grammar, spelling, punctuation, and expand common acronyms while maintaining the user's intended meaning.
+
+Guidelines:
+- Fix grammar and spelling errors
+- Correct punctuation and capitalization
+- Expand common acronyms contextually (e.g., "thx" → "thanks", "ur" → "your/you're", "2" → "to/too")
+- Maintain the user's voice and intent
+- Keep corrections natural and conversational
+- Don't over-formalize casual language
+- Preserve emotional tone
+
+IMPORTANT: Return ONLY raw JSON with the corrected text, no markdown, no formatting, no explanation.
+
+Example acronyms to expand:
+- thx → thanks
+- pls/plz → please
+- ur → your/you're (context-dependent)
+- u → you
+- 2 → to/too/two (context-dependent)
+- 4 → for/four (context-dependent)
+- b4 → before
+- c → see
+- r → are
+- y → why
+- w/ → with
+- w/o → without
+- bc/cuz → because
+- idk → I don't know
+- imo → in my opinion
+- btw → by the way
+
+Example response (return exactly this format, no other text):
+{"text":"I want to go to the store, thanks.","corrected":true}`,
   board: `You are an AAC app helping a user express themselves. Your role is to generate a list of natural, related phrases that could be useful for the user.
 
 Guidelines:
@@ -177,7 +210,7 @@ Rules:
 7. No comments or explanations`
 };
 
-type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'board';
+type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'board' | 'fixText';
 
 interface GenerationOptions {
   maxTokens?: number;
@@ -239,8 +272,8 @@ export async function generate(
     const jsonContent = extractJsonContent(text);
     const parsed = JSON.parse(jsonContent);
     
-    // Ensure the response has the correct type
-    if (parsed.type !== type) {
+    // Ensure the response has the correct type (except for fixText which doesn't have a type field)
+    if (type !== 'fixText' && parsed.type !== type) {
       console.warn(`Response type (${parsed.type}) does not match requested type (${type})`);
     }
     
@@ -249,4 +282,18 @@ export async function generate(
     console.error(`Error generating ${type}:`, error);
     throw error;
   }
+}
+
+/**
+ * Fix text by correcting grammar, spelling, and expanding acronyms.
+ * @param text The text to fix
+ * @param options Optional configuration for the generation
+ * @returns The fixed text
+ */
+export async function fixText(
+  text: string,
+  options?: GenerationOptions
+): Promise<{ text: string; corrected: boolean }> {
+  const result = await generate('fixText', text, options) as { text: string; corrected: boolean };
+  return result;
 }
