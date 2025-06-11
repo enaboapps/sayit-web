@@ -172,13 +172,13 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
             )}
           </div>
           {text.trim() && (
-            <div className="flex border-t border-gray-100 dark:border-gray-700 divide-x divide-gray-100 dark:divide-gray-700 transition-colors duration-200">
+            <div className="grid grid-cols-2 gap-[1px] bg-gray-100 dark:bg-gray-700 border-t border-gray-100 dark:border-gray-700 transition-colors duration-200">
               <button
                 onClick={handleSpeak}
-                className={`flex-1 h-14 transition-colors duration-200 ${
+                className={`h-14 transition-colors duration-200 ${
                   isSpeaking
                     ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                    : 'bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
+                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
                 }`}
                 data-tooltip-id="speak-tooltip"
                 data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
@@ -191,7 +191,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               </button>
               <button
                 onClick={handleFleshOut}
-                className="flex-1 h-14 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                className="h-14 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
                 data-tooltip-id="flesh-out-tooltip"
                 data-tooltip-content="Flesh out with AI"
                 disabled={!text.trim()}
@@ -205,7 +205,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                 fallback={
                   <button
                     onClick={() => window.location.href = '/pricing'}
-                    className="flex-1 h-14 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                    className="h-14 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
                     data-tooltip-id="fix-text-tooltip"
                     data-tooltip-content="Fix Text (Pro feature)"
                   >
@@ -218,10 +218,10 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               >
                 <button
                   onClick={handleFixText}
-                  className={`flex-1 h-14 transition-colors duration-200 ${
+                  className={`h-14 transition-colors duration-200 ${
                     isFixingText
                       ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                      : 'bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
+                      : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
                   }`}
                   data-tooltip-id="fix-text-tooltip"
                   data-tooltip-content="Fix grammar and spelling"
@@ -244,7 +244,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               </SubscriptionWrapper>
               <button
                 onClick={handleClear}
-                className="flex-1 h-14 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                className="h-14 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
                 data-tooltip-id="clear-tooltip"
                 data-tooltip-content="Clear"
               >
