@@ -187,28 +187,28 @@ export default function PhrasesInterface() {
             {!loading && (
               <div className="flex flex-col h-full">
                 <div className="flex-1 p-1 overflow-auto">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 h-full">
+                  <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-1 h-full">
                     {phrases.map((phrase) => (
                       <PhraseTile
                         key={phrase.id}
                         phrase={phrase}
                         onPress={() => handlePhrasePress(phrase)}
                         onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
-                        className="aspect-square"
+                        className="sm:aspect-square"
                       />
                     ))}
                     {typingText.trim() && (
                       <ActionTile
                         text="+ Add as Phrase"
                         onClick={handleAddTypingAsPhrase}
-                        className="aspect-square"
+                        className="sm:aspect-square"
                       />
                     )}
                     {isEditMode && (
                       <ActionTile
                         text="+ Add Phrase"
                         onClick={handleAddPhrase}
-                        className="aspect-square"
+                        className="sm:aspect-square"
                       />
                     )}
                   </div>
