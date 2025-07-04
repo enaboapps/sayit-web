@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { Phrase } from '@/lib/models/Phrase';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
+import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
 import TypingArea from '../TypingArea';
 import { useTTS } from '@/lib/hooks/useTTS';
@@ -24,6 +25,7 @@ export default function PhrasesInterface() {
   const [loading, setLoading] = useState(true);
   const [loadingPhrases, setLoadingPhrases] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isReaderOpen, setIsReaderOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -142,6 +144,18 @@ export default function PhrasesInterface() {
     router.push('/phrases/boards/add');
   };
 
+  const handleReader = () => {
+    setIsReaderOpen(true);
+  };
+
+  const handleCloseReader = () => {
+    setIsReaderOpen(false);
+  };
+
+  const handleSpeakInReader = (text: string) => {
+    tts.speak(text);
+  };
+
   const handleSelectBoard = (board: PhraseBoard) => {
     setSelectedBoard(board);
     // Save the selected board ID to localStorage
@@ -222,8 +236,15 @@ export default function PhrasesInterface() {
         onAddPhrase={handleAddPhrase}
         onAddBoard={handleAddBoard}
         onEdit={handleEdit}
+        onReader={handleReader}
         boardPresent={boards.length > 0}
         isEditMode={isEditMode}
+      />
+      <ReaderPopup
+        phrases={phrases}
+        isOpen={isReaderOpen}
+        onClose={handleCloseReader}
+        onSpeak={handleSpeakInReader}
       />
     </>
   );

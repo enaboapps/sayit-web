@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Pencil, MessageSquare, Check, Menu, X } from 'lucide-react';
+import { Plus, Pencil, MessageSquare, Check, Menu, X, Book } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import { useState, useRef, useEffect } from 'react';
 
@@ -8,6 +8,7 @@ interface PhrasesActionMenuProps {
   onAddPhrase: () => void
   onAddBoard: () => void
   onEdit: () => void
+  onReader: () => void
   boardPresent: boolean
   isEditMode: boolean
 }
@@ -16,6 +17,7 @@ export default function PhrasesActionMenu({
   onAddPhrase,
   onAddBoard,
   onEdit,
+  onReader,
   boardPresent,
   isEditMode,
 }: PhrasesActionMenuProps) {
@@ -76,6 +78,19 @@ export default function PhrasesActionMenu({
           </div>
         )}
 
+        {/* Reader Action - Only show when board has phrases */}
+        {boardPresent && (
+          <div
+            onClick={() => handleAction(onReader)}
+            className="flex items-center gap-3 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-200 dark:border-gray-600"
+            data-tooltip-id="reader-tooltip"
+            data-tooltip-content="Open reader mode to navigate through phrases"
+          >
+            <Book className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">Reader</span>
+          </div>
+        )}
+
         {/* Edit/Done Action */}
         <div
           onClick={() => handleAction(onEdit)}
@@ -119,6 +134,7 @@ export default function PhrasesActionMenu({
       {/* Tooltips */}
       <Tooltip id="new-board-tooltip" place="left" />
       <Tooltip id="add-phrase-tooltip" place="left" />
+      <Tooltip id="reader-tooltip" place="left" />
       <Tooltip id="edit-tooltip" place="left" />
       <Tooltip id="main-action-tooltip" place="left" />
     </div>
