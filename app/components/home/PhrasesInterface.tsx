@@ -1,7 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { Phrase } from '@/lib/models/Phrase';
 import { PhraseBoard } from '@/lib/models/PhraseBoard';
-import PhrasesBottomBar from '../phrases/PhrasesBottomBar';
+import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
 import BoardSelector from '../phrases/BoardSelector';
 import TypingArea from '../TypingArea';
 import { useTTS } from '@/lib/hooks/useTTS';
@@ -218,7 +218,7 @@ export default function PhrasesInterface() {
           </div>
         </div>
       )}
-      <PhrasesBottomBar
+      <PhrasesActionMenu
         onAddPhrase={handleAddPhrase}
         onAddBoard={handleAddBoard}
         onEdit={handleEdit}
