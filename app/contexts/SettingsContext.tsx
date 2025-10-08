@@ -5,6 +5,7 @@ import { TTSProviderType } from '@/lib/tts-provider';
 
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
+type ThemeMode = 'light' | 'dark' | 'system';
 
 interface Settings {
   textSize: TextSize;
@@ -17,6 +18,13 @@ interface Settings {
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
+  // Theme settings
+  theme: ThemeMode;
+  // Accessibility settings
+  reduceMotion: boolean;
+  highContrast: boolean;
+  // Keyboard shortcuts
+  enableKeyboardShortcuts: boolean;
 }
 
 interface SettingsContextType {
@@ -35,6 +43,13 @@ const defaultSettings: Settings = {
   ttsVoiceId: '', // Will be set by the component based on available voices
   ttsStability: 0.5,
   ttsSimilarityBoost: 0.5,
+  // Theme settings
+  theme: 'system',
+  // Accessibility settings
+  reduceMotion: false,
+  highContrast: false,
+  // Keyboard shortcuts
+  enableKeyboardShortcuts: true,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

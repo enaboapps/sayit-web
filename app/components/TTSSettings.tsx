@@ -158,15 +158,10 @@ export default function TTSSettings() {
   } ${!status.elevenLabsAvailable ? 'opacity-50 cursor-not-allowed' : ''}`;
 
   return (
-    <div className="space-y-6 py-6 px-4 sm:p-6">
-      <div>
-        <h2 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Text-to-Speech Settings</h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Configure your text-to-speech preferences.
-        </p>
-      </div>
+    <div className="space-y-6">
+      {/* Removed redundant header since it's now handled by the parent SettingsCard */}
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">TTS Provider</label>
           <div className="mt-1 flex space-x-4">
