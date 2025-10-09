@@ -157,7 +157,7 @@ export default function TTSSettings() {
               onClick={() => handleProviderChange('browser')}
               className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
                 settings.ttsProvider === 'browser'
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
@@ -177,7 +177,7 @@ export default function TTSSettings() {
                     </span>
                   )}
                   {settings.ttsProvider === 'browser' && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
                   )}
                 </div>
               </div>
@@ -192,7 +192,7 @@ export default function TTSSettings() {
                   : 'cursor-pointer'
               } ${
                 settings.ttsProvider === 'elevenlabs'
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
               }`}
             >
@@ -217,7 +217,7 @@ export default function TTSSettings() {
                     </span>
                   )}
                   {settings.ttsProvider === 'elevenlabs' && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
                   )}
                 </div>
               </div>
@@ -295,9 +295,9 @@ export default function TTSSettings() {
               disabled={isPlayingPreview || providerVoices.length === 0}
               className={`inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md transition-colors ${
                 isPlayingPreview 
-                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600'
+                  ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-600'
                   : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600'
-              } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+              } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500`}
               title={isPlayingPreview ? 'Stop preview' : 'Preview voice'}
             >
               {isPlayingPreview ? (
@@ -327,16 +327,16 @@ export default function TTSSettings() {
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
               <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Browser TTS Settings</h3>
               {isMobile ? (
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-blue-400 dark:text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-5 w-5 text-primary-400 dark:text-primary-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">Mobile Device Detected</h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      <h4 className="text-sm font-medium text-primary-800 dark:text-primary-200">Mobile Device Detected</h4>
+                      <p className="text-sm text-primary-700 dark:text-primary-300 mt-1">
                         Speech rate and pitch are controlled by your device's system settings. 
                         Please adjust these in your device's accessibility options.
                       </p>
@@ -383,10 +383,10 @@ export default function TTSSettings() {
               <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">ElevenLabs Settings</h3>
               <SubscriptionWrapper
                 fallback={
-                  <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 p-6 rounded-lg text-center border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gradient-to-r from-gray-50 to-primary-50 dark:from-gray-800 dark:to-primary-900/20 p-6 rounded-lg text-center border border-gray-200 dark:border-gray-700">
                     <div className="flex justify-center mb-4">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                       </div>
@@ -398,7 +398,7 @@ export default function TTSSettings() {
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button 
                         onClick={() => router.push('/pricing')}
-                        className="flex-1 py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                       >
                         Upgrade to Pro
                       </button>
