@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
-import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
 
 export default function ClientLayout({
@@ -34,16 +33,14 @@ export default function ClientLayout({
   return (
     <AuthProvider>
       <SettingsProvider>
-        <ThemeProvider>
-          <div className="min-h-screen flex">
-            <Sidebar />
-            <div className="flex-1 pl-16">
-              <main>
-                {children}
-              </main>
-            </div>
+        <div className="min-h-screen flex">
+          <Sidebar />
+          <div className="flex-1 pl-16">
+            <main>
+              {children}
+            </main>
           </div>
-        </ThemeProvider>
+        </div>
       </SettingsProvider>
     </AuthProvider>
   );
