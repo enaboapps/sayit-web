@@ -177,7 +177,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                 onClick={handleSpeak}
                 className={`h-14 transition-colors duration-200 ${
                   isSpeaking
-                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                    ? 'bg-primary-500 hover:bg-primary-600 text-white'
                     : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
                 }`}
                 data-tooltip-id="speak-tooltip"

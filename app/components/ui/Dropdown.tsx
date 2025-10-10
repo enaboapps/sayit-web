@@ -51,7 +51,7 @@ export function Dropdown<T = string>({
       <Listbox value={value} onChange={onChange} disabled={disabled}>
         <div className="relative">
           <Listbox.Button className={cn(
-            'relative w-full py-2 pl-3 pr-10 text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm cursor-default focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white text-base transition-all duration-200',
+            'relative w-full py-2 pl-3 pr-10 text-left bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm cursor-default focus:outline-none focus:ring-1 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 text-base transition-all duration-200',
             disabled && 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700',
             error && 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400 focus:border-red-500 dark:focus:border-red-400'
           )}>
@@ -78,7 +78,7 @@ export function Dropdown<T = string>({
                   className={({ active }) =>
                     cn(
                       'cursor-default select-none relative py-2 pl-3 pr-9',
-                      active ? 'text-white dark:text-black bg-black dark:bg-white' : 'text-gray-900 dark:text-gray-100',
+                      active ? 'text-white dark:text-gray-900 bg-primary-600 dark:bg-primary-400' : 'text-gray-900 dark:text-gray-100',
                       option.disabled && 'opacity-50 cursor-not-allowed text-gray-500 dark:text-gray-400'
                     )
                   }
@@ -103,7 +103,7 @@ export function Dropdown<T = string>({
                         <span
                           className={cn(
                             'absolute inset-y-0 right-0 flex items-center pr-4',
-                            active ? 'text-white dark:text-black' : 'text-black dark:text-white'
+                            active ? 'text-white dark:text-gray-900' : 'text-primary-600 dark:text-primary-400'
                           )}
                         >
                           <CheckIcon className="w-5 h-5" aria-hidden="true" />
