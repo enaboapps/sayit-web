@@ -4,6 +4,9 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
   {
+    ignores: ['.next/**', 'node_modules/**', 'out/**', '.vercel/**'],
+  },
+  {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       '@next': nextPlugin,
