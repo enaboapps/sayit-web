@@ -45,23 +45,23 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900">
+    <div className="fixed inset-0 z-50 bg-white bg-surface">
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Select a Symbol</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 border-border">
+          <h2 className="text-xl font-semibold text-gray-900 text-foreground">Select a Symbol</h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="text-gray-900 dark:text-gray-100"
+            className="text-gray-900 text-foreground"
           >
             <XMarkIcon className="h-6 w-6" />
           </Button>
         </div>
 
         {/* Search Bar */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 border-border">
           <Input
             type="text"
             label="Search symbols"
@@ -69,13 +69,13 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Type to search..."
           />
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-sm text-gray-500 text-text-secondary">
             Powered by{' '}
             <a 
               href="https://globalsymbols.com" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-gray-900 dark:text-gray-100 hover:underline"
+              className="text-gray-900 text-foreground hover:underline"
             >
               Global Symbols
             </a>
@@ -86,11 +86,11 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
         <div className="flex-1 overflow-auto p-4">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-gray-500 dark:text-gray-400">Searching symbols...</div>
+              <div className="text-gray-500 text-text-secondary">Searching symbols...</div>
             </div>
           ) : symbols.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-gray-500 dark:text-gray-400">
+              <div className="text-gray-500 text-text-secondary">
                 {searchTerm ? 'No symbols found' : 'Start typing to search symbols'}
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
                 <Button
                   key={`symbol-${index}-${Math.random().toString(36).substring(2, 11)}`}
                   variant="outline"
-                  className="flex flex-col items-center p-4 h-auto bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  className="flex flex-col items-center p-4 h-auto bg-white bg-surface hover:bg-gray-50 hover:bg-surface-hover border border-gray-200 border-border"
                   onClick={async () => {
                     onSymbolSelect(symbol);
                     onClose();
@@ -115,7 +115,7 @@ export default function SymbolSearchModal({ isOpen, onClose, onSymbolSelect }: S
                       className="mb-2"
                     />
                   )}
-                  <span className="text-sm text-center text-gray-900 dark:text-gray-100 font-medium">{symbol.name}</span>
+                  <span className="text-sm text-center text-gray-900 text-foreground font-medium">{symbol.name}</span>
                 </Button>
               ))}
             </div>

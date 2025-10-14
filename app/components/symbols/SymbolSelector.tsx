@@ -46,7 +46,7 @@ export default function SymbolSelector({ symbol, onSymbolSelect, className = '' 
         type="button"
         variant="outline"
         onClick={() => setIsModalOpen(true)}
-        className="w-full justify-start h-auto p-3 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+        className="w-full justify-start h-auto p-3 bg-white bg-surface border-gray-200 border-border hover:bg-gray-50 hover:bg-surface-hover/50"
       >
         <motion.div
           className="inline-flex items-center w-full"
@@ -57,12 +57,12 @@ export default function SymbolSelector({ symbol, onSymbolSelect, className = '' 
             {url && !imageError ? (
               <SymbolImage url={url} alt={symbol?.name || 'Selected symbol'} size="sm" />
             ) : (
-              <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-600">
-                <span className="text-gray-400 dark:text-gray-300 text-sm">+</span>
+              <div className="w-12 h-12 bg-gray-100 bg-surface-hover rounded-lg flex items-center justify-center border border-gray-200 border-border">
+                <span className="text-gray-400 text-text-secondary text-sm">+</span>
               </div>
             )}
             <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              <p className="text-sm font-medium text-gray-900 text-foreground">
                 {symbol ? 'Change symbol' : 'Select a symbol'}
               </p>
             </div>
@@ -72,7 +72,7 @@ export default function SymbolSelector({ symbol, onSymbolSelect, className = '' 
                 variant="ghost"
                 size="icon"
                 onClick={handleClear}
-                className="h-8 w-8 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="h-8 w-8 text-gray-500 text-text-secondary hover:text-gray-900 hover:text-foreground hover:bg-gray-100 hover:bg-surface-hover"
               >
                 <XMarkIcon className="h-4 w-4" />
               </Button>

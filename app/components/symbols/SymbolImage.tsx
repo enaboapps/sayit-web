@@ -17,7 +17,7 @@ export default function SymbolImage({ url, alt = 'Symbol', size = 'md', classNam
   };
 
   return (
-    <div className={`relative ${sizeClasses[size]} bg-white rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div className={`relative ${sizeClasses[size]} bg-white rounded-lg overflow-hidden border border-gray-200 border-border ${className}`}>
       <Image
         src={url}
         alt={alt}

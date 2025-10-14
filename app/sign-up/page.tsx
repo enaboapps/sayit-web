@@ -37,10 +37,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto p-4 pt-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Create Account</h1>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-foreground mb-6">Create Account</h1>
+        <div className="bg-surface rounded-xl shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
               id="email"
@@ -70,20 +70,20 @@ export default function SignUpPage() {
               required
             />
             {error && (
-              <div className="text-red-600 dark:text-red-400 text-sm">{error}</div>
+              <div className="text-red-600 text-sm">{error}</div>
             )}
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+            <div className="text-xs text-text-secondary mt-4">
             By creating an account, you agree to our{' '}
-              <Link href="/privacy" className="text-gray-700 dark:text-gray-300 hover:underline">
+              <Link href="/privacy" className="text-text-secondary hover:underline">
               Privacy Policy
               </Link>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-text-secondary">
               Already have an account?{' '}
                 <Link
                   href="/sign-in"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200"
+                  className="text-text-secondary hover:text-foreground transition-colors duration-200"
                 >
                 Sign in
                 </Link>

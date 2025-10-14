@@ -123,11 +123,11 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   return (
     <div className="flex flex-col">
       {isVisible && (
-        <div className="flex flex-col bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+        <div className="flex flex-col bg-surface shadow-lg border border-border overflow-hidden transition-colors duration-200">
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              className={`w-full h-40 bg-transparent text-gray-900 dark:text-gray-100 ${currentTextSizeClass} placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-0 resize-none p-6 overflow-auto transition-colors duration-200`}
+              className={`w-full h-40 bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-0 resize-none p-6 overflow-auto transition-colors duration-200`}
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
@@ -166,19 +166,19 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               }}
             />
             {error && (
-              <div className="absolute bottom-0 left-0 right-0 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-3 text-sm border-t border-red-100 dark:border-red-800 transition-colors duration-200">
+              <div className="absolute bottom-0 left-0 right-0 bg-red-50 text-red-700 p-3 text-sm border-t border-red-100 transition-colors duration-200">
                 {error}
               </div>
             )}
           </div>
           {text.trim() && (
-            <div className="grid grid-cols-2 gap-[1px] bg-gray-100 dark:bg-gray-700 border-t border-gray-100 dark:border-gray-700 transition-colors duration-200">
+            <div className="grid grid-cols-2 gap-[1px] bg-background border-t border-border transition-colors duration-200">
               <button
                 onClick={handleSpeak}
                 className={`h-14 transition-colors duration-200 ${
                   isSpeaking
                     ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                    : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
+                    : 'bg-surface hover:bg-surface-hover text-text-secondary'
                 }`}
                 data-tooltip-id="speak-tooltip"
                 data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
@@ -191,7 +191,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               </button>
               <button
                 onClick={handleFleshOut}
-                className="h-14 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                className="h-14 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200"
                 data-tooltip-id="flesh-out-tooltip"
                 data-tooltip-content="Flesh out with AI"
                 disabled={!text.trim()}
@@ -205,7 +205,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                 fallback={
                   <button
                     onClick={() => window.location.href = '/pricing'}
-                    className="h-14 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                    className="h-14 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200"
                     data-tooltip-id="fix-text-tooltip"
                     data-tooltip-content="Fix Text (Pro feature)"
                   >
@@ -221,7 +221,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                   className={`h-14 transition-colors duration-200 ${
                     isFixingText
                       ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                      : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300'
+                      : 'bg-surface hover:bg-surface-hover text-text-secondary'
                   }`}
                   data-tooltip-id="fix-text-tooltip"
                   data-tooltip-content="Fix grammar and spelling"
@@ -244,7 +244,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               </SubscriptionWrapper>
               <button
                 onClick={handleClear}
-                className="h-14 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200"
+                className="h-14 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200"
                 data-tooltip-id="clear-tooltip"
                 data-tooltip-content="Clear"
               >
@@ -259,7 +259,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       )}
       <button
         onClick={toggleVisibility}
-        className="h-10 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-600 dark:text-gray-300 transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-gray-100 dark:border-gray-700"
+        className="h-10 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-border"
         data-tooltip-id="toggle-tooltip"
         data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
       >

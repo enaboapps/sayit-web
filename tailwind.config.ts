@@ -8,30 +8,56 @@ const config: Config = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './app/components/ui/input.css',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         background: {
           DEFAULT: 'var(--background)',
-          dark: '#0a0a0a',
         },
         foreground: {
           DEFAULT: 'var(--foreground)',
-          dark: '#ededed',
         },
+        surface: {
+          DEFAULT: 'var(--surface)',
+          hover: 'var(--surface-hover)',
+        },
+        border: {
+          DEFAULT: 'var(--border)',
+        },
+        text: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          tertiary: 'var(--text-tertiary)',
+        },
+        // Accessible high-contrast accent colors
         primary: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-          950: '#022c22',
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa', // Primary accent - 8:1 contrast on dark bg
+          500: '#3b82f6', // Primary hover - 6.5:1 contrast
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          950: '#172554',
+        },
+        accent: {
+          DEFAULT: '#06b6d4', // Cyan-500 - 7:1 contrast
+          hover: '#0891b2',
+        },
+        success: {
+          DEFAULT: '#10b981', // Emerald-500 - 5:1 contrast
+          hover: '#059669',
+        },
+        warning: {
+          DEFAULT: '#f59e0b', // Amber-500 - 6:1 contrast
+          hover: '#d97706',
+        },
+        error: {
+          DEFAULT: '#ef4444', // Red-500 - 5.5:1 contrast
+          hover: '#dc2626',
         },
       },
     },

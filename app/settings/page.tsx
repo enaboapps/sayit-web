@@ -20,9 +20,9 @@ const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
   ssr: false,
   loading: () => (
     <div className="p-6">
-      <div className="animate-pulse h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
-      <div className="animate-pulse h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-      <div className="animate-pulse h-10 w-full bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+      <div className="animate-pulse h-6 w-48 bg-surface-hover rounded mb-4"></div>
+      <div className="animate-pulse h-4 w-full bg-surface-hover rounded mb-2"></div>
+      <div className="animate-pulse h-10 w-full bg-surface-hover rounded mb-4"></div>
     </div>
   )
 });
@@ -38,13 +38,13 @@ export default function SettingsPage() {
   // Don't render anything until after hydration
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto p-6">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-8"></div>
+            <div className="h-8 bg-surface-hover rounded w-48 mb-8"></div>
             <div className="space-y-6">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+                <div key={i} className="h-32 bg-surface-hover rounded-xl"></div>
               ))}
             </div>
           </div>
@@ -54,14 +54,14 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Settings
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-text-secondary">
             Configure your text-to-speech and typing preferences
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function SettingsPage() {
               icon={<Cog6ToothIcon className="w-6 h-6" />}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-text-secondary">
                   Current size: {settings.textSize}
                 </span>
                 <Dropdown
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               icon={<Cog6ToothIcon className="w-6 h-6" />}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-text-secondary">
                   Current behavior: {settings.enterKeyBehavior.replace(/([A-Z])/g, ' $1').toLowerCase()}
                 </span>
                 <Dropdown

@@ -16,11 +16,11 @@ export function SettingsSection({
   return (
     <section className={`space-y-6 ${className}`}>
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold text-foreground">
           {title}
         </h2>
         {description && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             {description}
           </p>
         )}
