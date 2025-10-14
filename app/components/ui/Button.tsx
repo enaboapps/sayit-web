@@ -5,20 +5,20 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         default:
-          'bg-black text-white shadow hover:bg-gray-900',
+          'bg-black text-white shadow hover:bg-gray-900 active:bg-gray-800 active:ring-2 active:ring-orange',
         destructive:
-          'bg-red-600 text-white shadow-sm hover:bg-red-700',
+          'bg-red-600 text-white shadow-sm hover:bg-red-700 active:bg-red-800 active:ring-2 active:ring-orange',
         outline:
-          'border border-border bg-surface text-foreground shadow-sm hover:bg-surface-hover',
+          'border border-border bg-surface text-foreground shadow-sm hover:bg-surface-hover active:bg-surface active:ring-2 active:ring-orange',
         secondary:
-          'bg-background text-foreground shadow-sm hover:bg-surface-hover',
-        ghost: 'hover:bg-surface-hover text-foreground',
-        link: 'text-foreground underline-offset-4 hover:underline',
+          'bg-background text-foreground shadow-sm hover:bg-surface-hover active:bg-surface active:ring-2 active:ring-orange',
+        ghost: 'hover:bg-surface-hover text-foreground active:bg-surface active:ring-2 active:ring-orange',
+        link: 'text-foreground underline-offset-4 hover:underline active:text-orange',
       },
       size: {
         default: 'h-9 px-4 py-2',
