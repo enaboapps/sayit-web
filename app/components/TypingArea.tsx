@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import FleshOutPopup from './flesh-out/FleshOutPopup';
@@ -32,6 +32,13 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     }
     return true;
   });
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('typingAreaExpanded');
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
+  });
 
   useEffect(() => {
     console.log('Current text size:', settings.textSize);
@@ -54,6 +61,10 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   useEffect(() => {
     localStorage.setItem('typingAreaVisible', JSON.stringify(isVisible));
   }, [isVisible]);
+
+  useEffect(() => {
+    localStorage.setItem('typingAreaExpanded', JSON.stringify(isExpanded));
+  }, [isExpanded]);
 
   const handleClear = () => {
     setText('');
@@ -120,6 +131,12 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     setIsVisible(!isVisible);
   };
 
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const textareaHeight = isExpanded ? '30rem' : '10rem';
+
   return (
     <div className="flex flex-col">
       {isVisible && (
@@ -127,7 +144,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              className={`w-full h-40 bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-0 resize-none p-6 overflow-auto transition-colors duration-200`}
+              className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-0 resize-none p-6 overflow-auto transition-all duration-300`}
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
@@ -160,8 +177,8 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               }}
               placeholder="Type your message here..."
               style={{
-                minHeight: '10rem',
-                maxHeight: '10rem',
+                minHeight: textareaHeight,
+                maxHeight: textareaHeight,
                 lineHeight: '1.5',
               }}
             />
@@ -257,22 +274,37 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
           )}
         </div>
       )}
-      <button
-        onClick={toggleVisibility}
-        className="h-10 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-border"
-        data-tooltip-id="toggle-tooltip"
-        data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
-      >
-        {isVisible ? (
-          <ChevronUpIcon className="w-5 h-5" />
-        ) : (
-          <ChevronDownIcon className="w-5 h-5" />
-        )}
-      </button>
+      <div className="flex">
+        <button
+          onClick={toggleExpanded}
+          className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-r-0 border-border"
+          data-tooltip-id="expand-tooltip"
+          data-tooltip-content={isExpanded ? 'Collapse typing area' : 'Expand typing area'}
+        >
+          {isExpanded ? (
+            <ArrowsPointingInIcon className="w-4 h-4" />
+          ) : (
+            <ArrowsPointingOutIcon className="w-4 h-4" />
+          )}
+        </button>
+        <button
+          onClick={toggleVisibility}
+          className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-border"
+          data-tooltip-id="toggle-tooltip"
+          data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
+        >
+          {isVisible ? (
+            <ChevronUpIcon className="w-5 h-5" />
+          ) : (
+            <ChevronDownIcon className="w-5 h-5" />
+          )}
+        </button>
+      </div>
       <Tooltip id="speak-tooltip" />
       <Tooltip id="flesh-out-tooltip" />
       <Tooltip id="fix-text-tooltip" />
       <Tooltip id="clear-tooltip" />
+      <Tooltip id="expand-tooltip" />
       <Tooltip id="toggle-tooltip" />
 
       {showFleshOutPopup && (
