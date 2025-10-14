@@ -48,12 +48,21 @@ export default function PhrasesActionMenu({
   }, [isOpen]);
 
   return (
-    <div ref={menuRef} className="fixed bottom-6 right-6 z-50">
-      {/* Action Menu Items */}
-      <div className={`
-        absolute bottom-16 right-0 flex flex-col gap-3 transition-all duration-300 ease-in-out
-        ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
-      `}>
+    <>
+      {/* Backdrop Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <div ref={menuRef} className="fixed bottom-6 right-6 z-50">
+        {/* Action Menu Items */}
+        <div className={`
+          absolute bottom-16 right-0 flex flex-col gap-3 transition-all duration-300 ease-in-out
+          ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
+        `}>
         {/* New Board Action */}
         <div
           onClick={() => handleAction(onAddBoard)}
@@ -132,11 +141,12 @@ export default function PhrasesActionMenu({
       </button>
 
       {/* Tooltips */}
-      <Tooltip id="new-board-tooltip" place="left" />
-      <Tooltip id="add-phrase-tooltip" place="left" />
-      <Tooltip id="reader-tooltip" place="left" />
-      <Tooltip id="edit-tooltip" place="left" />
-      <Tooltip id="main-action-tooltip" place="left" />
-    </div>
+        <Tooltip id="new-board-tooltip" place="left" />
+        <Tooltip id="add-phrase-tooltip" place="left" />
+        <Tooltip id="reader-tooltip" place="left" />
+        <Tooltip id="edit-tooltip" place="left" />
+        <Tooltip id="main-action-tooltip" place="left" />
+      </div>
+    </>
   );
 }
