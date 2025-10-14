@@ -46,10 +46,10 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
 
   return (
     <div
-      className={`relative bg-surface rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-surface-hover transition-all duration-300 flex flex-col items-center justify-center h-full ${
+      className={`relative bg-surface rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-surface-hover active:ring-2 active:ring-orange active:scale-[0.98] transition-all duration-300 flex flex-col items-center justify-center h-full ${
         onEdit ? 'ring-2 ring-blue-400' : ''
       } ${
-        isSpeaking ? 'ring-2 ring-green-400 scale-[0.98]' : ''
+        isSpeaking ? 'ring-2 ring-orange scale-[0.98]' : ''
       } ${className}`}
       onClick={handleClick}
     >
@@ -62,7 +62,7 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
       )}
       {isSpeaking && !onEdit && (
         <div className="absolute top-2 right-2 z-10">
-          <div className="bg-green-500 rounded-full p-1.5 shadow-sm animate-pulse">
+          <div className="bg-orange rounded-full p-1.5 shadow-sm animate-pulse">
             <SpeakerWaveIcon className="h-4 w-4 text-white" />
           </div>
         </div>

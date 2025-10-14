@@ -10,10 +10,10 @@ export default function ActionTile({ text, onClick, className = '' }: ActionTile
   return (
     <button
       onClick={onClick}
-      className={`aspect-square flex items-center justify-center bg-gray-100 bg-surface hover:bg-gray-200 hover:bg-surface-hover rounded-lg border-2 border-dashed border-gray-300 border-border transition-colors duration-200 ${className}`}
+      className={`aspect-square flex items-center justify-center bg-surface hover:bg-surface-hover active:ring-2 active:ring-orange active:scale-[0.98] rounded-lg border-2 border-dashed border-border transition-all duration-200 ${className}`}
       aria-label={text}
     >
-      <span className="text-gray-500 text-text-secondary text-lg">{text}</span>
+      <span className="text-text-secondary text-lg">{text}</span>
     </button>
   );
 } 

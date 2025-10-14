@@ -59,6 +59,12 @@ const config: Config = {
           DEFAULT: '#ef4444', // Red-500 - 5.5:1 contrast
           hover: '#dc2626',
         },
+        orange: {
+          DEFAULT: '#ff9800', // Orange-500 - main accent for interactions
+          hover: '#f57c00', // Orange-700 - darker hover
+          active: '#e65100', // Orange-900 - darkest active/pressed
+          light: '#ffb74d', // Orange-300 - lighter variant
+        },
       },
     },
   },
