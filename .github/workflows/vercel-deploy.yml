@@ -40,11 +40,10 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Add deployment comment to release
+        if: success()
+        continue-on-error: true
         run: |
-          gh release view v${{ github.event.release.tag_name }} --json body -q .body > release_body.txt
-          echo "" >> release_body.txt
-          echo "---" >> release_body.txt
-          echo "🚀 **Deployed to production via GitHub Actions**" >> release_body.txt
-          echo "Deployment completed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> release_body.txt
+          echo "✅ Deployment completed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> deployment_note.txt
+          gh release edit ${{ github.event.release.tag_name }} --notes-file deployment_note.txt
         env:
           GH_TOKEN: ${{ github.token }}
