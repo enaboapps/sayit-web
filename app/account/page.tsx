@@ -93,17 +93,17 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 bg-surface py-12">
+    <div className="min-h-screen flex flex-col bg-surface py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl font-bold text-gray-900 text-foreground mb-8">Account Settings</h1>
-          
-          <motion.div 
-            className="bg-white bg-surface rounded-xl shadow-lg overflow-hidden"
+          <h1 className="text-4xl font-bold text-foreground mb-8">Account Settings</h1>
+
+          <motion.div
+            className="bg-surface rounded-xl shadow-lg overflow-hidden"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -111,13 +111,13 @@ export default function AccountPage() {
             <div className="p-8">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 text-foreground mb-2">Email</h2>
-                  <p className="text-gray-700 text-text-secondary">{user?.email}</p>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Email</h2>
+                  <p className="text-text-secondary">{user?.email}</p>
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 text-foreground mb-2">Password</h2>
-                  <p className="text-gray-700 text-text-secondary mb-4">
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Password</h2>
+                  <p className="text-text-secondary mb-4">
                     Change your password to keep your account secure.
                   </p>
                   <Button
@@ -130,12 +130,12 @@ export default function AccountPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 text-foreground mb-3">Subscription</h2>
+                  <h2 className="text-xl font-semibold text-foreground mb-3">Subscription</h2>
                   {loading ? (
-                    <p className="text-gray-700 text-text-secondary">Loading subscription status...</p>
+                    <p className="text-text-secondary">Loading subscription status...</p>
                   ) : !subscription?.stripe_customer_id ? (
                     <div className="space-y-4">
-                      <p className="text-gray-700 text-text-secondary">
+                      <p className="text-text-secondary">
                         You don't have an active subscription yet.
                       </p>
                       <Button
@@ -147,12 +147,12 @@ export default function AccountPage() {
                     </div>
                   ) : subscription ? (
                     <div className="space-y-4">
-                      <div className="bg-gray-50 bg-surface-hover p-4 rounded-lg">
-                        <p className="text-gray-700 text-text-secondary mb-1">
+                      <div className="bg-surface-hover p-4 rounded-lg">
+                        <p className="text-text-secondary mb-1">
                           Status: <span className="font-medium capitalize">{subscription.status}</span>
                         </p>
                         {subscription.cancel_at_period_end && (
-                          <p className="text-yellow-700  text-sm mt-2">
+                          <p className="text-warning text-sm mt-2">
                             Your subscription will be cancelled at the end of the current period.
                           </p>
                         )}
@@ -166,7 +166,7 @@ export default function AccountPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <p className="text-gray-700 text-text-secondary">No active subscription</p>
+                      <p className="text-text-secondary">No active subscription</p>
                       <Button
                         onClick={() => router.push('/pricing')}
                         size="lg"
@@ -178,17 +178,17 @@ export default function AccountPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 text-foreground mb-3">Legal</h2>
+                  <h2 className="text-xl font-semibold text-foreground mb-3">Legal</h2>
                   <div className="space-y-2">
-                    <Link href="/privacy" className="text-gray-600 text-text-secondary hover:text-gray-900 hover:text-foreground block">
+                    <Link href="/privacy" className="text-text-secondary hover:text-foreground block">
                       Privacy Policy
                     </Link>
                   </div>
                 </div>
 
                 {error && (
-                  <motion.div 
-                    className="p-4 bg-red-50  border border-red-200  rounded-lg text-red-700 "
+                  <motion.div
+                    className="p-4 bg-error/10 border border-error/20 rounded-lg text-error"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -198,8 +198,8 @@ export default function AccountPage() {
                 )}
 
                 {success && (
-                  <motion.div 
-                    className="p-4 bg-green-50  border border-green-200  rounded-lg text-green-700 "
+                  <motion.div
+                    className="p-4 bg-success/10 border border-success/20 rounded-lg text-success"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
@@ -208,7 +208,7 @@ export default function AccountPage() {
                   </motion.div>
                 )}
 
-                <div className="pt-6 border-t border-gray-200 border-border">
+                <div className="pt-6 border-t border-border">
                   <Button
                     onClick={handleSignOut}
                     variant="destructive"
