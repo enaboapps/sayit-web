@@ -275,21 +275,23 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
         </div>
       )}
       <div className="flex">
-        <button
-          onClick={toggleExpanded}
-          className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-r-0 border-border"
-          data-tooltip-id="expand-tooltip"
-          data-tooltip-content={isExpanded ? 'Collapse typing area' : 'Expand typing area'}
-        >
-          {isExpanded ? (
-            <ArrowsPointingInIcon className="w-4 h-4" />
-          ) : (
-            <ArrowsPointingOutIcon className="w-4 h-4" />
-          )}
-        </button>
+        {isVisible && (
+          <button
+            onClick={toggleExpanded}
+            className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-r-0 border-border"
+            data-tooltip-id="expand-tooltip"
+            data-tooltip-content={isExpanded ? 'Collapse typing area' : 'Expand typing area'}
+          >
+            {isExpanded ? (
+              <ArrowsPointingInIcon className="w-4 h-4" />
+            ) : (
+              <ArrowsPointingOutIcon className="w-4 h-4" />
+            )}
+          </button>
+        )}
         <button
           onClick={toggleVisibility}
-          className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-border"
+          className={`h-10 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-border ${isVisible ? 'flex-1' : 'w-full'}`}
           data-tooltip-id="toggle-tooltip"
           data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
         >
