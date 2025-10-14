@@ -18,8 +18,8 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-16 bg-white dark:bg-gray-900 z-50 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-center items-center">
+    <aside className="fixed left-0 top-0 h-full w-16 bg-white bg-surface z-50 border-r border-gray-200  flex flex-col">
+      <div className="p-4 border-b border-gray-200  flex justify-center items-center">
         <Image 
           src="/icons/app-icon.png" 
           alt="Logo" 
@@ -86,8 +86,8 @@ function SidebarItem({ href, icon, title, isActive }: SidebarItemProps) {
       href={href}
       className={`flex items-center justify-center p-2 rounded-lg transition-colors ${
         isActive
-          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+          ? 'bg-gray-100 bg-surface text-gray-900 '
+          : 'text-gray-600 text-text-secondary hover:bg-gray-100 hover:bg-surface-hover'
       }`}
       data-tooltip-id={`sidebar-tooltip-${title}`}
       data-tooltip-content={title}

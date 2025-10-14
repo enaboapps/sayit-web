@@ -27,11 +27,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#1f2937" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#1a1a1a" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.className} bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`} suppressHydrationWarning>
+      <body className={`${inter.className} bg-surface text-foreground`} suppressHydrationWarning>
         <ClientLayout>
           {children}
         </ClientLayout>

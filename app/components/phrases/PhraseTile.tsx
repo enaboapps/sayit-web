@@ -46,23 +46,23 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
 
   return (
     <div
-      className={`relative bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-300 flex flex-col items-center justify-center h-full ${
-        onEdit ? 'ring-2 ring-blue-400 dark:ring-blue-600' : ''
+      className={`relative bg-surface rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md hover:bg-surface-hover transition-all duration-300 flex flex-col items-center justify-center h-full ${
+        onEdit ? 'ring-2 ring-blue-400' : ''
       } ${
-        isSpeaking ? 'ring-2 ring-green-400 dark:ring-green-600 scale-[0.98]' : ''
+        isSpeaking ? 'ring-2 ring-green-400 scale-[0.98]' : ''
       } ${className}`}
       onClick={handleClick}
     >
       {onEdit && (
         <div className="absolute top-2 right-2 z-10">
-          <div className="bg-blue-500 dark:bg-blue-600 rounded-full p-1.5 shadow-sm">
+          <div className="bg-blue-500 rounded-full p-1.5 shadow-sm">
             <PencilIcon className="h-4 w-4 text-white" />
           </div>
         </div>
       )}
       {isSpeaking && !onEdit && (
         <div className="absolute top-2 right-2 z-10">
-          <div className="bg-green-500 dark:bg-green-600 rounded-full p-1.5 shadow-sm animate-pulse">
+          <div className="bg-green-500 rounded-full p-1.5 shadow-sm animate-pulse">
             <SpeakerWaveIcon className="h-4 w-4 text-white" />
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
           </div>
         )}
         <div className="text-center w-full">
-          <p className="text-gray-900 dark:text-gray-100 text-lg font-semibold line-clamp-2 px-2 leading-tight">{phrase.text}</p>
+          <p className="text-foreground text-lg font-semibold line-clamp-2 px-2 leading-tight">{phrase.text}</p>
         </div>
       </div>
     </div>

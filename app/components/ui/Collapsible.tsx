@@ -11,11 +11,11 @@ interface CollapsibleProps {
   className?: string;
 }
 
-export function Collapsible({ 
-  title, 
-  children, 
+export function Collapsible({
+  title,
+  children,
   defaultOpen = false,
-  className, 
+  className,
 }: CollapsibleProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [contentHeight, setContentHeight] = useState<number | undefined>(defaultOpen ? undefined : 0);
@@ -37,12 +37,12 @@ export function Collapsible({
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full items-center justify-between py-3 px-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-lg transition-colors duration-200"
+        className="flex w-full items-center justify-between py-3 px-4 text-left hover:bg-surface-hover rounded-lg transition-colors duration-200"
       >
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</span>
+        <span className="text-sm font-medium text-foreground">{title}</span>
         <ChevronDownIcon
           className={cn(
-            'h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200',
+            'h-5 w-5 text-text-secondary transition-transform duration-200',
             isOpen ? 'rotate-180' : '',
           )}
         />
@@ -54,8 +54,8 @@ export function Collapsible({
           'overflow-hidden transition-all duration-200',
         )}
       >
-        <div className="py-6 px-4 text-gray-700 dark:text-gray-300">{children}</div>
+        <div className="py-6 px-4 text-text-secondary">{children}</div>
       </div>
     </div>
   );
-} 
+}

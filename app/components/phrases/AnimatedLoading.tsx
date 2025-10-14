@@ -39,7 +39,7 @@ const pulseVariants = {
 
 export default function AnimatedLoading() {
   return (
-    <div className="min-h-screen pb-20 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen pb-20 bg-gradient-to-b from-background to-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Animation */}
         <motion.div
@@ -49,7 +49,7 @@ export default function AnimatedLoading() {
           animate="visible"
         >
           <motion.div
-            className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-lg"
+            className="h-8 w-48 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg"
             variants={itemVariants}
           />
         </motion.div>
@@ -62,19 +62,19 @@ export default function AnimatedLoading() {
           animate="visible"
         >
           <motion.div
-            className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full"
+            className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full"
             variants={pulseVariants}
             initial="initial"
             animate="animate"
           />
           <motion.div
-            className="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-xl p-4 min-h-[60px]"
+            className="flex-1 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl p-4 min-h-[60px]"
             variants={pulseVariants}
             initial="initial"
             animate="animate"
           />
           <motion.div
-            className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-full"
+            className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full"
             variants={pulseVariants}
             initial="initial"
             animate="animate"
@@ -91,7 +91,7 @@ export default function AnimatedLoading() {
           {[...Array(8)].map((_, index) => (
             <motion.div
               key={index}
-              className="bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-lg p-4 h-32"
+              className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg p-4 h-32"
               variants={itemVariants}
             />
           ))}
@@ -99,7 +99,7 @@ export default function AnimatedLoading() {
 
         {/* Floating Animation */}
         <motion.div
-          className="absolute bottom-8 right-8 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-700 rounded-full"
+          className="absolute bottom-8 right-8 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full"
           animate={{
             y: [0, -20, 0],
             scale: [1, 1.1, 1],

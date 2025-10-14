@@ -11,19 +11,19 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="space-y-2">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="block text-sm font-medium text-text-secondary">
             {label}
           </label>
         )}
         <textarea
           className={cn(
-            'flex min-h-[80px] w-full rounded-md border border-gray-200 dark:border-gray-700',
-            'bg-white dark:bg-gray-800',
+            'flex min-h-[80px] w-full rounded-md border border-border',
+            'bg-surface',
             'px-3 py-2 text-sm',
-            'text-gray-900 dark:text-gray-100',
-            'placeholder:text-gray-500 dark:placeholder:text-gray-400',
-            'ring-offset-white dark:ring-offset-gray-900',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:focus-visible:ring-gray-600',
+            'text-foreground',
+            'placeholder:text-text-tertiary',
+            'ring-offset-surface',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400',
             'focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'transition-colors duration-200',
@@ -38,4 +38,4 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 );
 Textarea.displayName = 'Textarea';
 
-export { Textarea }; 
+export { Textarea };

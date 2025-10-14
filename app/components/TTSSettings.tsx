@@ -150,29 +150,29 @@ export default function TTSSettings() {
       {/* Provider Selection Section */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Choose Provider</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">Choose Provider</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Browser TTS Card */}
-            <div 
+            <div
               onClick={() => handleProviderChange('browser')}
               className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
                 settings.ttsProvider === 'browser'
-                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? 'border-primary-500 bg-primary-50'
+                  : 'border-border hover:border-border'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">Browser TTS</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Built-in system voices</p>
+                  <h4 className="font-medium text-foreground">Browser TTS</h4>
+                  <p className="text-sm text-text-secondary">Built-in system voices</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   {status.browserTTSAvailable ? (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
                       ✓ Available
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
                       ✗ Unavailable
                     </span>
                   )}
@@ -184,35 +184,35 @@ export default function TTSSettings() {
             </div>
 
             {/* ElevenLabs Card */}
-            <div 
+            <div
               onClick={() => status.elevenLabsAvailable && handleProviderChange('elevenlabs')}
               className={`relative p-4 border-2 rounded-lg transition-all ${
-                !status.elevenLabsAvailable 
-                  ? 'opacity-50 cursor-not-allowed' 
+                !status.elevenLabsAvailable
+                  ? 'opacity-50 cursor-not-allowed'
                   : 'cursor-pointer'
               } ${
                 settings.ttsProvider === 'elevenlabs'
-                  ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? 'border-primary-500 bg-primary-50'
+                  : 'border-border hover:border-border'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100">ElevenLabs</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">High-quality AI voices</p>
+                  <h4 className="font-medium text-foreground">ElevenLabs</h4>
+                  <p className="text-sm text-text-secondary">High-quality AI voices</p>
                 </div>
                 <div className="flex items-center space-x-2">
                   {status.elevenLabsAvailable ? (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
                       ✓ Available
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
                       ✗ Unavailable
                     </span>
                   )}
                   {!hasSubscription && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
                       Premium
                     </span>
                   )}
@@ -224,34 +224,34 @@ export default function TTSSettings() {
             </div>
           </div>
           {!status.elevenLabsAvailable && (
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs text-text-secondary">
               ElevenLabs API key not found. Add one to your environment variables to use high-quality voices.
             </p>
           )}
           {showSubscriptionMessage && settings.ttsProvider === 'elevenlabs' && !hasSubscription && (
-            <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md border border-yellow-200 dark:border-yellow-800">
+            <div className="mt-2 p-3 bg-yellow-50 rounded-md border border-yellow-200">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400 dark:text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  <p className="text-sm text-yellow-700">
                     <span className="font-medium">Premium Feature:</span> Full ElevenLabs voice functionality requires a subscription. You can preview voices, but your speech will use Browser TTS instead.
                   </p>
                   <div className="mt-2">
                     <button
                       type="button"
                       onClick={() => router.push('/pricing')}
-                      className="text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:text-yellow-600 dark:hover:text-yellow-200 underline"
+                      className="text-sm font-medium text-yellow-700 hover:text-yellow-600 underline"
                     >
                       Upgrade to Pro
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowSubscriptionMessage(false)}
-                      className="ml-3 text-sm font-medium text-yellow-700 dark:text-yellow-300 hover:text-yellow-600 dark:hover:text-yellow-200 underline"
+                      className="ml-3 text-sm font-medium text-yellow-700 hover:text-yellow-600 underline"
                     >
                       Dismiss
                     </button>
@@ -265,10 +265,10 @@ export default function TTSSettings() {
         {/* Voice Selection Section */}
         <div className="space-y-3">
           <div>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">Voice Selection</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {providerVoices.length > 0 ? 
-                `Choose from ${providerVoices.length} available voices` : 
+            <h3 className="text-sm font-medium text-foreground">Voice Selection</h3>
+            <p className="text-xs text-text-secondary mt-1">
+              {providerVoices.length > 0 ?
+                `Choose from ${providerVoices.length} available voices` :
                 'Loading voices...'
               }
             </p>
@@ -293,10 +293,10 @@ export default function TTSSettings() {
               type="button"
               onClick={previewVoice}
               disabled={isPlayingPreview || providerVoices.length === 0}
-              className={`inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md transition-colors ${
-                isPlayingPreview 
-                  ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-600'
-                  : 'text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600'
+              className={`inline-flex items-center justify-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md transition-colors ${
+                isPlayingPreview
+                  ? 'text-primary-600 bg-primary-50 border-primary-300'
+                  : 'text-text-secondary bg-surface hover:bg-surface-hover'
               } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500`}
               title={isPlayingPreview ? 'Stop preview' : 'Preview voice'}
             >
@@ -313,9 +313,9 @@ export default function TTSSettings() {
               )}
             </button>
           </div>
-          
+
           {providerVoices.length > 0 && settings.ttsVoiceId && (
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-text-secondary">
               Selected: {providerVoices.find(v => v.id === settings.ttsVoiceId)?.name || 'Unknown'}
             </div>
           )}
@@ -324,20 +324,20 @@ export default function TTSSettings() {
         {/* Browser TTS Specific Settings */}
         {settings.ttsProvider === 'browser' && (
           <div className="space-y-4">
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Browser TTS Settings</h3>
+            <div className="border-t border-border pt-4">
+              <h3 className="text-sm font-medium text-foreground mb-3">Browser TTS Settings</h3>
               {isMobile ? (
-                <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
+                <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-primary-400 dark:text-primary-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-5 w-5 text-primary-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div className="ml-3">
-                      <h4 className="text-sm font-medium text-primary-800 dark:text-primary-200">Mobile Device Detected</h4>
-                      <p className="text-sm text-primary-700 dark:text-primary-300 mt-1">
-                        Speech rate and pitch are controlled by your device's system settings. 
+                      <h4 className="text-sm font-medium text-primary-800">Mobile Device Detected</h4>
+                      <p className="text-sm text-primary-700 mt-1">
+                        Speech rate and pitch are controlled by your device's system settings.
                         Please adjust these in your device's accessibility options.
                       </p>
                     </div>
@@ -379,32 +379,32 @@ export default function TTSSettings() {
         {/* ElevenLabs Specific Settings */}
         {settings.ttsProvider === 'elevenlabs' && (
           <div className="space-y-4">
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">ElevenLabs Settings</h3>
+            <div className="border-t border-border pt-4">
+              <h3 className="text-sm font-medium text-foreground mb-3">ElevenLabs Settings</h3>
               <SubscriptionWrapper
                 fallback={
-                  <div className="bg-gradient-to-r from-gray-50 to-primary-50 dark:from-gray-800 dark:to-primary-900/20 p-6 rounded-lg text-center border border-gray-200 dark:border-gray-700">
+                  <div className="bg-gradient-to-r from-background to-primary-50 p-6 rounded-lg text-center border border-border">
                     <div className="flex justify-center mb-4">
-                      <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                       </div>
                     </div>
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Premium Feature</h4>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    <h4 className="text-lg font-semibold text-foreground mb-2">Premium Feature</h4>
+                    <p className="text-text-secondary mb-6">
                       Advanced ElevenLabs voice controls require a Pro subscription. Voice previews are available, but speech generation uses Browser TTS.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <button 
+                      <button
                         onClick={() => router.push('/pricing')}
                         className="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                       >
                         Upgrade to Pro
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleProviderChange('browser')}
-                        className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                        className="flex-1 py-2 px-4 border border-border text-text-secondary bg-surface hover:bg-surface-hover rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                       >
                         Use Browser TTS
                       </button>

@@ -171,19 +171,19 @@ export function Slider({
     <div className={className}>
       {label && (
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="block text-sm font-medium text-gray-700 text-text-secondary">
             {label}
           </label>
           <span className={cn(
             'text-sm px-2 py-1 rounded-md transition-all duration-300',
-            isHovering || isDragging ? 'bg-black dark:bg-white text-white dark:text-black' : 'text-gray-500 dark:text-gray-400'
+            isHovering || isDragging ? 'bg-black text-white' : 'text-gray-500 text-text-secondary'
           )}>
             {formattedValueLabel}
           </span>
         </div>
       )}
       {description && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{description}</p>
+        <p className="text-sm text-gray-500 text-text-secondary mb-2">{description}</p>
       )}
       
       <div 
@@ -199,18 +199,18 @@ export function Slider({
         {/* Background track */}
         <div 
           className={cn(
-            'absolute h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700',
-            error ? 'bg-red-100 dark:bg-red-900/20' : ''
+            'absolute h-2 w-full rounded-full bg-gray-200 bg-surface-hover',
+            error ? 'bg-red-100 ' : ''
           )} 
           style={{ top: '50%', transform: 'translateY(-50%)' }}
         />
 
         {/* Active track */}
-        <div 
+        <div
           className={cn(
             'absolute h-2 rounded-full transition-all',
-            disabled ? 'bg-gray-400 dark:bg-gray-600' : trackColor,
-            error ? 'bg-red-500 dark:bg-red-400' : '',
+            disabled ? 'bg-gray-400' : trackColor,
+            error ? 'bg-red-500' : '',
             isHovering || isDragging ? 'h-3' : 'h-2' // Slight height increase on hover
           )} 
           style={{ 
@@ -232,15 +232,15 @@ export function Slider({
           ref={thumbRef}
           className={cn(
             'absolute rounded-full shadow-md transform -translate-x-1/2 border-2 transition-all duration-200',
-            disabled ? 
-              'border-gray-400 dark:border-gray-600 bg-white dark:bg-gray-800 cursor-not-allowed w-5 h-5' : 
+            disabled ?
+              'border-gray-400 border-border bg-white bg-surface cursor-not-allowed w-5 h-5' :
               cn(
-                'border-gray-100 dark:border-gray-700 cursor-grab',
-                thumbColor, 
-                isDragging ? 'cursor-grabbing scale-110 w-7 h-7' : 
+                'border-gray-100 border-border cursor-grab',
+                thumbColor,
+                isDragging ? 'cursor-grabbing scale-110 w-7 h-7' :
                   isHovering ? 'scale-105 w-6 h-6' : 'w-5 h-5'
               ),
-            error ? 'border-red-500 dark:border-red-400' : ''
+            error ? 'border-red-500' : ''
           )}
           style={{ 
             left: `${percentage}%`,

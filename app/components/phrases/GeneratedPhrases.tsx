@@ -12,12 +12,12 @@ export function GeneratedPhrases({ phrases, onDeletePhrase, onDeleteAll }: Gener
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Generated Phrases</h2>
+        <h2 className="text-2xl font-bold text-gray-900 text-foreground">Generated Phrases</h2>
         <Button
           type="button"
           variant="outline"
           onClick={onDeleteAll}
-          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+          className="text-red-600  hover:text-red-700  hover:bg-red-50  transition-colors duration-200"
         >
           Delete All
         </Button>
@@ -36,14 +36,14 @@ export function GeneratedPhrases({ phrases, onDeletePhrase, onDeleteAll }: Gener
 
 function Phrase({ phrase, onDeletePhrase }: { phrase: string, onDeletePhrase: () => void }) {
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-100 dark:border-gray-700">
+    <div className="bg-white bg-surface p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-100 border-border">
       <div className="flex justify-between items-start gap-4">
-        <p className="text-gray-800 dark:text-gray-200 text-lg flex-grow">{phrase}</p>
+        <p className="text-gray-800 text-foreground text-lg flex-grow">{phrase}</p>
         <Button
           type="button"
           variant="outline"
           onClick={onDeletePhrase}
-          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200 shrink-0"
+          className="text-red-600  hover:text-red-700  hover:bg-red-50  transition-colors duration-200 shrink-0"
         >
           Delete
         </Button>

@@ -57,24 +57,24 @@ export default function PhrasesActionMenu({
         {/* New Board Action */}
         <div
           onClick={() => handleAction(onAddBoard)}
-          className="flex items-center gap-3 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-200 dark:border-gray-600"
+          className="flex items-center gap-3 bg-surface shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-surface-hover transition-colors duration-200 border border-border"
           data-tooltip-id="new-board-tooltip"
           data-tooltip-content="Create a new board to organize your phrases"
         >
-          <Plus className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <span className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">New Board</span>
+          <Plus className="w-5 h-5 text-text-secondary" />
+          <span className="text-sm font-medium text-text-primary whitespace-nowrap">New Board</span>
         </div>
 
         {/* Add to Board Action - Only show when board is present */}
         {boardPresent && (
           <div
             onClick={() => handleAction(onAddPhrase)}
-            className="flex items-center gap-3 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-200 dark:border-gray-600"
+            className="flex items-center gap-3 bg-surface shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-surface-hover transition-colors duration-200 border border-border"
             data-tooltip-id="add-phrase-tooltip"
             data-tooltip-content="Add a new phrase to the current board"
           >
-            <MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">Add to Board</span>
+            <MessageSquare className="w-5 h-5 text-text-secondary" />
+            <span className="text-sm font-medium text-text-primary whitespace-nowrap">Add to Board</span>
           </div>
         )}
 
@@ -82,12 +82,12 @@ export default function PhrasesActionMenu({
         {boardPresent && (
           <div
             onClick={() => handleAction(onReader)}
-            className="flex items-center gap-3 bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-200 dark:border-gray-600"
+            className="flex items-center gap-3 bg-surface shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-surface-hover transition-colors duration-200 border border-border"
             data-tooltip-id="reader-tooltip"
             data-tooltip-content="Open reader mode to navigate through phrases"
           >
-            <Book className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">Reader</span>
+            <Book className="w-5 h-5 text-text-secondary" />
+            <span className="text-sm font-medium text-text-primary whitespace-nowrap">Reader</span>
           </div>
         )}
 
@@ -95,9 +95,9 @@ export default function PhrasesActionMenu({
         <div
           onClick={() => handleAction(onEdit)}
           className={`flex items-center gap-3 shadow-lg rounded-full px-4 py-3 cursor-pointer transition-all duration-200 border ${
-            isEditMode 
-              ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500' 
-              : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600'
+            isEditMode
+              ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500'
+              : 'bg-surface hover:bg-surface-hover border-border'
           }`}
           data-tooltip-id="edit-tooltip"
           data-tooltip-content={isEditMode ? 'Finish editing the board' : 'Edit the current board'}
@@ -105,9 +105,9 @@ export default function PhrasesActionMenu({
           {isEditMode ? (
             <Check className="w-5 h-5" />
           ) : (
-            <Pencil className={`w-5 h-5 ${isEditMode ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`} />
+            <Pencil className={`w-5 h-5 ${isEditMode ? 'text-white' : 'text-text-secondary'}`} />
           )}
-          <span className={`text-sm font-medium whitespace-nowrap ${isEditMode ? 'text-white' : 'text-gray-800 dark:text-gray-200'}`}>
+          <span className={`text-sm font-medium whitespace-nowrap ${isEditMode ? 'text-white' : 'text-text-primary'}`}>
             {isEditMode ? 'Done' : 'Edit'}
           </span>
         </div>

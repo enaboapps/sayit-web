@@ -89,27 +89,27 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+      <div className="min-h-screen bg-gray-100 bg-surface flex items-center justify-center">
+        <div className="text-gray-600 text-text-secondary">Loading...</div>
       </div>
     );
   }
 
   if (!board) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-red-600 dark:text-red-400">Board not found</div>
+      <div className="min-h-screen bg-gray-100 bg-surface flex items-center justify-center">
+        <div className="text-red-600 ">Board not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100 bg-surface">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BackButton />
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-4">Edit Board</h1>
+        <h1 className="text-3xl font-bold text-gray-900 text-foreground mt-4">Edit Board</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mt-6">
+        <form onSubmit={handleSubmit} className="bg-white bg-surface shadow-md rounded-lg p-6 mt-6">
           <Input
             id="name"
             type="text"
@@ -121,7 +121,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
           />
 
           {error && (
-            <div className="mb-4 text-red-500 dark:text-red-400 text-sm">
+            <div className="mb-4 text-red-500  text-sm">
               {error}
             </div>
           )}
@@ -131,7 +131,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
               type="button"
               variant="ghost"
               onClick={handleDelete}
-              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+              className="text-red-600  hover:text-red-700 "
               disabled={deleting}
             >
               <TrashIcon className="h-5 w-5 mr-2" />
