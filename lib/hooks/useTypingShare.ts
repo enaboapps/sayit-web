@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { databaseService, TypingSession } from '../services/DatabaseService';
+import { TypingSession } from '../services/DatabaseService';
 
 const STORAGE_KEY = 'typing-share-session-key';
 
