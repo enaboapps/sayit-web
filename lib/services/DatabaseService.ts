@@ -31,6 +31,16 @@ export interface DatabasePhraseBoard extends PhraseBoard {
   phrase_board_phrases?: PhraseBoardPhrase[]
 }
 
+export interface TypingSession {
+  id: string
+  user_id: string
+  session_key: string
+  content: string
+  expires_at: string
+  created_at: string
+  updated_at: string
+}
+
 export interface IDatabaseService {
   getPhrases(userId: string): Promise<Phrase[]>
   addPhrase(phrase: Omit<Phrase, 'id' | 'created_at' | 'updated_at'>): Promise<Phrase>
@@ -44,6 +54,11 @@ export interface IDatabaseService {
   getPhraseBoard(id: string): Promise<DatabasePhraseBoard | null>
   addPhraseToBoard(phraseId: string, boardId: string): Promise<void>
   removePhraseFromBoard(phraseId: string, boardId: string): Promise<void>
+  createTypingSession(sessionKey: string): Promise<TypingSession>
+  getTypingSession(sessionKey: string): Promise<TypingSession | null>
+  updateTypingSessionContent(sessionKey: string, content: string): Promise<TypingSession>
+  deleteTypingSession(sessionKey: string): Promise<void>
+  getUserTypingSessions(userId: string): Promise<TypingSession[]>
 }
 
 export class DatabaseService implements IDatabaseService {
@@ -208,6 +223,77 @@ export class DatabaseService implements IDatabaseService {
       .eq('board_id', boardId);
 
     if (error) throw error;
+  }
+
+  async createTypingSession(sessionKey: string): Promise<TypingSession> {
+    const user = await this.ensureAuth();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    const { data, error } = await supabase
+      .from('typing_sessions')
+      .insert([{
+        user_id: user.id,
+        session_key: sessionKey,
+        content: '',
+        expires_at: expiresAt.toISOString(),
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async getTypingSession(sessionKey: string): Promise<TypingSession | null> {
+    const { data, error } = await supabase
+      .from('typing_sessions')
+      .select('*')
+      .eq('session_key', sessionKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null; // Not found
+      throw error;
+    }
+    return data;
+  }
+
+  async updateTypingSessionContent(sessionKey: string, content: string): Promise<TypingSession> {
+    await this.ensureAuth();
+    const { data, error } = await supabase
+      .from('typing_sessions')
+      .update({ content })
+      .eq('session_key', sessionKey)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteTypingSession(sessionKey: string): Promise<void> {
+    await this.ensureAuth();
+    const { error } = await supabase
+      .from('typing_sessions')
+      .delete()
+      .eq('session_key', sessionKey);
+
+    if (error) throw error;
+  }
+
+  async getUserTypingSessions(userId: string): Promise<TypingSession[]> {
+    await this.ensureAuth();
+    const { data, error } = await supabase
+      .from('typing_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   }
 }
 
