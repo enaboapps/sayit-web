@@ -75,7 +75,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     if (typingShare.isSharing) {
       typingShare.updateContent(text);
     }
-  }, [text, typingShare]);
+  }, [text, typingShare.isSharing, typingShare.updateContent]);
 
   const handleShare = async () => {
     if (typingShare.isSharing) {
