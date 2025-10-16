@@ -6,13 +6,20 @@ import { nanoid } from 'nanoid';
 export async function POST() {
   try {
     const cookieStore = await cookies();
+
+    // Debug: Log all cookies
+    const allCookies = cookieStore.getAll();
+    console.log('All cookies:', allCookies.map(c => c.name));
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value;
+            const value = cookieStore.get(name)?.value;
+            console.log(`Getting cookie ${name}:`, value ? 'found' : 'not found');
+            return value;
           },
           set(name: string, value: string, options: CookieOptions) {
             cookieStore.set({ name, value, ...options });
@@ -26,7 +33,10 @@ export async function POST() {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
+    console.log('Auth check:', { user: user?.id, authError: authError?.message });
+
     if (authError || !user) {
+      console.log('Authentication failed:', authError);
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
