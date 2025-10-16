@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import FleshOutPopup from './flesh-out/FleshOutPopup';
 import SubscriptionWrapper from './SubscriptionWrapper';
+import { useTypingShare } from '@/lib/hooks/useTypingShare';
+import ShareLinkModal from './typing-share/ShareLinkModal';
 
 interface TypingAreaProps {
   initialText?: string
@@ -22,9 +24,11 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const [error, setError] = useState<string | null>(null);
   const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
   const { speak, isSpeaking, isAvailable } = tts;
+  const typingShare = useTypingShare();
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('typingAreaVisible');
@@ -65,6 +69,26 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   useEffect(() => {
     localStorage.setItem('typingAreaExpanded', JSON.stringify(isExpanded));
   }, [isExpanded]);
+
+  // Update shared session content when text changes
+  useEffect(() => {
+    if (typingShare.isSharing) {
+      typingShare.updateContent(text);
+    }
+  }, [text, typingShare.isSharing, typingShare.updateContent]);
+
+  const handleShare = async () => {
+    if (typingShare.isSharing) {
+      setShowShareModal(true);
+    } else {
+      await typingShare.createSession();
+      if (typingShare.session) {
+        // Update with current text
+        typingShare.updateContent(text);
+        setShowShareModal(true);
+      }
+    }
+  };
 
   const handleClear = () => {
     setText('');
@@ -270,6 +294,31 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                   <span>Clear</span>
                 </div>
               </button>
+              <button
+                onClick={handleShare}
+                className={`h-14 col-span-2 transition-colors duration-200 ${
+                  typingShare.isSharing
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-surface hover:bg-surface-hover text-text-secondary'
+                }`}
+                data-tooltip-id="share-tooltip"
+                data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
+                disabled={typingShare.isCreating}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  {typingShare.isCreating ? (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShareIcon className="w-5 h-5" />
+                      <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
+                    </>
+                  )}
+                </div>
+              </button>
             </div>
           )}
         </div>
@@ -308,12 +357,24 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       <Tooltip id="clear-tooltip" />
       <Tooltip id="expand-tooltip" />
       <Tooltip id="toggle-tooltip" />
+      <Tooltip id="share-tooltip" />
 
       {showFleshOutPopup && (
         <FleshOutPopup
           initialText={text}
           onClose={() => setShowFleshOutPopup(false)}
           onApply={handleApplyFleshedOutText}
+        />
+      )}
+
+      {showShareModal && (
+        <ShareLinkModal
+          shareableLink={typingShare.getShareableLink() || ''}
+          onClose={() => setShowShareModal(false)}
+          onEndSession={async () => {
+            await typingShare.endSession();
+            setShowShareModal(false);
+          }}
         />
       )}
     </div>
