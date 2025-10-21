@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
+import { useAuth } from '../contexts/AuthContext';
 import FleshOutPopup from './flesh-out/FleshOutPopup';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
@@ -27,6 +28,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const [showShareModal, setShowShareModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
+  const { user } = useAuth();
   const { speak, isSpeaking, isAvailable } = tts;
   const typingShare = useTypingShare();
   const [isVisible, setIsVisible] = useState(() => {
@@ -294,31 +296,33 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                   <span>Clear</span>
                 </div>
               </button>
-              <button
-                onClick={handleShare}
-                className={`h-14 col-span-2 transition-colors duration-200 ${
-                  typingShare.isSharing
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-surface hover:bg-surface-hover text-text-secondary'
-                }`}
-                data-tooltip-id="share-tooltip"
-                data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
-                disabled={typingShare.isCreating}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  {typingShare.isCreating ? (
-                    <>
-                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShareIcon className="w-5 h-5" />
-                      <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
-                    </>
-                  )}
-                </div>
-              </button>
+              {user && (
+                <button
+                  onClick={handleShare}
+                  className={`h-14 col-span-2 transition-colors duration-200 ${
+                    typingShare.isSharing
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-surface hover:bg-surface-hover text-text-secondary'
+                  }`}
+                  data-tooltip-id="share-tooltip"
+                  data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
+                  disabled={typingShare.isCreating}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    {typingShare.isCreating ? (
+                      <>
+                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShareIcon className="w-5 h-5" />
+                        <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
+                      </>
+                    )}
+                  </div>
+                </button>
+              )}
             </div>
           )}
         </div>
