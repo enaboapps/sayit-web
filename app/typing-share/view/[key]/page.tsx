@@ -4,13 +4,32 @@ import { useEffect, useState, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { TypingSession } from '@/lib/services/DatabaseService';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function TypingShareViewPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
   const [session, setSession] = useState<TypingSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fontSize, setFontSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('typing-share-font-size');
+      return saved ? parseInt(saved, 10) : 18;
+    }
+    return 18;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('typing-share-font-size', fontSize.toString());
+  }, [fontSize]);
+
+  const increaseFontSize = () => {
+    setFontSize(prev => Math.min(prev + 4, 64));
+  };
+
+  const decreaseFontSize = () => {
+    setFontSize(prev => Math.max(prev - 4, 12));
+  };
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -115,20 +134,50 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
 
           <div className="p-6 sm:p-8">
             <div className="bg-background border border-border rounded-lg p-6 min-h-[20rem]">
-              {session?.content ? (
-                <p className="text-foreground text-lg whitespace-pre-wrap break-words">
-                  {session.content}
+              {session?.content !== undefined && session?.content !== null ? (
+                <p
+                  className="text-foreground whitespace-pre-wrap break-words"
+                  style={{ fontSize: `${fontSize}px`, lineHeight: '1.5' }}
+                >
+                  {session.content || (
+                    <span className="text-text-tertiary italic">Text cleared</span>
+                  )}
                 </p>
               ) : (
-                <p className="text-text-tertiary italic">
+                <p className="text-text-tertiary italic" style={{ fontSize: `${fontSize}px` }}>
                   No content yet. Waiting for the sender to start typing...
                 </p>
               )}
             </div>
 
-            <div className="mt-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-text-secondary">Connected</span>
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-text-secondary">Connected</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-secondary mr-2">Font Size</span>
+                <button
+                  onClick={decreaseFontSize}
+                  className="w-8 h-8 flex items-center justify-center bg-surface hover:bg-surface-hover text-text-secondary border border-border rounded transition-colors"
+                  aria-label="Decrease font size"
+                  disabled={fontSize <= 12}
+                >
+                  <MinusIcon className="w-4 h-4" />
+                </button>
+                <span className="text-sm text-text-secondary min-w-[3rem] text-center">
+                  {fontSize}px
+                </span>
+                <button
+                  onClick={increaseFontSize}
+                  className="w-8 h-8 flex items-center justify-center bg-surface hover:bg-surface-hover text-text-secondary border border-border rounded transition-colors"
+                  aria-label="Increase font size"
+                  disabled={fontSize >= 64}
+                >
+                  <PlusIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
