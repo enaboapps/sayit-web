@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ai-sdk/deepinfra": "^0.2.14",
+    "@clerk/nextjs": "^6.33.7",
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-slot": "^1.2.0",
