@@ -2,6 +2,17 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getUserIdentity } from "./users";
 
+// Query: Get profile for a specific user (used by server-side routes)
+export const getProfileByUserId = query({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("profiles")
+      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .first();
+  },
+});
+
 // Query: Get current user's profile
 export const getProfile = query({
   handler: async (ctx) => {

@@ -8,10 +8,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'globalsymbols.com',
       },
-      {
-        protocol: 'https',
-        hostname: 'equjsqktsqooirullrpy.supabase.co',
-      },
     ],
   },
 };

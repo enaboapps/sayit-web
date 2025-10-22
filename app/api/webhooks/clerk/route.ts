@@ -1,15 +1,22 @@
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
 import { WebhookEvent } from '@clerk/nextjs/server';
-import { supabase } from '@/lib/supabase';
+import { ConvexHttpClient } from 'convex/browser';
+import { api } from '@/convex/_generated/api';
 
 export async function POST(req: Request) {
   // Get the Clerk webhook secret from environment variables
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
   if (!WEBHOOK_SECRET) {
     throw new Error('Please add CLERK_WEBHOOK_SECRET to .env.local');
   }
+  if (!convexUrl) {
+    throw new Error('Please add NEXT_PUBLIC_CONVEX_URL to the environment');
+  }
+
+  const convex = new ConvexHttpClient(convexUrl);
 
   // Get the headers
   const headerPayload = await headers();
@@ -56,23 +63,11 @@ export async function POST(req: Request) {
 
     console.log('Creating user profile:', { id, email, first_name, last_name });
 
-    // Create or update user profile in Supabase
-    const { error } = await supabase
-      .from('profiles')
-      .upsert([
-        {
-          id,
-          email,
-          full_name: first_name && last_name ? `${first_name} ${last_name}` : null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ]);
-
-    if (error) {
-      console.error('Error creating user profile:', error);
-      return new Response('Error creating user profile', { status: 500 });
-    }
+    await convex.mutation(api.profiles.upsertProfile, {
+      userId: id,
+      email,
+      fullName: first_name && last_name ? `${first_name} ${last_name}` : null,
+    });
 
     console.log('User profile created successfully');
   }
@@ -83,20 +78,11 @@ export async function POST(req: Request) {
 
     console.log('Updating user profile:', { id, email, first_name, last_name });
 
-    // Update user profile in Supabase
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        email,
-        full_name: first_name && last_name ? `${first_name} ${last_name}` : null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating user profile:', error);
-      return new Response('Error updating user profile', { status: 500 });
-    }
+    await convex.mutation(api.profiles.upsertProfile, {
+      userId: id,
+      email,
+      fullName: first_name && last_name ? `${first_name} ${last_name}` : null,
+    });
 
     console.log('User profile updated successfully');
   }
@@ -108,15 +94,9 @@ export async function POST(req: Request) {
 
     // Optionally delete user profile from Supabase
     // Or just mark as deleted if you want to keep the data
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting user profile:', error);
-      return new Response('Error deleting user profile', { status: 500 });
-    }
+    await convex.mutation(api.profiles.deleteProfile, {
+      userId: id,
+    });
 
     console.log('User profile deleted successfully');
   }

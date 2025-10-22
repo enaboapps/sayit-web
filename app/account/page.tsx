@@ -1,57 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useClerk } from '@clerk/nextjs';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/app/components/ui/Button';
 import { motion } from 'framer-motion';
-
-interface SubscriptionStatus {
-  status: string;
-  cancel_at_period_end: boolean;
-  stripe_customer_id: string | null;
-}
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 export default function AccountPage() {
   const { user } = useAuth();
   const { signOut } = useClerk();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      if (!user) return;
-      
-      try {
-        const { data: profile, error: supabaseError } = await supabase
-          .from('profiles')
-          .select('subscription_status, subscription_cancel_at_period_end, stripe_customer_id')
-          .eq('id', user.id)
-          .single();
-
-        if (supabaseError) throw supabaseError;
-
-        if (profile) {
-          setSubscription({
-            status: profile.subscription_status,
-            cancel_at_period_end: profile.subscription_cancel_at_period_end,
-            stripe_customer_id: profile.stripe_customer_id
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching subscription:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSubscription();
-  }, [user]);
+  const subscriptionData = useQuery(api.profiles.getSubscriptionStatus);
+  const subscriptionLoading = subscriptionData === undefined;
+  const stripeCustomerId = subscriptionData?.stripeCustomerId ?? null;
+  const subscriptionStatus = subscriptionData?.status ?? 'inactive';
+  const cancelAtPeriodEnd = subscriptionData?.cancelAtPeriodEnd ?? false;
 
   const handleSignOut = async () => {
     setError(null);
@@ -105,9 +73,9 @@ export default function AccountPage() {
 
                 <div>
                   <h2 className="text-xl font-semibold text-foreground mb-3">Subscription</h2>
-                  {loading ? (
+                  {subscriptionLoading ? (
                     <p className="text-text-secondary">Loading subscription status...</p>
-                  ) : !subscription?.stripe_customer_id ? (
+                  ) : !stripeCustomerId ? (
                     <div className="space-y-4">
                       <p className="text-text-secondary">
                         You don't have an active subscription yet.
@@ -119,13 +87,13 @@ export default function AccountPage() {
                         Subscribe Now
                       </Button>
                     </div>
-                  ) : subscription ? (
+                  ) : (
                     <div className="space-y-4">
                       <div className="bg-surface-hover p-4 rounded-lg">
                         <p className="text-text-secondary mb-1">
-                          Status: <span className="font-medium capitalize">{subscription.status}</span>
+                          Status: <span className="font-medium capitalize">{subscriptionStatus}</span>
                         </p>
-                        {subscription.cancel_at_period_end && (
+                        {cancelAtPeriodEnd && (
                           <p className="text-warning text-sm mt-2">
                             Your subscription will be cancelled at the end of the current period.
                           </p>
@@ -136,16 +104,6 @@ export default function AccountPage() {
                         size="lg"
                       >
                         Manage Subscription
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-text-secondary">No active subscription</p>
-                      <Button
-                        onClick={() => router.push('/pricing')}
-                        size="lg"
-                      >
-                        Subscribe Now
                       </Button>
                     </div>
                   )}
