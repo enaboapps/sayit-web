@@ -10,9 +10,9 @@ interface PhraseStore {
   error: string | null
   fetchPhrases: (userId: string) => Promise<void>
   fetchBoards: (userId: string) => Promise<void>
-  addPhrase: (phraseData: Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>, boardId: string) => Promise<void>
-  deletePhrase: (phraseId: string, boardId: string) => Promise<void>
-  updatePhrase: (phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>
+  addPhrase: (userId: string, phraseData: Omit<PhraseData, 'id' | 'userId' | 'createdAt' | 'updatedAt'>, boardId: string) => Promise<void>
+  deletePhrase: (userId: string, phraseId: string, boardId: string) => Promise<void>
+  updatePhrase: (userId: string, phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updated At'>>) => Promise<void>
   getPhrase: (userId: string, boardId: string, phraseId: string) => Promise<Phrase | null>
   createPhraseBoard: (userId: string, name: string) => Promise<void>
   getPhraseBoard: (userId: string, boardId: string) => Promise<PhraseBoard | null>
@@ -49,18 +49,17 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       throw err;
     }
   },
-  addPhrase: async (phraseData: Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>, boardId: string) => {
+  addPhrase: async (userId: string, phraseData: Omit<PhraseData, 'id' | 'userId' | 'createdAt' | 'updatedAt'>, boardId: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
-      const dbPhraseData: Omit<DatabasePhrase, 'id' | 'created_at' | 'updated_at'> = {
+      const dbPhraseData: Omit<DatabasePhrase, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
         text: phraseData.text,
-        user_id: phraseData.userId,
         symbol_id: phraseData.symbol_id || null,
         frequency: phraseData.frequency || 0,
         position: phraseData.position || 0,
       };
-      const newPhrase = await databaseService.addPhrase(dbPhraseData);
-      await databaseService.addPhraseToBoard(newPhrase.id, boardId);
+      const newPhrase = await databaseService.addPhrase(userId, dbPhraseData);
+      await databaseService.addPhraseToBoard(newPhrase.id, boardId, userId);
       const phraseInstance = await Phrase.fromSupabase(newPhrase);
       set((state) => ({ ...state, phrases: [...state.phrases, phraseInstance], loading: false }));
     } catch (err) {
@@ -68,11 +67,11 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       throw err;
     }
   },
-  deletePhrase: async (phraseId: string, boardId: string) => {
+  deletePhrase: async (userId: string, phraseId: string, boardId: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
-      await databaseService.deletePhrase(phraseId);
-      await databaseService.removePhraseFromBoard(phraseId, boardId);
+      await databaseService.deletePhrase(phraseId, userId);
+      await databaseService.removePhraseFromBoard(phraseId, boardId, userId);
       set((state) => ({
         ...state,
         phrases: state.phrases.filter((p) => p.id !== phraseId),
@@ -83,7 +82,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
       throw err;
     }
   },
-  updatePhrase: async (phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>) => {
+  updatePhrase: async (userId: string, phraseId: string, phraseData: Partial<Omit<PhraseData, 'id' | 'createdAt' | 'updatedAt'>>) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
       const dbPhraseData: Partial<Omit<DatabasePhrase, 'id' | 'created_at' | 'updated_at'>> = {
@@ -93,7 +92,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
         frequency: phraseData.frequency,
         position: phraseData.position,
       };
-      const updatedPhrase = await databaseService.updatePhrase(phraseId, dbPhraseData);
+      const updatedPhrase = await databaseService.updatePhrase(phraseId, userId, dbPhraseData);
       const phraseInstance = await Phrase.fromSupabase(updatedPhrase);
       set((state) => ({
         ...state,
@@ -108,7 +107,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
   getPhrase: async (userId: string, boardId: string, phraseId: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
-      const phrase = await databaseService.getPhrase(phraseId);
+      const phrase = await databaseService.getPhrase(phraseId, userId);
       set((state) => ({ ...state, loading: false }));
       return phrase ? await Phrase.fromSupabase(phrase) : null;
     } catch (err) {
@@ -119,9 +118,8 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
   createPhraseBoard: async (userId: string, name: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
-      const board = await databaseService.addPhraseBoard({
+      const board = await databaseService.addPhraseBoard(userId, {
         name,
-        user_id: userId,
         position: 0,
       });
       const phraseBoard = await PhraseBoard.fromSupabase(board);
@@ -134,7 +132,7 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
   getPhraseBoard: async (userId: string, boardId: string) => {
     set((state) => ({ ...state, loading: true, error: null }));
     try {
-      const board = await databaseService.getPhraseBoard(boardId);
+      const board = await databaseService.getPhraseBoard(boardId, userId);
       set((state) => ({ ...state, loading: false }));
       return board ? await PhraseBoard.fromSupabase(board) : null;
     } catch (err) {
@@ -147,10 +145,9 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
     try {
       const dbBoardData = {
         name: updates.name,
-        user_id: userId,
         position: updates.position || 0,
       };
-      const updatedBoard = await databaseService.updatePhraseBoard(boardId, dbBoardData);
+      const updatedBoard = await databaseService.updatePhraseBoard(boardId, userId, dbBoardData);
       const phraseBoard = await PhraseBoard.fromSupabase(updatedBoard);
       set((state) => ({
         ...state,
@@ -166,15 +163,15 @@ export const phraseStore = create<PhraseStore>((set: SetState) => ({
     set((state) => ({ ...state, loading: true, error: null }));
     try {
       // First get the board to get its phrases
-      const board = await databaseService.getPhraseBoard(boardId);
+      const board = await databaseService.getPhraseBoard(boardId, userId);
       if (board?.phrase_board_phrases) {
         // Delete all phrases associated with this board
         await Promise.all(
-          board.phrase_board_phrases.map((p) => databaseService.deletePhrase(p.phrase_id))
+          board.phrase_board_phrases.map((p) => databaseService.deletePhrase(p.phrase_id, userId))
         );
       }
       // Then delete the board
-      await databaseService.deletePhraseBoard(boardId);
+      await databaseService.deletePhraseBoard(boardId, userId);
       set((state) => ({
         ...state,
         boards: state.boards.filter((b) => b.id !== boardId),
