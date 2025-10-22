@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ai-sdk/deepinfra": "^0.2.14",
+    "@clerk/nextjs": "^6.33.7",
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-slot": "^1.2.0",
@@ -31,6 +32,7 @@
     "react-dom": "^19.0.0",
     "react-tooltip": "^5.28.1",
     "stripe": "^18.1.0",
+    "svix": "^1.77.0",
     "tailwind-merge": "^3.2.0",
     "zustand": "^5.0.3"
   },

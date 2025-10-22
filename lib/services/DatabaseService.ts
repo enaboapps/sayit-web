@@ -1,4 +1,4 @@
-import { supabase, getCurrentSession } from '../supabase';
+import { supabase } from '../supabase';
 
 export interface Phrase {
   id: string
@@ -43,35 +43,27 @@ export interface TypingSession {
 
 export interface IDatabaseService {
   getPhrases(userId: string): Promise<Phrase[]>
-  addPhrase(phrase: Omit<Phrase, 'id' | 'created_at' | 'updated_at'>): Promise<Phrase>
-  updatePhrase(id: string, updates: Partial<Omit<Phrase, 'id' | 'created_at' | 'updated_at'>>): Promise<Phrase>
-  deletePhrase(id: string): Promise<void>
-  getPhrase(id: string): Promise<Phrase | null>
+  addPhrase(userId: string, phrase: Omit<Phrase, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Phrase>
+  updatePhrase(id: string, userId: string, updates: Partial<Omit<Phrase, 'id' | 'created_at' | 'updated_at'>>): Promise<Phrase>
+  deletePhrase(id: string, userId: string): Promise<void>
+  getPhrase(id: string, userId: string): Promise<Phrase | null>
   getPhraseBoards(userId: string): Promise<DatabasePhraseBoard[]>
-  addPhraseBoard(board: Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>): Promise<PhraseBoard>
-  updatePhraseBoard(id: string, updates: Partial<Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>>): Promise<PhraseBoard>
-  deletePhraseBoard(id: string): Promise<void>
-  getPhraseBoard(id: string): Promise<DatabasePhraseBoard | null>
-  addPhraseToBoard(phraseId: string, boardId: string): Promise<void>
-  removePhraseFromBoard(phraseId: string, boardId: string): Promise<void>
-  createTypingSession(sessionKey: string): Promise<TypingSession>
+  addPhraseBoard(userId: string, board: Omit<PhraseBoard, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<PhraseBoard>
+  updatePhraseBoard(id: string, userId: string, updates: Partial<Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>>): Promise<PhraseBoard>
+  deletePhraseBoard(id: string, userId: string): Promise<void>
+  getPhraseBoard(id: string, userId: string): Promise<DatabasePhraseBoard | null>
+  addPhraseToBoard(phraseId: string, boardId: string, userId: string): Promise<void>
+  removePhraseFromBoard(phraseId: string, boardId: string, userId: string): Promise<void>
+  createTypingSession(userId: string, sessionKey: string): Promise<TypingSession>
   getTypingSession(sessionKey: string): Promise<TypingSession | null>
-  updateTypingSessionContent(sessionKey: string, content: string): Promise<TypingSession>
-  deleteTypingSession(sessionKey: string): Promise<void>
+  updateTypingSessionContent(sessionKey: string, userId: string, content: string): Promise<TypingSession>
+  deleteTypingSession(sessionKey: string, userId: string): Promise<void>
   getUserTypingSessions(userId: string): Promise<TypingSession[]>
 }
 
 export class DatabaseService implements IDatabaseService {
-  private async ensureAuth() {
-    const session = await getCurrentSession();
-    if (!session?.user) {
-      throw new Error('Not authenticated');
-    }
-    return session.user;
-  }
 
   async getPhrases(userId: string): Promise<Phrase[]> {
-    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrases')
       .select('*')
@@ -81,11 +73,10 @@ export class DatabaseService implements IDatabaseService {
     return data || [];
   }
 
-  async addPhrase(phrase: Omit<Phrase, 'id' | 'created_at' | 'updated_at'>): Promise<Phrase> {
-    const user = await this.ensureAuth();
+  async addPhrase(userId: string, phrase: Omit<Phrase, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Phrase> {
     const { data, error } = await supabase
       .from('phrases')
-      .insert([{ ...phrase, user_id: user.id }])
+      .insert([{ ...phrase, user_id: userId }])
       .select()
       .single();
 
@@ -93,12 +84,12 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async updatePhrase(id: string, updates: Partial<Omit<Phrase, 'id' | 'created_at' | 'updated_at'>>): Promise<Phrase> {
-    await this.ensureAuth();
+  async updatePhrase(id: string, userId: string, updates: Partial<Omit<Phrase, 'id' | 'created_at' | 'updated_at'>>): Promise<Phrase> {
     const { data, error } = await supabase
       .from('phrases')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -106,22 +97,22 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async deletePhrase(id: string): Promise<void> {
-    await this.ensureAuth();
+  async deletePhrase(id: string, userId: string): Promise<void> {
     const { error } = await supabase
       .from('phrases')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   }
 
-  async getPhrase(id: string): Promise<Phrase | null> {
-    await this.ensureAuth();
+  async getPhrase(id: string, userId: string): Promise<Phrase | null> {
     const { data, error } = await supabase
       .from('phrases')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
 
     if (error) throw error;
@@ -129,7 +120,6 @@ export class DatabaseService implements IDatabaseService {
   }
 
   async getPhraseBoards(userId: string): Promise<DatabasePhraseBoard[]> {
-    await this.ensureAuth();
     const { data, error } = await supabase
       .from('phrase_boards')
       .select(`
@@ -149,11 +139,10 @@ export class DatabaseService implements IDatabaseService {
     return data || [];
   }
 
-  async addPhraseBoard(board: Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>): Promise<PhraseBoard> {
-    const user = await this.ensureAuth();
+  async addPhraseBoard(userId: string, board: Omit<PhraseBoard, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<PhraseBoard> {
     const { data, error } = await supabase
       .from('phrase_boards')
-      .insert([{ ...board, user_id: user.id }])
+      .insert([{ ...board, user_id: userId }])
       .select()
       .single();
 
@@ -161,12 +150,12 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async updatePhraseBoard(id: string, updates: Partial<Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>>): Promise<PhraseBoard> {
-    await this.ensureAuth();
+  async updatePhraseBoard(id: string, userId: string, updates: Partial<Omit<PhraseBoard, 'id' | 'created_at' | 'updated_at'>>): Promise<PhraseBoard> {
     const { data, error } = await supabase
       .from('phrase_boards')
       .update(updates)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -174,18 +163,17 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async deletePhraseBoard(id: string): Promise<void> {
-    await this.ensureAuth();
+  async deletePhraseBoard(id: string, userId: string): Promise<void> {
     const { error } = await supabase
       .from('phrase_boards')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) throw error;
   }
 
-  async getPhraseBoard(id: string): Promise<DatabasePhraseBoard | null> {
-    await this.ensureAuth();
+  async getPhraseBoard(id: string, userId: string): Promise<DatabasePhraseBoard | null> {
     const { data, error } = await supabase
       .from('phrase_boards')
       .select(`
@@ -198,6 +186,7 @@ export class DatabaseService implements IDatabaseService {
         )
       `)
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
 
     if (error) throw error;
@@ -205,8 +194,7 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async addPhraseToBoard(phraseId: string, boardId: string): Promise<void> {
-    await this.ensureAuth();
+  async addPhraseToBoard(phraseId: string, boardId: string, userId: string): Promise<void> {
     const { error } = await supabase
       .from('phrase_board_phrases')
       .insert([{ phrase_id: phraseId, board_id: boardId }]);
@@ -214,8 +202,7 @@ export class DatabaseService implements IDatabaseService {
     if (error) throw error;
   }
 
-  async removePhraseFromBoard(phraseId: string, boardId: string): Promise<void> {
-    await this.ensureAuth();
+  async removePhraseFromBoard(phraseId: string, boardId: string, userId: string): Promise<void> {
     const { error } = await supabase
       .from('phrase_board_phrases')
       .delete()
@@ -225,15 +212,14 @@ export class DatabaseService implements IDatabaseService {
     if (error) throw error;
   }
 
-  async createTypingSession(sessionKey: string): Promise<TypingSession> {
-    const user = await this.ensureAuth();
+  async createTypingSession(userId: string, sessionKey: string): Promise<TypingSession> {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
 
     const { data, error } = await supabase
       .from('typing_sessions')
       .insert([{
-        user_id: user.id,
+        user_id: userId,
         session_key: sessionKey,
         content: '',
         expires_at: expiresAt.toISOString(),
@@ -260,12 +246,12 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async updateTypingSessionContent(sessionKey: string, content: string): Promise<TypingSession> {
-    await this.ensureAuth();
+  async updateTypingSessionContent(sessionKey: string, userId: string, content: string): Promise<TypingSession> {
     const { data, error } = await supabase
       .from('typing_sessions')
       .update({ content })
       .eq('session_key', sessionKey)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -273,18 +259,17 @@ export class DatabaseService implements IDatabaseService {
     return data;
   }
 
-  async deleteTypingSession(sessionKey: string): Promise<void> {
-    await this.ensureAuth();
+  async deleteTypingSession(sessionKey: string, userId: string): Promise<void> {
     const { error } = await supabase
       .from('typing_sessions')
       .delete()
-      .eq('session_key', sessionKey);
+      .eq('session_key', sessionKey)
+      .eq('user_id', userId);
 
     if (error) throw error;
   }
 
   async getUserTypingSessions(userId: string): Promise<TypingSession[]> {
-    await this.ensureAuth();
     const { data, error } = await supabase
       .from('typing_sessions')
       .select('*')

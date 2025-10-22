@@ -1,12 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { authService } from '@/lib/auth';
+import React, { createContext, useContext } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 interface AuthContextType {
-  user: User | null
-  loading: boolean
+  user: {
+    id: string;
+    email: string | null;
+  } | null;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,22 +17,18 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user: clerkUser, isLoaded } = useUser();
 
-  useEffect(() => {
-    const { data: { subscription } } = authService.onAuthStateChanged((user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+  // Transform Clerk user to our simplified format
+  const user = clerkUser
+    ? {
+        id: clerkUser.id,
+        email: clerkUser.primaryEmailAddress?.emailAddress || null,
+      }
+    : null;
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading: !isLoaded }}>
       {children}
     </AuthContext.Provider>
   );

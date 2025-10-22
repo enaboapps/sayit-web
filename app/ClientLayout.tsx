@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { ClerkProvider } from '@clerk/nextjs';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
@@ -31,17 +32,19 @@ export default function ClientLayout({
   }, [pathname]);
 
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        <div className="min-h-screen flex">
-          <Sidebar />
-          <div className="flex-1 pl-16">
-            <main>
-              {children}
-            </main>
+    <ClerkProvider>
+      <AuthProvider>
+        <SettingsProvider>
+          <div className="min-h-screen flex">
+            <Sidebar />
+            <div className="flex-1 pl-16">
+              <main>
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-      </SettingsProvider>
-    </AuthProvider>
+        </SettingsProvider>
+      </AuthProvider>
+    </ClerkProvider>
   );
 } 
