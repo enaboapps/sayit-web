@@ -2,10 +2,13 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { ClerkProvider } from '@clerk/nextjs';
+import { ClerkProvider, useAuth } from '@clerk/nextjs';
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
+
+const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default function ClientLayout({
   children,
@@ -33,18 +36,20 @@ export default function ClientLayout({
 
   return (
     <ClerkProvider>
-      <AuthProvider>
-        <SettingsProvider>
-          <div className="min-h-screen flex">
-            <Sidebar />
-            <div className="flex-1 pl-16">
-              <main>
-                {children}
-              </main>
+      <ConvexProvider client={convex}>
+        <AuthProvider>
+          <SettingsProvider>
+            <div className="min-h-screen flex">
+              <Sidebar />
+              <div className="flex-1 pl-16">
+                <main>
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-        </SettingsProvider>
-      </AuthProvider>
+          </SettingsProvider>
+        </AuthProvider>
+      </ConvexProvider>
     </ClerkProvider>
   );
 } 
