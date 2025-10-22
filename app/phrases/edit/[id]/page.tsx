@@ -9,6 +9,8 @@ import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import BackButton from '@/app/components/ui/BackButton';
+import { useAuth } from '@/app/contexts/AuthContext';
+import type { Id } from '@/convex/_generated/dataModel';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -18,14 +20,20 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   const router = useRouter();
   const searchParams = useSearchParams();
   const boardId = searchParams.get('boardId');
+  const { user, loading: authLoading } = useAuth();
+  const shouldLoadPhrase = !authLoading && !!user;
+  const phraseId = resolvedParams.id as unknown as Id<'phrases'>;
 
   // Convex query and mutations
-  const phrase = useQuery(api.phrases.getPhrase, { id: resolvedParams.id as any });
+  const phrase = useQuery(
+    api.phrases.getPhrase,
+    shouldLoadPhrase ? { id: phraseId } : 'skip'
+  );
   const updatePhrase = useMutation(api.phrases.updatePhrase);
   const deletePhrase = useMutation(api.phrases.deletePhrase);
   const removePhraseFromBoard = useMutation(api.phraseBoards.removePhraseFromBoard);
 
-  const loading = phrase === undefined;
+  const loading = authLoading || (shouldLoadPhrase && phrase === undefined);
 
   useEffect(() => {
     if (!boardId) {
@@ -49,7 +57,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
     try {
       await updatePhrase({
-        id: resolvedParams.id as any,
+        id: phraseId,
         text,
       });
       router.back();
@@ -67,13 +75,13 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     try {
       // Remove from board first
       await removePhraseFromBoard({
-        phraseId: resolvedParams.id as any,
+        phraseId,
         boardId: boardId as any,
       });
 
       // Then delete the phrase
       await deletePhrase({
-        id: resolvedParams.id as any,
+        id: phraseId,
       });
 
       router.back();

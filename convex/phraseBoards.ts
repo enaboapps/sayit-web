@@ -49,7 +49,7 @@ export const getPhraseBoard = query({
 
     const board = await ctx.db.get(args.id);
     if (!board || board.userId !== identity.subject) {
-      throw new Error("Unauthorized");
+      return null;
     }
 
     const phraseBoardPhrases = await ctx.db

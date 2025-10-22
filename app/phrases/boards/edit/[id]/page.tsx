@@ -9,6 +9,8 @@ import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import BackButton from '@/app/components/ui/BackButton';
+import { useAuth } from '@/app/contexts/AuthContext';
+import type { Id } from '@/convex/_generated/dataModel';
 
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -17,13 +19,19 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  const shouldLoadBoard = !authLoading && !!user;
+  const boardId = resolvedParams.id as unknown as Id<'phraseBoards'>;
 
   // Convex query and mutations
-  const board = useQuery(api.phraseBoards.getPhraseBoard, { id: resolvedParams.id as any });
+  const board = useQuery(
+    api.phraseBoards.getPhraseBoard,
+    shouldLoadBoard ? { id: boardId } : 'skip'
+  );
   const updatePhraseBoard = useMutation(api.phraseBoards.updatePhraseBoard);
   const deletePhraseBoard = useMutation(api.phraseBoards.deletePhraseBoard);
 
-  const loading = board === undefined;
+  const loading = authLoading || (shouldLoadBoard && board === undefined);
 
   useEffect(() => {
     if (board) {
@@ -40,7 +48,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
     try {
       await updatePhraseBoard({
-        id: resolvedParams.id as any,
+        id: boardId,
         name,
       });
       router.back();
@@ -64,7 +72,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
     try {
       await deletePhraseBoard({
-        id: resolvedParams.id as any,
+        id: boardId,
       });
       router.back();
     } catch (error) {

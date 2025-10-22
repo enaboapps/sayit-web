@@ -28,7 +28,7 @@ export const getPhrase = query({
 
     const phrase = await ctx.db.get(args.id);
     if (!phrase || phrase.userId !== identity.subject) {
-      throw new Error("Unauthorized");
+      return null;
     }
 
     return phrase;
