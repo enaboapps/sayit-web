@@ -9,6 +9,7 @@ import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
+import type { BoardSummary, PhraseSummary } from '../phrases/types';
 import { useAuth } from '../../contexts/AuthContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 
@@ -69,7 +70,7 @@ export default function PhrasesInterface() {
     }
   }, [boards, shouldLoadBoards]);
 
-  const handlePhrasePress = (phrase: any) => {
+  const handlePhrasePress = (phrase: PhraseSummary) => {
     setTypingText(phrase.text);
     tts.speak(phrase.text);
   };
@@ -116,9 +117,9 @@ export default function PhrasesInterface() {
     }
   };
 
-  const handleEditPhrase = (phrase: any) => {
+  const handleEditPhrase = (phrase: PhraseSummary) => {
     if (!selectedBoardId) return;
-    router.push(`/phrases/edit/${phrase._id}?boardId=${selectedBoardId}`);
+    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoardId}`);
   };
 
   const handleAddBoard = () => {
@@ -145,19 +146,24 @@ export default function PhrasesInterface() {
   };
 
   // Extract phrases from the board data
-  const phrases = selectedBoardData?.phrase_board_phrases?.map(pbp => pbp.phrase).filter(Boolean) || [];
+  const phrases: PhraseSummary[] =
+    selectedBoardData?.phrase_board_phrases
+      ?.map((pbp: any) => pbp.phrase)
+      .filter(Boolean)
+      .map((phrase: any) => ({
+        id: String(phrase._id),
+        text: phrase.text,
+        frequency: phrase.frequency,
+      })) || [];
 
   // Transform boards to match the expected format (PhraseBoard type)
-  const transformedBoards = boards?.map(board => {
-    // Count phrases for this board
-    const phraseCount = board._id === selectedBoardId ? phrases.length : 0;
-    return {
-      id: board._id,
+  const transformedBoards: BoardSummary[] =
+    boards?.map((board: any) => ({
+      id: String(board._id),
       name: board.name,
       position: board.position,
-      phrases: board._id === selectedBoardId ? phrases : [], // Only load phrases for selected board
-    };
-  }) || [];
+      phrases: board._id === selectedBoardId ? phrases : [],
+    })) || [];
 
   const selectedBoard = transformedBoards.find(board => board.id === selectedBoardId) || null;
 
@@ -206,15 +212,10 @@ export default function PhrasesInterface() {
               <div className="flex flex-col h-full">
                 <div className="flex-1 p-1 overflow-auto">
                   <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-1 h-full">
-                    {phrases.map((phrase: any) => (
+                    {phrases.map((phrase) => (
                       <PhraseTile
-                        key={phrase._id}
-                        phrase={{
-                          id: phrase._id,
-                          text: phrase.text,
-                          symbolId: phrase.symbolId,
-                          frequency: phrase.frequency,
-                        }}
+                        key={phrase.id}
+                        phrase={phrase}
                         onPress={() => handlePhrasePress(phrase)}
                         onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
                         className="sm:aspect-square"
@@ -250,12 +251,7 @@ export default function PhrasesInterface() {
         isEditMode={isEditMode}
       />
       <ReaderPopup
-        phrases={phrases.map((p: any) => ({
-          id: p._id,
-          text: p.text,
-          symbolId: p.symbolId,
-          frequency: p.frequency,
-        }))}
+        phrases={phrases}
         isOpen={isReaderOpen}
         onClose={handleCloseReader}
         onSpeak={handleSpeakInReader}

@@ -9,13 +9,10 @@ import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import BackButton from '@/app/components/ui/BackButton';
-import { Symbol } from '@/lib/models/Symbol';
-import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [text, setText] = useState('');
-  const [symbol, setSymbol] = useState<Symbol | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -40,14 +37,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (phrase) {
       setText(phrase.text);
-      if (phrase.symbolId) {
-        const sym = Symbol.fromId(phrase.symbolId);
-        if (sym) {
-          sym.getImageURL().then(() => {
-            setSymbol(sym);
-          });
-        }
-      }
     }
   }, [phrase]);
 
@@ -62,7 +51,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
       await updatePhrase({
         id: resolvedParams.id as any,
         text,
-        symbolId: symbol?.id || undefined,
       });
       router.back();
     } catch (error) {
@@ -127,17 +115,6 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             placeholder="Enter your phrase"
             required
           />
-
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-text-secondary mb-2">
-              Symbol
-            </label>
-            <SymbolSelector
-              symbol={symbol}
-              onSymbolSelect={setSymbol}
-            />
-            <p className="mt-1 text-sm text-text-tertiary">Optional - Select a symbol to represent this phrase</p>
-          </div>
 
           {error && (
             <div className="mt-4 text-red-500 text-sm">

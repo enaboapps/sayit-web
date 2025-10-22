@@ -3,10 +3,11 @@
 import { ChevronLeft, ChevronRight, Volume2, X } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
 import { useState, useEffect, useRef } from 'react';
-import { Phrase } from '@/lib/models/Phrase';
-
 interface ReaderPopupProps {
-  phrases: Phrase[]
+  phrases: {
+    id?: string;
+    text: string;
+  }[];
   isOpen: boolean
   onClose: () => void
   onSpeak: (text: string) => void

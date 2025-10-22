@@ -4,10 +4,8 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Symbol } from '@/lib/models/Symbol';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 import BackButton from '@/app/components/ui/BackButton';
 
 function AddPhraseForm() {
@@ -15,7 +13,6 @@ function AddPhraseForm() {
   const searchParams = useSearchParams();
   const boardId = searchParams.get('boardId');
   const [text, setText] = useState('');
-  const [symbol, setSymbol] = useState<Symbol | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +29,6 @@ function AddPhraseForm() {
       // Create the phrase
       const phraseId = await addPhrase({
         text,
-        symbolId: symbol?.id,
         frequency: 0,
         position: 0, // Will be adjusted by backend based on board
       });
@@ -68,17 +64,6 @@ function AddPhraseForm() {
             placeholder="Enter your phrase"
             required
           />
-
-          <div className="mb-6">
-            <label className="block text-gray-700 text-text-secondary text-sm font-bold mb-2">
-              Symbol
-            </label>
-            <SymbolSelector
-              symbol={symbol}
-              onSymbolSelect={setSymbol}
-            />
-            <p className="mt-1 text-sm text-gray-500 text-text-secondary">Optional - Select a symbol to represent this phrase</p>
-          </div>
 
           {error && (
             <div className="mb-4 text-red-500 text-sm">

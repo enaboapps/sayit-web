@@ -1,16 +1,16 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import { PencilIcon } from '@heroicons/react/24/outline';
+import type { BoardSummary } from './types';
 
 interface BoardGridPopupProps {
-  boards: PhraseBoard[];
-  selectedBoard: PhraseBoard | null;
+  boards: BoardSummary[];
+  selectedBoard: BoardSummary | null;
   isEditMode: boolean;
   isLoadingPhrases?: boolean;
   isOpen: boolean;
   onClose: () => void;
-  onSelectBoard: (board: PhraseBoard) => void;
+  onSelectBoard: (board: BoardSummary) => void;
   onEditBoard: (boardId: string) => void;
 }
 
@@ -91,7 +91,7 @@ export default function BoardGridPopup({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              onEditBoard(board.id ?? '');
+                              onEditBoard(board.id);
                             }}
                             className="p-1 hover:bg-gray-100 hover:bg-surface-hover/50 rounded-full transition-colors duration-200"
                           >

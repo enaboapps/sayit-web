@@ -15,7 +15,6 @@ export default defineSchema({
   phrases: defineTable({
     userId: v.string(), // Clerk user ID
     text: v.string(),
-    symbolId: v.optional(v.string()),
     frequency: v.number(),
     position: v.number(),
   }).index("by_user_id", ["userId"]),
