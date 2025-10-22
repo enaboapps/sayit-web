@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
-import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { ConvexProviderWithClerk } from 'convex/react-clerk';
+import { ConvexReactClient } from 'convex/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
@@ -36,7 +37,7 @@ export default function ClientLayout({
 
   return (
     <ClerkProvider>
-      <ConvexProvider client={convex}>
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
             <div className="min-h-screen flex">
@@ -49,7 +50,7 @@ export default function ClientLayout({
             </div>
           </SettingsProvider>
         </AuthProvider>
-      </ConvexProvider>
+      </ConvexProviderWithClerk>
     </ClerkProvider>
   );
-} 
+}

@@ -1,76 +1,113 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { TypingSession } from '../services/DatabaseService';
+import { nanoid } from 'nanoid';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import type { Id } from '@/convex/_generated/dataModel';
 
 const STORAGE_KEY = 'typing-share-session-key';
 
+type TypingSession = {
+  _id: Id<'typingSessions'>;
+  userId: string;
+  sessionKey: string;
+  content: string;
+  expiresAt: number;
+  _creationTime: number;
+} | null;
+
 export function useTypingShare() {
-  const [session, setSession] = useState<TypingSession | null>(null);
-  const [isSharing, setIsSharing] = useState(false);
+  const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [session, setSession] = useState<TypingSession>(null);
+
+  const createTypingSession = useMutation(api.typingSessions.createTypingSession);
+  const updateTypingSessionContent = useMutation(api.typingSessions.updateTypingSessionContent);
+  const deleteTypingSession = useMutation(api.typingSessions.deleteTypingSession);
+
+  const sessionFromConvex = useQuery(
+    api.typingSessions.getTypingSession,
+    sessionKey ? { sessionKey } : 'skip'
+  );
 
   // Restore session from localStorage on mount
   useEffect(() => {
     const restoreSession = async () => {
-      const savedKey = localStorage.getItem(STORAGE_KEY);
+      if (typeof window === 'undefined') return;
+      const savedKey = window.localStorage.getItem(STORAGE_KEY);
       if (!savedKey) return;
 
-      try {
-        const response = await fetch(`/api/typing-sessions/${savedKey}`);
-        if (response.ok) {
-          const data = await response.json();
-          setSession(data);
-          setIsSharing(true);
-        } else {
-          // Session expired or not found, clean up
-          localStorage.removeItem(STORAGE_KEY);
-        }
-      } catch (err) {
-        console.error('Error restoring typing session:', err);
-        localStorage.removeItem(STORAGE_KEY);
-      }
+      setSessionKey(savedKey);
     };
 
     restoreSession();
   }, []);
+
+  // Synchronize convex session data to local state for backwards compatibility
+  useEffect(() => {
+    if (sessionFromConvex === undefined) {
+      return;
+    }
+
+    if (sessionFromConvex === null && sessionKey) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+      setSessionKey(null);
+      setSession(null);
+      setError('This typing session has expired.');
+      return;
+    }
+
+    if (sessionFromConvex) {
+      setSession({
+        _id: sessionFromConvex._id,
+        userId: sessionFromConvex.userId,
+        sessionKey: sessionFromConvex.sessionKey,
+        content: sessionFromConvex.content,
+        expiresAt: sessionFromConvex.expiresAt,
+        _creationTime: sessionFromConvex._creationTime,
+      });
+      setError(null);
+    }
+  }, [sessionFromConvex, sessionKey]);
 
   const createSession = useCallback(async () => {
     setIsCreating(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/typing-sessions', {
-        method: 'POST',
+      const newKey = nanoid(10);
+      const created = await createTypingSession({ sessionKey: newKey });
+
+      if (!created) {
+        throw new Error('Failed to create typing session');
+      }
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(STORAGE_KEY, newKey);
+      }
+
+      setSessionKey(newKey);
+      setSession({
+        _id: created._id,
+        userId: created.userId,
+        sessionKey: created.sessionKey,
+        content: created.content,
+        expiresAt: created.expiresAt,
+        _creationTime: created._creationTime,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create session');
-      }
-
-      const data = await response.json();
-
-      // Fetch full session details
-      const sessionResponse = await fetch(`/api/typing-sessions/${data.session_key}`);
-      if (sessionResponse.ok) {
-        const fullSession = await sessionResponse.json();
-        setSession(fullSession);
-        setIsSharing(true);
-
-        // Persist session key to localStorage
-        localStorage.setItem(STORAGE_KEY, data.session_key);
-      }
     } catch (err) {
       console.error('Error creating typing session:', err);
       setError(err instanceof Error ? err.message : 'Failed to create session');
     } finally {
       setIsCreating(false);
     }
-  }, []);
+  }, [createTypingSession]);
 
   const updateContent = useCallback(async (content: string) => {
-    if (!session) return;
+    if (!sessionKey) return;
 
     // Debounce updates to avoid hammering the server
     if (updateTimeoutRef.current) {
@@ -79,41 +116,37 @@ export function useTypingShare() {
 
     updateTimeoutRef.current = setTimeout(async () => {
       try {
-        await fetch(`/api/typing-sessions/${session.session_key}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content }),
-        });
+        await updateTypingSessionContent({ sessionKey, content });
       } catch (err) {
         console.error('Error updating typing session:', err);
       }
     }, 300); // 300ms debounce
-  }, [session]);
+  }, [sessionKey, updateTypingSessionContent]);
 
   const endSession = useCallback(async () => {
-    if (!session) return;
+    if (!sessionKey) return;
 
     try {
-      await fetch(`/api/typing-sessions/${session.session_key}`, {
-        method: 'DELETE',
-      });
+      await deleteTypingSession({ sessionKey });
+      setSessionKey(null);
       setSession(null);
-      setIsSharing(false);
 
       // Remove from localStorage
-      localStorage.removeItem(STORAGE_KEY);
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
     } catch (err) {
       console.error('Error ending typing session:', err);
       setError(err instanceof Error ? err.message : 'Failed to end session');
     }
-  }, [session]);
+  }, [sessionKey, deleteTypingSession]);
 
   const getShareableLink = useCallback(() => {
-    if (!session) return null;
-    return `${window.location.origin}/typing-share/view/${session.session_key}`;
-  }, [session]);
+    if (typeof window === 'undefined') return null;
+    const key = session?.sessionKey ?? sessionKey;
+    if (!key) return null;
+    return `${window.location.origin}/typing-share/view/${key}`;
+  }, [session, sessionKey]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -126,7 +159,7 @@ export function useTypingShare() {
 
   return {
     session,
-    isSharing,
+    isSharing: Boolean(sessionKey),
     isCreating,
     error,
     createSession,

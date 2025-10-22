@@ -47,6 +47,17 @@ export const createTypingSession = mutation({
       throw new Error("Unauthenticated");
     }
 
+    // Prevent accidental reuse of a live session key
+    const existing = await ctx.db
+      .query("typingSessions")
+      .withIndex("by_session_key", (q) => q.eq("sessionKey", args.sessionKey))
+      .filter((q) => q.gt(q.field("expiresAt"), Date.now()))
+      .first();
+
+    if (existing) {
+      throw new Error("Session key already in use");
+    }
+
     // Session expires in 24 hours
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
@@ -57,7 +68,7 @@ export const createTypingSession = mutation({
       expiresAt,
     });
 
-    return sessionId;
+    return await ctx.db.get(sessionId);
   },
 });
 

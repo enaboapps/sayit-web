@@ -7,7 +7,7 @@ export const getPhraseBoards = query({
   handler: async (ctx) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      return [];
     }
 
     const boards = await ctx.db
@@ -44,7 +44,7 @@ export const getPhraseBoard = query({
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      return null;
     }
 
     const board = await ctx.db.get(args.id);

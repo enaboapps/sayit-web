@@ -9,34 +9,52 @@ import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
+import { useAuth } from '../../contexts/AuthContext';
+import AnimatedLoading from '../phrases/AnimatedLoading';
 
 export default function PhrasesInterface() {
   const router = useRouter();
   const tts = useTTS();
+  const { user, loading: authLoading } = useAuth();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [isReaderOpen, setIsReaderOpen] = useState(false);
 
+  const shouldLoadBoards = !authLoading && !!user;
+  const showAuthPrompt = !authLoading && !user;
+
   // Fetch all boards from Convex
-  const boards = useQuery(api.phraseBoards.getPhraseBoards);
+  const boards = useQuery(
+    api.phraseBoards.getPhraseBoards,
+    shouldLoadBoards ? undefined : 'skip'
+  );
 
   // Fetch the selected board with its phrases
   const selectedBoardData = useQuery(
     api.phraseBoards.getPhraseBoard,
-    selectedBoardId ? { id: selectedBoardId as any } : 'skip'
+    shouldLoadBoards && selectedBoardId ? { id: selectedBoardId as any } : 'skip'
   );
 
   // Mutations
   const addPhrase = useMutation(api.phrases.addPhrase);
   const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
 
-  const loading = boards === undefined;
-  const loadingPhrases = selectedBoardData === undefined && selectedBoardId !== null;
+  const loading = authLoading || (shouldLoadBoards && boards === undefined);
+  const loadingPhrases =
+    shouldLoadBoards && selectedBoardId !== null && selectedBoardData === undefined;
 
   // Auto-select first board on load or use saved board
   useEffect(() => {
-    if (!boards || boards.length === 0) return;
+    if (!shouldLoadBoards) {
+      setSelectedBoardId(null);
+      return;
+    }
+
+    if (!boards || boards.length === 0) {
+      setSelectedBoardId(null);
+      return;
+    }
 
     // Try to get the saved board ID from localStorage
     const savedBoardId = localStorage.getItem('selectedBoardId');
@@ -49,7 +67,7 @@ export default function PhrasesInterface() {
       setSelectedBoardId(boards[0]._id);
       localStorage.setItem('selectedBoardId', boards[0]._id);
     }
-  }, [boards]);
+  }, [boards, shouldLoadBoards]);
 
   const handlePhrasePress = (phrase: any) => {
     setTypingText(phrase.text);
@@ -152,7 +170,18 @@ export default function PhrasesInterface() {
           onChange={(text) => setTypingText(text)}
         />
       </div>
-      {transformedBoards.length === 0 && !loading ? (
+      {showAuthPrompt ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
+            <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
+          </div>
+        </div>
+      ) : loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <AnimatedLoading />
+        </div>
+      ) : transformedBoards.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
