@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import { PencilIcon } from '@heroicons/react/24/outline';
 import BoardGridPopup from './BoardGridPopup';
 import { Button } from '@/app/components/ui/Button';
+import type { BoardSummary } from './types';
 
 interface BoardSelectorProps {
-  boards: PhraseBoard[];
-  selectedBoard: PhraseBoard | null;
+  boards: BoardSummary[];
+  selectedBoard: BoardSummary | null;
   isEditMode: boolean;
   isLoadingPhrases?: boolean;
-  onSelectBoard: (board: PhraseBoard) => void;
+  onSelectBoard: (board: BoardSummary) => void;
   onEditBoard: (boardId: string) => void;
 }
 
@@ -33,7 +33,7 @@ export default function BoardSelector({
           className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-surface-hover/50 transition-colors duration-200"
           onClick={() => {
             if (isEditMode && selectedBoard) {
-              onEditBoard(selectedBoard.id ?? '');
+              onEditBoard(selectedBoard.id);
             }
           }}
         >
@@ -89,7 +89,7 @@ export default function BoardSelector({
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   if (selectedBoard) {
-                    onEditBoard(selectedBoard.id ?? '');
+                    onEditBoard(selectedBoard.id);
                   }
                 }}
               >

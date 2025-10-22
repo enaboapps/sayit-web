@@ -19,7 +19,8 @@ SayIt! is an AI-powered augmentative and alternative communication (AAC) app tha
 - TypeScript
 - Tailwind CSS
 - Framer Motion for animations
-- Supabase for authentication and database
+- Clerk for authentication
+- Convex for realtime data and storage
 - Stripe for payment processing
 - DeepInfra AI SDK for AI features
 - ElevenLabs for high-quality text-to-speech
@@ -29,9 +30,13 @@ SayIt! is an AI-powered augmentative and alternative communication (AAC) app tha
 To run this application, you need to set up the following environment variables:
 
 ```
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Convex Configuration
+NEXT_PUBLIC_CONVEX_URL=your_convex_url
+
+# Clerk Configuration
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret
 
 # Stripe Configuration
 STRIPE_SECRET_KEY=your_stripe_secret_key
@@ -41,7 +46,7 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 DEEPINFRA_API_KEY=your_deepinfra_api_key
 
 # ElevenLabs Configuration (for high-quality TTS)
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
+NEXT_PUBLIC_ELEVENLABS_API_KEY=your_elevenlabs_api_key
 ```
 
 ## Getting Started

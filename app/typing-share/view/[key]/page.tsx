@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { supabase } from '@/lib/supabase';
-import { TypingSession } from '@/lib/services/DatabaseService';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
 import { ExclamationTriangleIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function TypingShareViewPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
-  const [session, setSession] = useState<TypingSession | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const session = useQuery(api.typingSessions.getTypingSession, { sessionKey: key });
+  const loading = session === undefined;
+  const sessionMissing = session === null;
   const [fontSize, setFontSize] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('typing-share-font-size');
@@ -31,76 +31,6 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
     setFontSize(prev => Math.max(prev - 4, 12));
   };
 
-  useEffect(() => {
-    let channel: ReturnType<typeof supabase.channel> | null = null;
-
-    async function fetchAndSubscribe() {
-      try {
-        // Fetch initial session data
-        const response = await fetch(`/api/typing-sessions/${key}`);
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('This typing session does not exist or has expired.');
-          } else {
-            setError('Failed to load typing session.');
-          }
-          setLoading(false);
-          return;
-        }
-
-        const data = await response.json();
-        setSession(data);
-        setLoading(false);
-
-        // Subscribe to real-time updates
-        channel = supabase
-          .channel(`typing-session-${key}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'UPDATE',
-              schema: 'public',
-              table: 'typing_sessions',
-              filter: `session_key=eq.${key}`,
-            },
-            (payload) => {
-              console.log('Real-time update received:', payload);
-              setSession(payload.new as TypingSession);
-            }
-          )
-          .on(
-            'postgres_changes',
-            {
-              event: 'DELETE',
-              schema: 'public',
-              table: 'typing_sessions',
-              filter: `session_key=eq.${key}`,
-            },
-            () => {
-              console.log('Session deleted');
-              setError('This typing session has ended.');
-              setSession(null);
-            }
-          )
-          .subscribe();
-      } catch (err) {
-        console.error('Error fetching typing session:', err);
-        setError('Failed to load typing session.');
-        setLoading(false);
-      }
-    }
-
-    fetchAndSubscribe();
-
-    // Cleanup subscription on unmount
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [key]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -109,13 +39,13 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
     );
   }
 
-  if (error) {
+  if (sessionMissing) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-surface rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-foreground mb-2">Session Unavailable</h1>
-          <p className="text-text-secondary">{error}</p>
+          <p className="text-text-secondary">This typing session does not exist or has expired.</p>
         </div>
       </div>
     );

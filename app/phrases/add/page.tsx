@@ -2,13 +2,10 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Symbol } from '@/lib/models/Symbol';
-import { phraseStore } from '@/lib/stores/phraseStore';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { PhraseData } from '@/lib/models/Phrase';
+import { useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 import BackButton from '@/app/components/ui/BackButton';
 
 function AddPhraseForm() {
@@ -16,23 +13,32 @@ function AddPhraseForm() {
   const searchParams = useSearchParams();
   const boardId = searchParams.get('boardId');
   const [text, setText] = useState('');
-  const [symbol, setSymbol] = useState<Symbol | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const user = useAuth();
+
+  // Convex mutations
+  const addPhrase = useMutation(api.phrases.addPhrase);
+  const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.user?.id || !boardId) return;
+    if (!boardId) return;
 
     setLoading(true);
     try {
-      const phraseData: PhraseData = {
+      // Create the phrase
+      const phraseId = await addPhrase({
         text,
-        userId: user.user.id,
-        symbol_id: symbol?.id || undefined,
-      };
-      await phraseStore.getState().addPhrase(phraseData, boardId);
+        frequency: 0,
+        position: 0, // Will be adjusted by backend based on board
+      });
+
+      // Add it to the board
+      await addPhraseToBoard({
+        phraseId: phraseId as any,
+        boardId: boardId as any,
+      });
+
       router.back();
     } catch (error) {
       console.error('Error adding phrase:', error);
@@ -59,19 +65,8 @@ function AddPhraseForm() {
             required
           />
 
-          <div className="mb-6">
-            <label className="block text-gray-700 text-text-secondary text-sm font-bold mb-2">
-              Symbol
-            </label>
-            <SymbolSelector
-              symbol={symbol}
-              onSymbolSelect={setSymbol}
-            />
-            <p className="mt-1 text-sm text-gray-500 text-text-secondary">Optional - Select a symbol to represent this phrase</p>
-          </div>
-
           {error && (
-            <div className="mb-4 text-red-500  text-sm">
+            <div className="mb-4 text-red-500 text-sm">
               {error}
             </div>
           )}

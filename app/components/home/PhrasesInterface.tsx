@@ -1,94 +1,76 @@
 import { useRouter } from 'next/navigation';
-import { Phrase } from '@/lib/models/Phrase';
-import { PhraseBoard } from '@/lib/models/PhraseBoard';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
 import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
 import TypingArea from '../TypingArea';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
-import { phraseStore } from '@/lib/stores/phraseStore';
-import { databaseService } from '@/lib/services/DatabaseService';
-import { useAuth } from '@/app/contexts/AuthContext';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
+import type { BoardSummary, PhraseSummary } from '../phrases/types';
+import { useAuth } from '../../contexts/AuthContext';
+import AnimatedLoading from '../phrases/AnimatedLoading';
 
 export default function PhrasesInterface() {
   const router = useRouter();
-  const { user } = useAuth();
   const tts = useTTS();
+  const { user, loading: authLoading } = useAuth();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  const [boards, setBoards] = useState<PhraseBoard[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<PhraseBoard | null>(null);
-  const [phrases, setPhrases] = useState<Phrase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingPhrases, setLoadingPhrases] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [isReaderOpen, setIsReaderOpen] = useState(false);
 
+  const shouldLoadBoards = !authLoading && !!user;
+  const showAuthPrompt = !authLoading && !user;
+
+  // Fetch all boards from Convex
+  const boards = useQuery(
+    api.phraseBoards.getPhraseBoards,
+    shouldLoadBoards ? undefined : 'skip'
+  );
+
+  // Fetch the selected board with its phrases
+  const selectedBoardData = useQuery(
+    api.phraseBoards.getPhraseBoard,
+    shouldLoadBoards && selectedBoardId ? { id: selectedBoardId as any } : 'skip'
+  );
+
+  // Mutations
+  const addPhrase = useMutation(api.phrases.addPhrase);
+  const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
+
+  const loading = authLoading || (shouldLoadBoards && boards === undefined);
+  const loadingPhrases =
+    shouldLoadBoards && selectedBoardId !== null && selectedBoardData === undefined;
+
+  // Auto-select first board on load or use saved board
   useEffect(() => {
-    if (!user) return;
-
-    console.log('Fetching phrase boards for user:', user.id);
-    phraseStore.getState().fetchBoards(user.id)
-      .then(() => {
-        const boards = phraseStore.getState().boards;
-        setBoards(boards);
-        
-        // Try to get the saved board ID from localStorage
-        const savedBoardId = localStorage.getItem(`${user.id}_selectedBoardId`);
-        
-        if (savedBoardId && boards.length > 0) {
-          // Find the saved board in the loaded boards
-          const savedBoard = boards.find(board => board.id === savedBoardId);
-          if (savedBoard) {
-            setSelectedBoard(savedBoard);
-          } else {
-            // If saved board not found, select first board and update localStorage
-            setSelectedBoard(boards[0]);
-            localStorage.setItem(`${user.id}_selectedBoardId`, boards[0].id || '');
-          }
-        } else if (boards.length > 0) {
-          // No saved board or no boards, select first board
-          setSelectedBoard(boards[0]);
-          localStorage.setItem(`${user.id}_selectedBoardId`, boards[0].id || '');
-        }
-        
-        setLoading(false);
-      })
-      .catch((err: Error) => {
-        console.error('Error fetching boards:', err);
-        setError('Failed to load phrase boards');
-        setLoading(false);
-      });
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || !selectedBoard) return;
-
-    console.log('Fetching phrases for board:', selectedBoard.id);
-    setLoadingPhrases(true);
-    setPhrases([]); // Clear existing phrases while loading
-
-    if (selectedBoard.id) {
-      databaseService.getPhraseBoard(selectedBoard.id)
-        .then(async boardData => {
-          if (boardData) {
-            const board = await PhraseBoard.fromSupabase(boardData);
-            setPhrases(board.phrases);
-          }
-          setLoadingPhrases(false);
-        })
-        .catch(err => {
-          console.error('Error fetching board data:', err);
-          setError('Failed to load phrases');
-          setLoadingPhrases(false);
-        });
+    if (!shouldLoadBoards) {
+      setSelectedBoardId(null);
+      return;
     }
-  }, [user, selectedBoard]);
 
-  const handlePhrasePress = (phrase: Phrase) => {
+    if (!boards || boards.length === 0) {
+      setSelectedBoardId(null);
+      return;
+    }
+
+    // Try to get the saved board ID from localStorage
+    const savedBoardId = localStorage.getItem('selectedBoardId');
+
+    if (savedBoardId && boards.some(board => board._id === savedBoardId)) {
+      // Found the saved board
+      setSelectedBoardId(savedBoardId);
+    } else {
+      // No saved board or it doesn't exist, select first board
+      setSelectedBoardId(boards[0]._id);
+      localStorage.setItem('selectedBoardId', boards[0]._id);
+    }
+  }, [boards, shouldLoadBoards]);
+
+  const handlePhrasePress = (phrase: PhraseSummary) => {
     setTypingText(phrase.text);
     tts.speak(phrase.text);
   };
@@ -98,46 +80,46 @@ export default function PhrasesInterface() {
   };
 
   const handleAddPhrase = async () => {
-    if (!user || !selectedBoard) {
-      console.error('Cannot add phrase: no user or board selected');
+    if (!selectedBoardId) {
+      console.error('Cannot add phrase: no board selected');
       return;
     }
-    router.push(`/phrases/add?boardId=${selectedBoard.id}`);
+    router.push(`/phrases/add?boardId=${selectedBoardId}`);
   };
 
   const handleAddTypingAsPhrase = async () => {
-    if (!user || !selectedBoard?.id || !typingText.trim()) {
-      console.error('Cannot add phrase: no user, board selected, or empty text');
+    if (!selectedBoardId || !typingText.trim()) {
+      console.error('Cannot add phrase: no board selected or empty text');
       return;
     }
 
     try {
-      const phraseData = {
+      // Get the current number of phrases to set position
+      const currentPhrases = selectedBoardData?.phrase_board_phrases || [];
+      const position = currentPhrases.length;
+
+      // Create the phrase
+      const phraseId = await addPhrase({
         text: typingText,
-        userId: user.id,
-        boardId: selectedBoard.id,
-      };
+        frequency: 0,
+        position,
+      });
 
-      await phraseStore.getState().addPhrase(phraseData, selectedBoard.id);
+      // Add it to the board
+      await addPhraseToBoard({
+        phraseId: phraseId as any,
+        boardId: selectedBoardId as any,
+      });
+
       setTypingText(''); // Clear the typing area after adding
-
-      // Refresh the phrases list
-      if (selectedBoard.id) {
-        const boardData = await databaseService.getPhraseBoard(selectedBoard.id);
-        if (boardData) {
-          const board = await PhraseBoard.fromSupabase(boardData);
-          setPhrases(board.phrases);
-        }
-      }
     } catch (error) {
       console.error('Error adding phrase:', error);
-      setError('Failed to add phrase');
     }
   };
 
-  const handleEditPhrase = (phrase: Phrase) => {
-    if (!selectedBoard) return;
-    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoard.id}`);
+  const handleEditPhrase = (phrase: PhraseSummary) => {
+    if (!selectedBoardId) return;
+    router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoardId}`);
   };
 
   const handleAddBoard = () => {
@@ -156,28 +138,56 @@ export default function PhrasesInterface() {
     tts.speak(text);
   };
 
-  const handleSelectBoard = (board: PhraseBoard) => {
-    setSelectedBoard(board);
+  const handleSelectBoard = (board: any) => {
+    const boardId = typeof board === 'string' ? board : board.id;
+    setSelectedBoardId(boardId);
     // Save the selected board ID to localStorage
-    if (user && board.id) {
-      localStorage.setItem(`${user.id}_selectedBoardId`, board.id);
-    }
+    localStorage.setItem('selectedBoardId', boardId);
   };
 
-  if (error) {
-    return <div className="text-red-500 p-4">{error}</div>;
-  }
+  // Extract phrases from the board data
+  const phrases: PhraseSummary[] =
+    selectedBoardData?.phrase_board_phrases
+      ?.map((pbp: any) => pbp.phrase)
+      .filter(Boolean)
+      .map((phrase: any) => ({
+        id: String(phrase._id),
+        text: phrase.text,
+        frequency: phrase.frequency,
+      })) || [];
+
+  // Transform boards to match the expected format (PhraseBoard type)
+  const transformedBoards: BoardSummary[] =
+    boards?.map((board: any) => ({
+      id: String(board._id),
+      name: board.name,
+      position: board.position,
+      phrases: board._id === selectedBoardId ? phrases : [],
+    })) || [];
+
+  const selectedBoard = transformedBoards.find(board => board.id === selectedBoardId) || null;
 
   return (
     <>
       <div className="flex-none">
-        <TypingArea 
-          initialText={typingText} 
-          tts={tts} 
+        <TypingArea
+          initialText={typingText}
+          tts={tts}
           onChange={(text) => setTypingText(text)}
         />
       </div>
-      {boards.length === 0 ? (
+      {showAuthPrompt ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
+            <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
+          </div>
+        </div>
+      ) : loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <AnimatedLoading />
+        </div>
+      ) : transformedBoards.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
@@ -188,7 +198,7 @@ export default function PhrasesInterface() {
         <div className="flex-1 flex flex-col">
           <div className="flex-none">
             <BoardSelector
-              boards={boards}
+              boards={transformedBoards}
               selectedBoard={selectedBoard}
               isEditMode={isEditMode}
               isLoadingPhrases={loadingPhrases}
@@ -237,7 +247,7 @@ export default function PhrasesInterface() {
         onAddBoard={handleAddBoard}
         onEdit={handleEdit}
         onReader={handleReader}
-        boardPresent={boards.length > 0}
+        boardPresent={transformedBoards.length > 0}
         isEditMode={isEditMode}
       />
       <ReaderPopup
@@ -248,4 +258,4 @@ export default function PhrasesInterface() {
       />
     </>
   );
-} 
+}

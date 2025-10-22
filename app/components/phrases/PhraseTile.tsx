@@ -1,45 +1,28 @@
 'use client';
 
-import { Phrase } from '@/lib/models/Phrase';
 import { PencilIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
-import SymbolImage from '@/app/components/symbols/SymbolImage';
+import { useState } from 'react';
 
 interface PhraseTileProps {
-  phrase: Phrase
-  onPress: () => void
-  onEdit?: () => void
-  className?: string
+  phrase: {
+    id?: string;
+    text: string;
+    frequency?: number;
+  };
+  onPress: () => void;
+  onEdit?: () => void;
+  className?: string;
 }
 
 export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: PhraseTileProps) {
-  const [url, setUrl] = useState<string | null>(null);
-  const [imageError, setImageError] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-
-  useEffect(() => {
-    const fetchImageUrl = async () => {
-      try {
-        const symbol = await phrase.getSymbol()?.getImageURL();
-        if (symbol) {
-          setUrl(symbol);
-        }
-      } catch {
-        setImageError(true);
-      }
-    };
-    fetchImageUrl();
-  }, [phrase]);
 
   const handleClick = () => {
     if (onEdit) {
-      // In edit mode, clicking anywhere on the tile should edit
       onEdit();
     } else {
-      // Not in edit mode, use normal press behavior with visual feedback
       setIsSpeaking(true);
       onPress();
-      // Reset speaking state after a short delay
       setTimeout(() => setIsSpeaking(false), 800);
     }
   };
@@ -68,17 +51,10 @@ export default function PhraseTile({ phrase, onPress, onEdit, className = '' }: 
         </div>
       )}
       <div className="flex flex-col items-center justify-center w-full h-full">
-        {url && !imageError && (
-          <div className="mb-3">
-            <SymbolImage
-              url={url}
-              alt={`Symbol for ${phrase.text}`}
-              size="md"
-            />
-          </div>
-        )}
         <div className="text-center w-full">
-          <p className="text-foreground text-lg font-semibold line-clamp-2 px-2 leading-tight">{phrase.text}</p>
+          <p className="text-foreground text-lg font-semibold line-clamp-2 px-2 leading-tight">
+            {phrase.text}
+          </p>
         </div>
       </div>
     </div>

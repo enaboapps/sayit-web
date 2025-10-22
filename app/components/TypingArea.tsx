@@ -31,6 +31,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const { user } = useAuth();
   const { speak, isSpeaking, isAvailable } = tts;
   const typingShare = useTypingShare();
+  const shareableLink = typingShare.getShareableLink();
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('typingAreaVisible');
@@ -82,13 +83,14 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const handleShare = async () => {
     if (typingShare.isSharing) {
       setShowShareModal(true);
-    } else {
-      await typingShare.createSession();
-      if (typingShare.session) {
-        // Update with current text
-        typingShare.updateContent(text);
-        setShowShareModal(true);
-      }
+      return;
+    }
+
+    await typingShare.createSession();
+
+    if (typingShare.isSharing) {
+      typingShare.updateContent(text);
+      setShowShareModal(true);
     }
   };
 
@@ -373,9 +375,9 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
         />
       )}
 
-      {showShareModal && (
+      {showShareModal && shareableLink && (
         <ShareLinkModal
-          shareableLink={typingShare.getShareableLink() || ''}
+          shareableLink={shareableLink}
           onClose={() => setShowShareModal(false)}
           onEndSession={async () => {
             await typingShare.endSession();
