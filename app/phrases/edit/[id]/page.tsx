@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { phraseStore } from '@/lib/stores/phraseStore';
-import { Phrase } from '@/lib/models/Phrase';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
@@ -15,68 +14,56 @@ import SymbolSelector from '@/app/components/symbols/SymbolSelector';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [phrase, setPhrase] = useState<Phrase | null>(null);
   const [text, setText] = useState('');
   const [symbol, setSymbol] = useState<Symbol | null>(null);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
   const boardId = searchParams.get('boardId');
-  const { getPhrase, updatePhrase, deletePhrase } = phraseStore();
+
+  // Convex query and mutations
+  const phrase = useQuery(api.phrases.getPhrase, { id: resolvedParams.id as any });
+  const updatePhrase = useMutation(api.phrases.updatePhrase);
+  const deletePhrase = useMutation(api.phrases.deletePhrase);
+  const removePhraseFromBoard = useMutation(api.phraseBoards.removePhraseFromBoard);
+
+  const loading = phrase === undefined;
 
   useEffect(() => {
-    if (!user) {
-      router.push('/sign-in');
-      return;
-    }
     if (!boardId) {
       router.back();
       return;
     }
+  }, [boardId, router]);
 
-    const fetchPhrase = async () => {
-      try {
-        const userId = user.id || '';
-        const fetchedPhrase = await getPhrase(userId, boardId, resolvedParams.id);
-        setPhrase(fetchedPhrase || null);
-        setText(fetchedPhrase?.text || '');
-        if (fetchedPhrase?.symbol_id) {
-          const symbol = Symbol.fromId(fetchedPhrase.symbol_id);
-          if (symbol) {
-            await symbol.getImageURL();
-            setSymbol(symbol);
-          }
+  useEffect(() => {
+    if (phrase) {
+      setText(phrase.text);
+      if (phrase.symbolId) {
+        const sym = Symbol.fromId(phrase.symbolId);
+        if (sym) {
+          sym.getImageURL().then(() => {
+            setSymbol(sym);
+          });
         }
-      } catch (error) {
-        console.error('Error fetching phrase:', error);
-        setError('Failed to load phrase');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchPhrase();
-  }, [resolvedParams.id, user, router, getPhrase]);
+    }
+  }, [phrase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !boardId || !phrase) return;
+    if (!boardId || !phrase) return;
 
     setError(null);
     setSaving(true);
 
     try {
-      if (!phrase.id) throw new Error('Phrase ID is missing');
-
-      const updatedPhrase = new Phrase({
-        ...phrase,
+      await updatePhrase({
+        id: resolvedParams.id as any,
         text,
-        symbol_id: symbol?.id || null,
+        symbolId: symbol?.id || undefined,
       });
-      await updatePhrase(phrase.id, updatedPhrase);
       router.back();
     } catch (error) {
       console.error('Error updating phrase:', error);
@@ -87,10 +74,20 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   };
 
   const handleDelete = async () => {
-    if (!phrase || !boardId || !phrase.id) return;
+    if (!phrase || !boardId) return;
 
     try {
-      await deletePhrase(phrase.id, boardId);
+      // Remove from board first
+      await removePhraseFromBoard({
+        phraseId: resolvedParams.id as any,
+        boardId: boardId as any,
+      });
+
+      // Then delete the phrase
+      await deletePhrase({
+        id: resolvedParams.id as any,
+      });
+
       router.back();
     } catch (error) {
       console.error('Error deleting phrase:', error);

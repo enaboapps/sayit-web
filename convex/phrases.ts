@@ -17,6 +17,24 @@ export const getPhrases = query({
   },
 });
 
+// Query: Get a single phrase by ID
+export const getPhrase = query({
+  args: { id: v.id("phrases") },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const phrase = await ctx.db.get(args.id);
+    if (!phrase || phrase.userId !== identity.subject) {
+      throw new Error("Unauthorized");
+    }
+
+    return phrase;
+  },
+});
+
 // Mutation: Add a new phrase
 export const addPhrase = mutation({
   args: {

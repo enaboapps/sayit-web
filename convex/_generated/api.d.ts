@@ -8,13 +8,17 @@
  * @module
  */
 
+import type * as phraseBoards from "../phraseBoards.js";
+import type * as phrases from "../phrases.js";
+import type * as profiles from "../profiles.js";
+import type * as typingSessions from "../typingSessions.js";
+import type * as users from "../users.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as phrases from "../phrases.js";
-import type * as users from "../users.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -25,14 +29,21 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  phraseBoards: typeof phraseBoards;
   phrases: typeof phrases;
+  profiles: typeof profiles;
+  typingSessions: typeof typingSessions;
   users: typeof users;
 }>;
+declare const fullApiWithMounts: typeof fullApi;
+
 export declare const api: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "public">
 >;
 export declare const internal: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "internal">
 >;
+
+export declare const components: {};

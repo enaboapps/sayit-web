@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '@/app/contexts/AuthContext';
-import { phraseStore } from '@/lib/stores/phraseStore';
-import { PhraseBoard } from '@/lib/models/PhraseBoard';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
@@ -13,50 +12,37 @@ import BackButton from '@/app/components/ui/BackButton';
 
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const [board, setBoard] = useState<PhraseBoard | null>(null);
   const [name, setName] = useState('');
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { user } = useAuth();
+
+  // Convex query and mutations
+  const board = useQuery(api.phraseBoards.getPhraseBoard, { id: resolvedParams.id as any });
+  const updatePhraseBoard = useMutation(api.phraseBoards.updatePhraseBoard);
+  const deletePhraseBoard = useMutation(api.phraseBoards.deletePhraseBoard);
+
+  const loading = board === undefined;
 
   useEffect(() => {
-    if (!user) {
-      router.push('/sign-in');
-      return;
+    if (board) {
+      setName(board.name);
     }
-
-    const fetchBoard = async () => {
-      try {
-        const fetchedBoard = await phraseStore.getState().getPhraseBoard(user.id, resolvedParams.id);
-        setBoard(fetchedBoard);
-        setName(fetchedBoard?.name || '');
-      } catch (error) {
-        console.error('Error fetching board:', error);
-        setError('Failed to load board');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBoard();
-  }, [resolvedParams.id, user, router]);
+  }, [board]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !board) return;
+    if (!board) return;
 
     setSaving(true);
     setError(null);
 
     try {
-      const updatedBoard = new PhraseBoard({
-        ...board,
+      await updatePhraseBoard({
+        id: resolvedParams.id as any,
         name,
       });
-      await phraseStore.getState().updatePhraseBoard(user.id, resolvedParams.id, updatedBoard);
       router.back();
     } catch (error) {
       console.error('Error updating board:', error);
@@ -67,7 +53,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
   };
 
   const handleDelete = async () => {
-    if (!user || !board) return;
+    if (!board) return;
 
     if (!confirm('Are you sure you want to delete this board? All phrases in this board will be deleted.')) {
       return;
@@ -77,7 +63,9 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
     setError(null);
 
     try {
-      await phraseStore.getState().deletePhraseBoard(user.id, resolvedParams.id);
+      await deletePhraseBoard({
+        id: resolvedParams.id as any,
+      });
       router.back();
     } catch (error) {
       console.error('Error deleting board:', error);
@@ -98,7 +86,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
   if (!board) {
     return (
       <div className="min-h-screen bg-gray-100 bg-surface flex items-center justify-center">
-        <div className="text-red-600 ">Board not found</div>
+        <div className="text-red-600">Board not found</div>
       </div>
     );
   }
@@ -121,7 +109,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
           />
 
           {error && (
-            <div className="mb-4 text-red-500  text-sm">
+            <div className="mb-4 text-red-500 text-sm">
               {error}
             </div>
           )}
@@ -131,7 +119,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
               type="button"
               variant="ghost"
               onClick={handleDelete}
-              className="text-red-600  hover:text-red-700 "
+              className="text-red-600 hover:text-red-700"
               disabled={deleting}
             >
               <TrashIcon className="h-5 w-5 mr-2" />
