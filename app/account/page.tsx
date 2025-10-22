@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { authService } from '@/lib/auth';
+import { useClerk } from '@clerk/nextjs';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/app/components/ui/Button';
@@ -17,9 +17,9 @@ interface SubscriptionStatus {
 
 export default function AccountPage() {
   const { user } = useAuth();
+  const { signOut } = useClerk();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -55,25 +55,10 @@ export default function AccountPage() {
 
   const handleSignOut = async () => {
     setError(null);
-    setSuccess(null);
 
     try {
-      await authService.signOut();
+      await signOut();
       router.push('/');
-    } catch (error) {
-      setError((error as Error).message);
-    }
-  };
-
-  const handleResetPassword = async () => {
-    setError(null);
-    setSuccess(null);
-
-    if (!user?.email) return;
-
-    try {
-      await authService.sendPasswordResetEmail(user.email);
-      setSuccess('Password reset email sent! Please check your inbox.');
     } catch (error) {
       setError((error as Error).message);
     }
@@ -113,20 +98,9 @@ export default function AccountPage() {
                 <div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">Email</h2>
                   <p className="text-text-secondary">{user?.email}</p>
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold text-foreground mb-2">Password</h2>
-                  <p className="text-text-secondary mb-4">
-                    Change your password to keep your account secure.
+                  <p className="text-text-tertiary text-sm mt-2">
+                    To update your email or password, please use the Clerk account settings.
                   </p>
-                  <Button
-                    onClick={handleResetPassword}
-                    variant="ghost"
-                    size="sm"
-                  >
-                    Reset Password
-                  </Button>
                 </div>
 
                 <div>
@@ -194,17 +168,6 @@ export default function AccountPage() {
                     transition={{ duration: 0.3 }}
                   >
                     {error}
-                  </motion.div>
-                )}
-
-                {success && (
-                  <motion.div
-                    className="p-4 bg-success/10 border border-success/20 rounded-lg text-success"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {success}
                   </motion.div>
                 )}
 
