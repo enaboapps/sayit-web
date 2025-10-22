@@ -1,42 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { auth } from '@clerk/nextjs/server';
 import { nanoid } from 'nanoid';
+import { supabase } from '@/lib/supabase';
 
 export async function POST() {
   try {
-    const cookieStore = await cookies();
+    const { userId } = await auth();
 
-    // Debug: Log all cookies
-    const allCookies = cookieStore.getAll();
-    console.log('All cookies:', allCookies.map(c => c.name));
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            const value = cookieStore.get(name)?.value;
-            console.log(`Getting cookie ${name}:`, value ? 'found' : 'not found');
-            return value;
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            cookieStore.set({ name, value, ...options });
-          },
-          remove(name: string, options: CookieOptions) {
-            cookieStore.set({ name, value: '', ...options });
-          },
-        },
-      },
-    );
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    console.log('Auth check:', { user: user?.id, authError: authError?.message });
-
-    if (authError || !user) {
-      console.log('Authentication failed:', authError);
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -51,7 +22,7 @@ export async function POST() {
     const { data, error } = await supabase
       .from('typing_sessions')
       .insert([{
-        user_id: user.id,
+        user_id: userId,
         session_key: sessionKey,
         content: '',
         expires_at: expiresAt.toISOString(),

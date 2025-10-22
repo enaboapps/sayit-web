@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { auth } from '@clerk/nextjs/server';
 import { supabase } from '@/lib/supabase';
-import { getCurrentUser } from '@/lib/supabase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -9,8 +9,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(req: Request) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const { userId } = await auth();
+
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('stripe_customer_id')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (error || !profile?.stripe_customer_id) {
