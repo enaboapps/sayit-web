@@ -296,33 +296,35 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                   <span>Clear</span>
                 </div>
               </button>
-              {user && (
-                <button
-                  onClick={handleShare}
-                  className={`h-14 col-span-2 transition-colors duration-200 ${
-                    typingShare.isSharing
-                      ? 'bg-green-500 hover:bg-green-600 text-white'
-                      : 'bg-surface hover:bg-surface-hover text-text-secondary'
-                  }`}
-                  data-tooltip-id="share-tooltip"
-                  data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
-                  disabled={typingShare.isCreating}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {typingShare.isCreating ? (
-                      <>
-                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                        <span>Creating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShareIcon className="w-5 h-5" />
-                        <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
-                      </>
-                    )}
-                  </div>
-                </button>
-              )}
+            </div>
+          )}
+          {user && (
+            <div className="border-t border-border transition-colors duration-200">
+              <button
+                onClick={handleShare}
+                className={`h-14 w-full transition-colors duration-200 ${
+                  typingShare.isSharing
+                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                    : 'bg-surface hover:bg-surface-hover text-text-secondary'
+                }`}
+                data-tooltip-id="share-tooltip"
+                data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
+                disabled={typingShare.isCreating}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  {typingShare.isCreating ? (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShareIcon className="w-5 h-5" />
+                      <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
+                    </>
+                  )}
+                </div>
+              </button>
             </div>
           )}
         </div>
