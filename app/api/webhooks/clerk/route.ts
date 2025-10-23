@@ -90,6 +90,10 @@ export async function POST(req: Request) {
   if (eventType === 'user.deleted') {
     const { id } = evt.data;
 
+    if (!id) {
+      return new Response('Error: Missing user ID', { status: 400 });
+    }
+
     console.log('Deleting user profile:', id);
 
     // Optionally delete user profile from Supabase
