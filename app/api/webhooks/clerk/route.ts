@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     await convex.mutation(api.profiles.upsertProfile, {
       userId: id,
       email,
-      fullName: first_name && last_name ? `${first_name} ${last_name}` : null,
+      fullName: first_name && last_name ? `${first_name} ${last_name}` : undefined,
     });
 
     console.log('User profile created successfully');
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     await convex.mutation(api.profiles.upsertProfile, {
       userId: id,
       email,
-      fullName: first_name && last_name ? `${first_name} ${last_name}` : null,
+      fullName: first_name && last_name ? `${first_name} ${last_name}` : undefined,
     });
 
     console.log('User profile updated successfully');
