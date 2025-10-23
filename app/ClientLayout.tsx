@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
@@ -9,14 +9,18 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  // Initialize Convex client - memoize to avoid recreating on each render
+  const convex = useMemo(
+    () => new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!),
+    []
+  );
 
   useEffect(() => {
     // Store the current path in localStorage
