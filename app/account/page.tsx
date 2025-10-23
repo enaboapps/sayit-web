@@ -64,10 +64,17 @@ export default function AccountPage() {
             <div className="p-8">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-xl font-semibold text-foreground mb-2">Email</h2>
-                  <p className="text-text-secondary">{user?.email}</p>
+                  <h2 className="text-xl font-semibold text-foreground mb-3">Profile</h2>
+                  <p className="text-text-secondary mb-4">{user?.email}</p>
+                  <Button
+                    onClick={() => window.location.href = 'https://accounts.sayitaac.com/user'}
+                    variant="outline"
+                    size="lg"
+                  >
+                    Manage Account Settings
+                  </Button>
                   <p className="text-text-tertiary text-sm mt-2">
-                    To update your email or password, please use the Clerk account settings.
+                    Update your email, password, and security settings
                   </p>
                 </div>
 
