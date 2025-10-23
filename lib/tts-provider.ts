@@ -56,13 +56,8 @@ export class TTSProvider {
         this.isSpeaking = false;
         this.callbacks.onError?.(error);
       },
-      onVoicesChanged: (voices) => {
-        // Map web speech voices to unified format
-        const mappedVoices: TTSVoice[] = voices.map(voice => ({
-          id: voice.voiceURI,
-          name: `${voice.name} (${voice.lang})`,
-          provider: 'browser'
-        }));
+      onVoicesChanged: () => {
+        // Notify that voices have changed
         this.callbacks.onVoicesChanged?.(this.getAllVoices());
       }
     });
@@ -80,8 +75,8 @@ export class TTSProvider {
         this.isSpeaking = false;
         this.callbacks.onError?.(error);
       },
-      onVoicesChanged: (voices) => {
-        // Map ElevenLabs voices to unified format
+      onVoicesChanged: () => {
+        // Notify that voices have changed
         this.callbacks.onVoicesChanged?.(this.getAllVoices());
       }
     });

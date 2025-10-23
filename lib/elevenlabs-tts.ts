@@ -1,6 +1,5 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
 import { ElevenLabsClient } from 'elevenlabs';
-import type { Voice as ElevenLabsVoice } from 'elevenlabs/api';
 
 // Define interfaces for our types
 export interface Voice {
@@ -8,6 +7,7 @@ export interface Voice {
   name: string;
   preview_url?: string;
   description?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 
@@ -231,11 +231,12 @@ export class ElevenLabsTTS {
       };
 
       await this.audio.play();
-    } catch (error: any) {
+    } catch (error) {
       this.isSpeaking = false;
-      
+
       // Don't log or fallback if the request was intentionally aborted
-      if (error?.name === 'AbortError' || this.abortController?.signal.aborted) {
+      const err = error as Error & { name?: string };
+      if (err?.name === 'AbortError' || this.abortController?.signal.aborted) {
         console.log('Speech request was cancelled');
         return;
       }

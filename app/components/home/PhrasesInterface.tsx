@@ -1,6 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
 import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
@@ -34,7 +35,7 @@ export default function PhrasesInterface() {
   // Fetch the selected board with its phrases
   const selectedBoardData = useQuery(
     api.phraseBoards.getPhraseBoard,
-    shouldLoadBoards && selectedBoardId ? { id: selectedBoardId as any } : 'skip'
+    shouldLoadBoards && selectedBoardId ? { id: selectedBoardId as Id<'phraseBoards'> } : 'skip'
   );
 
   // Mutations
@@ -107,8 +108,8 @@ export default function PhrasesInterface() {
 
       // Add it to the board
       await addPhraseToBoard({
-        phraseId: phraseId as any,
-        boardId: selectedBoardId as any,
+        phraseId: phraseId as Id<'phrases'>,
+        boardId: selectedBoardId as Id<'phraseBoards'>,
       });
 
       setTypingText(''); // Clear the typing area after adding
@@ -138,7 +139,7 @@ export default function PhrasesInterface() {
     tts.speak(text);
   };
 
-  const handleSelectBoard = (board: any) => {
+  const handleSelectBoard = (board: BoardSummary | string) => {
     const boardId = typeof board === 'string' ? board : board.id;
     setSelectedBoardId(boardId);
     // Save the selected board ID to localStorage
@@ -148,8 +149,10 @@ export default function PhrasesInterface() {
   // Extract phrases from the board data
   const phrases: PhraseSummary[] =
     selectedBoardData?.phrase_board_phrases
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ?.map((pbp: any) => pbp.phrase)
       .filter(Boolean)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((phrase: any) => ({
         id: String(phrase._id),
         text: phrase.text,
@@ -158,6 +161,7 @@ export default function PhrasesInterface() {
 
   // Transform boards to match the expected format (PhraseBoard type)
   const transformedBoards: BoardSummary[] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     boards?.map((board: any) => ({
       id: String(board._id),
       name: board.name,

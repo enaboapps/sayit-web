@@ -22,9 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Transform Clerk user to our simplified format
   const user = clerkUser
     ? {
-        id: clerkUser.id,
-        email: clerkUser.primaryEmailAddress?.emailAddress || null,
-      }
+      id: clerkUser.id,
+      email: clerkUser.primaryEmailAddress?.emailAddress || null,
+    }
     : null;
 
   return (

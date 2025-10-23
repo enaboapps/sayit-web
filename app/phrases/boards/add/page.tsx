@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import { Textarea } from '@/app/components/ui/Textarea';
@@ -95,8 +96,8 @@ export default function AddBoardPage() {
           });
 
           await addPhraseToBoard({
-            phraseId: phraseId as any,
-            boardId: boardId as any,
+            phraseId: phraseId as Id<'phrases'>,
+            boardId: boardId as Id<'phraseBoards'>,
           });
         }
       }

@@ -76,7 +76,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
       // Remove from board first
       await removePhraseFromBoard({
         phraseId,
-        boardId: boardId as any,
+        boardId: boardId as Id<'phraseBoards'>,
       });
 
       // Then delete the phrase

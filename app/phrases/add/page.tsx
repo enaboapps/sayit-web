@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import BackButton from '@/app/components/ui/BackButton';
@@ -35,8 +36,8 @@ function AddPhraseForm() {
 
       // Add it to the board
       await addPhraseToBoard({
-        phraseId: phraseId as any,
-        boardId: boardId as any,
+        phraseId: phraseId as Id<'phrases'>,
+        boardId: boardId as Id<'phraseBoards'>,
       });
 
       router.back();
