@@ -5,12 +5,12 @@ export function useSubscription() {
 
   const loading = !isLoaded;
 
-  // Clerk stores subscription status in user public metadata
-  const subscriptionStatus = user?.publicMetadata?.subscriptionStatus as string | undefined;
-  const isActive = subscriptionStatus === 'active';
-
   // Check for bypass flag (for testing/admin purposes)
   const bypassEnabled = user?.publicMetadata?.bypassSubscriptionCheck === true;
+
+  // Clerk stores subscription status in user public metadata
+  const subscriptionStatus = user?.publicMetadata?.subscriptionStatus as string | undefined;
+  const isActive = subscriptionStatus === 'active' || bypassEnabled;
 
   return { isActive, loading, bypassEnabled };
 }
