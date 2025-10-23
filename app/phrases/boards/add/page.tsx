@@ -112,14 +112,14 @@ export default function AddBoardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 bg-surface">
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto p-6">
         <BackButton />
-        <h1 className="text-2xl font-bold text-gray-900 text-foreground mb-6">Create New Board</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-6">Create New Board</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 text-text-secondary mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-1">
               Board Name
             </label>
             <Input
@@ -137,12 +137,12 @@ export default function AddBoardPage() {
           >
             <SubscriptionWrapper
               fallback={
-                <div className="bg-gray-50 bg-surface p-6 rounded-lg text-center my-4">
-                  <svg className="w-12 h-12 mx-auto text-gray-400 text-text-tertiary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="bg-surface p-6 rounded-lg text-center my-4">
+                  <svg className="w-12 h-12 mx-auto text-text-tertiary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                   </svg>
-                  <h3 className="text-xl font-semibold text-gray-900 text-foreground mb-2">Pro Feature</h3>
-                  <p className="text-gray-600 text-text-secondary mb-6">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">Pro Feature</h3>
+                  <p className="text-text-secondary mb-6">
                     AI-Assisted Phrase Generation is a premium feature that helps you create relevant phrases quickly using AI.
                   </p>
                   <Button
@@ -155,12 +155,12 @@ export default function AddBoardPage() {
               }
             >
               <div className="space-y-4">
-                <p className="text-sm text-gray-500 text-text-secondary">
+                <p className="text-sm text-text-secondary">
                   Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
                 </p>
 
                 <div>
-                  <label htmlFor="prompt" className="block text-sm font-medium text-gray-700 text-text-secondary mb-1">
+                  <label htmlFor="prompt" className="block text-sm font-medium text-text-secondary mb-1">
                     Generation Prompt
                   </label>
                   <div className="space-y-4">

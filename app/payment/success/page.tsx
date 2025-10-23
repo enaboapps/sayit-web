@@ -20,7 +20,7 @@ export default function PaymentSuccessPage() {
   }, [countdown, router]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <div className="flex-1 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -28,8 +28,8 @@ export default function PaymentSuccessPage() {
           transition={{ duration: 0.5 }}
           className="max-w-md w-full"
         >
-          <motion.div 
-            className="bg-white p-8 rounded-xl shadow-lg"
+          <motion.div
+            className="bg-surface p-8 rounded-xl shadow-lg"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -38,34 +38,34 @@ export default function PaymentSuccessPage() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ 
+                transition={{
                   type: 'spring',
                   stiffness: 260,
                   damping: 20,
                   delay: 0.3
                 }}
-                className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4"
+                className="inline-flex items-center justify-center w-16 h-16 bg-green-500/20 rounded-full mb-4"
               >
-                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </motion.div>
-              
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-              <p className="text-lg text-gray-600 mb-6">
+
+              <h1 className="text-3xl font-bold text-foreground mb-2">Payment Successful!</h1>
+              <p className="text-lg text-text-secondary mb-6">
                 Thank you for subscribing to SayIt Pro.
               </p>
-              
-              <div className="mb-8 p-4 bg-gray-50 rounded-lg">
-                <p className="text-gray-700">
+
+              <div className="mb-8 p-4 bg-surface-hover rounded-lg">
+                <p className="text-text-secondary">
                   Your subscription has been activated and you now have access to all premium features.
                 </p>
               </div>
-              
-              <div className="text-sm text-gray-500 mb-6">
+
+              <div className="text-sm text-text-tertiary mb-6">
                 Redirecting to your account in {countdown} seconds...
               </div>
-              
+
               <div className="flex flex-col gap-3">
                 <Button
                   onClick={() => router.push('/account')}
@@ -74,7 +74,7 @@ export default function PaymentSuccessPage() {
                 >
                   Go to My Account
                 </Button>
-                
+
                 <Button
                   onClick={() => router.push('/')}
                   variant="outline"
@@ -90,4 +90,4 @@ export default function PaymentSuccessPage() {
       </div>
     </div>
   );
-} 
+}
