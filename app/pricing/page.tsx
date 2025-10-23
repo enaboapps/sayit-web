@@ -12,7 +12,7 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState<string>('');
   const [loadingPrice, setLoadingPrice] = useState(true);
-  
+
   // Use the specific price ID
   const priceId = 'price_1RKLysHFy05HLttRWb8mpW03';
 
@@ -67,13 +67,13 @@ export default function PricingPage() {
       });
 
       const data = await response.json();
-      
+
       if (data.error) {
         console.error('Error from API:', data.error);
         alert('There was an error creating your checkout session. Please try again later.');
         return;
       }
-      
+
       window.location.href = data.url;
     } catch (error) {
       console.error('Error:', error);
@@ -84,40 +84,40 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center"
         >
-          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+          <h1 className="text-4xl font-bold text-foreground mb-6">
             Upgrade to SayIt! Pro
           </h1>
-          <p className="text-xl text-gray-600 mb-12">
+          <p className="text-xl text-text-secondary mb-12">
             Unlock advanced AI features to enhance your communication
           </p>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className="max-w-4xl mx-auto rounded-xl shadow-lg overflow-hidden"
         >
-          <div className="bg-white p-8 lg:p-10">
+          <div className="bg-surface p-8 lg:p-10">
             <div className="lg:flex lg:items-start lg:justify-between">
               <div className="lg:max-w-3xl">
-                <h2 className="text-3xl font-bold text-gray-900">
+                <h2 className="text-3xl font-bold text-foreground">
                   Pro Plan
                 </h2>
-                <p className="mt-4 text-lg text-gray-600">
+                <p className="mt-4 text-lg text-text-secondary">
                   Our premium plan includes all the features you need to communicate effectively with advanced AI assistance.
                 </p>
-                
+
                 <div className="mt-8">
-                  <h3 className="text-lg font-semibold text-black mb-4">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
                     What&apos;s included
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,33 +131,33 @@ export default function PricingPage() {
                     ].map((feature, index) => (
                       <div key={index} className="flex items-start">
                         <div className="flex-shrink-0 mt-1">
-                          <svg className="h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="h-5 w-5 text-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                         </div>
-                        <p className="ml-3 text-gray-700">{feature}</p>
+                        <p className="ml-3 text-text-secondary">{feature}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-8 lg:mt-0 lg:ml-8 lg:min-w-[250px]">
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold text-black mb-2">
+                <div className="bg-surface-hover p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     Monthly subscription
                   </h3>
                   <div className="mt-2 flex items-baseline">
                     {loadingPrice ? (
-                      <span className="text-2xl font-medium">Loading...</span>
+                      <span className="text-2xl font-medium text-foreground">Loading...</span>
                     ) : (
                       <>
-                        <span className="text-5xl font-bold text-black">{price}</span>
-                        <span className="ml-1 text-xl font-medium text-gray-500">/mo</span>
+                        <span className="text-5xl font-bold text-foreground">{price}</span>
+                        <span className="ml-1 text-xl font-medium text-text-tertiary">/mo</span>
                       </>
                     )}
                   </div>
-                  <p className="mt-3 text-sm text-gray-500">
+                  <p className="mt-3 text-sm text-text-tertiary">
                     Cancel anytime. No long-term contracts.
                   </p>
                   <div className="mt-6">
@@ -171,9 +171,9 @@ export default function PricingPage() {
                     </Button>
                   </div>
                   <div className="mt-4 text-center">
-                    <a 
-                      href="#" 
-                      className="text-sm font-medium text-black hover:underline"
+                    <a
+                      href="#"
+                      className="text-sm font-medium text-foreground hover:underline"
                     >
                       Learn more about our subscription
                     </a>
@@ -186,4 +186,4 @@ export default function PricingPage() {
       </div>
     </div>
   );
-} 
+}

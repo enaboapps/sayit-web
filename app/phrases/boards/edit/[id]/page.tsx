@@ -85,27 +85,27 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 bg-surface flex items-center justify-center">
-        <div className="text-gray-600 text-text-secondary">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-text-secondary">Loading...</div>
       </div>
     );
   }
 
   if (!board) {
     return (
-      <div className="min-h-screen bg-gray-100 bg-surface flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-red-600">Board not found</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 bg-surface">
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <BackButton />
-        <h1 className="text-3xl font-bold text-gray-900 text-foreground mt-4">Edit Board</h1>
+        <h1 className="text-3xl font-bold text-foreground mt-4">Edit Board</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white bg-surface shadow-md rounded-lg p-6 mt-6">
+        <form onSubmit={handleSubmit} className="bg-surface shadow-md rounded-lg p-6 mt-6">
           <Input
             id="name"
             type="text"
