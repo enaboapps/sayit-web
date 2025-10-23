@@ -59,29 +59,6 @@ export const upsertProfile = mutation({
   },
 });
 
-// Mutation: Update subscription status
-export const updateSubscription = mutation({
-  args: {
-    userId: v.string(),
-    subscriptionStatus: v.optional(v.string()),
-    subscriptionCancelAtPeriodEnd: v.optional(v.boolean()),
-    stripeCustomerId: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
-      .first();
-
-    if (!profile) {
-      throw new Error("Profile not found");
-    }
-
-    const { userId, ...updates } = args;
-    await ctx.db.patch(profile._id, updates);
-  },
-});
-
 // Mutation: Delete user profile
 export const deleteProfile = mutation({
   args: {
@@ -99,7 +76,8 @@ export const deleteProfile = mutation({
   },
 });
 
-// Query: Check subscription status
+// Query: Check subscription status (now uses Clerk metadata via hook)
+// This query is kept for backward compatibility but primarily returns bypass status
 export const getSubscriptionStatus = query({
   handler: async (ctx) => {
     const identity = await getUserIdentity(ctx);
@@ -117,17 +95,10 @@ export const getSubscriptionStatus = query({
     }
 
     const bypassEnabled = profile.bypassSubscriptionCheck ?? false;
-    const isActive =
-      bypassEnabled ||
-      profile.subscriptionStatus === "active" ||
-      profile.subscriptionStatus === "trialing";
 
     return {
-      isActive,
+      isActive: bypassEnabled, // Only return true if bypass is enabled
       bypassEnabled,
-      status: profile.subscriptionStatus,
-      cancelAtPeriodEnd: profile.subscriptionCancelAtPeriodEnd,
-      stripeCustomerId: profile.stripeCustomerId,
     };
   },
 });

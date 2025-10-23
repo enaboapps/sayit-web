@@ -6,9 +6,6 @@ export default defineSchema({
     userId: v.string(), // Clerk user ID
     email: v.string(),
     fullName: v.optional(v.string()),
-    subscriptionStatus: v.optional(v.string()),
-    subscriptionCancelAtPeriodEnd: v.optional(v.boolean()),
-    stripeCustomerId: v.optional(v.string()),
     bypassSubscriptionCheck: v.optional(v.boolean()),
   }).index("by_user_id", ["userId"]),
 
