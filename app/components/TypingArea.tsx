@@ -122,10 +122,10 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
 
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
-    
+
     setIsFixingText(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/fix-text', {
         method: 'POST',
@@ -141,7 +141,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       }
 
       const data = await response.json();
-      
+
       if (data.text && data.text !== text) {
         setText(data.text);
         onChange?.(data.text);
@@ -168,11 +168,11 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   return (
     <div className="flex flex-col">
       {isVisible && (
-        <div className="flex flex-col bg-surface shadow-lg border border-border overflow-hidden transition-colors duration-200">
+        <div className="flex flex-col bg-surface shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-3xl">
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-0 resize-none p-6 overflow-auto transition-all duration-300`}
+              className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl`}
               value={text}
               onChange={(e) => {
                 setText(e.target.value);
@@ -211,131 +211,119 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
               }}
             />
             {error && (
-              <div className="absolute bottom-0 left-0 right-0 bg-red-50 text-red-700 p-3 text-sm border-t border-red-100 transition-colors duration-200">
+              <div className="absolute bottom-0 left-0 right-0 bg-red-500/10 text-red-400 p-4 text-sm rounded-b-3xl backdrop-blur-sm transition-all duration-200">
                 {error}
               </div>
             )}
           </div>
           {text.trim() && (
-            <div className="grid grid-cols-2 gap-[1px] bg-background border-t border-border transition-colors duration-200">
+            <div className="flex flex-wrap gap-2 p-4 bg-surface-hover/50 transition-colors duration-200">
               <button
                 onClick={handleSpeak}
-                className={`h-14 transition-colors duration-200 ${
+                className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                   isSpeaking
-                    ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                    : 'bg-surface hover:bg-surface-hover text-text-secondary'
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+                    : 'bg-surface hover:bg-primary-500/10 text-foreground hover:text-primary-500'
                 }`}
                 data-tooltip-id="speak-tooltip"
                 data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
                 disabled={!isAvailable || !text.trim()}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <ChatBubbleLeftIcon className="w-5 h-5" />
-                  <span>Speak</span>
-                </div>
+                <ChatBubbleLeftIcon className="w-5 h-5" />
+                <span>Speak</span>
               </button>
               <button
                 onClick={handleFleshOut}
-                className="h-14 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200"
+                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-purple-500/10 text-foreground hover:text-purple-500"
                 data-tooltip-id="flesh-out-tooltip"
                 data-tooltip-content="Flesh out with AI"
                 disabled={!text.trim()}
               >
-                <div className="flex items-center justify-center gap-2">
-                  <ArrowPathIcon className="w-5 h-5" />
-                  <span>Flesh Out</span>
-                </div>
+                <ArrowPathIcon className="w-5 h-5" />
+                <span>Flesh Out</span>
               </button>
               <SubscriptionWrapper
                 fallback={
                   <button
                     onClick={() => window.location.href = '/pricing'}
-                    className="h-14 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200"
+                    className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-amber-500/10 text-foreground hover:text-amber-500"
                     data-tooltip-id="fix-text-tooltip"
                     data-tooltip-content="Fix Text (Pro feature)"
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <SparklesIcon className="w-5 h-5" />
-                      <span>Fix Text</span>
-                    </div>
+                    <SparklesIcon className="w-5 h-5" />
+                    <span>Fix Text</span>
                   </button>
                 }
               >
                 <button
                   onClick={handleFixText}
-                  className={`h-14 transition-colors duration-200 ${
+                  className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                     isFixingText
-                      ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                      : 'bg-surface hover:bg-surface-hover text-text-secondary'
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                      : 'bg-surface hover:bg-purple-500/10 text-foreground hover:text-purple-500'
                   }`}
                   data-tooltip-id="fix-text-tooltip"
                   data-tooltip-content="Fix grammar and spelling"
                   disabled={!text.trim() || isFixingText}
                 >
-                  <div className="flex items-center justify-center gap-2">
-                    {isFixingText ? (
-                      <>
-                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                        <span>Fixing...</span>
-                      </>
-                    ) : (
-                      <>
-                        <SparklesIcon className="w-5 h-5" />
-                        <span>Fix Text</span>
-                      </>
-                    )}
-                  </div>
+                  {isFixingText ? (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                      <span>Fixing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <SparklesIcon className="w-5 h-5" />
+                      <span>Fix Text</span>
+                    </>
+                  )}
                 </button>
               </SubscriptionWrapper>
               <button
                 onClick={handleClear}
-                className="h-14 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200"
+                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-red-500/10 text-foreground hover:text-red-500"
                 data-tooltip-id="clear-tooltip"
                 data-tooltip-content="Clear"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <XMarkIcon className="w-5 h-5" />
-                  <span>Clear</span>
-                </div>
+                <XMarkIcon className="w-5 h-5" />
+                <span>Clear</span>
               </button>
             </div>
           )}
           {user && (
-            <div className="border-t border-border transition-colors duration-200">
+            <div className="p-4 pt-0 bg-surface-hover/50 transition-colors duration-200">
               <button
                 onClick={handleShare}
-                className={`h-14 w-full transition-colors duration-200 ${
+                className={`w-full h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                   typingShare.isSharing
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-surface hover:bg-surface-hover text-text-secondary'
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                    : 'bg-surface hover:bg-green-500/10 text-foreground hover:text-green-500'
                 }`}
                 data-tooltip-id="share-tooltip"
                 data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
                 disabled={typingShare.isCreating}
               >
-                <div className="flex items-center justify-center gap-2">
-                  {typingShare.isCreating ? (
-                    <>
-                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShareIcon className="w-5 h-5" />
-                      <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
-                    </>
-                  )}
-                </div>
+                {typingShare.isCreating ? (
+                  <>
+                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShareIcon className="w-5 h-5" />
+                    <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
+                  </>
+                )}
               </button>
             </div>
           )}
         </div>
       )}
-      <div className="flex">
+      <div className="flex gap-2 mt-2">
         {isVisible && (
           <button
             onClick={toggleExpanded}
-            className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-r-0 border-border"
+            className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground transition-all duration-200 flex items-center justify-center rounded-full shadow-md hover:shadow-lg hover:scale-105"
             data-tooltip-id="expand-tooltip"
             data-tooltip-content={isExpanded ? 'Collapse typing area' : 'Expand typing area'}
           >
@@ -348,7 +336,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
         )}
         <button
           onClick={toggleVisibility}
-          className={`h-10 bg-surface hover:bg-surface-hover text-text-secondary transition-colors duration-200 flex items-center justify-center shadow-sm border border-t-0 border-border ${isVisible ? 'flex-1' : 'w-full'}`}
+          className={`h-10 bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground transition-all duration-200 flex items-center justify-center rounded-full shadow-md hover:shadow-lg hover:scale-105 ${isVisible ? 'flex-1' : 'w-full'}`}
           data-tooltip-id="toggle-tooltip"
           data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
         >
