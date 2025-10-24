@@ -33,16 +33,16 @@ export function Collapsible({
   };
 
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn('w-full bg-surface rounded-3xl shadow-md hover:shadow-lg transition-all duration-300', className)}>
       <button
         type="button"
         onClick={handleClick}
-        className="flex w-full items-center justify-between py-3 px-4 text-left hover:bg-surface-hover rounded-lg transition-colors duration-200"
+        className="flex w-full items-center justify-between py-4 px-6 text-left hover:bg-surface-hover rounded-3xl transition-all duration-300"
       >
-        <span className="text-sm font-medium text-foreground">{title}</span>
+        <span className="text-sm font-semibold text-foreground">{title}</span>
         <ChevronDownIcon
           className={cn(
-            'h-5 w-5 text-text-secondary transition-transform duration-200',
+            'h-5 w-5 text-text-secondary transition-transform duration-300',
             isOpen ? 'rotate-180' : '',
           )}
         />
@@ -51,10 +51,10 @@ export function Collapsible({
         ref={contentRef}
         style={{ height: contentHeight }}
         className={cn(
-          'overflow-hidden transition-all duration-200',
+          'overflow-hidden transition-all duration-300',
         )}
       >
-        <div className="py-6 px-4 text-text-secondary">{children}</div>
+        <div className="pb-6 px-6 text-text-secondary">{children}</div>
       </div>
     </div>
   );

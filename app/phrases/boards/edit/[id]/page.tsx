@@ -105,7 +105,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
         <BackButton />
         <h1 className="text-3xl font-bold text-foreground mt-4">Edit Board</h1>
 
-        <form onSubmit={handleSubmit} className="bg-surface shadow-md rounded-lg p-6 mt-6">
+        <form onSubmit={handleSubmit} className="bg-surface shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-3xl p-8 mt-6">
           <Input
             id="name"
             type="text"
@@ -117,7 +117,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
           />
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm">
+            <div className="mb-4 text-red-500 text-sm bg-red-500/10 px-4 py-3 rounded-3xl">
               {error}
             </div>
           )}
