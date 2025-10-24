@@ -19,10 +19,10 @@ type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
   ssr: false,
   loading: () => (
-    <div className="p-6">
-      <div className="animate-pulse h-6 w-48 bg-surface-hover rounded mb-4"></div>
-      <div className="animate-pulse h-4 w-full bg-surface-hover rounded mb-2"></div>
-      <div className="animate-pulse h-10 w-full bg-surface-hover rounded mb-4"></div>
+    <div className="space-y-4">
+      <div className="animate-pulse h-6 w-48 bg-gradient-to-r from-surface-hover to-surface rounded-3xl"></div>
+      <div className="animate-pulse h-4 w-full bg-gradient-to-r from-surface-hover to-surface rounded-3xl"></div>
+      <div className="animate-pulse h-12 w-full bg-gradient-to-r from-surface-hover to-surface rounded-3xl"></div>
     </div>
   )
 });
@@ -40,11 +40,11 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-surface-hover rounded w-48 mb-8"></div>
+          <div className="space-y-8">
+            <div className="animate-pulse h-10 bg-gradient-to-r from-surface-hover to-surface rounded-3xl w-48"></div>
             <div className="space-y-6">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-32 bg-surface-hover rounded-xl"></div>
+                <div key={i} className="animate-pulse h-40 bg-gradient-to-r from-surface-hover to-surface rounded-3xl shadow-2xl"></div>
               ))}
             </div>
           </div>
