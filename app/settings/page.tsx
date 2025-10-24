@@ -77,10 +77,7 @@ export default function SettingsPage() {
               description="Adjust the size of text in the typing area"
               icon={<Cog6ToothIcon className="w-6 h-6" />}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-text-secondary">
-                  Current size: {settings.textSize}
-                </span>
+              <div className="flex justify-end">
                 <Dropdown
                   options={[
                     { value: 'small', label: 'Small' },
@@ -100,10 +97,7 @@ export default function SettingsPage() {
               description="Choose what happens when you press Enter in the typing area"
               icon={<Cog6ToothIcon className="w-6 h-6" />}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-text-secondary">
-                  Current behavior: {settings.enterKeyBehavior.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                </span>
+              <div className="flex justify-end">
                 <Dropdown
                   options={[
                     { value: 'newline', label: 'New Line' },
