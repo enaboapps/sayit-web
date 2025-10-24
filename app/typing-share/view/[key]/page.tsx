@@ -42,9 +42,11 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
   if (sessionMissing) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-surface rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Session Unavailable</h1>
+        <div className="bg-surface rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
+          <div className="mx-auto w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mb-6">
+            <ExclamationTriangleIcon className="w-10 h-10 text-red-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Session Unavailable</h1>
           <p className="text-text-secondary">This typing session does not exist or has expired.</p>
         </div>
       </div>
@@ -54,16 +56,16 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="bg-surface rounded-lg shadow-lg border border-border">
-          <div className="border-b border-border p-4 sm:p-6">
-            <h1 className="text-2xl font-bold text-foreground">Live Typing Share</h1>
-            <p className="text-text-secondary text-sm mt-1">
+        <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <div className="p-6 sm:p-8">
+            <h1 className="text-3xl font-bold text-foreground">Live Typing Share</h1>
+            <p className="text-text-secondary mt-2">
               You are viewing a live typing session. Updates appear in real-time.
             </p>
           </div>
 
-          <div className="p-6 sm:p-8">
-            <div className="bg-background border border-border rounded-lg p-6 min-h-[20rem]">
+          <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+            <div className="bg-background rounded-3xl shadow-md p-8 min-h-[20rem]">
               {session?.content !== undefined && session?.content !== null ? (
                 <p
                   className="text-foreground whitespace-pre-wrap break-words"
@@ -80,32 +82,32 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
               )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="mt-6 flex items-center justify-between">
+              <div className="flex items-center gap-3 bg-green-500/10 px-4 py-2 rounded-3xl">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-text-secondary">Connected</span>
+                <span className="text-sm font-semibold text-green-500">Connected</span>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-text-secondary mr-2">Font Size</span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-text-secondary">Font Size</span>
                 <button
                   onClick={decreaseFontSize}
-                  className="w-8 h-8 flex items-center justify-center bg-surface hover:bg-surface-hover text-text-secondary border border-border rounded transition-colors"
+                  className="w-10 h-10 flex items-center justify-center bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
                   aria-label="Decrease font size"
                   disabled={fontSize <= 12}
                 >
-                  <MinusIcon className="w-4 h-4" />
+                  <MinusIcon className="w-5 h-5" />
                 </button>
-                <span className="text-sm text-text-secondary min-w-[3rem] text-center">
+                <span className="text-sm font-semibold text-foreground min-w-[3rem] text-center">
                   {fontSize}px
                 </span>
                 <button
                   onClick={increaseFontSize}
-                  className="w-8 h-8 flex items-center justify-center bg-surface hover:bg-surface-hover text-text-secondary border border-border rounded transition-colors"
+                  className="w-10 h-10 flex items-center justify-center bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
                   aria-label="Increase font size"
                   disabled={fontSize >= 64}
                 >
-                  <PlusIcon className="w-4 h-4" />
+                  <PlusIcon className="w-5 h-5" />
                 </button>
               </div>
             </div>
