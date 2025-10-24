@@ -11,7 +11,7 @@ export default function SupportPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-surface rounded-xl shadow-lg p-8 mb-8"
+          className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 p-8 mb-8"
         >
           <h1 className="text-3xl font-bold text-foreground mb-6">Support</h1>
 
@@ -21,14 +21,14 @@ export default function SupportPage() {
               Have questions or need help with SayIt!? We're here to help!
             </p>
             <p className="text-text-secondary mb-6">
-              Email: <a href="mailto:enaboapps@gmail.com" className="text-text-secondary hover:underline">enaboapps@gmail.com</a>
+              Email: <a href="mailto:enaboapps@gmail.com" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">enaboapps@gmail.com</a>
             </p>
 
             <div className="mt-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">Quick Links</h2>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/privacy" className="text-text-secondary hover:text-foreground">
+                  <Link href="/privacy" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">
                     Privacy Policy
                   </Link>
                 </li>
@@ -41,7 +41,7 @@ export default function SupportPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-surface rounded-xl shadow-lg p-8"
+          className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 p-8"
         >
           <h2 className="text-2xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
 
