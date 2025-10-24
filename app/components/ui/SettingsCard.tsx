@@ -8,24 +8,24 @@ interface SettingsCardProps {
   className?: string;
 }
 
-export function SettingsCard({ 
-  title, 
-  description, 
-  children, 
-  icon, 
-  className = '' 
+export function SettingsCard({
+  title,
+  description,
+  children,
+  icon,
+  className = ''
 }: SettingsCardProps) {
   return (
-    <div className={`bg-surface rounded-xl shadow-sm border border-border overflow-hidden ${className}`}>
-      <div className="px-6 py-4 border-b border-border">
-        <div className="flex items-center space-x-3">
+    <div className={`bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300 ${className}`}>
+      <div className="px-8 py-6">
+        <div className="flex items-center space-x-4 mb-6">
           {icon && (
-            <div className="flex-shrink-0 text-text-secondary">
+            <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-3xl">
               {icon}
             </div>
           )}
           <div>
-            <h3 className="text-lg font-medium text-foreground">
+            <h3 className="text-lg font-semibold text-foreground">
               {title}
             </h3>
             {description && (
@@ -35,9 +35,9 @@ export function SettingsCard({
             )}
           </div>
         </div>
-      </div>
-      <div className="px-6 py-4">
-        {children}
+        <div>
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -13,12 +13,12 @@ export default function BackButton({ className = '' }: BackButtonProps) {
 
   return (
     <Button
-      variant="ghost"
+      variant="secondary"
       onClick={() => router.back()}
-      className={`flex items-center hover:bg-gray-100 hover:bg-surface-hover hover:text-gray-900 hover:text-foreground ${className}`}
+      className={`gap-2 ${className}`}
     >
-      <ArrowLeftIcon className="h-5 w-5 mr-2 text-gray-900 text-foreground" />
-      <span className="text-gray-900 text-foreground">Back</span>
+      <ArrowLeftIcon className="h-5 w-5" />
+      <span>Back</span>
     </Button>
   );
 } 
