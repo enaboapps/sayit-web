@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { Button } from '@/app/components/ui/Button';
 
 export default function OfflinePage() {
   const handleRetry = useCallback(() => {
@@ -8,17 +10,25 @@ export default function OfflinePage() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <h1 className="text-2xl font-bold mb-4">You're offline</h1>
-      <p className="text-center mb-4">
-        Please check your internet connection and try again.
-      </p>
-      <button
-        onClick={handleRetry}
-        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-      >
-        Retry
-      </button>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
+      <div className="bg-surface rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
+        <div className="mb-6">
+          <div className="mx-auto w-20 h-20 bg-primary-500/10 rounded-3xl flex items-center justify-center">
+            <ArrowPathIcon className="w-10 h-10 text-primary-500" />
+          </div>
+        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-4">You're Offline</h1>
+        <p className="text-text-secondary mb-8">
+          Please check your internet connection and try again.
+        </p>
+        <Button
+          onClick={handleRetry}
+          className="w-full gap-2"
+        >
+          <ArrowPathIcon className="w-5 h-5" />
+          <span>Retry Connection</span>
+        </Button>
+      </div>
     </div>
   );
 } 

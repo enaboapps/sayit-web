@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-surface rounded-xl shadow-lg p-8"
+          className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 p-8"
         >
           <h1 className="text-3xl font-bold text-foreground mb-6">Privacy Policy</h1>
 
@@ -76,7 +76,7 @@ export default function PrivacyPolicyPage() {
 
             <h2 className="text-xl font-semibold text-foreground mt-8 mb-4">8. Contact Us</h2>
             <p className="text-text-secondary">
-              If you have any questions about this Privacy Policy, please contact us at <a href="mailto:enaboapps@gmail.com" className="text-text-secondary hover:underline">enaboapps@gmail.com</a>.
+              If you have any questions about this Privacy Policy, please contact us at <a href="mailto:enaboapps@gmail.com" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">enaboapps@gmail.com</a>.
             </p>
           </div>
         </motion.div>
