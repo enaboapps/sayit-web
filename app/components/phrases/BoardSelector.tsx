@@ -8,7 +8,6 @@ interface BoardSelectorProps {
   boards: BoardSummary[];
   selectedBoard: BoardSummary | null;
   isEditMode: boolean;
-  isLoadingPhrases?: boolean;
   onSelectBoard: (board: BoardSummary) => void;
   onEditBoard: (boardId: string) => void;
 }
@@ -17,7 +16,6 @@ export default function BoardSelector({
   boards,
   selectedBoard,
   isEditMode,
-  isLoadingPhrases = false,
   onSelectBoard,
   onEditBoard,
 }: BoardSelectorProps) {
@@ -28,9 +26,9 @@ export default function BoardSelector({
   // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
-      <div className="flex items-center bg-surface mb-2">
+      <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl mb-4 transition-all duration-300">
         <div
-          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-surface-hover/50 transition-colors duration-200"
+          className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
           onClick={() => {
             if (isEditMode && selectedBoard) {
               onEditBoard(selectedBoard.id);
@@ -38,21 +36,10 @@ export default function BoardSelector({
           }}
         >
           <div className="flex items-center space-x-2">
-            <div>
-              <h2 className="font-medium text-foreground text-sm">{selectedBoard?.name}</h2>
-              <p className="text-xs text-text-secondary">
-                {isLoadingPhrases ? (
-                  <span className="inline-block w-16 h-3 bg-surface-hover rounded animate-pulse" />
-                ) : selectedBoard?.phrases.length === 0 ? (
-                  <span className="text-text-secondary">Empty board</span>
-                ) : (
-                  `${selectedBoard?.phrases.length} ${selectedBoard?.phrases.length === 1 ? 'phrase' : 'phrases'}`
-                )}
-              </p>
-            </div>
+            <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
           </div>
           {isEditMode && (
-            <PencilIcon className="h-4 w-4 text-text-secondary" />
+            <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
           )}
         </div>
       </div>
@@ -62,24 +49,13 @@ export default function BoardSelector({
   // If there are multiple boards, show a button to open the popup
   return (
     <>
-      <div className="flex items-center bg-surface mb-2">
+      <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl mb-4 transition-all duration-300">
         <div
-          className="flex-1 flex items-center justify-between p-3 min-h-[40px] cursor-pointer hover:bg-surface-hover/50 transition-colors duration-200"
+          className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
           onClick={() => setIsPopupOpen(true)}
         >
           <div className="flex items-center space-x-2">
-            <div>
-              <h2 className="font-medium text-foreground text-sm">{selectedBoard?.name}</h2>
-              <p className="text-xs text-text-secondary">
-                {isLoadingPhrases ? (
-                  <span className="inline-block w-16 h-3 bg-surface-hover rounded animate-pulse" />
-                ) : selectedBoard?.phrases.length === 0 ? (
-                  <span className="text-text-secondary">Empty board</span>
-                ) : (
-                  `${selectedBoard?.phrases.length} ${selectedBoard?.phrases.length === 1 ? 'phrase' : 'phrases'}`
-                )}
-              </p>
-            </div>
+            <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
           </div>
           <div className="flex items-center space-x-1">
             {isEditMode && (
@@ -93,7 +69,7 @@ export default function BoardSelector({
                   }
                 }}
               >
-                <PencilIcon className="h-4 w-4 text-text-secondary" />
+                <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
               </Button>
             )}
             <Button
@@ -104,7 +80,7 @@ export default function BoardSelector({
                 setIsPopupOpen(true);
               }}
             >
-              <span className="text-text-secondary">▼</span>
+              <span className="text-text-secondary hover:text-foreground transition-colors duration-200 text-lg">▼</span>
             </Button>
           </div>
         </div>
@@ -114,7 +90,6 @@ export default function BoardSelector({
         boards={boards}
         selectedBoard={selectedBoard}
         isEditMode={isEditMode}
-        isLoadingPhrases={isLoadingPhrases}
         isOpen={isPopupOpen}
         onClose={() => setIsPopupOpen(false)}
         onSelectBoard={onSelectBoard}
