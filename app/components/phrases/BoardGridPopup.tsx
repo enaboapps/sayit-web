@@ -50,10 +50,10 @@ export default function BoardGridPopup({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-black p-8 text-left align-middle shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-surface p-8 text-left align-middle shadow-2xl transition-all">
                 <Dialog.Title
                   as="h3"
-                  className="text-2xl font-bold leading-6 text-white mb-6"
+                  className="text-2xl font-bold leading-6 text-foreground mb-6"
                 >
                   Select a Board
                 </Dialog.Title>
@@ -64,8 +64,8 @@ export default function BoardGridPopup({
                       key={board.id}
                       className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                         selectedBoard?.id === board.id
-                          ? 'border-primary-500 bg-primary-500/20 shadow-lg'
-                          : 'border-gray-700 hover:border-primary-300 hover:shadow-md'
+                          ? 'border-primary-500 bg-primary-500/10 shadow-lg'
+                          : 'border-border hover:border-primary-300 hover:shadow-md'
                       }`}
                       onClick={() => {
                         onSelectBoard(board);
@@ -74,7 +74,7 @@ export default function BoardGridPopup({
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-white text-base">{board.name}</h4>
+                          <h4 className="font-semibold text-foreground text-base">{board.name}</h4>
                         </div>
                         {isEditMode && (
                           <button
@@ -82,9 +82,9 @@ export default function BoardGridPopup({
                               e.stopPropagation();
                               onEditBoard(board.id);
                             }}
-                            className="p-2 hover:bg-gray-800 rounded-xl transition-all duration-200"
+                            className="p-2 hover:bg-surface-hover rounded-xl transition-all duration-200"
                           >
-                            <PencilIcon className="h-4 w-4 text-gray-400 hover:text-white transition-colors duration-200" />
+                            <PencilIcon className="h-4 w-4 text-text-secondary hover:text-foreground transition-colors duration-200" />
                           </button>
                         )}
                       </div>
