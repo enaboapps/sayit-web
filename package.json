@@ -20,7 +20,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.28.0",
-    "elevenlabs": "^1.57.0",
+    "@elevenlabs/elevenlabs-js": "^2.20.1",
     "framer-motion": "^12.9.2",
     "lucide-react": "^0.514.0",
     "nanoid": "^5.1.6",
