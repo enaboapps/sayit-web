@@ -43,8 +43,6 @@ export default function PhrasesInterface() {
   const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
-  const loadingPhrases =
-    shouldLoadBoards && selectedBoardId !== null && selectedBoardData === undefined;
 
   // Auto-select first board on load or use saved board
   useEffect(() => {
@@ -205,7 +203,6 @@ export default function PhrasesInterface() {
               boards={transformedBoards}
               selectedBoard={selectedBoard}
               isEditMode={isEditMode}
-              isLoadingPhrases={loadingPhrases}
               onSelectBoard={handleSelectBoard}
               onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
             />
