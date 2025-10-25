@@ -1,5 +1,4 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
-import { ElevenLabsClient } from 'elevenlabs';
 
 // Define interfaces for our types
 export interface Voice {
@@ -23,7 +22,6 @@ export class ElevenLabsTTS {
   private audio: HTMLAudioElement | null = null;
   private isSpeaking: boolean = false;
   private fallbackTTS: WebSpeechTTS;
-  private elevenLabsClient: ElevenLabsClient | null = null;
   private abortController: AbortController | null = null;
   private lastRequestTime: number = 0;
   private callbacks: {
@@ -37,15 +35,9 @@ export class ElevenLabsTTS {
     // Private constructor to enforce singleton pattern
     this.fallbackTTS = WebSpeechTTS.getInstance();
     this.apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || '';
-    
-    if (this.apiKey) {
-      this.elevenLabsClient = new ElevenLabsClient({ 
-        apiKey: this.apiKey 
-      });
-      
-      if (typeof window !== 'undefined') {
-        this.loadVoices();
-      }
+
+    if (this.apiKey && typeof window !== 'undefined') {
+      this.loadVoices();
     }
   }
 
@@ -57,19 +49,30 @@ export class ElevenLabsTTS {
   }
 
   private async loadVoices() {
-    if (!this.elevenLabsClient) return;
+    if (!this.apiKey) return;
 
     try {
-      const response = await this.elevenLabsClient.voices.getAll();
-      
+      // Call ElevenLabs API directly to get voices
+      const response = await fetch('https://api.elevenlabs.io/v1/voices', {
+        headers: {
+          'xi-api-key': this.apiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load voices: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
       // Map voices to our format
-      this.voices = response.voices.map(voice => ({
+      this.voices = data.voices.map((voice: Voice) => ({
         voice_id: voice.voice_id,
-        name: voice.name || 'Unnamed Voice', // Ensure name is never undefined
+        name: voice.name || 'Unnamed Voice',
         preview_url: voice.preview_url,
         description: voice.description || ''
       }));
-      
+
       this.callbacks.onVoicesChanged?.(this.voices);
     } catch (error) {
       console.error('Error loading ElevenLabs voices:', error);
@@ -84,7 +87,7 @@ export class ElevenLabsTTS {
     onVoicesChanged?: (voices: Voice[]) => void;
   }) {
     this.callbacks = callbacks;
-    
+
     // Also set callbacks for fallback TTS
     this.fallbackTTS.setCallbacks({
       onStart: callbacks.onStart,
@@ -106,7 +109,7 @@ export class ElevenLabsTTS {
     stability?: number;
     similarityBoost?: number;
   }) {
-    if (!this.apiKey || !this.elevenLabsClient) {
+    if (!this.apiKey) {
       console.warn('ElevenLabs API key not found, falling back to browser TTS');
       this.fallbackTTS.speak(text);
       return;
@@ -114,20 +117,20 @@ export class ElevenLabsTTS {
 
     // Stop any ongoing speech and API requests
     this.stop();
-    
+
     // Track request timing
     const currentTime = Date.now();
     this.lastRequestTime = currentTime;
-    
+
     // Create a new abort controller for this request
     this.abortController = new AbortController();
 
     // Voice ID handling
     let voiceId = options?.voiceId;
-    
+
     // Check if the voice ID exists in available voices
     const voiceExists = voiceId && this.voices.some(v => v.voice_id === voiceId);
-    
+
     // If no valid voice ID, use the first available voice or default to Rachel
     if (!voiceExists) {
       if (this.voices.length > 0) {
@@ -140,7 +143,7 @@ export class ElevenLabsTTS {
     } else {
       console.log(`Using selected voice: ${voiceId}`);
     }
-    
+
     const stability = options?.stability ?? 0.5;
     const similarityBoost = options?.similarityBoost ?? 0.5;
 
@@ -151,69 +154,50 @@ export class ElevenLabsTTS {
       this.isSpeaking = true;
 
       console.log('ElevenLabs speaking with voice ID:', voiceId);
-      
-      // Generate audio with ElevenLabs SDK
-      const voiceSettings = {
-        stability,
-        similarity_boost: similarityBoost
-      };
-      
-      console.log('Sending ElevenLabs API request with settings:', JSON.stringify(voiceSettings));
-      
+
       // Check if request was aborted before making API call
       if (this.abortController?.signal.aborted) {
         console.log('Speech request was aborted before API call');
         return;
       }
-      
-      const audioData = await this.elevenLabsClient.textToSpeech.convert(
-        voiceId!,
-        {
-          text: text,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: voiceSettings
+
+      // Call our Next.js API route with Flash v2.5 model
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          abortSignal: this.abortController.signal
-        }
-      );
+        body: JSON.stringify({
+          text: text,
+          voiceId: voiceId,
+          stability: stability,
+          similarityBoost: similarityBoost,
+        }),
+        signal: this.abortController.signal,
+      });
 
       // Check if request was aborted after API call
       if (this.abortController?.signal.aborted) {
         console.log('Speech request was aborted after API call');
         return;
       }
-      
-      // Create blob from the audio data (handle different return types)
-      let audioBlob: Blob;
-      if (audioData instanceof Blob) {
-        audioBlob = audioData;
-      } else if (audioData instanceof ArrayBuffer) {
-        audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
-      } else {
-        // If it's a readable stream or other format, convert to Buffer then Blob
-        const chunks: Uint8Array[] = [];
-        for await (const chunk of audioData) {
-          // Check if aborted during streaming
-          if (this.abortController?.signal.aborted) {
-            console.log('Speech request was aborted during streaming');
-            return;
-          }
-          chunks.push(chunk instanceof Uint8Array ? chunk : Buffer.from(chunk));
-        }
-        const buffer = Buffer.concat(chunks);
-        audioBlob = new Blob([buffer], { type: 'audio/mpeg' });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
       }
-      
+
+      // Get the audio data as a blob
+      const audioBlob = await response.blob();
+
       // Final check before playing
       if (this.abortController?.signal.aborted) {
         console.log('Speech request was aborted before playback');
         return;
       }
-      
+
       const audioUrl = URL.createObjectURL(audioBlob);
       this.audio = new Audio(audioUrl);
-      
+
       this.audio.onended = () => {
         this.isSpeaking = false;
         this.callbacks.onEnd?.();
@@ -240,13 +224,13 @@ export class ElevenLabsTTS {
         console.log('Speech request was cancelled');
         return;
       }
-      
+
       // Check if this is a rapid request (within 2 seconds of last request)
       const timeSinceLastRequest = Date.now() - this.lastRequestTime;
       const isRapidRequest = timeSinceLastRequest < 2000;
-      
+
       console.error('ElevenLabs TTS error:', error);
-      
+
       // Only show error and fallback if this isn't a rapid request
       if (!isRapidRequest) {
         this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
@@ -264,27 +248,27 @@ export class ElevenLabsTTS {
       this.abortController.abort();
       this.abortController = null;
     }
-    
+
     if (this.audio) {
       // Remove event listeners to prevent callbacks after stopping
       this.audio.onended = null;
       this.audio.onerror = null;
-      
+
       this.audio.pause();
       this.audio.currentTime = 0;
-      
+
       // Ensure the audio source is properly cleaned up
       const audioSrc = this.audio.src;
       this.audio.src = '';
-      
+
       // Clean up the blob URL
       if (audioSrc && audioSrc.startsWith('blob:')) {
         URL.revokeObjectURL(audioSrc);
       }
-      
+
       this.audio = null;
     }
-    
+
     this.isSpeaking = false;
     // Don't call onEnd callback here as this is a manual stop
   }
@@ -305,6 +289,6 @@ export class ElevenLabsTTS {
   }
 
   public isAvailable(): boolean {
-    return !!this.apiKey && !!this.elevenLabsClient;
+    return !!this.apiKey;
   }
-} 
+}
