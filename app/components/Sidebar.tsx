@@ -7,11 +7,11 @@ import { usePathname } from 'next/navigation';
 import {
   QuestionMarkCircleIcon,
   HomeIcon,
-  UserIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
+import { UserButton } from '@clerk/nextjs';
 
 export default function Sidebar() {
   const { user } = useAuth();
@@ -38,28 +38,12 @@ export default function Sidebar() {
           isActive={pathname === '/'}
         />
 
-        {user ? (
-          <>
-            <SidebarItem
-              href="/account"
-              icon={<UserIcon className="w-6 h-6" />}
-              title="Account"
-              isActive={pathname === '/account'}
-            />
-
-            <SidebarItem
-              href="/settings"
-              icon={<Cog6ToothIcon className="w-6 h-6" />}
-              title="Settings"
-              isActive={pathname === '/settings'}
-            />
-          </>
-        ) : (
+        {user && (
           <SidebarItem
-            href="/sign-in"
-            icon={<ArrowRightStartOnRectangleIcon className="w-6 h-6" />}
-            title="Sign In"
-            isActive={pathname === '/sign-in'}
+            href="/settings"
+            icon={<Cog6ToothIcon className="w-6 h-6" />}
+            title="Settings"
+            isActive={pathname === '/settings'}
           />
         )}
 
@@ -70,6 +54,32 @@ export default function Sidebar() {
           isActive={pathname === '/support'}
         />
       </nav>
+
+      <div className="p-3 flex items-center justify-center">
+        {user ? (
+          <UserButton
+            appearance={{
+              elements: {
+                avatarBox: 'w-10 h-10 rounded-full hover:scale-110 transition-transform duration-300'
+              }
+            }}
+          />
+        ) : (
+          <Link
+            href="/sign-in"
+            className="flex items-center justify-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl hover:scale-110 bg-surface-hover text-text-secondary hover:bg-primary-500/10 hover:text-primary-500"
+            data-tooltip-id="sidebar-tooltip-sign-in"
+            data-tooltip-content="Sign In"
+          >
+            <ArrowRightStartOnRectangleIcon className="w-6 h-6" />
+            <Tooltip
+              id="sidebar-tooltip-sign-in"
+              place="right"
+              className="z-50"
+            />
+          </Link>
+        )}
+      </div>
     </aside>
   );
 }
