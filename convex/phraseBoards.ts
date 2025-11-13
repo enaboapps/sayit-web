@@ -1,6 +1,6 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { getUserIdentity } from "./users";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
+import { getUserIdentity } from './users';
 
 // Query: Get all phrase boards for current user
 export const getPhraseBoards = query({
@@ -11,16 +11,16 @@ export const getPhraseBoards = query({
     }
 
     const boards = await ctx.db
-      .query("phraseBoards")
-      .withIndex("by_user_id", (q) => q.eq("userId", identity.subject))
+      .query('phraseBoards')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
       .collect();
 
     // Get phrases for each board
     const boardsWithPhrases = await Promise.all(
       boards.map(async (board) => {
         const phraseBoardPhrases = await ctx.db
-          .query("phraseBoardPhrases")
-          .withIndex("by_board", (q) => q.eq("boardId", board._id))
+          .query('phraseBoardPhrases')
+          .withIndex('by_board', (q) => q.eq('boardId', board._id))
           .collect();
 
         const phrases = await Promise.all(
@@ -40,7 +40,7 @@ export const getPhraseBoards = query({
 
 // Query: Get a single phrase board by ID
 export const getPhraseBoard = query({
-  args: { id: v.id("phraseBoards") },
+  args: { id: v.id('phraseBoards') },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
@@ -53,8 +53,8 @@ export const getPhraseBoard = query({
     }
 
     const phraseBoardPhrases = await ctx.db
-      .query("phraseBoardPhrases")
-      .withIndex("by_board", (q) => q.eq("boardId", args.id))
+      .query('phraseBoardPhrases')
+      .withIndex('by_board', (q) => q.eq('boardId', args.id))
       .collect();
 
     const phrases = await Promise.all(
@@ -77,10 +77,10 @@ export const addPhraseBoard = mutation({
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
-    const boardId = await ctx.db.insert("phraseBoards", {
+    const boardId = await ctx.db.insert('phraseBoards', {
       userId: identity.subject,
       name: args.name,
       position: args.position,
@@ -93,14 +93,14 @@ export const addPhraseBoard = mutation({
 // Mutation: Update a phrase board
 export const updatePhraseBoard = mutation({
   args: {
-    id: v.id("phraseBoards"),
+    id: v.id('phraseBoards'),
     name: v.optional(v.string()),
     position: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     const { id, ...updates } = args;
@@ -108,7 +108,7 @@ export const updatePhraseBoard = mutation({
     // Verify ownership
     const board = await ctx.db.get(id);
     if (!board || board.userId !== identity.subject) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     await ctx.db.patch(id, updates);
@@ -118,24 +118,24 @@ export const updatePhraseBoard = mutation({
 // Mutation: Delete a phrase board
 export const deletePhraseBoard = mutation({
   args: {
-    id: v.id("phraseBoards"),
+    id: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     // Verify ownership
     const board = await ctx.db.get(args.id);
     if (!board || board.userId !== identity.subject) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     // Delete all phrase associations
     const phraseBoardPhrases = await ctx.db
-      .query("phraseBoardPhrases")
-      .withIndex("by_board", (q) => q.eq("boardId", args.id))
+      .query('phraseBoardPhrases')
+      .withIndex('by_board', (q) => q.eq('boardId', args.id))
       .collect();
 
     for (const pbp of phraseBoardPhrases) {
@@ -152,13 +152,13 @@ export const deletePhraseBoard = mutation({
 // Mutation: Add a phrase to a board
 export const addPhraseToBoard = mutation({
   args: {
-    phraseId: v.id("phrases"),
-    boardId: v.id("phraseBoards"),
+    phraseId: v.id('phrases'),
+    boardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     // Verify phrase and board ownership
@@ -166,13 +166,13 @@ export const addPhraseToBoard = mutation({
     const board = await ctx.db.get(args.boardId);
 
     if (!phrase || phrase.userId !== identity.subject) {
-      throw new Error("Unauthorized - phrase");
+      throw new Error('Unauthorized - phrase');
     }
     if (!board || board.userId !== identity.subject) {
-      throw new Error("Unauthorized - board");
+      throw new Error('Unauthorized - board');
     }
 
-    await ctx.db.insert("phraseBoardPhrases", {
+    await ctx.db.insert('phraseBoardPhrases', {
       phraseId: args.phraseId,
       boardId: args.boardId,
     });
@@ -182,19 +182,19 @@ export const addPhraseToBoard = mutation({
 // Mutation: Remove a phrase from a board
 export const removePhraseFromBoard = mutation({
   args: {
-    phraseId: v.id("phrases"),
-    boardId: v.id("phraseBoards"),
+    phraseId: v.id('phrases'),
+    boardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     const link = await ctx.db
-      .query("phraseBoardPhrases")
-      .withIndex("by_phrase", (q) => q.eq("phraseId", args.phraseId))
-      .filter((q) => q.eq(q.field("boardId"), args.boardId))
+      .query('phraseBoardPhrases')
+      .withIndex('by_phrase', (q) => q.eq('phraseId', args.phraseId))
+      .filter((q) => q.eq(q.field('boardId'), args.boardId))
       .first();
 
     if (link) {

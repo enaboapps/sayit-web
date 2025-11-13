@@ -1,6 +1,6 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { getUserIdentity } from "./users";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
+import { getUserIdentity } from './users';
 
 // Query: Get a typing session by session key (public access for viewers)
 export const getTypingSession = query({
@@ -9,9 +9,9 @@ export const getTypingSession = query({
     const now = Date.now();
 
     const session = await ctx.db
-      .query("typingSessions")
-      .withIndex("by_session_key", (q) => q.eq("sessionKey", args.sessionKey))
-      .filter((q) => q.gt(q.field("expiresAt"), now))
+      .query('typingSessions')
+      .withIndex('by_session_key', (q) => q.eq('sessionKey', args.sessionKey))
+      .filter((q) => q.gt(q.field('expiresAt'), now))
       .first();
 
     return session;
@@ -23,15 +23,15 @@ export const getUserTypingSessions = query({
   handler: async (ctx) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     const now = Date.now();
 
     return await ctx.db
-      .query("typingSessions")
-      .withIndex("by_user_id", (q) => q.eq("userId", identity.subject))
-      .filter((q) => q.gt(q.field("expiresAt"), now))
+      .query('typingSessions')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .filter((q) => q.gt(q.field('expiresAt'), now))
       .collect();
   },
 });
@@ -44,27 +44,27 @@ export const createTypingSession = mutation({
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     // Prevent accidental reuse of a live session key
     const existing = await ctx.db
-      .query("typingSessions")
-      .withIndex("by_session_key", (q) => q.eq("sessionKey", args.sessionKey))
-      .filter((q) => q.gt(q.field("expiresAt"), Date.now()))
+      .query('typingSessions')
+      .withIndex('by_session_key', (q) => q.eq('sessionKey', args.sessionKey))
+      .filter((q) => q.gt(q.field('expiresAt'), Date.now()))
       .first();
 
     if (existing) {
-      throw new Error("Session key already in use");
+      throw new Error('Session key already in use');
     }
 
     // Session expires in 24 hours
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
-    const sessionId = await ctx.db.insert("typingSessions", {
+    const sessionId = await ctx.db.insert('typingSessions', {
       userId: identity.subject,
       sessionKey: args.sessionKey,
-      content: "",
+      content: '',
       expiresAt,
     });
 
@@ -81,16 +81,16 @@ export const updateTypingSessionContent = mutation({
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     const session = await ctx.db
-      .query("typingSessions")
-      .withIndex("by_session_key", (q) => q.eq("sessionKey", args.sessionKey))
+      .query('typingSessions')
+      .withIndex('by_session_key', (q) => q.eq('sessionKey', args.sessionKey))
       .first();
 
     if (!session || session.userId !== identity.subject) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     await ctx.db.patch(session._id, {
@@ -107,16 +107,16 @@ export const deleteTypingSession = mutation({
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
-      throw new Error("Unauthenticated");
+      throw new Error('Unauthenticated');
     }
 
     const session = await ctx.db
-      .query("typingSessions")
-      .withIndex("by_session_key", (q) => q.eq("sessionKey", args.sessionKey))
+      .query('typingSessions')
+      .withIndex('by_session_key', (q) => q.eq('sessionKey', args.sessionKey))
       .first();
 
     if (!session || session.userId !== identity.subject) {
-      throw new Error("Unauthorized");
+      throw new Error('Unauthorized');
     }
 
     await ctx.db.delete(session._id);

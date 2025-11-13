@@ -1,14 +1,14 @@
-import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { getUserIdentity } from "./users";
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
+import { getUserIdentity } from './users';
 
 // Query: Get profile for a specific user (used by server-side routes)
 export const getProfileByUserId = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
     return await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', args.userId))
       .first();
   },
 });
@@ -22,8 +22,8 @@ export const getProfile = query({
     }
 
     const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", identity.subject))
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
       .first();
 
     return profile;
@@ -39,8 +39,8 @@ export const upsertProfile = mutation({
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', args.userId))
       .first();
 
     if (existing) {
@@ -50,7 +50,7 @@ export const upsertProfile = mutation({
       });
       return existing._id;
     } else {
-      return await ctx.db.insert("profiles", {
+      return await ctx.db.insert('profiles', {
         userId: args.userId,
         email: args.email,
         fullName: args.fullName,
@@ -66,8 +66,8 @@ export const deleteProfile = mutation({
   },
   handler: async (ctx, args) => {
     const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", args.userId))
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', args.userId))
       .first();
 
     if (profile) {
@@ -86,8 +86,8 @@ export const getSubscriptionStatus = query({
     }
 
     const profile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user_id", (q) => q.eq("userId", identity.subject))
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
       .first();
 
     if (!profile) {
