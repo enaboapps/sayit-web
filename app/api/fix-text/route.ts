@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     
     try {
       const result = await fixText(text, {
-        maxTokens: 200,
+        maxOutputTokens: 200,
         temperature: 0.3, // Lower temperature for more consistent corrections
       });
       

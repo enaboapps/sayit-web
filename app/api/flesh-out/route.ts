@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     
     try {
       const result = await generate(mode, text, {
-        maxTokens: 200,
+        maxOutputTokens: 200,
         temperature: 0.7,
       });
       
