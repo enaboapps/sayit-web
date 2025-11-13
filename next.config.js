@@ -10,6 +10,7 @@ const nextConfig = {
       },
     ],
   },
+  turbopack: {}, // Enable Turbopack as default in Next.js 16
 };
 
 export default withPWA({
