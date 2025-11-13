@@ -176,41 +176,10 @@ Example acronyms to expand:
 - btw → by the way
 
 Example response (return exactly this format, no other text):
-{"text":"I want to go to the store, thanks.","corrected":true}`,
-  board: `You are an AAC app helping a user express themselves. Your role is to generate a list of natural, related phrases that could be useful for the user.
-
-Guidelines:
-- Generate 5-10 natural, sentence-like phrases
-- Phrases should be complete thoughts or questions
-- Keep phrases clear and conversational
-- Use natural language patterns
-- Include a mix of statements and questions
-- Make phrases specific and meaningful
-- Ensure phrases flow naturally
-- Use appropriate grammar and punctuation
-- Be empathetic and supportive
-
-IMPORTANT: Return ONLY this exact format with no additional text:
-[
-  "I want to take a break and rest for a while",
-  "Could you help me with this task",
-  "I'm feeling tired and need to sit down",
-  "How was your day",
-  "I really enjoyed spending time with you",
-  "Would you like to join me for lunch"
-]
-
-Rules:
-1. Start with [ and end with ]
-2. Use double quotes for all strings
-3. No line breaks
-4. No extra spaces
-5. No trailing commas
-6. No additional text before or after
-7. No comments or explanations`
+{"text":"I want to go to the store, thanks.","corrected":true}`
 };
 
-type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'board' | 'fixText';
+type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'fixText';
 
 interface GenerationOptions {
   maxTokens?: number;
@@ -236,16 +205,16 @@ function extractJsonContent(text: string): string {
 
 /**
  * Generate content using the DeepInfra API.
- * @param type The type of generation to perform ('fleshOut' or 'board')
+ * @param type The type of generation to perform
  * @param prompt The input prompt for the generation
  * @param options Optional configuration for the generation
- * @returns The generated content (string for fleshOut, string[] for board)
+ * @returns The generated content
  */
 export async function generate(
   type: GenerationType,
   prompt: string,
   options?: GenerationOptions
-): Promise<string[] | Record<string, unknown>> {
+): Promise<Record<string, unknown>> {
   try {
     const { text } = await aiGenerateText({
       model: deepinfra('google/gemma-3-27b-it'),
@@ -257,26 +226,15 @@ export async function generate(
       topK: options?.topK || 50,
     });
 
-    if (type === 'board') {
-      try {
-        const result = JSON.parse(text);
-        return result;
-      } catch (parseError) {
-        console.error('JSON Parse Error:', parseError);
-        console.error('Raw content:', text);
-        throw new Error('Failed to parse board response');
-      }
-    }
-
-    // For other types, extract and parse the JSON content
+    // Extract and parse the JSON content
     const jsonContent = extractJsonContent(text);
     const parsed = JSON.parse(jsonContent);
-    
+
     // Ensure the response has the correct type (except for fixText which doesn't have a type field)
     if (type !== 'fixText' && parsed.type !== type) {
       console.warn(`Response type (${parsed.type}) does not match requested type (${type})`);
     }
-    
+
     return parsed;
   } catch (error) {
     console.error(`Error generating ${type}:`, error);

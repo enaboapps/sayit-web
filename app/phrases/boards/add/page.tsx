@@ -4,71 +4,19 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import { Textarea } from '@/app/components/ui/Textarea';
-import { GeneratedPhrases } from '@/app/components/phrases/GeneratedPhrases';
-import { Collapsible } from '@/app/components/ui/Collapsible';
-import SubscriptionWrapper from '@/app/components/SubscriptionWrapper';
 import BackButton from '@/app/components/ui/BackButton';
 
 export default function AddBoardPage() {
   const [name, setName] = useState('');
-  const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [generatedPhrases, setGeneratedPhrases] = useState<string[]>([]);
-  const [generating, setGenerating] = useState(false);
   const router = useRouter();
 
   // Convex mutations
   const boards = useQuery(api.phraseBoards.getPhraseBoards);
   const addPhraseBoard = useMutation(api.phraseBoards.addPhraseBoard);
-  const addPhrase = useMutation(api.phrases.addPhrase);
-  const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
-
-  const handleGeneratePhrases = async () => {
-    if (!prompt) return;
-
-    setGenerating(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/board', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: prompt,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate phrases');
-      }
-
-      const data = await response.json();
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid response format');
-      }
-      setGeneratedPhrases(data);
-    } catch (error) {
-      console.error('Error generating phrases:', error);
-      setError('Failed to generate phrases');
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleDeletePhrase = (index: number) => {
-    setGeneratedPhrases(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleDeleteAll = () => {
-    setGeneratedPhrases([]);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,26 +29,10 @@ export default function AddBoardPage() {
       const position = boards?.length || 0;
 
       // Create the board
-      const boardId = await addPhraseBoard({
+      await addPhraseBoard({
         name,
         position,
       });
-
-      // Add generated phrases to the board
-      if (generatedPhrases.length > 0) {
-        for (let i = 0; i < generatedPhrases.length; i++) {
-          const phraseId = await addPhrase({
-            text: generatedPhrases[i],
-            frequency: 0,
-            position: i,
-          });
-
-          await addPhraseToBoard({
-            phraseId: phraseId as Id<'phrases'>,
-            boardId: boardId as Id<'phraseBoards'>,
-          });
-        }
-      }
 
       router.back();
     } catch (error) {
@@ -130,67 +62,6 @@ export default function AddBoardPage() {
               required
             />
           </div>
-
-          <Collapsible
-            title="AI-Assisted Phrase Generation (Optional)"
-            defaultOpen={false}
-          >
-            <SubscriptionWrapper
-              fallback={
-                <div className="bg-surface p-8 rounded-3xl shadow-2xl text-center my-4">
-                  <div className="mx-auto w-16 h-16 bg-primary-500/10 rounded-3xl flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Pro Feature</h3>
-                  <p className="text-text-secondary mb-6">
-                    AI-Assisted Phrase Generation is a premium feature that helps you create relevant phrases quickly using AI.
-                  </p>
-                  <Button
-                    onClick={() => router.push('/pricing')}
-                    className="w-full"
-                  >
-                    Upgrade to Pro
-                  </Button>
-                </div>
-              }
-            >
-              <div className="space-y-4">
-                <p className="text-sm text-text-secondary">
-                  Use AI to generate suggested phrases for your board. This is completely optional - you can always add phrases manually later.
-                </p>
-
-                <div>
-                  <label htmlFor="prompt" className="block text-sm font-medium text-text-secondary mb-1">
-                    Generation Prompt
-                  </label>
-                  <div className="space-y-4">
-                    <Textarea
-                      id="prompt"
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="Describe what kind of phrases you want to generate"
-                      rows={4}
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleGeneratePhrases}
-                      disabled={!prompt || generating}
-                    >
-                      {generating ? 'Generating...' : 'Generate Phrases'}
-                    </Button>
-                  </div>
-                </div>
-
-                <GeneratedPhrases
-                  phrases={generatedPhrases}
-                  onDeletePhrase={handleDeletePhrase}
-                  onDeleteAll={handleDeleteAll}
-                />
-              </div>
-            </SubscriptionWrapper>
-          </Collapsible>
 
           <div className="flex justify-end mt-6">
             <Button
