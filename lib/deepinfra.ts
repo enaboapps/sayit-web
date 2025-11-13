@@ -182,7 +182,7 @@ Example response (return exactly this format, no other text):
 type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'fixText';
 
 interface GenerationOptions {
-  maxTokens?: number;
+  maxOutputTokens?: number;
   temperature?: number;
   topP?: number;
   topK?: number;
@@ -220,7 +220,7 @@ export async function generate(
       model: deepinfra('google/gemma-3-27b-it'),
       system: systemPrompts[type],
       prompt,
-      maxTokens: options?.maxTokens || 200,
+      maxOutputTokens: options?.maxOutputTokens || 200,
       temperature: options?.temperature || 0.7,
       topP: options?.topP || 0.9,
       topK: options?.topK || 50,
