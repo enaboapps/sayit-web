@@ -76,6 +76,34 @@ export const deleteProfile = mutation({
   },
 });
 
+// Mutation: Set user role (caregiver or communicator)
+export const setRole = mutation({
+  args: {
+    role: v.union(v.literal('caregiver'), v.literal('communicator')),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .first();
+
+    if (!profile) {
+      throw new Error('Profile not found');
+    }
+
+    await ctx.db.patch(profile._id, {
+      role: args.role,
+    });
+
+    return profile._id;
+  },
+});
+
 // Query: Check subscription status (now uses Clerk metadata via hook)
 // This query is kept for backward compatibility but primarily returns bypass status
 export const getSubscriptionStatus = query({

@@ -7,7 +7,27 @@ export default defineSchema({
     email: v.string(),
     fullName: v.optional(v.string()),
     bypassSubscriptionCheck: v.optional(v.boolean()),
+    role: v.optional(v.union(v.literal('caregiver'), v.literal('communicator'))),
   }).index('by_user_id', ['userId']),
+
+  caregiverClients: defineTable({
+    caregiverId: v.string(), // Clerk user ID of caregiver
+    communicatorId: v.string(), // Clerk user ID of communicator
+    createdAt: v.number(),
+  })
+    .index('by_caregiver', ['caregiverId'])
+    .index('by_communicator', ['communicatorId']),
+
+  sharedBoards: defineTable({
+    boardId: v.id('phraseBoards'),
+    caregiverId: v.string(), // Clerk user ID of caregiver (owner)
+    communicatorId: v.string(), // Clerk user ID of communicator
+    accessLevel: v.union(v.literal('view'), v.literal('edit')),
+    sharedAt: v.number(),
+  })
+    .index('by_board', ['boardId'])
+    .index('by_caregiver', ['caregiverId'])
+    .index('by_communicator', ['communicatorId']),
 
   phrases: defineTable({
     userId: v.string(), // Clerk user ID
