@@ -4,11 +4,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 import {
   QuestionMarkCircleIcon,
   HomeIcon,
   Cog6ToothIcon,
-  ArrowRightStartOnRectangleIcon
+  ArrowRightStartOnRectangleIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { UserButton } from '@clerk/nextjs';
@@ -16,6 +19,9 @@ import { UserButton } from '@clerk/nextjs';
 export default function Sidebar() {
   const { user } = useAuth();
   const pathname = usePathname();
+  const profile = useQuery(api.profiles.getProfile);
+
+  const isCaregiver = profile?.role === 'caregiver';
 
   return (
     <aside className="fixed left-0 top-0 h-full w-16 bg-surface z-50 shadow-2xl flex flex-col">
@@ -37,6 +43,15 @@ export default function Sidebar() {
           title="Home"
           isActive={pathname === '/'}
         />
+
+        {user && isCaregiver && (
+          <SidebarItem
+            href="/dashboard"
+            icon={<UsersIcon className="w-6 h-6" />}
+            title="Clients"
+            isActive={pathname?.startsWith('/dashboard') ?? false}
+          />
+        )}
 
         {user && (
           <SidebarItem

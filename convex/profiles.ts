@@ -13,6 +13,17 @@ export const getProfileByUserId = query({
   },
 });
 
+// Query: Get profile by email (used for finding clients)
+export const getProfileByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('profiles')
+      .withIndex('by_email', (q) => q.eq('email', args.email.toLowerCase()))
+      .first();
+  },
+});
+
 // Query: Get current user's profile
 export const getProfile = query({
   handler: async (ctx) => {
