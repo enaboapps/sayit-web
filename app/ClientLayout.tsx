@@ -8,6 +8,7 @@ import { ConvexReactClient } from 'convex/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
+import RoleGate from './components/onboarding/RoleGate';
 
 export default function ClientLayout({
   children,
@@ -44,14 +45,16 @@ export default function ClientLayout({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
-            <div className="min-h-screen flex">
-              <Sidebar />
-              <div className="flex-1 pl-16">
-                <main>
-                  {children}
-                </main>
+            <RoleGate>
+              <div className="min-h-screen flex">
+                <Sidebar />
+                <div className="flex-1 pl-16">
+                  <main>
+                    {children}
+                  </main>
+                </div>
               </div>
-            </div>
+            </RoleGate>
           </SettingsProvider>
         </AuthProvider>
       </ConvexProviderWithClerk>

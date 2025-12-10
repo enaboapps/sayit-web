@@ -77,6 +77,7 @@ export const deleteProfile = mutation({
 });
 
 // Mutation: Set user role (caregiver or communicator)
+// Creates profile if it doesn't exist (handles case where webhook hasn't fired yet)
 export const setRole = mutation({
   args: {
     role: v.union(v.literal('caregiver'), v.literal('communicator')),
@@ -93,7 +94,15 @@ export const setRole = mutation({
       .first();
 
     if (!profile) {
-      throw new Error('Profile not found');
+      // Create profile if it doesn't exist
+      const email = identity.email ?? '';
+      const fullName = identity.name ?? undefined;
+      return await ctx.db.insert('profiles', {
+        userId: identity.subject,
+        email,
+        fullName,
+        role: args.role,
+      });
     }
 
     await ctx.db.patch(profile._id, {
