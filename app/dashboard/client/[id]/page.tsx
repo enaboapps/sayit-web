@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { ArrowLeftIcon, UserIcon, FolderPlusIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import SharedBoardCard from '@/app/components/dashboard/SharedBoardCard';
-import ShareBoardButton from '@/app/components/dashboard/ShareBoardButton';
+import ClientBoardCard from '@/app/components/dashboard/ClientBoardCard';
+import CreateBoardButton from '@/app/components/dashboard/CreateBoardButton';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -21,7 +21,7 @@ export default function ClientDetailPage({ params }: PageProps) {
   const { user, loading: authLoading } = useAuth();
   const profile = useQuery(api.profiles.getProfile);
   const clientProfile = useQuery(api.profiles.getProfileByUserId, { userId: communicatorId });
-  const sharedBoards = useQuery(api.sharedBoards.getSharedBoardsForClient, { communicatorId });
+  const clientBoards = useQuery(api.phraseBoards.getBoardsForClient, { clientId: communicatorId });
   const router = useRouter();
 
   // Redirect non-caregivers
@@ -35,7 +35,7 @@ export default function ClientDetailPage({ params }: PageProps) {
     }
   }, [authLoading, user, profile, router]);
 
-  if (authLoading || profile === undefined || clientProfile === undefined || sharedBoards === undefined) {
+  if (authLoading || profile === undefined || clientProfile === undefined || clientBoards === undefined) {
     return <AnimatedLoading />;
   }
 
@@ -70,22 +70,22 @@ export default function ClientDetailPage({ params }: PageProps) {
 
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Shared Boards</h2>
-            <ShareBoardButton communicatorId={communicatorId} />
+            <h2 className="text-lg font-semibold text-foreground">{clientName}&apos;s Boards</h2>
+            <CreateBoardButton communicatorId={communicatorId} />
           </div>
 
-          {sharedBoards.length === 0 ? (
+          {clientBoards.length === 0 ? (
             <div className="text-center py-12 bg-surface rounded-xl border border-border">
               <FolderPlusIcon className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-              <p className="text-text-secondary mb-2">No boards shared yet</p>
+              <p className="text-text-secondary mb-2">No boards yet</p>
               <p className="text-text-tertiary text-sm">
-                Share a board to help {clientName} communicate
+                Create a board to help {clientName} communicate
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {sharedBoards.map((share) => (
-                <SharedBoardCard key={share._id} share={share} />
+              {clientBoards.map((board) => (
+                <ClientBoardCard key={board._id} board={board} />
               ))}
             </div>
           )}

@@ -85,6 +85,14 @@ export default function BoardGridPopup({
                                 </span>
                               </div>
                             )}
+                            {board.isOwner && board.forClientName && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <UserGroupIcon className="h-3 w-3 text-blue-400" />
+                                <span className="text-xs text-blue-400">
+                                  For {board.forClientName}
+                                </span>
+                              </div>
+                            )}
                           </div>
                           {isEditMode && canEdit && (
                             <button

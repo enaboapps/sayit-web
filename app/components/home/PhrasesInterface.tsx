@@ -166,8 +166,11 @@ export default function PhrasesInterface() {
       position: board.position,
       phrases: board._id === selectedBoardId ? phrases : [],
       isShared: board.isShared,
+      isOwner: board.isOwner,
       accessLevel: board.accessLevel,
       sharedBy: board.sharedBy,
+      forClientId: board.forClientId,
+      forClientName: board.forClientName,
     })) || [];
 
   const selectedBoard = transformedBoards.find(board => board.id === selectedBoardId) || null;

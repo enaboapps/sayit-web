@@ -25,6 +25,37 @@ export default function BoardSelector({
 
   const canEditSelected = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
+  // Helper to render board subtitle (client name or shared by)
+  const renderBoardSubtitle = (board: BoardSummary | null) => {
+    if (!board) return null;
+
+    // For shared boards (communicator viewing caregiver's board)
+    if (board.isShared && board.sharedBy) {
+      return (
+        <div className="flex items-center gap-1 mt-0.5">
+          <UserGroupIcon className="h-3 w-3 text-primary-400" />
+          <span className="text-xs text-primary-400">
+            Shared by {board.sharedBy}
+          </span>
+        </div>
+      );
+    }
+
+    // For owned boards assigned to a client (caregiver viewing)
+    if (board.isOwner && board.forClientName) {
+      return (
+        <div className="flex items-center gap-1 mt-0.5">
+          <UserGroupIcon className="h-3 w-3 text-blue-400" />
+          <span className="text-xs text-blue-400">
+            For {board.forClientName}
+          </span>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
@@ -39,14 +70,7 @@ export default function BoardSelector({
         >
           <div className="flex flex-col">
             <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
-            {selectedBoard?.isShared && selectedBoard?.sharedBy && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <UserGroupIcon className="h-3 w-3 text-primary-400" />
-                <span className="text-xs text-primary-400">
-                  Shared by {selectedBoard.sharedBy}
-                </span>
-              </div>
-            )}
+            {renderBoardSubtitle(selectedBoard)}
           </div>
           {isEditMode && canEditSelected && (
             <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
@@ -66,14 +90,7 @@ export default function BoardSelector({
         >
           <div className="flex flex-col">
             <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
-            {selectedBoard?.isShared && selectedBoard?.sharedBy && (
-              <div className="flex items-center gap-1 mt-0.5">
-                <UserGroupIcon className="h-3 w-3 text-primary-400" />
-                <span className="text-xs text-primary-400">
-                  Shared by {selectedBoard.sharedBy}
-                </span>
-              </div>
-            )}
+            {renderBoardSubtitle(selectedBoard)}
           </div>
           <div className="flex items-center space-x-1">
             {isEditMode && canEditSelected && (
