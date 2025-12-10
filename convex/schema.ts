@@ -39,10 +39,14 @@ export default defineSchema({
   }).index('by_user_id', ['userId']),
 
   phraseBoards: defineTable({
-    userId: v.string(), // Clerk user ID
+    userId: v.string(), // Clerk user ID (creator/owner)
     name: v.string(),
     position: v.number(),
-  }).index('by_user_id', ['userId']),
+    forClientId: v.optional(v.string()), // If set, this board is for a specific client
+    clientAccessLevel: v.optional(v.union(v.literal('view'), v.literal('edit'))), // Client's permission level
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_client', ['forClientId']),
 
   phraseBoardPhrases: defineTable({
     phraseId: v.id('phrases'),

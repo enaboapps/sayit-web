@@ -10,6 +10,9 @@ export interface BoardSummary {
   position?: number;
   phrases: PhraseSummary[];
   isShared?: boolean;
+  isOwner?: boolean;
   accessLevel?: 'view' | 'edit';
   sharedBy?: string | null;
+  forClientId?: string | null;
+  forClientName?: string | null;
 }
