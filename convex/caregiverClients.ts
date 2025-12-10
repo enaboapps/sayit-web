@@ -29,9 +29,9 @@ export const getClients = query({
           createdAt: rel.createdAt,
           profile: profile
             ? {
-                email: profile.email,
-                fullName: profile.fullName,
-              }
+              email: profile.email,
+              fullName: profile.fullName,
+            }
             : null,
         };
       })
@@ -69,9 +69,9 @@ export const getCaregiver = query({
       createdAt: relationship.createdAt,
       profile: profile
         ? {
-            email: profile.email,
-            fullName: profile.fullName,
-          }
+          email: profile.email,
+          fullName: profile.fullName,
+        }
         : null,
     };
   },

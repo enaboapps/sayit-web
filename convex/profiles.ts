@@ -124,6 +124,86 @@ export const setRole = mutation({
   },
 });
 
+// Mutation: Change user role with relationship cleanup
+// This is a destructive operation - removes all caregiver/client relationships
+export const changeRole = mutation({
+  args: {
+    newRole: v.union(v.literal('caregiver'), v.literal('communicator')),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .first();
+
+    if (!profile) {
+      throw new Error('Profile not found');
+    }
+
+    if (profile.role === args.newRole) {
+      throw new Error('Already have this role');
+    }
+
+    const userId = identity.subject;
+
+    // Clean up relationships based on current role
+    if (profile.role === 'caregiver') {
+      // Switching FROM caregiver: remove all clients and boards created for them
+      const clientRelationships = await ctx.db
+        .query('caregiverClients')
+        .withIndex('by_caregiver', (q) => q.eq('caregiverId', userId))
+        .collect();
+
+      // Delete boards created for clients (forClientId is set)
+      const boardsForClients = await ctx.db
+        .query('phraseBoards')
+        .withIndex('by_user_id', (q) => q.eq('userId', userId))
+        .collect();
+
+      for (const board of boardsForClients) {
+        if (board.forClientId) {
+          // Delete phrase associations first
+          const phraseLinks = await ctx.db
+            .query('phraseBoardPhrases')
+            .withIndex('by_board', (q) => q.eq('boardId', board._id))
+            .collect();
+          for (const link of phraseLinks) {
+            await ctx.db.delete(link._id);
+          }
+          await ctx.db.delete(board._id);
+        }
+      }
+
+      // Delete client relationships
+      for (const rel of clientRelationships) {
+        await ctx.db.delete(rel._id);
+      }
+    } else if (profile.role === 'communicator') {
+      // Switching FROM communicator: remove relationship with caregiver
+      const caregiverRelationships = await ctx.db
+        .query('caregiverClients')
+        .withIndex('by_communicator', (q) => q.eq('communicatorId', userId))
+        .collect();
+
+      for (const rel of caregiverRelationships) {
+        await ctx.db.delete(rel._id);
+      }
+    }
+
+    // Update the role
+    await ctx.db.patch(profile._id, {
+      role: args.newRole,
+    });
+
+    return profile._id;
+  },
+});
+
 // Query: Check subscription status (now uses Clerk metadata via hook)
 // This query is kept for backward compatibility but primarily returns bypass status
 export const getSubscriptionStatus = query({

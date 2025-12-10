@@ -3,13 +3,16 @@
 import { useSettings } from '../contexts/SettingsContext';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { 
-  Cog6ToothIcon, 
-  SpeakerWaveIcon
+import {
+  Cog6ToothIcon,
+  SpeakerWaveIcon,
+  UserCircleIcon
 } from '@heroicons/react/24/outline';
 import { SettingsCard } from '@/app/components/ui/SettingsCard';
 import { SettingsSection } from '@/app/components/ui/SettingsSection';
 import { Dropdown } from '@/app/components/ui/Dropdown';
+import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
+import { useAuth } from '../contexts/AuthContext';
 
 // Import types from SettingsContext
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
@@ -29,6 +32,7 @@ const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
 
 export default function SettingsPage() {
   const { settings, updateSetting } = useSettings();
+  const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -114,8 +118,8 @@ export default function SettingsPage() {
           </SettingsSection>
 
           {/* Text-to-Speech Settings */}
-          <SettingsSection 
-            title="Text-to-Speech" 
+          <SettingsSection
+            title="Text-to-Speech"
             description="Configure voice and speech settings"
           >
             <SettingsCard
@@ -126,6 +130,22 @@ export default function SettingsPage() {
               <TTSSettings />
             </SettingsCard>
           </SettingsSection>
+
+          {/* Account Settings - Only show when logged in */}
+          {user && (
+            <SettingsSection
+              title="Account"
+              description="Manage your account settings"
+            >
+              <SettingsCard
+                title="Your Role"
+                description="Change how you use SayIt"
+                icon={<UserCircleIcon className="w-6 h-6" />}
+              >
+                <RoleChangeSection />
+              </SettingsCard>
+            </SettingsSection>
+          )}
         </div>
       </div>
     </div>
