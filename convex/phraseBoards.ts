@@ -2,7 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { getUserIdentity } from './users';
 
-// Query: Get all phrase boards for current user
+// Query: Get all phrase boards for current user (owned + shared)
 export const getPhraseBoards = query({
   handler: async (ctx) => {
     const identity = await getUserIdentity(ctx);
@@ -10,14 +10,40 @@ export const getPhraseBoards = query({
       return [];
     }
 
-    const boards = await ctx.db
+    // Get owned boards
+    const ownedBoards = await ctx.db
       .query('phraseBoards')
       .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
       .collect();
 
-    // Get phrases for each board
-    const boardsWithPhrases = await Promise.all(
-      boards.map(async (board) => {
+    // Get shared boards
+    const sharedBoardLinks = await ctx.db
+      .query('sharedBoards')
+      .withIndex('by_communicator', (q) => q.eq('communicatorId', identity.subject))
+      .collect();
+
+    const sharedBoards = await Promise.all(
+      sharedBoardLinks.map(async (link) => {
+        const board = await ctx.db.get(link.boardId);
+        if (!board) return null;
+
+        // Get caregiver profile for display
+        const caregiverProfile = await ctx.db
+          .query('profiles')
+          .withIndex('by_user_id', (q) => q.eq('userId', link.caregiverId))
+          .first();
+
+        return {
+          board,
+          accessLevel: link.accessLevel,
+          sharedBy: caregiverProfile?.fullName || caregiverProfile?.email || 'Caregiver',
+        };
+      })
+    );
+
+    // Get phrases for owned boards
+    const ownedBoardsWithPhrases = await Promise.all(
+      ownedBoards.map(async (board) => {
         const phraseBoardPhrases = await ctx.db
           .query('phraseBoardPhrases')
           .withIndex('by_board', (q) => q.eq('boardId', board._id))
@@ -30,15 +56,49 @@ export const getPhraseBoards = query({
           })
         );
 
-        return { ...board, phrase_board_phrases: phrases };
+        return {
+          ...board,
+          phrase_board_phrases: phrases,
+          isShared: false,
+          accessLevel: 'edit' as const,
+          sharedBy: null,
+        };
       })
     );
 
-    return boardsWithPhrases;
+    // Get phrases for shared boards
+    const sharedBoardsWithPhrases = await Promise.all(
+      sharedBoards
+        .filter((sb): sb is NonNullable<typeof sb> => sb !== null)
+        .map(async ({ board, accessLevel, sharedBy }) => {
+          const phraseBoardPhrases = await ctx.db
+            .query('phraseBoardPhrases')
+            .withIndex('by_board', (q) => q.eq('boardId', board._id))
+            .collect();
+
+          const phrases = await Promise.all(
+            phraseBoardPhrases.map(async (pbp) => {
+              const phrase = await ctx.db.get(pbp.phraseId);
+              return { ...pbp, phrase };
+            })
+          );
+
+          return {
+            ...board,
+            phrase_board_phrases: phrases,
+            isShared: true,
+            accessLevel,
+            sharedBy,
+          };
+        })
+    );
+
+    // Combine and return all boards
+    return [...ownedBoardsWithPhrases, ...sharedBoardsWithPhrases];
   },
 });
 
-// Query: Get a single phrase board by ID
+// Query: Get a single phrase board by ID (owned or shared)
 export const getPhraseBoard = query({
   args: { id: v.id('phraseBoards') },
   handler: async (ctx, args) => {
@@ -48,8 +108,38 @@ export const getPhraseBoard = query({
     }
 
     const board = await ctx.db.get(args.id);
-    if (!board || board.userId !== identity.subject) {
+    if (!board) {
       return null;
+    }
+
+    // Check if user owns the board
+    const isOwner = board.userId === identity.subject;
+
+    // Check if board is shared with user
+    let shareInfo = null;
+    if (!isOwner) {
+      const sharedBoardLinks = await ctx.db
+        .query('sharedBoards')
+        .withIndex('by_board', (q) => q.eq('boardId', args.id))
+        .collect();
+
+      const share = sharedBoardLinks.find(
+        (link) => link.communicatorId === identity.subject
+      );
+
+      if (!share) {
+        return null; // User has no access
+      }
+
+      const caregiverProfile = await ctx.db
+        .query('profiles')
+        .withIndex('by_user_id', (q) => q.eq('userId', share.caregiverId))
+        .first();
+
+      shareInfo = {
+        accessLevel: share.accessLevel,
+        sharedBy: caregiverProfile?.fullName || caregiverProfile?.email || 'Caregiver',
+      };
     }
 
     const phraseBoardPhrases = await ctx.db
@@ -64,7 +154,13 @@ export const getPhraseBoard = query({
       })
     );
 
-    return { ...board, phrase_board_phrases: phrases };
+    return {
+      ...board,
+      phrase_board_phrases: phrases,
+      isShared: !isOwner,
+      accessLevel: isOwner ? 'edit' : shareInfo?.accessLevel,
+      sharedBy: shareInfo?.sharedBy || null,
+    };
   },
 });
 
@@ -161,14 +257,35 @@ export const addPhraseToBoard = mutation({
       throw new Error('Unauthenticated');
     }
 
-    // Verify phrase and board ownership
+    // Verify phrase ownership
     const phrase = await ctx.db.get(args.phraseId);
-    const board = await ctx.db.get(args.boardId);
-
     if (!phrase || phrase.userId !== identity.subject) {
       throw new Error('Unauthorized - phrase');
     }
-    if (!board || board.userId !== identity.subject) {
+
+    // Verify board access (owner or shared with edit access)
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error('Board not found');
+    }
+
+    const isOwner = board.userId === identity.subject;
+    let hasEditAccess = false;
+
+    if (!isOwner) {
+      // Check if board is shared with edit access
+      const sharedBoardLinks = await ctx.db
+        .query('sharedBoards')
+        .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
+        .collect();
+
+      const share = sharedBoardLinks.find(
+        (link) => link.communicatorId === identity.subject && link.accessLevel === 'edit'
+      );
+      hasEditAccess = !!share;
+    }
+
+    if (!isOwner && !hasEditAccess) {
       throw new Error('Unauthorized - board');
     }
 

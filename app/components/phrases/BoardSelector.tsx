@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PencilIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import BoardGridPopup from './BoardGridPopup';
 import { Button } from '@/app/components/ui/Button';
 import type { BoardSummary } from './types';
@@ -23,6 +23,8 @@ export default function BoardSelector({
 
   if (boards.length === 0) return null;
 
+  const canEditSelected = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
+
   // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
@@ -30,15 +32,23 @@ export default function BoardSelector({
         <div
           className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
           onClick={() => {
-            if (isEditMode && selectedBoard) {
+            if (isEditMode && selectedBoard && canEditSelected) {
               onEditBoard(selectedBoard.id);
             }
           }}
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col">
             <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
+            {selectedBoard?.isShared && selectedBoard?.sharedBy && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <UserGroupIcon className="h-3 w-3 text-primary-400" />
+                <span className="text-xs text-primary-400">
+                  Shared by {selectedBoard.sharedBy}
+                </span>
+              </div>
+            )}
           </div>
-          {isEditMode && (
+          {isEditMode && canEditSelected && (
             <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
           )}
         </div>
@@ -54,11 +64,19 @@ export default function BoardSelector({
           className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
           onClick={() => setIsPopupOpen(true)}
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col">
             <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
+            {selectedBoard?.isShared && selectedBoard?.sharedBy && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <UserGroupIcon className="h-3 w-3 text-primary-400" />
+                <span className="text-xs text-primary-400">
+                  Shared by {selectedBoard.sharedBy}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-1">
-            {isEditMode && (
+            {isEditMode && canEditSelected && (
               <Button
                 variant="ghost"
                 size="icon"

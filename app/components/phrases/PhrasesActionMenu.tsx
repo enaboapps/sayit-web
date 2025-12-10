@@ -11,6 +11,7 @@ interface PhrasesActionMenuProps {
   onReader: () => void
   boardPresent: boolean
   isEditMode: boolean
+  canEditBoard?: boolean
 }
 
 export default function PhrasesActionMenu({
@@ -20,6 +21,7 @@ export default function PhrasesActionMenu({
   onReader,
   boardPresent,
   isEditMode,
+  canEditBoard = true,
 }: PhrasesActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -74,8 +76,8 @@ export default function PhrasesActionMenu({
             <span className="text-sm font-medium text-text-primary whitespace-nowrap">New Board</span>
           </div>
 
-          {/* Add to Board Action - Only show when board is present */}
-          {boardPresent && (
+          {/* Add to Board Action - Only show when board is present and can be edited */}
+          {boardPresent && canEditBoard && (
             <div
               onClick={() => handleAction(onAddPhrase)}
               className="flex items-center gap-3 bg-surface shadow-lg rounded-full px-4 py-3 cursor-pointer hover:bg-surface-hover transition-colors duration-200 border border-border"
@@ -100,26 +102,28 @@ export default function PhrasesActionMenu({
             </div>
           )}
 
-          {/* Edit/Done Action */}
-          <div
-            onClick={() => handleAction(onEdit)}
-            className={`flex items-center gap-3 shadow-lg rounded-full px-4 py-3 cursor-pointer transition-all duration-200 border ${
-              isEditMode
-                ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500'
-                : 'bg-surface hover:bg-surface-hover border-border'
-            }`}
-            data-tooltip-id="edit-tooltip"
-            data-tooltip-content={isEditMode ? 'Finish editing the board' : 'Edit the current board'}
-          >
-            {isEditMode ? (
-              <Check className="w-5 h-5" />
-            ) : (
-              <Pencil className={`w-5 h-5 ${isEditMode ? 'text-white' : 'text-text-secondary'}`} />
-            )}
-            <span className={`text-sm font-medium whitespace-nowrap ${isEditMode ? 'text-white' : 'text-text-primary'}`}>
-              {isEditMode ? 'Done' : 'Edit'}
-            </span>
-          </div>
+          {/* Edit/Done Action - Only show when board can be edited */}
+          {canEditBoard && (
+            <div
+              onClick={() => handleAction(onEdit)}
+              className={`flex items-center gap-3 shadow-lg rounded-full px-4 py-3 cursor-pointer transition-all duration-200 border ${
+                isEditMode
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white border-blue-500'
+                  : 'bg-surface hover:bg-surface-hover border-border'
+              }`}
+              data-tooltip-id="edit-tooltip"
+              data-tooltip-content={isEditMode ? 'Finish editing the board' : 'Edit the current board'}
+            >
+              {isEditMode ? (
+                <Check className="w-5 h-5" />
+              ) : (
+                <Pencil className={`w-5 h-5 ${isEditMode ? 'text-white' : 'text-text-secondary'}`} />
+              )}
+              <span className={`text-sm font-medium whitespace-nowrap ${isEditMode ? 'text-white' : 'text-text-primary'}`}>
+                {isEditMode ? 'Done' : 'Edit'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Main Action Button */}
