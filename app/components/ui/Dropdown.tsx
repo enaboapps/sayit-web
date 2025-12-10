@@ -1,8 +1,8 @@
 'use client';
 
-import { Fragment, ReactNode } from 'react';
-import { Listbox, Transition } from '@headlessui/react';
-import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
+import { Fragment, ReactNode, useState } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { CheckIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 
 export interface DropdownOption<T = string> {
@@ -36,7 +36,13 @@ export function Dropdown<T = string>({
   error,
   renderOption
 }: DropdownProps<T>) {
+  const [isOpen, setIsOpen] = useState(false);
   const selectedOption = options.find(option => option.value === value);
+
+  const handleSelect = (optionValue: T) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
 
   return (
     <div className={className}>
@@ -48,79 +54,113 @@ export function Dropdown<T = string>({
       {description && (
         <p className="text-sm text-text-secondary mb-2">{description}</p>
       )}
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
-        <div className="relative">
-          <Listbox.Button className={cn(
-            'relative w-full py-3 pl-6 pr-10 text-left bg-surface border border-border rounded-3xl shadow-md hover:shadow-lg cursor-default focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:shadow-xl text-base transition-all duration-300',
-            disabled && 'opacity-50 cursor-not-allowed bg-surface-hover',
-            error && 'border-red-500 focus:ring-red-500/50 focus:border-red-500/50'
-          )}>
-            <span className="block truncate text-foreground">
-              {selectedOption ? selectedOption.label : placeholder}
-            </span>
-            <span className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-              <ChevronDownIcon
-                className="w-5 h-5 text-text-tertiary"
-                aria-hidden="true"
-              />
-            </span>
-          </Listbox.Button>
-          <Transition
+
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(true)}
+        className={cn(
+          'relative w-full py-3 pl-6 pr-10 text-left bg-surface border border-border rounded-3xl shadow-md hover:shadow-lg cursor-default focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:shadow-xl text-base transition-all duration-300',
+          disabled && 'opacity-50 cursor-not-allowed bg-surface-hover',
+          error && 'border-red-500 focus:ring-red-500/50 focus:border-red-500/50'
+        )}
+        disabled={disabled}
+      >
+        <span className="block truncate text-foreground">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <span className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+          <ChevronDownIcon
+            className="w-5 h-5 text-text-tertiary"
+            aria-hidden="true"
+          />
+        </span>
+      </button>
+
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsOpen(false)}>
+          <Transition.Child
             as={Fragment}
-            enter="transition ease-out duration-200"
-            enterFrom="opacity-0 translate-y-1"
-            enterTo="opacity-100 translate-y-0"
-            leave="transition ease-in duration-150"
-            leaveFrom="opacity-100 translate-y-0"
-            leaveTo="opacity-0 translate-y-1"
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            <Listbox.Options className="absolute z-10 w-full py-2 mt-2 overflow-auto text-base bg-surface rounded-3xl shadow-2xl max-h-60 border border-border focus:outline-none">
-              {options.map((option, optionIdx) => (
-                <Listbox.Option
-                  key={optionIdx}
-                  className={({ active }) =>
-                    cn(
-                      'cursor-default select-none relative py-3 pl-6 pr-10 mx-2 rounded-2xl transition-all duration-200',
-                      active ? 'text-white bg-gradient-to-r from-primary-500 to-primary-600' : 'text-foreground',
-                      option.disabled && 'opacity-50 cursor-not-allowed text-text-tertiary'
-                    )
-                  }
-                  value={option.value}
-                  disabled={option.disabled}
-                >
-                  {({ selected, active }) => (
-                    <>
-                      {renderOption ? (
-                        renderOption(option)
-                      ) : (
-                        <span
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-surface border border-border shadow-2xl transition-all">
+                  <div className="flex items-center justify-between p-4 border-b border-border">
+                    <Dialog.Title className="text-lg font-semibold text-foreground">
+                      {label || 'Select an option'}
+                    </Dialog.Title>
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      className="p-2 rounded-full hover:bg-surface-hover transition-colors"
+                    >
+                      <XMarkIcon className="w-5 h-5 text-text-tertiary" />
+                    </button>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto p-2">
+                    {options.map((option, optionIdx) => {
+                      const isSelected = option.value === value;
+                      return (
+                        <button
+                          key={optionIdx}
+                          type="button"
+                          onClick={() => !option.disabled && handleSelect(option.value)}
                           className={cn(
-                            'block truncate',
-                            selected ? 'font-semibold' : 'font-normal'
+                            'w-full cursor-default select-none relative py-3 pl-6 pr-10 rounded-2xl transition-all duration-200 text-left',
+                            isSelected
+                              ? 'text-white bg-gradient-to-r from-primary-500 to-primary-600'
+                              : 'text-foreground hover:bg-surface-hover',
+                            option.disabled && 'opacity-50 cursor-not-allowed text-text-tertiary'
                           )}
+                          disabled={option.disabled}
                         >
-                          {option.label}
-                        </span>
-                      )}
-                      {selected ? (
-                        <span
-                          className={cn(
-                            'absolute inset-y-0 right-0 flex items-center pr-4',
-                            active ? 'text-white' : 'text-primary-500'
+                          {renderOption ? (
+                            renderOption(option)
+                          ) : (
+                            <span
+                              className={cn(
+                                'block truncate',
+                                isSelected ? 'font-semibold' : 'font-normal'
+                              )}
+                            >
+                              {option.label}
+                            </span>
                           )}
-                        >
-                          <CheckIcon className="w-5 h-5" aria-hidden="true" />
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </Transition>
-        </div>
-      </Listbox>
+                          {isSelected && (
+                            <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-white">
+                              <CheckIcon className="w-5 h-5" aria-hidden="true" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
       {error && <p className="mt-2 text-sm text-red-500 bg-red-500/10 px-4 py-2 rounded-3xl">{error}</p>}
     </div>
   );
-} 
+}
