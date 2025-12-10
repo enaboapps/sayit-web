@@ -8,7 +8,9 @@ export default defineSchema({
     fullName: v.optional(v.string()),
     bypassSubscriptionCheck: v.optional(v.boolean()),
     role: v.optional(v.union(v.literal('caregiver'), v.literal('communicator'))),
-  }).index('by_user_id', ['userId']),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_email', ['email']),
 
   caregiverClients: defineTable({
     caregiverId: v.string(), // Clerk user ID of caregiver
