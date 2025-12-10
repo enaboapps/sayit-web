@@ -51,20 +51,28 @@ When work is complete:
 
 Releases are created when a milestone is complete:
 
-**Step 1: Run Linting**
+**Step 1: Run Tests**
+```bash
+# Ensure all tests pass before release
+npm test
+```
+
+Do not proceed with release if any tests fail.
+
+**Step 2: Run Linting**
 ```bash
 # Fix any linting issues before release
 npx eslint . --ext .js,.jsx,.ts,.tsx --fix
 ```
 
-**Step 2: Commit and Push Lint Fixes**
+**Step 3: Commit and Push Lint Fixes**
 ```bash
 git add -A
 git commit -m "Fix linting issues with auto-fix"
 git push
 ```
 
-**Step 3: Version Bump**
+**Step 4: Version Bump**
 ```bash
 # Choose based on milestone type:
 npm version major  # Breaking changes (1.0.0 -> 2.0.0)
@@ -77,12 +85,12 @@ This command will:
 - Create a git commit with the version bump
 - Create a git tag (e.g., v1.15.0)
 
-**Step 4: Push Commits and Tags**
+**Step 5: Push Commits and Tags**
 ```bash
 git push && git push --tags
 ```
 
-**Step 5: Create GitHub Release**
+**Step 6: Create GitHub Release**
 ```bash
 # Create release with auto-generated notes (no title specified)
 gh release create v1.15.0 --generate-notes
@@ -92,7 +100,7 @@ The release will:
 - Use the version tag created by `npm version`
 - Auto-generate release notes from merged PRs
 
-**Step 6: Close Milestone**
+**Step 7: Close Milestone**
 ```bash
 # Close the milestone (use milestone number from GitHub)
 gh api repos/:owner/:repo/milestones/<number> -X PATCH -f state=closed
@@ -104,9 +112,10 @@ When working with AI agents on this project:
 
 1. **Always create an issue first** - Don't start coding without a tracked issue
 2. **Work in feature branches** - Never commit directly to `main`
-3. **Build before PR** - Run `npm run build` to catch issues early
-4. **Follow the release process** - Use npm version commands and gh CLI for releases
-5. **Check dependencies** - Ensure any new dependencies align with the existing tech stack
+3. **Run tests before PR** - Run `npm test` to catch regressions
+4. **Build before PR** - Run `npm run build` to catch issues early
+5. **Follow the release process** - Use npm version commands and gh CLI for releases
+6. **Check dependencies** - Ensure any new dependencies align with the existing tech stack
 
 ## Project Structure
 
@@ -117,6 +126,7 @@ sayit-web/
 ├── convex/          # Convex backend functions
 ├── lib/             # Utility functions
 ├── public/          # Static assets
+├── tests/           # Jest test suites
 └── ...
 ```
 
