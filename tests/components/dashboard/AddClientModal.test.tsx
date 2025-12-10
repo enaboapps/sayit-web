@@ -49,7 +49,7 @@ describe('AddClientModal', () => {
   it('shows helper text about existing account', () => {
     render(<AddClientModal onClose={mockOnClose} />);
 
-    expect(screen.getByText(/must have an existing sayit account/i)).toBeInTheDocument();
+    expect(screen.getByText(/must have an existing sayit! account/i)).toBeInTheDocument();
   });
 
   it('shows found user when profile exists', () => {

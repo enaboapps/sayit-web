@@ -6,12 +6,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useSubscription } from '@/app/hooks/useSubscription';
 import {
   QuestionMarkCircleIcon,
   HomeIcon,
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
-  UsersIcon
+  UsersIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { UserButton } from '@clerk/nextjs';
@@ -20,6 +22,7 @@ export default function Sidebar() {
   const { user } = useAuth();
   const pathname = usePathname();
   const profile = useQuery(api.profiles.getProfile);
+  const { isActive: hasSubscription } = useSubscription();
 
   const isCaregiver = profile?.role === 'caregiver';
 
@@ -47,8 +50,17 @@ export default function Sidebar() {
         {user && isCaregiver && (
           <SidebarItem
             href="/dashboard"
-            icon={<UsersIcon className="w-6 h-6" />}
-            title="Clients"
+            icon={
+              hasSubscription ? (
+                <UsersIcon className="w-6 h-6" />
+              ) : (
+                <div className="relative">
+                  <UsersIcon className="w-6 h-6" />
+                  <LockClosedIcon className="w-3 h-3 absolute -bottom-1 -right-1 text-text-tertiary" />
+                </div>
+              )
+            }
+            title={hasSubscription ? "Clients" : "Clients (Pro)"}
             isActive={pathname?.startsWith('/dashboard') ?? false}
           />
         )}
