@@ -40,9 +40,9 @@ export const getSharedBoardsForCommunicator = query({
           sharedAt: share.sharedAt,
           caregiver: caregiverProfile
             ? {
-                fullName: caregiverProfile.fullName,
-                email: caregiverProfile.email,
-              }
+              fullName: caregiverProfile.fullName,
+              email: caregiverProfile.email,
+            }
             : null,
         };
       })
@@ -89,9 +89,9 @@ export const getBoardShares = query({
           sharedAt: share.sharedAt,
           communicator: communicatorProfile
             ? {
-                fullName: communicatorProfile.fullName,
-                email: communicatorProfile.email,
-              }
+              fullName: communicatorProfile.fullName,
+              email: communicatorProfile.email,
+            }
             : null,
         };
       })
