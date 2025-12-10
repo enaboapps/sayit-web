@@ -86,7 +86,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
               autoFocus
             />
             <p className="mt-2 text-text-tertiary text-sm">
-              The client must have an existing SayIt account
+              The client must have an existing SayIt! account
             </p>
           </div>
 

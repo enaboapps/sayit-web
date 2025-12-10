@@ -139,7 +139,7 @@ export default function SettingsPage() {
             >
               <SettingsCard
                 title="Your Role"
-                description="Change how you use SayIt"
+                description="Change how you use SayIt!"
                 icon={<UserCircleIcon className="w-6 h-6" />}
               >
                 <RoleChangeSection />
