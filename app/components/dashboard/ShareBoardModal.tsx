@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { XMarkIcon, FolderIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, FolderIcon, CheckIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { Id } from '@/convex/_generated/dataModel';
 
 interface ShareBoardModalProps {
@@ -102,26 +103,44 @@ export default function ShareBoardModal({ communicatorId, onClose }: ShareBoardM
               <label className="block text-sm font-medium text-foreground mb-2">
                 Permission level
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setAccessLevel('view')}
-                  className={`flex-1 px-4 py-2 rounded-xl border-2 transition-all text-sm font-medium ${
+                  className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                     accessLevel === 'view'
-                      ? 'border-primary-500 bg-primary-500/10 text-primary-400'
-                      : 'border-border text-text-secondary hover:border-primary-500/50'
+                      ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/30'
+                      : 'border-border hover:border-primary-500/50'
                   }`}
                 >
-                  View only
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <EyeIcon className={`w-5 h-5 ${accessLevel === 'view' ? 'text-primary-400' : 'text-text-secondary'}`} />
+                    {accessLevel === 'view' && <CheckCircleIcon className="w-5 h-5 text-primary-500" />}
+                  </div>
+                  <span className={`text-sm font-medium ${accessLevel === 'view' ? 'text-primary-400' : 'text-text-secondary'}`}>
+                    View only
+                  </span>
+                  <p className={`text-xs mt-1 ${accessLevel === 'view' ? 'text-primary-400/70' : 'text-text-tertiary'}`}>
+                    Can see phrases
+                  </p>
                 </button>
                 <button
                   onClick={() => setAccessLevel('edit')}
-                  className={`flex-1 px-4 py-2 rounded-xl border-2 transition-all text-sm font-medium ${
+                  className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                     accessLevel === 'edit'
-                      ? 'border-primary-500 bg-primary-500/10 text-primary-400'
-                      : 'border-border text-text-secondary hover:border-primary-500/50'
+                      ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/30'
+                      : 'border-border hover:border-primary-500/50'
                   }`}
                 >
-                  Can edit
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <PencilIcon className={`w-5 h-5 ${accessLevel === 'edit' ? 'text-primary-400' : 'text-text-secondary'}`} />
+                    {accessLevel === 'edit' && <CheckCircleIcon className="w-5 h-5 text-primary-500" />}
+                  </div>
+                  <span className={`text-sm font-medium ${accessLevel === 'edit' ? 'text-primary-400' : 'text-text-secondary'}`}>
+                    Can edit
+                  </span>
+                  <p className={`text-xs mt-1 ${accessLevel === 'edit' ? 'text-primary-400/70' : 'text-text-tertiary'}`}>
+                    Add & modify phrases
+                  </p>
                 </button>
               </div>
             </div>

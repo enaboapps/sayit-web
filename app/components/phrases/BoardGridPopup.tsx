@@ -1,6 +1,6 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
-import { PencilIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import type { BoardSummary } from './types';
 
 interface BoardGridPopupProps {
@@ -59,37 +59,48 @@ export default function BoardGridPopup({
                 </Dialog.Title>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {boards.map((board) => (
-                    <div
-                      key={board.id}
-                      className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                        selectedBoard?.id === board.id
-                          ? 'border-primary-500 bg-primary-500/10 shadow-lg'
-                          : 'border-border hover:border-primary-300 hover:shadow-md'
-                      }`}
-                      onClick={() => {
-                        onSelectBoard(board);
-                        onClose();
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-foreground text-base">{board.name}</h4>
+                  {boards.map((board) => {
+                    const canEdit = !board.isShared || board.accessLevel === 'edit';
+                    return (
+                      <div
+                        key={board.id}
+                        className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                          selectedBoard?.id === board.id
+                            ? 'border-primary-500 bg-primary-500/10 shadow-lg'
+                            : 'border-border hover:border-primary-300 hover:shadow-md'
+                        }`}
+                        onClick={() => {
+                          onSelectBoard(board);
+                          onClose();
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-foreground text-base">{board.name}</h4>
+                            {board.isShared && board.sharedBy && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <UserGroupIcon className="h-3 w-3 text-primary-400" />
+                                <span className="text-xs text-primary-400">
+                                  Shared by {board.sharedBy}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {isEditMode && canEdit && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditBoard(board.id);
+                              }}
+                              className="p-2 hover:bg-surface-hover rounded-xl transition-all duration-200"
+                            >
+                              <PencilIcon className="h-4 w-4 text-text-secondary hover:text-foreground transition-colors duration-200" />
+                            </button>
+                          )}
                         </div>
-                        {isEditMode && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditBoard(board.id);
-                            }}
-                            className="p-2 hover:bg-surface-hover rounded-xl transition-all duration-200"
-                          >
-                            <PencilIcon className="h-4 w-4 text-text-secondary hover:text-foreground transition-colors duration-200" />
-                          </button>
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </Dialog.Panel>
             </Transition.Child>

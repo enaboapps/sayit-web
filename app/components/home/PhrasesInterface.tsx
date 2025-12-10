@@ -165,9 +165,15 @@ export default function PhrasesInterface() {
       name: board.name,
       position: board.position,
       phrases: board._id === selectedBoardId ? phrases : [],
+      isShared: board.isShared,
+      accessLevel: board.accessLevel,
+      sharedBy: board.sharedBy,
     })) || [];
 
   const selectedBoard = transformedBoards.find(board => board.id === selectedBoardId) || null;
+
+  // Check if current board allows editing
+  const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
   return (
     <>
@@ -218,18 +224,18 @@ export default function PhrasesInterface() {
                         key={phrase.id}
                         phrase={phrase}
                         onPress={() => handlePhrasePress(phrase)}
-                        onEdit={isEditMode ? () => handleEditPhrase(phrase) : undefined}
+                        onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
                         className="sm:aspect-square"
                       />
                     ))}
-                    {typingText.trim() && (
+                    {typingText.trim() && canEditCurrentBoard && (
                       <ActionTile
                         text="+ Add as Phrase"
                         onClick={handleAddTypingAsPhrase}
                         className="sm:aspect-square"
                       />
                     )}
-                    {isEditMode && (
+                    {isEditMode && canEditCurrentBoard && (
                       <ActionTile
                         text="+ Add Phrase"
                         onClick={handleAddPhrase}
@@ -250,6 +256,7 @@ export default function PhrasesInterface() {
         onReader={handleReader}
         boardPresent={transformedBoards.length > 0}
         isEditMode={isEditMode}
+        canEditBoard={canEditCurrentBoard}
       />
       <ReaderPopup
         phrases={phrases}

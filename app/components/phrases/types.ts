@@ -9,4 +9,7 @@ export interface BoardSummary {
   name: string;
   position?: number;
   phrases: PhraseSummary[];
+  isShared?: boolean;
+  accessLevel?: 'view' | 'edit';
+  sharedBy?: string | null;
 }
