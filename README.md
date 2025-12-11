@@ -16,7 +16,7 @@ SayIt! is an AI-powered augmentative and alternative communication (AAC) app tha
 
 ## Tech Stack
 
-- Next.js 15 / React 19 / TypeScript
+- Next.js 16 / React 19 / TypeScript
 - Tailwind CSS / Framer Motion
 - Clerk (authentication & billing)
 - Convex (real-time database)
