@@ -23,8 +23,8 @@ export default function ClientCard({ client }: ClientCardProps) {
   const [isRemoving, setIsRemoving] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const removeClient = useMutation(api.caregiverClients.removeClient);
-  const sharedBoards = useQuery(api.sharedBoards.getSharedBoardsForClient, {
-    communicatorId: client.communicatorId,
+  const clientBoards = useQuery(api.phraseBoards.getBoardsForClient, {
+    clientId: client.communicatorId,
   });
 
   const handleRemove = async () => {
@@ -39,7 +39,7 @@ export default function ClientCard({ client }: ClientCardProps) {
   };
 
   const displayName = client.profile?.fullName || client.profile?.email || 'Unknown';
-  const boardCount = sharedBoards?.length ?? 0;
+  const boardCount = clientBoards?.length ?? 0;
 
   return (
     <div className="bg-surface rounded-xl border border-border p-4 hover:border-primary-500/30 transition-colors">

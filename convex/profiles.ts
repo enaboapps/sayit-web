@@ -70,20 +70,70 @@ export const upsertProfile = mutation({
   },
 });
 
-// Mutation: Delete user profile
+// Mutation: Delete user profile with full relationship cleanup
+// This handles cascade deletion of all related data when a user account is deleted
 export const deleteProfile = mutation({
   args: {
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = args.userId;
+
+    // 1. Get user's profile to check their role
     const profile = await ctx.db
       .query('profiles')
-      .withIndex('by_user_id', (q) => q.eq('userId', args.userId))
+      .withIndex('by_user_id', (q) => q.eq('userId', userId))
       .first();
 
-    if (profile) {
-      await ctx.db.delete(profile._id);
+    if (!profile) {
+      return; // No profile to delete
     }
+
+    // 2. Clean up caregiverClients relationships (as caregiver)
+    const asCaregiver = await ctx.db
+      .query('caregiverClients')
+      .withIndex('by_caregiver', (q) => q.eq('caregiverId', userId))
+      .collect();
+
+    for (const rel of asCaregiver) {
+      await ctx.db.delete(rel._id);
+    }
+
+    // 3. Clean up caregiverClients relationships (as communicator)
+    const asCommunicator = await ctx.db
+      .query('caregiverClients')
+      .withIndex('by_communicator', (q) => q.eq('communicatorId', userId))
+      .collect();
+
+    for (const rel of asCommunicator) {
+      await ctx.db.delete(rel._id);
+    }
+
+    // 4. Delete boards created for clients (forClientId set) and their phrases
+    const userBoards = await ctx.db
+      .query('phraseBoards')
+      .withIndex('by_user_id', (q) => q.eq('userId', userId))
+      .collect();
+
+    for (const board of userBoards) {
+      if (board.forClientId) {
+        // Delete phrase associations for this board
+        const phraseLinks = await ctx.db
+          .query('phraseBoardPhrases')
+          .withIndex('by_board', (q) => q.eq('boardId', board._id))
+          .collect();
+
+        for (const link of phraseLinks) {
+          await ctx.db.delete(link._id);
+        }
+
+        // Delete the board
+        await ctx.db.delete(board._id);
+      }
+    }
+
+    // 5. Finally delete the profile
+    await ctx.db.delete(profile._id);
   },
 });
 

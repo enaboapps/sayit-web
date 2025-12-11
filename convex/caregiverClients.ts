@@ -98,7 +98,7 @@ export const addClient = mutation({
       throw new Error('Only caregivers can add clients');
     }
 
-    // Verify the communicator exists
+    // Verify the communicator exists and has communicator role
     const communicatorProfile = await ctx.db
       .query('profiles')
       .withIndex('by_user_id', (q) => q.eq('userId', args.communicatorId))
@@ -106,6 +106,10 @@ export const addClient = mutation({
 
     if (!communicatorProfile) {
       throw new Error('Communicator not found');
+    }
+
+    if (communicatorProfile.role !== 'communicator') {
+      throw new Error('Can only add users with communicator role as clients');
     }
 
     // Check if relationship already exists
@@ -132,6 +136,7 @@ export const addClient = mutation({
 });
 
 // Mutation: Remove a client
+// Deletes relationship, all shared boards, and all boards created for this client
 export const removeClient = mutation({
   args: {
     communicatorId: v.string(),
@@ -142,10 +147,12 @@ export const removeClient = mutation({
       throw new Error('Not authenticated');
     }
 
+    const caregiverId = identity.subject;
+
     // Find the relationship
     const relationships = await ctx.db
       .query('caregiverClients')
-      .withIndex('by_caregiver', (q) => q.eq('caregiverId', identity.subject))
+      .withIndex('by_caregiver', (q) => q.eq('caregiverId', caregiverId))
       .collect();
 
     const relationship = relationships.find(
@@ -156,21 +163,32 @@ export const removeClient = mutation({
       throw new Error('Client relationship not found');
     }
 
-    // Delete all shared boards for this client
-    const sharedBoards = await ctx.db
-      .query('sharedBoards')
-      .withIndex('by_communicator', (q) => q.eq('communicatorId', args.communicatorId))
+    // 1. Delete all boards created FOR this client
+    const myBoards = await ctx.db
+      .query('phraseBoards')
+      .withIndex('by_user_id', (q) => q.eq('userId', caregiverId))
       .collect();
 
-    const boardsToDelete = sharedBoards.filter(
-      (sb) => sb.caregiverId === identity.subject
+    const clientBoards = myBoards.filter(
+      (board) => board.forClientId === args.communicatorId
     );
 
-    for (const board of boardsToDelete) {
+    for (const board of clientBoards) {
+      // Delete phrase associations first
+      const phraseLinks = await ctx.db
+        .query('phraseBoardPhrases')
+        .withIndex('by_board', (q) => q.eq('boardId', board._id))
+        .collect();
+
+      for (const link of phraseLinks) {
+        await ctx.db.delete(link._id);
+      }
+
+      // Delete the board
       await ctx.db.delete(board._id);
     }
 
-    // Delete the relationship
+    // 2. Delete the relationship
     await ctx.db.delete(relationship._id);
   },
 });
