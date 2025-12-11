@@ -60,7 +60,7 @@ export default function Sidebar() {
                 </div>
               )
             }
-            title={hasSubscription ? "Clients" : "Clients (Pro)"}
+            title={hasSubscription ? 'Clients' : 'Clients (Pro)'}
             isActive={pathname?.startsWith('/dashboard') ?? false}
           />
         )}

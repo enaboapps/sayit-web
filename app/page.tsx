@@ -4,6 +4,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
 import HomeFeatures from '@/app/components/home/HomeFeatures';
 import PhrasesInterface from '@/app/components/home/PhrasesInterface';
+import ConnectionRequestsBanner from '@/app/components/connection/ConnectionRequestsBanner';
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -17,7 +18,10 @@ export default function Home() {
       {!user ? (
         <HomeFeatures />
       ) : (
-        <PhrasesInterface />
+        <>
+          <ConnectionRequestsBanner />
+          <PhrasesInterface />
+        </>
       )}
     </div>
   );

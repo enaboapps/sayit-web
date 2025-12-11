@@ -25,7 +25,7 @@ describe('AddClientModal', () => {
 
     expect(screen.getByRole('heading', { name: 'Add Client' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('client@example.com')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /add client/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send request/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
   });
 
@@ -46,10 +46,10 @@ describe('AddClientModal', () => {
     expect(emailInput).toHaveValue('test@example.com');
   });
 
-  it('shows helper text about existing account', () => {
+  it('shows helper text about request process', () => {
     render(<AddClientModal onClose={mockOnClose} />);
 
-    expect(screen.getByText(/must have an existing sayit! account/i)).toBeInTheDocument();
+    expect(screen.getByText(/must accept your request/i)).toBeInTheDocument();
   });
 
   it('shows found user when profile exists', () => {
