@@ -1,16 +1,17 @@
-import { useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 export function useSubscription() {
-  const { user, isLoaded } = useUser();
+  const { has, isLoaded: authLoaded } = useAuth();
+  const { user, isLoaded: userLoaded } = useUser();
 
-  const loading = !isLoaded;
+  const loading = !authLoaded || !userLoaded;
 
   // Check for bypass flag (for testing/admin purposes)
   const bypassEnabled = user?.publicMetadata?.bypassSubscriptionCheck === true;
 
-  // Clerk stores subscription status in user public metadata
-  const subscriptionStatus = user?.publicMetadata?.subscriptionStatus as string | undefined;
-  const isActive = subscriptionStatus === 'active' || bypassEnabled;
+  // Use Clerk's native billing has() helper to check subscription plan
+  const hasProPlan = has?.({ plan: 'sayit_pro_monthly' }) ?? false;
+  const isActive = hasProPlan || bypassEnabled;
 
   return { isActive, loading, bypassEnabled };
 }
