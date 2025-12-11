@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { UserIcon, HeartIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
+import { UserIcon, HeartIcon, CheckCircleIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
 
 interface RoleSelectionModalProps {
   onComplete: () => void;
@@ -12,9 +12,19 @@ interface RoleSelectionModalProps {
 export default function RoleSelectionModal({ onComplete }: RoleSelectionModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'caregiver' | 'communicator' | null>(null);
+  const [step, setStep] = useState<'select' | 'confirm'>('select');
   const setRole = useMutation(api.profiles.setRole);
 
-  const handleSubmit = async () => {
+  const handleContinue = () => {
+    if (!selectedRole) return;
+    setStep('confirm');
+  };
+
+  const handleBack = () => {
+    setStep('select');
+  };
+
+  const handleConfirm = async () => {
     if (!selectedRole) return;
 
     setIsSubmitting(true);
@@ -27,6 +37,74 @@ export default function RoleSelectionModal({ onComplete }: RoleSelectionModalPro
     }
   };
 
+  const roleConfig = {
+    communicator: {
+      icon: UserIcon,
+      title: 'Communicator',
+      description: 'You will use boards and phrases to express yourself. You can create your own boards or receive boards from a caregiver.',
+    },
+    caregiver: {
+      icon: HeartIcon,
+      title: 'Caregiver',
+      description: 'You will create and manage boards for your clients. You can share boards with configurable permissions.',
+    },
+  };
+
+  // Confirmation step
+  if (step === 'confirm' && selectedRole) {
+    const config = roleConfig[selectedRole];
+    const Icon = config.icon;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 text-text-secondary hover:text-foreground transition-colors mb-6"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+
+          <div className="text-center mb-8">
+            <div className="inline-flex p-4 rounded-full bg-primary-500/20 mb-4">
+              <Icon className="w-10 h-10 text-primary-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Continue as {config.title}?
+            </h2>
+            <p className="text-text-secondary">
+              {config.description}
+            </p>
+          </div>
+
+          <div className="bg-surface-hover rounded-xl p-4 mb-8">
+            <p className="text-text-secondary text-sm text-center">
+              You can change your role later in settings, but switching roles may result in some data being removed.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleBack}
+              className="flex-1 px-6 py-4 bg-surface-hover hover:bg-background text-foreground font-semibold rounded-xl transition-colors"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Setting up...' : 'Confirm'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Selection step
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8">
@@ -100,11 +178,11 @@ export default function RoleSelectionModal({ onComplete }: RoleSelectionModalPro
         </div>
 
         <button
-          onClick={handleSubmit}
-          disabled={!selectedRole || isSubmitting}
+          onClick={handleContinue}
+          disabled={!selectedRole}
           className="w-full px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Setting up...' : 'Continue'}
+          Continue
         </button>
 
         <p className="text-text-tertiary text-xs text-center mt-4">

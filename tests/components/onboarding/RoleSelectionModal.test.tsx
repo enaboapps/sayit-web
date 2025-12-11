@@ -101,7 +101,39 @@ describe('RoleSelectionModal', () => {
     expect(communicatorOption).not.toHaveClass('border-primary-500');
   });
 
-  it('calls setRole mutation with communicator', async () => {
+  it('shows confirmation step after clicking continue', async () => {
+    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+
+    const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
+    await userEvent.click(communicatorOption!);
+
+    const continueButton = screen.getByRole('button', { name: /continue/i });
+    await userEvent.click(continueButton);
+
+    // Should show confirmation screen
+    expect(screen.getByText(/continue as communicator/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /go back/i })).toBeInTheDocument();
+  });
+
+  it('goes back to selection when clicking go back', async () => {
+    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+
+    const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
+    await userEvent.click(communicatorOption!);
+
+    const continueButton = screen.getByRole('button', { name: /continue/i });
+    await userEvent.click(continueButton);
+
+    // Now on confirmation screen
+    const goBackButton = screen.getByRole('button', { name: /go back/i });
+    await userEvent.click(goBackButton);
+
+    // Should be back on selection screen
+    expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+  });
+
+  it('calls setRole mutation with communicator after confirm', async () => {
     mockSetRole.mockResolvedValue(undefined);
 
     render(<RoleSelectionModal onComplete={mockOnComplete} />);
@@ -112,12 +144,15 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    const confirmButton = screen.getByRole('button', { name: /confirm/i });
+    await userEvent.click(confirmButton);
+
     await waitFor(() => {
       expect(mockSetRole).toHaveBeenCalledWith({ role: 'communicator' });
     });
   });
 
-  it('calls setRole mutation with caregiver', async () => {
+  it('calls setRole mutation with caregiver after confirm', async () => {
     mockSetRole.mockResolvedValue(undefined);
 
     render(<RoleSelectionModal onComplete={mockOnComplete} />);
@@ -127,6 +162,9 @@ describe('RoleSelectionModal', () => {
 
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
+
+    const confirmButton = screen.getByRole('button', { name: /confirm/i });
+    await userEvent.click(confirmButton);
 
     await waitFor(() => {
       expect(mockSetRole).toHaveBeenCalledWith({ role: 'caregiver' });
@@ -145,6 +183,9 @@ describe('RoleSelectionModal', () => {
 
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
+
+    const confirmButton = screen.getByRole('button', { name: /confirm/i });
+    await userEvent.click(confirmButton);
 
     // The loading text is "Setting up..."
     expect(screen.getByText(/setting up/i)).toBeInTheDocument();
@@ -172,9 +213,12 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    const confirmButton = screen.getByRole('button', { name: /confirm/i });
+    await userEvent.click(confirmButton);
+
     // Should not crash, button should re-enable
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /continue/i })).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: /confirm/i })).not.toBeDisabled();
     });
   });
 
@@ -188,6 +232,9 @@ describe('RoleSelectionModal', () => {
 
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
+
+    const confirmButton = screen.getByRole('button', { name: /confirm/i });
+    await userEvent.click(confirmButton);
 
     await waitFor(() => {
       expect(mockOnComplete).toHaveBeenCalled();
