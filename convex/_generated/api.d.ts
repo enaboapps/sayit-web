@@ -9,6 +9,7 @@
  */
 
 import type * as caregiverClients from "../caregiverClients.js";
+import type * as connectionRequests from "../connectionRequests.js";
 import type * as phraseBoards from "../phraseBoards.js";
 import type * as phrases from "../phrases.js";
 import type * as profiles from "../profiles.js";
@@ -23,6 +24,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   caregiverClients: typeof caregiverClients;
+  connectionRequests: typeof connectionRequests;
   phraseBoards: typeof phraseBoards;
   phrases: typeof phrases;
   profiles: typeof profiles;

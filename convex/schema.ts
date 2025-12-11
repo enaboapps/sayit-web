@@ -20,6 +20,15 @@ export default defineSchema({
     .index('by_caregiver', ['caregiverId'])
     .index('by_communicator', ['communicatorId']),
 
+  connectionRequests: defineTable({
+    caregiverId: v.string(), // Clerk user ID of caregiver requesting connection
+    communicatorId: v.string(), // Clerk user ID of communicator being requested
+    status: v.union(v.literal('pending'), v.literal('accepted'), v.literal('rejected')),
+    createdAt: v.number(),
+  })
+    .index('by_caregiver', ['caregiverId'])
+    .index('by_communicator', ['communicatorId']),
+
   phrases: defineTable({
     userId: v.string(), // Clerk user ID
     text: v.string(),

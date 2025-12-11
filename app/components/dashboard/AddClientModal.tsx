@@ -12,8 +12,9 @@ interface AddClientModalProps {
 export default function AddClientModal({ onClose }: AddClientModalProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
-  const addClient = useMutation(api.caregiverClients.addClient);
+  const [isSending, setIsSending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const createRequest = useMutation(api.connectionRequests.createConnectionRequest);
 
   // Query to find user by email
   const foundProfile = useQuery(
@@ -40,14 +41,15 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
       return;
     }
 
-    setIsAdding(true);
+    setIsSending(true);
     try {
-      await addClient({ communicatorId: foundProfile.userId });
-      onClose();
+      await createRequest({ communicatorId: foundProfile.userId });
+      setSuccess(true);
+      setTimeout(() => onClose(), 1500);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to add client';
+      const message = err instanceof Error ? err.message : 'Failed to send request';
       setError(message);
-      setIsAdding(false);
+      setIsSending(false);
     }
   };
 
@@ -86,7 +88,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
               autoFocus
             />
             <p className="mt-2 text-text-tertiary text-sm">
-              The client must have an existing SayIt! account
+              They must accept your request before you can create boards for them
             </p>
           </div>
 
@@ -96,7 +98,13 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
             </div>
           )}
 
-          {foundProfile && !error && (
+          {success && (
+            <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+              Request sent! Waiting for {foundProfile?.fullName || foundProfile?.email} to accept.
+            </div>
+          )}
+
+          {foundProfile && !error && !success && (
             <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
               Found: {foundProfile.fullName || foundProfile.email}
             </div>
@@ -108,15 +116,17 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
               onClick={onClose}
               className="flex-1 px-4 py-3 bg-surface-hover hover:bg-background text-foreground rounded-xl transition-colors"
             >
-              Cancel
+              {success ? 'Close' : 'Cancel'}
             </button>
-            <button
-              type="submit"
-              disabled={isAdding || !email.trim()}
-              className="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isAdding ? 'Adding...' : 'Add Client'}
-            </button>
+            {!success && (
+              <button
+                type="submit"
+                disabled={isSending || !email.trim()}
+                className="flex-1 px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSending ? 'Sending...' : 'Send Request'}
+              </button>
+            )}
           </div>
         </form>
       </div>
