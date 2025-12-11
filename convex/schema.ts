@@ -20,17 +20,6 @@ export default defineSchema({
     .index('by_caregiver', ['caregiverId'])
     .index('by_communicator', ['communicatorId']),
 
-  sharedBoards: defineTable({
-    boardId: v.id('phraseBoards'),
-    caregiverId: v.string(), // Clerk user ID of caregiver (owner)
-    communicatorId: v.string(), // Clerk user ID of communicator
-    accessLevel: v.union(v.literal('view'), v.literal('edit')),
-    sharedAt: v.number(),
-  })
-    .index('by_board', ['boardId'])
-    .index('by_caregiver', ['caregiverId'])
-    .index('by_communicator', ['communicatorId']),
-
   phrases: defineTable({
     userId: v.string(), // Clerk user ID
     text: v.string(),

@@ -35,8 +35,8 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
       return;
     }
 
-    if (foundProfile.role === 'caregiver') {
-      setError('This user is registered as a caregiver, not a communicator.');
+    if (foundProfile.role !== 'communicator') {
+      setError('This user must be registered as a communicator to be added as a client.');
       return;
     }
 

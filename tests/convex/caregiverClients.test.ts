@@ -289,23 +289,23 @@ describe('caregiverClients', () => {
       expect(mockDb.delete).toHaveBeenCalledWith('link-to-remove');
     });
 
-    test('cascades delete to sharedBoards', async () => {
-      const sharedBoard = {
-        _id: 'shared-1',
-        boardId: 'board-1',
-        caregiverId: 'caregiver-123',
-        communicatorId: 'communicator-456',
+    test('cascades delete to client boards', async () => {
+      const clientBoard = {
+        _id: 'board-1',
+        userId: 'caregiver-123',
+        forClientId: 'communicator-456',
+        name: 'Test Board',
       };
 
       mockDb.delete.mockResolvedValue(undefined);
 
-      // Simulate cascade delete
-      const sharedBoards = [sharedBoard];
-      for (const sb of sharedBoards) {
-        await mockDb.delete(sb._id);
+      // Simulate cascade delete of boards created for client
+      const clientBoards = [clientBoard];
+      for (const board of clientBoards) {
+        await mockDb.delete(board._id);
       }
 
-      expect(mockDb.delete).toHaveBeenCalledWith('shared-1');
+      expect(mockDb.delete).toHaveBeenCalledWith('board-1');
     });
   });
 });
