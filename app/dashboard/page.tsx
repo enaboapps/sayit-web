@@ -43,10 +43,33 @@ export default function DashboardPage() {
               <div className="p-4 rounded-full bg-primary-500/10 w-fit mx-auto mb-6">
                 <UsersIcon className="w-12 h-12 text-primary-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Client Management</h2>
-              <p className="text-text-secondary mb-6 max-w-md mx-auto">
-                Manage multiple clients, create personalized boards, and track their communication needs with a Pro subscription.
+              <h2 className="text-2xl font-bold text-foreground mb-4">Client Management</h2>
+              <p className="text-text-secondary mb-8 max-w-md mx-auto">
+                Help your clients communicate more effectively with personalized AAC boards.
               </p>
+
+              <div className="bg-surface rounded-xl p-6 max-w-lg mx-auto mb-8 text-left">
+                <h3 className="font-semibold text-foreground mb-4">With Pro, you can:</h3>
+                <ul className="space-y-3 text-text-secondary">
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary-500 mt-0.5">✓</span>
+                    <span>Add and manage multiple clients from one account</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary-500 mt-0.5">✓</span>
+                    <span>Create personalized boards tailored to each client&apos;s needs</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary-500 mt-0.5">✓</span>
+                    <span>Set view-only or edit permissions for each board</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary-500 mt-0.5">✓</span>
+                    <span>Clients see boards instantly on their own devices</span>
+                  </li>
+                </ul>
+              </div>
+
               <a
                 href="/pricing"
                 className="inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
