@@ -75,10 +75,13 @@ export default function RoleGate({ children }: RoleGateProps) {
     setShowRoleModal(false);
   };
 
+  // Don't render modal while still loading to prevent flash
+  const shouldRenderModal = showRoleModal && !authLoading && profile !== undefined;
+
   return (
     <>
       {children}
-      {showRoleModal && <RoleSelectionModal onComplete={handleRoleComplete} />}
+      {shouldRenderModal && <RoleSelectionModal onComplete={handleRoleComplete} />}
     </>
   );
 }
