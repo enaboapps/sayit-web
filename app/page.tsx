@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -14,6 +14,17 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const profile = useQuery(api.profiles.getProfile);
   const [roleJustSelected, setRoleJustSelected] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
+  // Add delay before showing role selection to prevent flash
+  useEffect(() => {
+    if (!authLoading && (!user || profile !== undefined)) {
+      const timer = setTimeout(() => {
+        setIsReady(true);
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, user, profile]);
 
   if (authLoading) {
     return <AnimatedLoading />;
@@ -21,6 +32,11 @@ export default function Home() {
 
   // Show loading while profile is being fetched for logged-in users
   if (user && profile === undefined) {
+    return <AnimatedLoading />;
+  }
+
+  // Show loading during delay period to prevent flash
+  if (!isReady) {
     return <AnimatedLoading />;
   }
 
