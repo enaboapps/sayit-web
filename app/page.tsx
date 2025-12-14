@@ -10,18 +10,39 @@ import PhrasesInterface from '@/app/components/home/PhrasesInterface';
 import ConnectionRequestsBanner from '@/app/components/connection/ConnectionRequestsBanner';
 import RoleSelectionModal from '@/app/components/onboarding/RoleSelectionModal';
 
+const ROLE_CACHE_KEY = 'sayit_user_has_role';
+
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const profile = useQuery(api.profiles.getProfile);
   const [roleJustSelected, setRoleJustSelected] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  // Add delay before showing role selection to prevent flash
+  // Check localStorage cache on mount for instant feedback
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cachedHasRole = localStorage.getItem(ROLE_CACHE_KEY);
+      // If cache says user has a role, we can skip the delay
+      if (cachedHasRole === 'true' && !authLoading && user) {
+        setIsReady(true);
+      }
+    }
+  }, [authLoading, user]);
+
+  // Update cache when profile loads
+  useEffect(() => {
+    if (profile && typeof window !== 'undefined') {
+      const hasRole = profile.role ? 'true' : 'false';
+      localStorage.setItem(ROLE_CACHE_KEY, hasRole);
+    }
+  }, [profile]);
+
+  // Add delay before showing role selection to prevent flash (increased to 250ms)
   useEffect(() => {
     if (!authLoading && (!user || profile !== undefined)) {
       const timer = setTimeout(() => {
         setIsReady(true);
-      }, 150);
+      }, 250);
       return () => clearTimeout(timer);
     }
   }, [authLoading, user, profile]);
