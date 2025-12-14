@@ -16,18 +16,12 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const profile = useQuery(api.profiles.getProfile);
   const [roleJustSelected, setRoleJustSelected] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
-  // Check localStorage cache on mount for instant feedback
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const cachedHasRole = localStorage.getItem(ROLE_CACHE_KEY);
-      // If cache says user has a role, we can skip the delay
-      if (cachedHasRole === 'true' && !authLoading && user) {
-        setIsReady(true);
-      }
-    }
-  }, [authLoading, user]);
+  // Initialize from localStorage synchronously to prevent flash
+  const [isReady, setIsReady] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(ROLE_CACHE_KEY) === 'true';
+  });
 
   // Update cache when profile loads
   useEffect(() => {
@@ -37,13 +31,10 @@ export default function Home() {
     }
   }, [profile]);
 
-  // Add delay before showing role selection to prevent flash (increased to 250ms)
+  // Set ready when auth and profile are loaded
   useEffect(() => {
     if (!authLoading && (!user || profile !== undefined)) {
-      const timer = setTimeout(() => {
-        setIsReady(true);
-      }, 250);
-      return () => clearTimeout(timer);
+      setIsReady(true);
     }
   }, [authLoading, user, profile]);
 
@@ -56,7 +47,7 @@ export default function Home() {
     return <AnimatedLoading />;
   }
 
-  // Show loading during delay period to prevent flash
+  // Show loading until ready
   if (!isReady) {
     return <AnimatedLoading />;
   }
@@ -64,16 +55,14 @@ export default function Home() {
   // Show role selection if user is logged in but has no role
   const needsRoleSelection = user && !roleJustSelected && (profile === null || !profile?.role);
 
-  if (needsRoleSelection) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <RoleSelectionModal onComplete={() => setRoleJustSelected(true)} />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Always render modal, control visibility with CSS */}
+      <RoleSelectionModal
+        visible={needsRoleSelection}
+        onComplete={() => setRoleJustSelected(true)}
+      />
+
       {!user ? (
         <HomeFeatures />
       ) : (
