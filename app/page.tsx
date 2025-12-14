@@ -53,7 +53,7 @@ export default function Home() {
   }
 
   // Show role selection if user is logged in but has no role
-  const needsRoleSelection = user && !roleJustSelected && (profile === null || !profile?.role);
+  const needsRoleSelection = Boolean(user && !roleJustSelected && (profile === null || !profile?.role));
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
