@@ -7,9 +7,10 @@ import { UserIcon, HeartIcon, CheckCircleIcon, ArrowLeftIcon } from '@heroicons/
 
 interface RoleSelectionModalProps {
   onComplete: () => void;
+  visible: boolean;
 }
 
-export default function RoleSelectionModal({ onComplete }: RoleSelectionModalProps) {
+export default function RoleSelectionModal({ onComplete, visible }: RoleSelectionModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'caregiver' | 'communicator' | null>(null);
   const [step, setStep] = useState<'select' | 'confirm'>('select');
@@ -56,7 +57,11 @@ export default function RoleSelectionModal({ onComplete }: RoleSelectionModalPro
     const Icon = config.icon;
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 transition-opacity duration-200 ${
+        visible
+          ? 'opacity-100 bg-opacity-70'
+          : 'opacity-0 bg-opacity-0 pointer-events-none'
+      }`}>
         <div className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8">
           <button
             onClick={handleBack}
@@ -106,7 +111,11 @@ export default function RoleSelectionModal({ onComplete }: RoleSelectionModalPro
 
   // Selection step
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+    <div className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 transition-opacity duration-200 ${
+      visible
+        ? 'opacity-100 bg-opacity-70'
+        : 'opacity-0 bg-opacity-0 pointer-events-none'
+    }`}>
       <div className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">Welcome to SayIt!</h2>
