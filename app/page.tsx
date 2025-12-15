@@ -16,9 +16,10 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const profile = useQuery(api.profiles.getProfile);
   const [roleJustSelected, setRoleJustSelected] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize from localStorage synchronously to prevent flash
-  const [isReady, setIsReady] = useState(() => {
+  const [hasRoleCached, setHasRoleCached] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(ROLE_CACHE_KEY) === 'true';
   });
@@ -28,17 +29,23 @@ export default function Home() {
     if (profile && typeof window !== 'undefined') {
       const hasRole = profile.role ? 'true' : 'false';
       localStorage.setItem(ROLE_CACHE_KEY, hasRole);
+      setHasRoleCached(profile.role !== null && profile.role !== undefined);
     }
   }, [profile]);
 
-  // Set ready when auth and profile are loaded
+  // Initialize state only after auth is loaded
   useEffect(() => {
-    if (!authLoading && (!user || profile !== undefined)) {
-      setIsReady(true);
+    if (!authLoading) {
+      // 2 second delay to ensure everything is fully loaded before showing modal
+      const timer = setTimeout(() => {
+        setIsInitialized(true);
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [authLoading, user, profile]);
+  }, [authLoading]);
 
-  if (authLoading) {
+  // Show loading while auth is loading
+  if (authLoading || !isInitialized) {
     return <AnimatedLoading />;
   }
 
@@ -47,21 +54,29 @@ export default function Home() {
     return <AnimatedLoading />;
   }
 
-  // Show loading until ready
-  if (!isReady) {
-    return <AnimatedLoading />;
-  }
-
-  // Show role selection if user is logged in but has no role
-  const needsRoleSelection = Boolean(user && !roleJustSelected && (profile === null || !profile?.role));
+  // Determine if role selection is needed - only show after all data is loaded
+  const needsRoleSelection = Boolean(
+    isInitialized &&
+    user &&
+    !roleJustSelected &&
+    profile !== undefined &&
+    (profile === null || !profile?.role)
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Always render modal, control visibility with CSS */}
-      <RoleSelectionModal
-        visible={needsRoleSelection}
-        onComplete={() => setRoleJustSelected(true)}
-      />
+      {/* Only render modal when we're certain about the state */}
+      {isInitialized && profile !== undefined && (
+        <RoleSelectionModal
+          visible={needsRoleSelection}
+          onComplete={() => {
+            setRoleJustSelected(true);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(ROLE_CACHE_KEY, 'true');
+            }
+          }}
+        />
+      )}
 
       {!user ? (
         <HomeFeatures />

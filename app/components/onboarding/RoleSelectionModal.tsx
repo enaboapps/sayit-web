@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { UserIcon, HeartIcon, CheckCircleIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface RoleSelectionModalProps {
   onComplete: () => void;
@@ -14,7 +15,18 @@ export default function RoleSelectionModal({ onComplete, visible }: RoleSelectio
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'caregiver' | 'communicator' | null>(null);
   const [step, setStep] = useState<'select' | 'confirm'>('select');
+  const [isMounted, setIsMounted] = useState(false);
   const setRole = useMutation(api.profiles.setRole);
+
+  // Delay mounting to prevent flash
+  useEffect(() => {
+    if (visible) {
+      const timer = setTimeout(() => setIsMounted(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setIsMounted(false);
+    }
+  }, [visible]);
 
   const handleContinue = () => {
     if (!selectedRole) return;
@@ -57,12 +69,22 @@ export default function RoleSelectionModal({ onComplete, visible }: RoleSelectio
     const Icon = config.icon;
 
     return (
-      <div className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 transition-opacity duration-200 ${
-        visible
-          ? 'opacity-100 bg-opacity-70'
-          : 'opacity-0 bg-opacity-0 pointer-events-none'
-      }`}>
-        <div className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8">
+      <AnimatePresence>
+        {visible && isMounted && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8"
+            >
           <button
             onClick={handleBack}
             className="flex items-center gap-2 text-text-secondary hover:text-foreground transition-colors mb-6"
@@ -104,19 +126,31 @@ export default function RoleSelectionModal({ onComplete, visible }: RoleSelectio
               {isSubmitting ? 'Setting up...' : 'Confirm'}
             </button>
           </div>
-        </div>
-      </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     );
   }
 
   // Selection step
   return (
-    <div className={`fixed inset-0 bg-black flex items-center justify-center p-4 z-50 transition-opacity duration-200 ${
-      visible
-        ? 'opacity-100 bg-opacity-70'
-        : 'opacity-0 bg-opacity-0 pointer-events-none'
-    }`}>
-      <div className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8">
+    <AnimatePresence>
+      {visible && isMounted && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8"
+          >
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">Welcome to SayIt!</h2>
           <p className="text-text-secondary">
@@ -197,7 +231,9 @@ export default function RoleSelectionModal({ onComplete, visible }: RoleSelectio
         <p className="text-text-tertiary text-xs text-center mt-4">
           You can change this later in settings
         </p>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
