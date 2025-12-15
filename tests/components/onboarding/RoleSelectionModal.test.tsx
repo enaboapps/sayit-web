@@ -17,36 +17,48 @@ describe('RoleSelectionModal', () => {
     (useMutation as jest.Mock).mockReturnValue(mockSetRole);
   });
 
-  it('renders modal with both role options', () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+  it('renders modal with both role options', async () => {
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
 
-    expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+    });
     expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
     expect(screen.getByText(/i'm helping someone communicate/i)).toBeInTheDocument();
   });
 
-  it('renders communicator role description', () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+  it('renders communicator role description', async () => {
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
 
-    // The description mentions "caregiver" in communicator option
-    expect(screen.getByText(/receive boards from a caregiver/i)).toBeInTheDocument();
+    await waitFor(() => {
+      // The description mentions "caregiver" in communicator option
+      expect(screen.getByText(/receive boards from a caregiver/i)).toBeInTheDocument();
+    });
   });
 
-  it('renders caregiver role description', () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+  it('renders caregiver role description', async () => {
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
 
-    expect(screen.getByText(/create and manage boards for your clients/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/create and manage boards for your clients/i)).toBeInTheDocument();
+    });
   });
 
-  it('disables continue button when no role selected', () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+  it('disables continue button when no role selected', async () => {
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
 
-    const continueButton = screen.getByRole('button', { name: /continue/i });
-    expect(continueButton).toBeDisabled();
+    await waitFor(() => {
+      const continueButton = screen.getByRole('button', { name: /continue/i });
+      expect(continueButton).toBeDisabled();
+    });
   });
 
   it('enables continue button when communicator role selected', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -56,7 +68,11 @@ describe('RoleSelectionModal', () => {
   });
 
   it('enables continue button when caregiver role selected', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i'm helping someone communicate/i)).toBeInTheDocument();
+    });
 
     const caregiverOption = screen.getByText(/i'm helping someone communicate/i).closest('button');
     await userEvent.click(caregiverOption!);
@@ -66,7 +82,11 @@ describe('RoleSelectionModal', () => {
   });
 
   it('highlights selected communicator option', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -76,7 +96,11 @@ describe('RoleSelectionModal', () => {
   });
 
   it('highlights selected caregiver option', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i'm helping someone communicate/i)).toBeInTheDocument();
+    });
 
     const caregiverOption = screen.getByText(/i'm helping someone communicate/i).closest('button');
     await userEvent.click(caregiverOption!);
@@ -85,7 +109,11 @@ describe('RoleSelectionModal', () => {
   });
 
   it('only allows one selection at a time', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     const caregiverOption = screen.getByText(/i'm helping someone communicate/i).closest('button');
@@ -102,7 +130,11 @@ describe('RoleSelectionModal', () => {
   });
 
   it('shows confirmation step after clicking continue', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -111,13 +143,19 @@ describe('RoleSelectionModal', () => {
     await userEvent.click(continueButton);
 
     // Should show confirmation screen
-    expect(screen.getByText(/continue as communicator/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/continue as communicator/i)).toBeInTheDocument();
+    });
     expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /go back/i })).toBeInTheDocument();
   });
 
   it('goes back to selection when clicking go back', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -126,17 +164,26 @@ describe('RoleSelectionModal', () => {
     await userEvent.click(continueButton);
 
     // Now on confirmation screen
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /go back/i })).toBeInTheDocument();
+    });
     const goBackButton = screen.getByRole('button', { name: /go back/i });
     await userEvent.click(goBackButton);
 
     // Should be back on selection screen
-    expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/welcome/i)).toBeInTheDocument();
+    });
   });
 
   it('calls setRole mutation with communicator after confirm', async () => {
     mockSetRole.mockResolvedValue(undefined);
 
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -144,6 +191,9 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
+    });
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
     await userEvent.click(confirmButton);
 
@@ -155,7 +205,11 @@ describe('RoleSelectionModal', () => {
   it('calls setRole mutation with caregiver after confirm', async () => {
     mockSetRole.mockResolvedValue(undefined);
 
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i'm helping someone communicate/i)).toBeInTheDocument();
+    });
 
     const caregiverOption = screen.getByText(/i'm helping someone communicate/i).closest('button');
     await userEvent.click(caregiverOption!);
@@ -163,6 +217,9 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
+    });
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
     await userEvent.click(confirmButton);
 
@@ -176,7 +233,11 @@ describe('RoleSelectionModal', () => {
       () => new Promise((resolve) => setTimeout(resolve, 1000))
     );
 
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i'm helping someone communicate/i)).toBeInTheDocument();
+    });
 
     const caregiverOption = screen.getByText(/i'm helping someone communicate/i).closest('button');
     await userEvent.click(caregiverOption!);
@@ -184,6 +245,9 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
+    });
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
     await userEvent.click(confirmButton);
 
@@ -192,7 +256,11 @@ describe('RoleSelectionModal', () => {
   });
 
   it('shows checkmark icon on selected option', async () => {
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -205,7 +273,11 @@ describe('RoleSelectionModal', () => {
   it('handles mutation error gracefully', async () => {
     mockSetRole.mockRejectedValue(new Error('Network error'));
 
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i'm helping someone communicate/i)).toBeInTheDocument();
+    });
 
     const caregiverOption = screen.getByText(/i'm helping someone communicate/i).closest('button');
     await userEvent.click(caregiverOption!);
@@ -213,6 +285,9 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
+    });
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
     await userEvent.click(confirmButton);
 
@@ -225,7 +300,11 @@ describe('RoleSelectionModal', () => {
   it('calls onComplete after successful role selection', async () => {
     mockSetRole.mockResolvedValue(undefined);
 
-    render(<RoleSelectionModal onComplete={mockOnComplete} />);
+    render(<RoleSelectionModal onComplete={mockOnComplete} visible={true} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/i need help communicating/i)).toBeInTheDocument();
+    });
 
     const communicatorOption = screen.getByText(/i need help communicating/i).closest('button');
     await userEvent.click(communicatorOption!);
@@ -233,6 +312,9 @@ describe('RoleSelectionModal', () => {
     const continueButton = screen.getByRole('button', { name: /continue/i });
     await userEvent.click(continueButton);
 
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirm/i })).toBeInTheDocument();
+    });
     const confirmButton = screen.getByRole('button', { name: /confirm/i });
     await userEvent.click(confirmButton);
 
