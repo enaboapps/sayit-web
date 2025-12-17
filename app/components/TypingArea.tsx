@@ -27,25 +27,13 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const [isFixingText, setIsFixingText] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { settings } = useSettings();
+  const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
   const { speak, isSpeaking, isAvailable } = tts;
   const typingShare = useTypingShare();
   const shareableLink = typingShare.getShareableLink();
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('typingAreaVisible');
-      return saved ? JSON.parse(saved) : true;
-    }
-    return true;
-  });
-  const [isExpanded, setIsExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('typingAreaExpanded');
-      return saved ? JSON.parse(saved) : false;
-    }
-    return false;
-  });
+  const isVisible = uiPreferences.typingAreaVisible;
+  const isExpanded = uiPreferences.typingAreaExpanded;
 
   useEffect(() => {
     console.log('Current text size:', settings.textSize);
@@ -64,14 +52,6 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   useEffect(() => {
     setText(initialText);
   }, [initialText]);
-
-  useEffect(() => {
-    localStorage.setItem('typingAreaVisible', JSON.stringify(isVisible));
-  }, [isVisible]);
-
-  useEffect(() => {
-    localStorage.setItem('typingAreaExpanded', JSON.stringify(isExpanded));
-  }, [isExpanded]);
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -156,11 +136,11 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   };
 
   const toggleVisibility = () => {
-    setIsVisible(!isVisible);
+    updateUIPreference('typingAreaVisible', !isVisible);
   };
 
   const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
+    updateUIPreference('typingAreaExpanded', !isExpanded);
   };
 
   const textareaHeight = isExpanded ? '30rem' : '10rem';
