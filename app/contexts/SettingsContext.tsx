@@ -266,8 +266,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // 3. If authenticated, sync to Convex in background
     if (user) {
       setIsSyncing(true);
+      // Convert null to undefined for Convex (v.optional only accepts undefined, not null)
+      const convexValue = value === null ? undefined : value;
       updateSettingsMutation({
-        [key]: value,
+        [key]: convexValue,
         lastSyncedAt: Date.now(),
       })
         .then(() => {
