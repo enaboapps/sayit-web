@@ -151,6 +151,11 @@ export const updateSettings = mutation({
 
     const { lastSyncedAt, ...updates } = args;
 
+    // Validate lastSyncedAt
+    if (!Number.isFinite(lastSyncedAt) || lastSyncedAt < 0) {
+      throw new Error('lastSyncedAt must be a valid non-negative timestamp');
+    }
+
     // Validate numeric fields
     if (updates.speechRate !== undefined) {
       if (!Number.isFinite(updates.speechRate) || updates.speechRate < 0.1 || updates.speechRate > 2.0) {
