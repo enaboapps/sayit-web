@@ -62,8 +62,23 @@ export const initializeSettings = mutation({
       throw new Error('Unauthenticated');
     }
 
-    // Validate typingShareFontSize bounds (12-64 px)
-    if (isNaN(args.typingShareFontSize) || args.typingShareFontSize < 12 || args.typingShareFontSize > 64) {
+    // Validate numeric fields
+    if (!Number.isFinite(args.speechRate) || args.speechRate < 0.1 || args.speechRate > 2.0) {
+      throw new Error('speechRate must be a valid number between 0.1 and 2.0');
+    }
+    if (!Number.isFinite(args.speechPitch) || args.speechPitch < 0.1 || args.speechPitch > 2.0) {
+      throw new Error('speechPitch must be a valid number between 0.1 and 2.0');
+    }
+    if (!Number.isFinite(args.speechVolume) || args.speechVolume < 0.0 || args.speechVolume > 1.0) {
+      throw new Error('speechVolume must be a valid number between 0.0 and 1.0');
+    }
+    if (!Number.isFinite(args.ttsStability) || args.ttsStability < 0.0 || args.ttsStability > 1.0) {
+      throw new Error('ttsStability must be a valid number between 0.0 and 1.0');
+    }
+    if (!Number.isFinite(args.ttsSimilarityBoost) || args.ttsSimilarityBoost < 0.0 || args.ttsSimilarityBoost > 1.0) {
+      throw new Error('ttsSimilarityBoost must be a valid number between 0.0 and 1.0');
+    }
+    if (!Number.isFinite(args.typingShareFontSize) || args.typingShareFontSize < 12 || args.typingShareFontSize > 64) {
       throw new Error('typingShareFontSize must be a valid number between 12 and 64');
     }
 
@@ -136,9 +151,34 @@ export const updateSettings = mutation({
 
     const { lastSyncedAt, ...updates } = args;
 
-    // Validate typingShareFontSize bounds (12-64 px)
+    // Validate numeric fields
+    if (updates.speechRate !== undefined) {
+      if (!Number.isFinite(updates.speechRate) || updates.speechRate < 0.1 || updates.speechRate > 2.0) {
+        throw new Error('speechRate must be a valid number between 0.1 and 2.0');
+      }
+    }
+    if (updates.speechPitch !== undefined) {
+      if (!Number.isFinite(updates.speechPitch) || updates.speechPitch < 0.1 || updates.speechPitch > 2.0) {
+        throw new Error('speechPitch must be a valid number between 0.1 and 2.0');
+      }
+    }
+    if (updates.speechVolume !== undefined) {
+      if (!Number.isFinite(updates.speechVolume) || updates.speechVolume < 0.0 || updates.speechVolume > 1.0) {
+        throw new Error('speechVolume must be a valid number between 0.0 and 1.0');
+      }
+    }
+    if (updates.ttsStability !== undefined) {
+      if (!Number.isFinite(updates.ttsStability) || updates.ttsStability < 0.0 || updates.ttsStability > 1.0) {
+        throw new Error('ttsStability must be a valid number between 0.0 and 1.0');
+      }
+    }
+    if (updates.ttsSimilarityBoost !== undefined) {
+      if (!Number.isFinite(updates.ttsSimilarityBoost) || updates.ttsSimilarityBoost < 0.0 || updates.ttsSimilarityBoost > 1.0) {
+        throw new Error('ttsSimilarityBoost must be a valid number between 0.0 and 1.0');
+      }
+    }
     if (updates.typingShareFontSize !== undefined) {
-      if (isNaN(updates.typingShareFontSize) || updates.typingShareFontSize < 12 || updates.typingShareFontSize > 64) {
+      if (!Number.isFinite(updates.typingShareFontSize) || updates.typingShareFontSize < 12 || updates.typingShareFontSize > 64) {
         throw new Error('typingShareFontSize must be a valid number between 12 and 64');
       }
     }

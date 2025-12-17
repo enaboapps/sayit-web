@@ -81,7 +81,9 @@ function loadFromLocalStorage(): AllSettings {
   const typingShareFontSize = localStorage.getItem('typing-share-font-size');
 
   const parsedFontSize = typingShareFontSize ? parseInt(typingShareFontSize, 10) : defaultUIPreferences.typingShareFontSize;
-  const validFontSize = !isNaN(parsedFontSize) ? parsedFontSize : defaultUIPreferences.typingShareFontSize;
+  const validFontSize = !isNaN(parsedFontSize)
+    ? Math.max(12, Math.min(64, parsedFontSize))
+    : defaultUIPreferences.typingShareFontSize;
 
   const uiPreferences: UIPreferences = {
     typingAreaVisible: typingAreaVisible ? JSON.parse(typingAreaVisible) : defaultUIPreferences.typingAreaVisible,
