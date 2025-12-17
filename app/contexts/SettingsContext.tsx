@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { TTSProviderType } from '@/lib/tts-provider';
@@ -203,16 +203,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [user, convexSettings, hasMigrated, initializeSettings]);
 
-  const updateSetting = <K extends keyof Settings>(key: K, value: Settings[K]) => {
+  const updateSetting = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
     console.log(`Updating setting ${key} to:`, value);
 
-    const newAllSettings = { ...allSettings, [key]: value };
+    // Use functional update to avoid depending on allSettings
+    setAllSettings((prev) => {
+      const newAllSettings = { ...prev, [key]: value };
 
-    // 1. Update React state immediately (optimistic update)
-    setAllSettings(newAllSettings);
+      // 2. Update localStorage immediately (for offline support)
+      saveToLocalStorage(newAllSettings);
 
-    // 2. Update localStorage immediately (for offline support)
-    saveToLocalStorage(newAllSettings);
+      return newAllSettings;
+    });
 
     // 3. If authenticated, sync to Convex in background
     if (user) {
@@ -230,18 +232,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           // Don't revert - keep optimistic update
         });
     }
-  };
+  }, [user, updateSettingsMutation]);
 
-  const updateUIPreference = <K extends keyof UIPreferences>(key: K, value: UIPreferences[K]) => {
+  const updateUIPreference = useCallback(<K extends keyof UIPreferences>(key: K, value: UIPreferences[K]) => {
     console.log(`Updating UI preference ${key} to:`, value);
 
-    const newAllSettings = { ...allSettings, [key]: value };
+    // Use functional update to avoid depending on allSettings
+    setAllSettings((prev) => {
+      const newAllSettings = { ...prev, [key]: value };
 
-    // 1. Update React state immediately (optimistic update)
-    setAllSettings(newAllSettings);
+      // 2. Update localStorage immediately (for offline support)
+      saveToLocalStorage(newAllSettings);
 
-    // 2. Update localStorage immediately (for offline support)
-    saveToLocalStorage(newAllSettings);
+      return newAllSettings;
+    });
 
     // 3. If authenticated, sync to Convex in background
     if (user) {
@@ -259,7 +263,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           // Don't revert - keep optimistic update
         });
     }
-  };
+  }, [user, updateSettingsMutation]);
 
   const settings: Settings = {
     textSize: allSettings.textSize,

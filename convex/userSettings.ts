@@ -62,6 +62,11 @@ export const initializeSettings = mutation({
       throw new Error('Unauthenticated');
     }
 
+    // Validate typingShareFontSize bounds (12-64 px)
+    if (args.typingShareFontSize < 12 || args.typingShareFontSize > 64) {
+      throw new Error('typingShareFontSize must be between 12 and 64');
+    }
+
     // Check if settings already exist
     const existing = await ctx.db
       .query('userSettings')
@@ -130,6 +135,13 @@ export const updateSettings = mutation({
     }
 
     const { lastSyncedAt, ...updates } = args;
+
+    // Validate typingShareFontSize bounds (12-64 px)
+    if (updates.typingShareFontSize !== undefined) {
+      if (updates.typingShareFontSize < 12 || updates.typingShareFontSize > 64) {
+        throw new Error('typingShareFontSize must be between 12 and 64');
+      }
+    }
 
     // Build update object with only the fields that were provided
     const updateData: any = {
