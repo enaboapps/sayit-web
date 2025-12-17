@@ -85,9 +85,20 @@ function loadFromLocalStorage(): AllSettings {
     ? Math.max(12, Math.min(64, parsedFontSize))
     : defaultUIPreferences.typingShareFontSize;
 
+  // Helper to safely parse JSON booleans
+  const parseBooleanSafely = (value: string | null, fallback: boolean): boolean => {
+    if (!value) return fallback;
+    try {
+      const parsed = JSON.parse(value);
+      return typeof parsed === 'boolean' ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  };
+
   const uiPreferences: UIPreferences = {
-    typingAreaVisible: typingAreaVisible ? JSON.parse(typingAreaVisible) : defaultUIPreferences.typingAreaVisible,
-    typingAreaExpanded: typingAreaExpanded ? JSON.parse(typingAreaExpanded) : defaultUIPreferences.typingAreaExpanded,
+    typingAreaVisible: parseBooleanSafely(typingAreaVisible, defaultUIPreferences.typingAreaVisible),
+    typingAreaExpanded: parseBooleanSafely(typingAreaExpanded, defaultUIPreferences.typingAreaExpanded),
     selectedBoardId: selectedBoardId || defaultUIPreferences.selectedBoardId,
     typingShareFontSize: validFontSize,
   };
