@@ -63,8 +63,8 @@ export const initializeSettings = mutation({
     }
 
     // Validate typingShareFontSize bounds (12-64 px)
-    if (args.typingShareFontSize < 12 || args.typingShareFontSize > 64) {
-      throw new Error('typingShareFontSize must be between 12 and 64');
+    if (isNaN(args.typingShareFontSize) || args.typingShareFontSize < 12 || args.typingShareFontSize > 64) {
+      throw new Error('typingShareFontSize must be a valid number between 12 and 64');
     }
 
     // Check if settings already exist
@@ -138,13 +138,13 @@ export const updateSettings = mutation({
 
     // Validate typingShareFontSize bounds (12-64 px)
     if (updates.typingShareFontSize !== undefined) {
-      if (updates.typingShareFontSize < 12 || updates.typingShareFontSize > 64) {
-        throw new Error('typingShareFontSize must be between 12 and 64');
+      if (isNaN(updates.typingShareFontSize) || updates.typingShareFontSize < 12 || updates.typingShareFontSize > 64) {
+        throw new Error('typingShareFontSize must be a valid number between 12 and 64');
       }
     }
 
     // Build update object with only the fields that were provided
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       updatedAt: Date.now(),
       lastSyncedAt,
     };

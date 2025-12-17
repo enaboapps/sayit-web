@@ -80,11 +80,14 @@ function loadFromLocalStorage(): AllSettings {
   const selectedBoardId = localStorage.getItem('selectedBoardId');
   const typingShareFontSize = localStorage.getItem('typing-share-font-size');
 
+  const parsedFontSize = typingShareFontSize ? parseInt(typingShareFontSize, 10) : defaultUIPreferences.typingShareFontSize;
+  const validFontSize = !isNaN(parsedFontSize) ? parsedFontSize : defaultUIPreferences.typingShareFontSize;
+
   const uiPreferences: UIPreferences = {
     typingAreaVisible: typingAreaVisible ? JSON.parse(typingAreaVisible) : defaultUIPreferences.typingAreaVisible,
     typingAreaExpanded: typingAreaExpanded ? JSON.parse(typingAreaExpanded) : defaultUIPreferences.typingAreaExpanded,
     selectedBoardId: selectedBoardId || defaultUIPreferences.selectedBoardId,
-    typingShareFontSize: typingShareFontSize ? parseInt(typingShareFontSize) : defaultUIPreferences.typingShareFontSize,
+    typingShareFontSize: validFontSize,
   };
 
   return { ...settings, ...uiPreferences };
