@@ -85,47 +85,47 @@ export default function RoleSelectionModal({ onComplete, visible }: RoleSelectio
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8"
             >
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-2 text-text-secondary hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeftIcon className="w-4 h-4" />
-            <span>Back</span>
-          </button>
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 text-text-secondary hover:text-foreground transition-colors mb-6"
+              >
+                <ArrowLeftIcon className="w-4 h-4" />
+                <span>Back</span>
+              </button>
 
-          <div className="text-center mb-8">
-            <div className="inline-flex p-4 rounded-full bg-primary-500/20 mb-4">
-              <Icon className="w-10 h-10 text-primary-500" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
+              <div className="text-center mb-8">
+                <div className="inline-flex p-4 rounded-full bg-primary-500/20 mb-4">
+                  <Icon className="w-10 h-10 text-primary-500" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
               Continue as {config.title}?
-            </h2>
-            <p className="text-text-secondary">
-              {config.description}
-            </p>
-          </div>
+                </h2>
+                <p className="text-text-secondary">
+                  {config.description}
+                </p>
+              </div>
 
-          <div className="bg-surface-hover rounded-xl p-4 mb-8">
-            <p className="text-text-secondary text-sm text-center">
+              <div className="bg-surface-hover rounded-xl p-4 mb-8">
+                <p className="text-text-secondary text-sm text-center">
               You can change your role later in settings, but switching roles may result in some data being removed.
-            </p>
-          </div>
+                </p>
+              </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={handleBack}
-              className="flex-1 px-6 py-4 bg-surface-hover hover:bg-background text-foreground font-semibold rounded-xl transition-colors"
-            >
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBack}
+                  className="flex-1 px-6 py-4 bg-surface-hover hover:bg-background text-foreground font-semibold rounded-xl transition-colors"
+                >
               Go Back
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={isSubmitting}
-              className="flex-1 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Setting up...' : 'Confirm'}
-            </button>
-          </div>
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Setting up...' : 'Confirm'}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -151,86 +151,86 @@ export default function RoleSelectionModal({ onComplete, visible }: RoleSelectio
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full p-8"
           >
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-2">Welcome to SayIt!</h2>
-          <p className="text-text-secondary">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-foreground mb-2">Welcome to SayIt!</h2>
+              <p className="text-text-secondary">
             How will you be using the app?
-          </p>
-        </div>
-
-        <div className="space-y-4 mb-8">
-          <button
-            onClick={() => setSelectedRole('communicator')}
-            className={`w-full p-6 rounded-xl border-2 transition-all text-left flex items-start gap-4 relative ${
-              selectedRole === 'communicator'
-                ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/50'
-                : 'border-border hover:border-primary-500/50 hover:bg-surface-hover'
-            }`}
-          >
-            {selectedRole === 'communicator' && (
-              <CheckCircleIcon className="absolute top-4 right-4 w-6 h-6 text-primary-500" />
-            )}
-            <div className={`p-3 rounded-full flex-shrink-0 ${
-              selectedRole === 'communicator' ? 'bg-primary-500' : 'bg-surface-hover'
-            }`}>
-              <UserIcon className={`w-6 h-6 ${
-                selectedRole === 'communicator' ? 'text-white' : 'text-text-secondary'
-              }`} />
+              </p>
             </div>
-            <div className="pr-8">
-              <h3 className={`text-lg font-semibold mb-1 ${
-                selectedRole === 'communicator' ? 'text-primary-400' : 'text-foreground'
-              }`}>
+
+            <div className="space-y-4 mb-8">
+              <button
+                onClick={() => setSelectedRole('communicator')}
+                className={`w-full p-6 rounded-xl border-2 transition-all text-left flex items-start gap-4 relative ${
+                  selectedRole === 'communicator'
+                    ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/50'
+                    : 'border-border hover:border-primary-500/50 hover:bg-surface-hover'
+                }`}
+              >
+                {selectedRole === 'communicator' && (
+                  <CheckCircleIcon className="absolute top-4 right-4 w-6 h-6 text-primary-500" />
+                )}
+                <div className={`p-3 rounded-full flex-shrink-0 ${
+                  selectedRole === 'communicator' ? 'bg-primary-500' : 'bg-surface-hover'
+                }`}>
+                  <UserIcon className={`w-6 h-6 ${
+                    selectedRole === 'communicator' ? 'text-white' : 'text-text-secondary'
+                  }`} />
+                </div>
+                <div className="pr-8">
+                  <h3 className={`text-lg font-semibold mb-1 ${
+                    selectedRole === 'communicator' ? 'text-primary-400' : 'text-foreground'
+                  }`}>
                 I need help communicating
-              </h3>
-              <p className="text-text-secondary text-sm">
+                  </h3>
+                  <p className="text-text-secondary text-sm">
                 Use boards and phrases to express yourself. You can create your own or receive boards from a caregiver.
-              </p>
-            </div>
-          </button>
+                  </p>
+                </div>
+              </button>
 
-          <button
-            onClick={() => setSelectedRole('caregiver')}
-            className={`w-full p-6 rounded-xl border-2 transition-all text-left flex items-start gap-4 relative ${
-              selectedRole === 'caregiver'
-                ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/50'
-                : 'border-border hover:border-primary-500/50 hover:bg-surface-hover'
-            }`}
-          >
-            {selectedRole === 'caregiver' && (
-              <CheckCircleIcon className="absolute top-4 right-4 w-6 h-6 text-primary-500" />
-            )}
-            <div className={`p-3 rounded-full flex-shrink-0 ${
-              selectedRole === 'caregiver' ? 'bg-primary-500' : 'bg-surface-hover'
-            }`}>
-              <HeartIcon className={`w-6 h-6 ${
-                selectedRole === 'caregiver' ? 'text-white' : 'text-text-secondary'
-              }`} />
-            </div>
-            <div className="pr-8">
-              <h3 className={`text-lg font-semibold mb-1 ${
-                selectedRole === 'caregiver' ? 'text-primary-400' : 'text-foreground'
-              }`}>
+              <button
+                onClick={() => setSelectedRole('caregiver')}
+                className={`w-full p-6 rounded-xl border-2 transition-all text-left flex items-start gap-4 relative ${
+                  selectedRole === 'caregiver'
+                    ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/50'
+                    : 'border-border hover:border-primary-500/50 hover:bg-surface-hover'
+                }`}
+              >
+                {selectedRole === 'caregiver' && (
+                  <CheckCircleIcon className="absolute top-4 right-4 w-6 h-6 text-primary-500" />
+                )}
+                <div className={`p-3 rounded-full flex-shrink-0 ${
+                  selectedRole === 'caregiver' ? 'bg-primary-500' : 'bg-surface-hover'
+                }`}>
+                  <HeartIcon className={`w-6 h-6 ${
+                    selectedRole === 'caregiver' ? 'text-white' : 'text-text-secondary'
+                  }`} />
+                </div>
+                <div className="pr-8">
+                  <h3 className={`text-lg font-semibold mb-1 ${
+                    selectedRole === 'caregiver' ? 'text-primary-400' : 'text-foreground'
+                  }`}>
                 I'm helping someone communicate
-              </h3>
-              <p className="text-text-secondary text-sm">
+                  </h3>
+                  <p className="text-text-secondary text-sm">
                 Create and manage boards for your clients. Share boards with configurable permissions.
-              </p>
+                  </p>
+                </div>
+              </button>
             </div>
-          </button>
-        </div>
 
-        <button
-          onClick={handleContinue}
-          disabled={!selectedRole}
-          className="w-full px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+            <button
+              onClick={handleContinue}
+              disabled={!selectedRole}
+              className="w-full px-6 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
           Continue
-        </button>
+            </button>
 
-        <p className="text-text-tertiary text-xs text-center mt-4">
+            <p className="text-text-tertiary text-xs text-center mt-4">
           You can change this later in settings
-        </p>
+            </p>
           </motion.div>
         </motion.div>
       )}
