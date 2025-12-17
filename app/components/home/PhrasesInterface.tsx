@@ -12,16 +12,18 @@ import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 
 export default function PhrasesInterface() {
   const router = useRouter();
   const tts = useTTS();
   const { user, loading: authLoading } = useAuth();
+  const { uiPreferences, updateUIPreference } = useSettings();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(null);
   const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const selectedBoardId = uiPreferences.selectedBoardId;
 
   const shouldLoadBoards = !authLoading && !!user;
   const showAuthPrompt = !authLoading && !user;
@@ -47,27 +49,27 @@ export default function PhrasesInterface() {
   // Auto-select first board on load or use saved board
   useEffect(() => {
     if (!shouldLoadBoards) {
-      setSelectedBoardId(null);
+      if (selectedBoardId !== null) {
+        updateUIPreference('selectedBoardId', null);
+      }
       return;
     }
 
     if (!boards || boards.length === 0) {
-      setSelectedBoardId(null);
+      if (selectedBoardId !== null) {
+        updateUIPreference('selectedBoardId', null);
+      }
       return;
     }
 
-    // Try to get the saved board ID from localStorage
-    const savedBoardId = localStorage.getItem('selectedBoardId');
-
-    if (savedBoardId && boards.some(board => board._id === savedBoardId)) {
-      // Found the saved board
-      setSelectedBoardId(savedBoardId);
-    } else {
-      // No saved board or it doesn't exist, select first board
-      setSelectedBoardId(boards[0]._id);
-      localStorage.setItem('selectedBoardId', boards[0]._id);
+    if (selectedBoardId && boards.some(board => board._id === selectedBoardId)) {
+      // Current board selection is valid
+      return;
     }
-  }, [boards, shouldLoadBoards]);
+
+    // No saved board or it doesn't exist, select first board
+    updateUIPreference('selectedBoardId', boards[0]._id);
+  }, [boards, shouldLoadBoards, selectedBoardId, updateUIPreference]);
 
   const handlePhrasePress = (phrase: PhraseSummary) => {
     setTypingText(phrase.text);
@@ -139,9 +141,7 @@ export default function PhrasesInterface() {
 
   const handleSelectBoard = (board: BoardSummary | string) => {
     const boardId = typeof board === 'string' ? board : board.id;
-    setSelectedBoardId(boardId);
-    // Save the selected board ID to localStorage
-    localStorage.setItem('selectedBoardId', boardId);
+    updateUIPreference('selectedBoardId', boardId);
   };
 
   // Extract phrases from the board data

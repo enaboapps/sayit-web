@@ -61,4 +61,31 @@ export default defineSchema({
   })
     .index('by_user_id', ['userId'])
     .index('by_session_key', ['sessionKey']),
+
+  userSettings: defineTable({
+    userId: v.string(), // Clerk user ID
+
+    // Main Settings (from SettingsContext)
+    textSize: v.union(v.literal('small'), v.literal('medium'), v.literal('large'), v.literal('xlarge')),
+    speechRate: v.number(),
+    speechPitch: v.number(),
+    speechVolume: v.number(),
+    speechVoice: v.string(),
+    enterKeyBehavior: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
+    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs')),
+    ttsVoiceId: v.string(),
+    ttsStability: v.number(),
+    ttsSimilarityBoost: v.number(),
+
+    // UI Preferences (consolidated from various components)
+    typingAreaVisible: v.boolean(),
+    typingAreaExpanded: v.boolean(),
+    selectedBoardId: v.optional(v.string()),
+    typingShareFontSize: v.number(),
+
+    // Metadata for sync tracking
+    lastSyncedAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user_id', ['userId']),
 });

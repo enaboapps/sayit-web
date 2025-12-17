@@ -1,34 +1,26 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { use } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { useSettings } from '@/app/contexts/SettingsContext';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
 import { ExclamationTriangleIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export default function TypingShareViewPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
   const session = useQuery(api.typingSessions.getTypingSession, { sessionKey: key });
+  const { uiPreferences, updateUIPreference } = useSettings();
   const loading = session === undefined;
   const sessionMissing = session === null;
-  const [fontSize, setFontSize] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('typing-share-font-size');
-      return saved ? parseInt(saved, 10) : 18;
-    }
-    return 18;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('typing-share-font-size', fontSize.toString());
-  }, [fontSize]);
+  const fontSize = uiPreferences.typingShareFontSize;
 
   const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 4, 64));
+    updateUIPreference('typingShareFontSize', Math.min(fontSize + 4, 64));
   };
 
   const decreaseFontSize = () => {
-    setFontSize(prev => Math.max(prev - 4, 12));
+    updateUIPreference('typingShareFontSize', Math.max(fontSize - 4, 12));
   };
 
   if (loading) {
