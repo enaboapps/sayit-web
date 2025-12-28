@@ -67,7 +67,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       if (isMod && e.key === 't') {
         e.preventDefault();
         createTab();
-      } else if (isMod && e.key === 'w' && tabs.length > 1) {
+      } else if (isMod && e.key === 'w') {
         e.preventDefault();
         closeTab(activeTabId!);
       } else if (isMod && e.key === '[') {
@@ -84,7 +84,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [createTab, closeTab, activeTabId, switchToTabByIndex, switchToPreviousTab, switchToNextTab, tabs.length]);
+  }, [createTab, closeTab, activeTabId, switchToTabByIndex, switchToPreviousTab, switchToNextTab]);
 
   useEffect(() => {
     console.log('Current text size:', settings.textSize);

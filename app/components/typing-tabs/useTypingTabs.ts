@@ -116,9 +116,14 @@ export function useTypingTabs(initialText?: string) {
   // Close a tab
   const closeTab = useCallback((tabId: string) => {
     setTabsState(prev => {
-      // Always keep at least one tab
+      // Special handling for last tab: create new empty tab instead of preventing close
       if (prev.tabs.length === 1) {
-        return prev;
+        const newTab = createDefaultTab(prev.nextTabNumber);
+        return {
+          tabs: [...prev.tabs, newTab],
+          activeTabId: newTab.id,
+          nextTabNumber: prev.nextTabNumber + 1,
+        };
       }
 
       const tabIndex = prev.tabs.findIndex(t => t.id === tabId);
