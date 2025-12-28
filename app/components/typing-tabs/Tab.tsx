@@ -55,7 +55,7 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
   return (
     <div
       className={`
-        flex items-center gap-2 px-4 py-2 rounded-2xl cursor-pointer
+        flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-2xl cursor-pointer
         whitespace-nowrap transition-all duration-200 group
         ${
     isActive
@@ -78,14 +78,14 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
           onClick={(e) => e.stopPropagation()}
         />
       ) : (
-        <span className="text-sm font-medium select-none">{tab.label}</span>
+        <span className="text-sm font-medium select-none max-w-[120px] md:max-w-[200px] overflow-hidden text-ellipsis block">{tab.label}</span>
       )}
 
       <button
         onClick={handleClose}
         className={`
           p-0.5 rounded-full transition-opacity
-          ${isActive ? 'opacity-100 hover:bg-white/20' : 'opacity-0 group-hover:opacity-100 hover:bg-surface'}
+          ${isActive ? 'opacity-100 hover:bg-white/20' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-surface'}
         `}
         aria-label={`Close ${tab.label}`}
       >
