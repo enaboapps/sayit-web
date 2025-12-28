@@ -9,6 +9,8 @@ import FleshOutPopup from './flesh-out/FleshOutPopup';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
 import ShareLinkModal from './typing-share/ShareLinkModal';
+import { useTypingTabs } from './typing-tabs/useTypingTabs';
+import TabBar from './typing-tabs/TabBar';
 
 interface TypingAreaProps {
   initialText?: string
@@ -21,7 +23,6 @@ interface TypingAreaProps {
 }
 
 export default function TypingArea({ initialText = '', tts, onChange }: TypingAreaProps) {
-  const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
   const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
@@ -34,6 +35,56 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   const shareableLink = typingShare.getShareableLink();
   const isVisible = uiPreferences.typingAreaVisible;
   const isExpanded = uiPreferences.typingAreaExpanded;
+
+  // Use tabs instead of single text state
+  const {
+    tabs,
+    activeTab,
+    activeTabId,
+    createTab,
+    switchTab,
+    closeTab,
+    renameTab,
+    updateActiveTabText,
+    switchToTabByIndex,
+    switchToPreviousTab,
+    switchToNextTab,
+  } = useTypingTabs(initialText);
+
+  const text = activeTab.text;
+
+  // Keyboard shortcuts for tabs
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+
+      // Don't trigger shortcuts if user is typing in an input field (other than textarea)
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' && target !== textareaRef.current) {
+        return;
+      }
+
+      if (isMod && e.key === 't') {
+        e.preventDefault();
+        createTab();
+      } else if (isMod && e.key === 'w' && tabs.length > 1) {
+        e.preventDefault();
+        closeTab(activeTabId!);
+      } else if (isMod && e.key === '[') {
+        e.preventDefault();
+        switchToPreviousTab();
+      } else if (isMod && e.key === ']') {
+        e.preventDefault();
+        switchToNextTab();
+      } else if (isMod && e.key >= '1' && e.key <= '9') {
+        e.preventDefault();
+        switchToTabByIndex(parseInt(e.key) - 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [createTab, closeTab, activeTabId, switchToTabByIndex, switchToPreviousTab, switchToNextTab, tabs.length]);
 
   useEffect(() => {
     console.log('Current text size:', settings.textSize);
@@ -48,10 +99,6 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
 
   const currentTextSizeClass = textSizeClasses[settings.textSize];
   console.log('Applied text size class:', currentTextSizeClass);
-
-  useEffect(() => {
-    setText(initialText);
-  }, [initialText]);
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -75,7 +122,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   };
 
   const handleClear = () => {
-    setText('');
+    updateActiveTabText('');
     setError(null);
     onChange?.('');
     textareaRef.current?.focus();
@@ -94,7 +141,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   };
 
   const handleApplyFleshedOutText = (newText: string) => {
-    setText(newText);
+    updateActiveTabText(newText);
     onChange?.(newText);
     setShowFleshOutPopup(false);
     textareaRef.current?.focus();
@@ -123,7 +170,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
       const data = await response.json();
 
       if (data.text && data.text !== text) {
-        setText(data.text);
+        updateActiveTabText(data.text);
         onChange?.(data.text);
       }
     } catch (error) {
@@ -149,13 +196,21 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
     <div className="flex flex-col">
       {isVisible && (
         <div className="flex flex-col bg-surface shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-3xl">
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabSelect={switchTab}
+            onTabClose={closeTab}
+            onTabCreate={createTab}
+            onTabRename={renameTab}
+          />
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
               className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl`}
               value={text}
               onChange={(e) => {
-                setText(e.target.value);
+                updateActiveTabText(e.target.value);
                 onChange?.(e.target.value);
                 setError(null);
               }}
@@ -177,7 +232,7 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
                     break;
                   case 'newline':
                   default:
-                    setText(prev => prev + '\n');
+                    updateActiveTabText(text + '\n');
                     onChange?.(text + '\n');
                     break;
                   }

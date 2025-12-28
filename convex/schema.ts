@@ -82,6 +82,8 @@ export default defineSchema({
     typingAreaExpanded: v.boolean(),
     selectedBoardId: v.optional(v.string()),
     typingShareFontSize: v.number(),
+    typingTabs: v.optional(v.string()), // JSON stringified TypingTabsState
+    activeTypingTabId: v.optional(v.string()),
 
     // Metadata for sync tracking
     lastSyncedAt: v.number(),

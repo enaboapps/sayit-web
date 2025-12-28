@@ -27,6 +27,7 @@ interface UIPreferences {
   typingAreaExpanded: boolean;
   selectedBoardId: string | null;
   typingShareFontSize: number;
+  activeTypingTabId: string | null;
 }
 
 type AllSettings = Settings & UIPreferences;
@@ -58,6 +59,7 @@ const defaultUIPreferences: UIPreferences = {
   typingAreaExpanded: false,
   selectedBoardId: null,
   typingShareFontSize: 18,
+  activeTypingTabId: null,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -79,6 +81,7 @@ function loadFromLocalStorage(): AllSettings {
   const typingAreaExpanded = localStorage.getItem('typingAreaExpanded');
   const selectedBoardId = localStorage.getItem('selectedBoardId');
   const typingShareFontSize = localStorage.getItem('typing-share-font-size');
+  const activeTypingTabId = localStorage.getItem('activeTypingTabId');
 
   const parsedFontSize = typingShareFontSize ? parseInt(typingShareFontSize, 10) : defaultUIPreferences.typingShareFontSize;
   const validFontSize = !isNaN(parsedFontSize)
@@ -101,6 +104,7 @@ function loadFromLocalStorage(): AllSettings {
     typingAreaExpanded: parseBooleanSafely(typingAreaExpanded, defaultUIPreferences.typingAreaExpanded),
     selectedBoardId: selectedBoardId || defaultUIPreferences.selectedBoardId,
     typingShareFontSize: validFontSize,
+    activeTypingTabId: activeTypingTabId || defaultUIPreferences.activeTypingTabId,
   };
 
   return { ...settings, ...uiPreferences };
@@ -134,6 +138,11 @@ function saveToLocalStorage(allSettings: AllSettings) {
     localStorage.removeItem('selectedBoardId');
   }
   localStorage.setItem('typing-share-font-size', allSettings.typingShareFontSize.toString());
+  if (allSettings.activeTypingTabId) {
+    localStorage.setItem('activeTypingTabId', allSettings.activeTypingTabId);
+  } else {
+    localStorage.removeItem('activeTypingTabId');
+  }
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -183,6 +192,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         typingAreaExpanded: localSettings.typingAreaExpanded,
         selectedBoardId: localSettings.selectedBoardId ?? undefined,
         typingShareFontSize: localSettings.typingShareFontSize,
+        activeTypingTabId: localSettings.activeTypingTabId ?? undefined,
       })
         .then(() => {
           console.log('Settings migrated to Convex successfully');
@@ -210,6 +220,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         typingAreaExpanded: convexSettings.typingAreaExpanded,
         selectedBoardId: convexSettings.selectedBoardId ?? null,
         typingShareFontSize: convexSettings.typingShareFontSize,
+        activeTypingTabId: convexSettings.activeTypingTabId ?? null,
       };
 
       setAllSettings(serverSettings);
@@ -301,6 +312,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     typingAreaExpanded: allSettings.typingAreaExpanded,
     selectedBoardId: allSettings.selectedBoardId,
     typingShareFontSize: allSettings.typingShareFontSize,
+    activeTypingTabId: allSettings.activeTypingTabId,
   };
 
   return (
