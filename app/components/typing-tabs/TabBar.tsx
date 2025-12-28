@@ -45,10 +45,10 @@ export default function TabBar({
         className={`
           flex items-center justify-center p-2 rounded-2xl transition-all duration-200
           ${
-            canCreateTab
-              ? 'bg-surface hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 cursor-pointer'
-              : 'bg-surface text-text-tertiary cursor-not-allowed opacity-50'
-          }
+    canCreateTab
+      ? 'bg-surface hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 cursor-pointer'
+      : 'bg-surface text-text-tertiary cursor-not-allowed opacity-50'
+    }
         `}
         aria-label="Create new tab"
         title={canCreateTab ? 'Create new tab (Cmd/Ctrl+T)' : `Maximum of ${MAX_TABS} tabs reached`}

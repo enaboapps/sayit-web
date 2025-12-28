@@ -58,10 +58,10 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
         flex items-center gap-2 px-4 py-2 rounded-2xl cursor-pointer
         whitespace-nowrap transition-all duration-200 group
         ${
-          isActive
-            ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-            : 'bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground'
-        }
+    isActive
+      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+      : 'bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground'
+    }
       `}
       onClick={onSelect}
       onDoubleClick={handleDoubleClick}
