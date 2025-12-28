@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { TypingTab } from '@/app/types/typing-tabs';
 
@@ -15,6 +15,13 @@ interface TabProps {
 export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(tab.label);
+
+  // Sync editLabel with tab.label when not editing
+  useEffect(() => {
+    if (!isEditing) {
+      setEditLabel(tab.label);
+    }
+  }, [tab.label, isEditing]);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
