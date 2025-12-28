@@ -52,6 +52,24 @@ export function useTypingTabs(initialText?: string) {
   // Get active tab
   const activeTab = tabsState.tabs.find(tab => tab.id === tabsState.activeTabId) || tabsState.tabs[0];
 
+  // Auto-create new empty tab on mount if active tab has text
+  const hasAutoCreated = useRef(false);
+  useEffect(() => {
+    // Only run once on mount
+    if (hasAutoCreated.current) return;
+    hasAutoCreated.current = true;
+
+    // Check if active tab has text and we're not at max tabs
+    if (activeTab.text.trim().length > 0 && tabsState.tabs.length < MAX_TABS) {
+      const newTab = createDefaultTab(tabsState.nextTabNumber);
+      setTabsState(prev => ({
+        tabs: [...prev.tabs, newTab],
+        activeTabId: newTab.id,
+        nextTabNumber: prev.nextTabNumber + 1,
+      }));
+    }
+  }, [activeTab.text, tabsState.tabs.length, tabsState.nextTabNumber]);
+
   // Persist tabs to localStorage and Convex (debounced)
   const persistTabs = useCallback((state: TypingTabsState) => {
     // Clear existing timeout
