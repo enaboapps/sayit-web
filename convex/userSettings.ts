@@ -55,6 +55,8 @@ export const initializeSettings = mutation({
     typingAreaExpanded: v.boolean(),
     selectedBoardId: v.optional(v.string()),
     typingShareFontSize: v.number(),
+    typingTabs: v.optional(v.string()),
+    activeTypingTabId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -109,6 +111,8 @@ export const initializeSettings = mutation({
       typingAreaExpanded: args.typingAreaExpanded,
       selectedBoardId: args.selectedBoardId,
       typingShareFontSize: args.typingShareFontSize,
+      typingTabs: args.typingTabs,
+      activeTypingTabId: args.activeTypingTabId,
       lastSyncedAt: now,
       updatedAt: now,
     });
@@ -132,6 +136,8 @@ export const updateSettings = mutation({
     typingAreaExpanded: v.optional(v.boolean()),
     selectedBoardId: v.optional(v.string()),
     typingShareFontSize: v.optional(v.number()),
+    typingTabs: v.optional(v.string()),
+    activeTypingTabId: v.optional(v.string()),
     lastSyncedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -209,6 +215,8 @@ export const updateSettings = mutation({
     if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;
     if (updates.selectedBoardId !== undefined) updateData.selectedBoardId = updates.selectedBoardId;
     if (updates.typingShareFontSize !== undefined) updateData.typingShareFontSize = updates.typingShareFontSize;
+    if (updates.typingTabs !== undefined) updateData.typingTabs = updates.typingTabs;
+    if (updates.activeTypingTabId !== undefined) updateData.activeTypingTabId = updates.activeTypingTabId;
 
     await ctx.db.patch(settings._id, updateData);
 
