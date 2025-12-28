@@ -134,13 +134,18 @@ export function useTypingTabs(initialText?: string) {
   // Close a tab
   const closeTab = useCallback((tabId: string) => {
     setTabsState(prev => {
-      // Special handling for last tab: create new empty tab instead of preventing close
+      // Special handling for last tab: clear text instead of closing
       if (prev.tabs.length === 1) {
-        const newTab = createDefaultTab(prev.nextTabNumber);
+        const tabIndex = 0;
         return {
-          tabs: [...prev.tabs, newTab],
-          activeTabId: newTab.id,
-          nextTabNumber: prev.nextTabNumber + 1,
+          ...prev,
+          tabs: prev.tabs.map(tab => ({
+            ...tab,
+            text: '',
+            label: generateLabelFromText('', tabIndex + 1),
+            isCustomLabel: false,
+            lastModified: Date.now(),
+          })),
         };
       }
 
