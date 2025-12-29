@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import { TypingTab } from '@/app/types/typing-tabs';
 import Tab from './Tab';
@@ -23,11 +24,22 @@ export default function TabBar({
   onTabRename,
 }: TabBarProps) {
   const canCreateTab = tabs.length < MAX_TABS;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const prevTabCountRef = useRef(tabs.length);
+
+  // Auto-scroll to end when new tab is added
+  useEffect(() => {
+    if (tabs.length > prevTabCountRef.current && scrollContainerRef.current) {
+      // Scroll to the far right to show the new tab
+      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+    }
+    prevTabCountRef.current = tabs.length;
+  }, [tabs.length]);
 
   return (
     <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
       {/* Scrollable tabs column */}
-      <div className="overflow-x-auto scrollbar-hide min-w-0">
+      <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide min-w-0">
         <div className="flex gap-1 items-center">
           {tabs.map((tab) => (
             <Tab
