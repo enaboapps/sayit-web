@@ -60,7 +60,7 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
         ${
     isActive
       ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-      : 'bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground'
+      : 'bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground opacity-50 hover:opacity-100'
     }
       `}
       onClick={onSelect}
@@ -81,16 +81,15 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
         <span className="text-sm font-medium select-none">{tab.label}</span>
       )}
 
-      <button
-        onClick={handleClose}
-        className={`
-          p-0.5 rounded-full transition-opacity
-          ${isActive ? 'opacity-100 hover:bg-white/20' : 'opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-surface'}
-        `}
-        aria-label={`Close ${tab.label}`}
-      >
-        <XMarkIcon className="w-4 h-4" />
-      </button>
+      {isActive && (
+        <button
+          onClick={handleClose}
+          className="p-0.5 rounded-full transition-opacity opacity-100 hover:bg-white/20"
+          aria-label={`Close ${tab.label}`}
+        >
+          <XMarkIcon className="w-4 h-4" />
+        </button>
+      )}
     </div>
   );
 }
