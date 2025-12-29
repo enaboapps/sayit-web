@@ -73,7 +73,7 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
           onChange={(e) => setEditLabel(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          className="bg-transparent outline-none border-b border-current w-24 text-sm"
+          className="bg-transparent outline-none border-b border-current min-w-24 text-sm"
           autoFocus
           onClick={(e) => e.stopPropagation()}
         />

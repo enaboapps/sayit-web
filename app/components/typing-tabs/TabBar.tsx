@@ -30,8 +30,11 @@ export default function TabBar({
   // Auto-scroll to end when new tab is added
   useEffect(() => {
     if (tabs.length > prevTabCountRef.current && scrollContainerRef.current) {
-      // Scroll to the far right to show the new tab
-      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+      // Smoothly scroll to the far right to show the new tab
+      scrollContainerRef.current.scrollTo({
+        left: scrollContainerRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
     }
     prevTabCountRef.current = tabs.length;
   }, [tabs.length]);
@@ -63,7 +66,7 @@ export default function TabBar({
             flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200
             ${
     canCreateTab
-      ? 'bg-surface hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 cursor-pointer'
+      ? 'bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 cursor-pointer'
       : 'bg-surface text-text-tertiary cursor-not-allowed opacity-50'
     }
           `}
