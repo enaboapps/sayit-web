@@ -25,10 +25,10 @@ export default function TabBar({
   const canCreateTab = tabs.length < MAX_TABS;
 
   return (
-    <div className="flex gap-2 p-2 bg-surface-hover rounded-t-3xl">
-      {/* Scrollable tabs container */}
-      <div className="flex-1 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-1 min-w-max">
+    <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
+      {/* Scrollable tabs column */}
+      <div className="overflow-x-auto scrollbar-hide min-w-0">
+        <div className="flex gap-1 items-center">
           {tabs.map((tab) => (
             <Tab
               key={tab.id}
@@ -42,8 +42,8 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Fixed button - stays visible */}
-      <div className="flex-shrink-0">
+      {/* Fixed button column */}
+      <div className="flex items-center">
         <button
           onClick={onTabCreate}
           disabled={!canCreateTab}
