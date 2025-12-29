@@ -78,7 +78,7 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
           onClick={(e) => e.stopPropagation()}
         />
       ) : (
-        <span className="text-sm font-medium select-none max-w-[120px] md:max-w-[200px] overflow-hidden text-ellipsis block">{tab.label}</span>
+        <span className="text-sm font-medium select-none">{tab.label}</span>
       )}
 
       <button
