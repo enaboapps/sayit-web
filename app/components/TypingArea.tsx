@@ -14,6 +14,7 @@ import TabBar from './typing-tabs/TabBar';
 
 interface TypingAreaProps {
   initialText?: string
+  text?: string  // External text to sync with active tab
   tts: {
     speak: (text: string) => void;
     isSpeaking: boolean;
@@ -22,7 +23,7 @@ interface TypingAreaProps {
   onChange?: (text: string) => void
 }
 
-export default function TypingArea({ initialText = '', tts, onChange }: TypingAreaProps) {
+export default function TypingArea({ initialText = '', text: externalText, tts, onChange }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
   const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
@@ -52,6 +53,13 @@ export default function TypingArea({ initialText = '', tts, onChange }: TypingAr
   } = useTypingTabs(initialText);
 
   const text = activeTab.text;
+
+  // Sync external text prop with active tab
+  useEffect(() => {
+    if (externalText !== undefined && externalText !== activeTab.text) {
+      updateActiveTabText(externalText);
+    }
+  }, [externalText, activeTab.text, updateActiveTabText]);
 
   // Keyboard shortcuts for tabs
   useEffect(() => {
