@@ -141,9 +141,9 @@ export default function TabManagementDialog({
                         className={`
                           border-2 rounded-2xl p-4 cursor-pointer transition-all
                           ${isActive
-                            ? 'border-primary-500 bg-primary-500/10 shadow-lg'
-                            : 'border-border hover:border-primary-300 hover:bg-surface-hover'
-                          }
+                        ? 'border-primary-500 bg-primary-500/10 shadow-lg'
+                        : 'border-border hover:border-primary-300 hover:bg-surface-hover'
+                      }
                         `}
                         onClick={() => !isEditing && handleTabClick(tab.id)}
                       >
