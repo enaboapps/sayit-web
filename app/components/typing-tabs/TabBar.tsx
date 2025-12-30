@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, QueueListIcon } from '@heroicons/react/24/outline';
 import { TypingTab } from '@/app/types/typing-tabs';
 import Tab from './Tab';
 import { MAX_TABS } from './utils';
@@ -13,6 +13,7 @@ interface TabBarProps {
   onTabClose: (tabId: string) => void;
   onTabCreate: () => void;
   onTabRename: (tabId: string, newLabel: string) => void;
+  onManage: () => void;
 }
 
 export default function TabBar({
@@ -22,6 +23,7 @@ export default function TabBar({
   onTabClose,
   onTabCreate,
   onTabRename,
+  onManage,
 }: TabBarProps) {
   const canCreateTab = tabs.length < MAX_TABS;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -58,7 +60,16 @@ export default function TabBar({
       </div>
 
       {/* Fixed button column */}
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onManage}
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500"
+          aria-label="Manage tabs"
+          title="Manage all tabs"
+        >
+          <QueueListIcon className="w-4 h-4 md:w-5 md:h-5" />
+        </button>
+
         <button
           onClick={onTabCreate}
           disabled={!canCreateTab}
