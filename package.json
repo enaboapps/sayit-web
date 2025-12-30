@@ -13,7 +13,6 @@
     "test:coverage": "jest --config jest.config.cjs --coverage"
   },
   "dependencies": {
-    "@ai-sdk/deepinfra": "^1.0.28",
     "@ai-sdk/openai": "^3.0.1",
     "@clerk/nextjs": "^6.35.1",
     "@elevenlabs/elevenlabs-js": "^2.24.0",
