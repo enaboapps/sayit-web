@@ -59,7 +59,8 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     if (externalText !== undefined && externalText !== activeTab.text) {
       updateActiveTabText(externalText);
     }
-  }, [externalText, activeTab.text, updateActiveTabText]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalText, updateActiveTabText]);
 
   // Keyboard shortcuts for tabs
   useEffect(() => {

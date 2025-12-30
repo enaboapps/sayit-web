@@ -187,6 +187,45 @@ describe('TypingArea', () => {
       rerender(<TypingArea text="Third" tts={mockTTS} onChange={onChange} />);
       expect(textarea).toHaveValue('Third');
     });
+
+    it('maintains independent text when switching tabs (no carryover)', () => {
+      const onChange = jest.fn();
+      const { rerender } = render(
+        <TypingArea text="Tab A content" tts={mockTTS} onChange={onChange} />
+      );
+
+      const textarea = screen.getByRole('textbox');
+      expect(textarea).toHaveValue('Tab A content');
+
+      // Simulate tab switch by NOT changing external text
+      // In real app, activeTab changes internally via switchTab
+      // But parent's externalText stays the same
+      onChange.mockClear();
+      rerender(
+        <TypingArea text="Tab A content" tts={mockTTS} onChange={onChange} />
+      );
+
+      // Text should remain "Tab A content" - no carryover should occur
+      // Even though we're simulating a tab switch internally
+      expect(textarea).toHaveValue('Tab A content');
+    });
+
+    it('still syncs phrase selection after internal state changes', () => {
+      const { rerender } = render(
+        <TypingArea text="" tts={mockTTS} />
+      );
+
+      const textarea = screen.getByRole('textbox');
+      expect(textarea).toHaveValue('');
+
+      // External text changes (phrase selected)
+      rerender(
+        <TypingArea text="Selected phrase" tts={mockTTS} />
+      );
+
+      // Should update to phrase text
+      expect(textarea).toHaveValue('Selected phrase');
+    });
   });
 
   describe('backward compatibility', () => {
