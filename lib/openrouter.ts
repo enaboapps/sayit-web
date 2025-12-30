@@ -11,7 +11,7 @@ const openrouter = createOpenAI({
 });
 
 // Model configuration (easy to change)
-const MODEL = 'meta-llama/llama-3.1-8b-instruct';
+const MODEL = 'moonshotai/kimi-k2-thinking';
 
 const sharedGuidelines = `
 Guidelines:
