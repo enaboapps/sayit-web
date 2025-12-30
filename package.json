@@ -13,14 +13,14 @@
     "test:coverage": "jest --config jest.config.cjs --coverage"
   },
   "dependencies": {
-    "@ai-sdk/deepinfra": "^1.0.28",
+    "@ai-sdk/openai": "^3.0.1",
     "@clerk/nextjs": "^6.35.1",
     "@elevenlabs/elevenlabs-js": "^2.24.0",
     "@headlessui/react": "^2.2.2",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-slot": "^1.2.0",
     "@tailwindcss/forms": "^0.5.10",
-    "ai": "^5.0.93",
+    "ai": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.29.0",

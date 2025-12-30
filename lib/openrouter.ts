@@ -1,13 +1,17 @@
-import { createDeepInfra } from '@ai-sdk/deepinfra';
+import { createOpenAI } from '@ai-sdk/openai';
 import { generateText as aiGenerateText } from 'ai';
 
-if (!process.env.DEEPINFRA_API_KEY) {
-  throw new Error('DEEPINFRA_API_KEY is not set in environment variables');
+if (!process.env.OPENROUTER_API_KEY) {
+  throw new Error('OPENROUTER_API_KEY is not set in environment variables');
 }
 
-const deepinfra = createDeepInfra({
-  apiKey: process.env.DEEPINFRA_API_KEY,
+const openrouter = createOpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
+
+// Model configuration (easy to change)
+const MODEL = 'moonshotai/kimi-k2-thinking';
 
 const sharedGuidelines = `
 Guidelines:
@@ -195,16 +199,16 @@ interface GenerationOptions {
 function extractJsonContent(text: string): string {
   const firstBracket = text.indexOf('{');
   const lastBracket = text.lastIndexOf('}');
-  
+
   if (firstBracket === -1 || lastBracket === -1) {
     throw new Error('No valid JSON object found in the response');
   }
-  
+
   return text.slice(firstBracket, lastBracket + 1);
 }
 
 /**
- * Generate content using the DeepInfra API.
+ * Generate content using the OpenRouter API.
  * @param type The type of generation to perform
  * @param prompt The input prompt for the generation
  * @param options Optional configuration for the generation
@@ -217,7 +221,7 @@ export async function generate(
 ): Promise<Record<string, unknown>> {
   try {
     const { text } = await aiGenerateText({
-      model: deepinfra('google/gemma-3-27b-it'),
+      model: openrouter(MODEL),
       system: systemPrompts[type],
       prompt,
       maxOutputTokens: options?.maxOutputTokens || 200,
