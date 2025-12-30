@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fixText } from '@/lib/deepinfra';
+import { fixText } from '@/lib/openrouter';
 
 export const config = {
   runtime: 'nodejs',
@@ -13,8 +13,8 @@ export const config = {
 export async function POST(request: Request) {
   try {
     // Check for API key first
-    if (!process.env.DEEPINFRA_API_KEY) {
-      console.error('DEEPINFRA_API_KEY is not set');
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.error('OPENROUTER_API_KEY is not set');
       return NextResponse.json(
         { error: 'API configuration error' },
         { status: 500 },
