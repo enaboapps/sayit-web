@@ -11,7 +11,7 @@ const openrouter = createOpenAI({
 });
 
 // Model configuration (easy to change)
-const MODEL = 'moonshotai/kimi-k2-thinking';
+const MODEL = 'google/gemini-2.5-flash';
 
 const sharedGuidelines = `
 Guidelines:
