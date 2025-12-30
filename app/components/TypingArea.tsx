@@ -11,6 +11,7 @@ import { useTypingShare } from '@/lib/hooks/useTypingShare';
 import ShareLinkModal from './typing-share/ShareLinkModal';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
+import TabManagementDialog from './typing-tabs/TabManagementDialog';
 
 interface TypingAreaProps {
   initialText?: string
@@ -28,6 +29,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
@@ -211,6 +213,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
             onTabClose={closeTab}
             onTabCreate={createTab}
             onTabRename={renameTab}
+            onManage={() => setShowTabManagementDialog(true)}
           />
           <div className="flex-1 relative">
             <textarea
@@ -414,6 +417,18 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
             await typingShare.endSession();
             setShowShareModal(false);
           }}
+        />
+      )}
+
+      {showTabManagementDialog && (
+        <TabManagementDialog
+          isOpen={showTabManagementDialog}
+          onClose={() => setShowTabManagementDialog(false)}
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onSwitchTab={switchTab}
+          onCloseTab={closeTab}
+          onRenameTab={renameTab}
         />
       )}
     </div>
