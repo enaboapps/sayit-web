@@ -183,6 +183,7 @@ export default function PhrasesInterface() {
       <div className="flex-none">
         <TypingArea
           initialText={typingText}
+          text={typingText}
           tts={tts}
           onChange={(text) => setTypingText(text)}
         />
