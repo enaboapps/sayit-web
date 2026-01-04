@@ -65,6 +65,7 @@ export const upsertProfile = mutation({
         userId: args.userId,
         email: args.email,
         fullName: args.fullName,
+        role: 'communicator',
       });
     }
   },
@@ -134,6 +135,30 @@ export const deleteProfile = mutation({
 
     // 5. Finally delete the profile
     await ctx.db.delete(profile._id);
+  },
+});
+
+// Mutation: Migrate null roles to 'communicator' for existing users
+export const migrateNullRole = mutation({
+  handler: async (ctx) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .first();
+
+    if (profile && !profile.role) {
+      await ctx.db.patch(profile._id, {
+        role: 'communicator',
+      });
+      return { migrated: true };
+    }
+
+    return { migrated: false };
   },
 });
 

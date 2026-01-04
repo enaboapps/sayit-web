@@ -29,7 +29,7 @@ const createProfile = (overrides = {}) => ({
   userId: 'user-123',
   email: 'test@example.com',
   fullName: 'Test User',
-  role: undefined,
+  role: 'communicator',
   bypassSubscriptionCheck: false,
   ...overrides,
 });
@@ -194,7 +194,7 @@ describe('profiles', () => {
   });
 
   describe('upsertProfile', () => {
-    test('creates new profile', async () => {
+    test('creates new profile with communicator role', async () => {
       mockDb.query.mockReturnValue({
         withIndex: jest.fn().mockReturnValue({
           unique: jest.fn().mockResolvedValue(null),
@@ -209,15 +209,18 @@ describe('profiles', () => {
           userId: 'new-user',
           email: 'new@example.com',
           fullName: 'New User',
+          role: 'communicator',
         });
         expect(id).toBe('new-profile-id');
       }
 
-      expect(mockDb.insert).toHaveBeenCalled();
+      expect(mockDb.insert).toHaveBeenCalledWith('profiles', expect.objectContaining({
+        role: 'communicator',
+      }));
     });
 
-    test('updates existing profile', async () => {
-      const existing = createProfile({ _id: 'profile-1' });
+    test('updates existing profile without changing role', async () => {
+      const existing = createProfile({ _id: 'profile-1', role: 'caregiver' });
 
       mockDb.query.mockReturnValue({
         withIndex: jest.fn().mockReturnValue({
@@ -237,6 +240,9 @@ describe('profiles', () => {
 
       expect(mockDb.patch).toHaveBeenCalledWith('profile-1', expect.objectContaining({
         email: 'updated@example.com',
+      }));
+      expect(mockDb.patch).not.toHaveBeenCalledWith('profile-1', expect.objectContaining({
+        role: expect.anything(),
       }));
     });
   });
