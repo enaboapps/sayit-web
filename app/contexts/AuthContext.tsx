@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '@/convex/_generated/api';
 
 interface AuthContextType {
   user: {
@@ -18,6 +20,8 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user: clerkUser, isLoaded } = useUser();
+  const profile = useQuery(api.profiles.getProfile);
+  const migrateNullRole = useMutation(api.profiles.migrateNullRole);
 
   // Transform Clerk user to our simplified format
   const user = clerkUser
@@ -27,12 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     : null;
 
-  // Clear role cache when user logs out
+  // Migrate existing users with null roles to 'communicator'
   useEffect(() => {
-    if (isLoaded && !clerkUser && typeof window !== 'undefined') {
-      localStorage.removeItem('sayit_user_has_role');
+    if (profile && !profile.role) {
+      migrateNullRole({}).catch((error) => {
+        console.error('Failed to migrate null role:', error);
+      });
     }
-  }, [clerkUser, isLoaded]);
+  }, [profile, migrateNullRole]);
 
   return (
     <AuthContext.Provider value={{ user, loading: !isLoaded }}>
