@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user: clerkUser, isLoaded } = useUser();
   const profile = useQuery(api.profiles.getProfile);
   const migrateNullRole = useMutation(api.profiles.migrateNullRole);
+  const migrationAttemptedRef = useRef(false);
 
   // Transform Clerk user to our simplified format
   const user = clerkUser
@@ -31,11 +32,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     : null;
 
-  // Migrate existing users with null roles to 'communicator'
+  // Migrate existing users with null roles to 'communicator' (only once)
   useEffect(() => {
-    if (profile && !profile.role) {
+    if (profile && !profile.role && !migrationAttemptedRef.current) {
+      migrationAttemptedRef.current = true;
       migrateNullRole({}).catch((error) => {
         console.error('Failed to migrate null role:', error);
+        migrationAttemptedRef.current = false; // Allow retry on error
       });
     }
   }, [profile, migrateNullRole]);
