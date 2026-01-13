@@ -1,8 +1,8 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
@@ -20,6 +20,21 @@ function AddPhraseForm() {
   // Convex mutations
   const addPhrase = useMutation(api.phrases.addPhrase);
   const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
+
+  // Fetch board to check for duplicate phrases
+  const boardData = useQuery(
+    api.phraseBoards.getPhraseBoard,
+    boardId ? { id: boardId as Id<'phraseBoards'> } : 'skip'
+  );
+
+  // Check if phrase text already exists on the board
+  const isDuplicate = useMemo(() => {
+    if (!boardData || !text.trim()) return false;
+    return boardData.phrase_board_phrases?.some(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (pbp: any) => pbp.phrase?.text === text.trim()
+    );
+  }, [boardData, text]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,10 +87,16 @@ function AddPhraseForm() {
             </div>
           )}
 
+          {isDuplicate && (
+            <div className="mb-4 text-amber-600 text-sm bg-amber-500/10 px-4 py-3 rounded-3xl">
+              This phrase already exists on the board
+            </div>
+          )}
+
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || isDuplicate || !text.trim()}
             >
               {loading ? 'Adding...' : 'Add Phrase'}
             </Button>
