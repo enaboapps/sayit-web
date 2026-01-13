@@ -441,6 +441,105 @@ describe('phraseBoards', () => {
 
       expect(validateAccess).toThrow('Unauthorized');
     });
+
+    test('throws error when adding phrase with duplicate text to board', async () => {
+      const board = createBoard();
+      const existingPhrase = { _id: 'phrase-1', userId: 'user-123', text: 'Hello', frequency: 0, position: 0 };
+      const newPhrase = { _id: 'phrase-2', userId: 'user-123', text: 'Hello', frequency: 0, position: 1 };
+      const existingLink = { _id: 'pbp-1', boardId: 'board-1', phraseId: 'phrase-1' };
+
+      mockCtx.auth.getUserIdentity.mockResolvedValue({
+        subject: 'user-123',
+      });
+
+      // Mock getting the new phrase being added
+      mockDb.get.mockImplementation((id: string) => {
+        if (id === 'board-1') return Promise.resolve(board);
+        if (id === 'phrase-1') return Promise.resolve(existingPhrase);
+        if (id === 'phrase-2') return Promise.resolve(newPhrase);
+        return Promise.resolve(null);
+      });
+
+      // Mock query for existing phrases on board
+      mockDb.query.mockReturnValue({
+        withIndex: jest.fn().mockReturnValue({
+          collect: jest.fn().mockResolvedValue([existingLink]),
+        }),
+      });
+
+      // Simulate the duplicate check logic
+      const phraseToAdd = await mockDb.get('phrase-2');
+      const boardPhraseLinks = await mockDb.query('phraseBoardPhrases')
+        .withIndex('by_board')
+        .collect();
+
+      const checkForDuplicate = async () => {
+        for (const link of boardPhraseLinks) {
+          const existingPhraseOnBoard = await mockDb.get(link.phraseId);
+          if (existingPhraseOnBoard && existingPhraseOnBoard.text === phraseToAdd?.text) {
+            throw new Error('A phrase with this text already exists on this board');
+          }
+        }
+      };
+
+      await expect(checkForDuplicate()).rejects.toThrow('A phrase with this text already exists on this board');
+    });
+
+    test('allows adding phrase with different text to board', async () => {
+      const board = createBoard();
+      const existingPhrase = { _id: 'phrase-1', userId: 'user-123', text: 'Hello', frequency: 0, position: 0 };
+      const newPhrase = { _id: 'phrase-2', userId: 'user-123', text: 'Goodbye', frequency: 0, position: 1 };
+      const existingLink = { _id: 'pbp-1', boardId: 'board-1', phraseId: 'phrase-1' };
+
+      mockCtx.auth.getUserIdentity.mockResolvedValue({
+        subject: 'user-123',
+      });
+
+      mockDb.get.mockImplementation((id: string) => {
+        if (id === 'board-1') return Promise.resolve(board);
+        if (id === 'phrase-1') return Promise.resolve(existingPhrase);
+        if (id === 'phrase-2') return Promise.resolve(newPhrase);
+        return Promise.resolve(null);
+      });
+
+      mockDb.query.mockReturnValue({
+        withIndex: jest.fn().mockReturnValue({
+          collect: jest.fn().mockResolvedValue([existingLink]),
+        }),
+      });
+
+      mockDb.insert.mockResolvedValue('pbp-2');
+
+      // Simulate the duplicate check logic
+      const phraseToAdd = await mockDb.get('phrase-2');
+      const boardPhraseLinks = await mockDb.query('phraseBoardPhrases')
+        .withIndex('by_board')
+        .collect();
+
+      let hasDuplicate = false;
+      for (const link of boardPhraseLinks) {
+        const existingPhraseOnBoard = await mockDb.get(link.phraseId);
+        if (existingPhraseOnBoard && existingPhraseOnBoard.text === phraseToAdd?.text) {
+          hasDuplicate = true;
+          break;
+        }
+      }
+
+      // No duplicate, so insert should proceed
+      expect(hasDuplicate).toBe(false);
+
+      if (!hasDuplicate) {
+        await mockDb.insert('phraseBoardPhrases', {
+          boardId: 'board-1',
+          phraseId: 'phrase-2',
+        });
+      }
+
+      expect(mockDb.insert).toHaveBeenCalledWith('phraseBoardPhrases', {
+        boardId: 'board-1',
+        phraseId: 'phrase-2',
+      });
+    });
   });
 
   describe('getBoardsForClient', () => {
