@@ -232,7 +232,7 @@ export default function PhrasesInterface() {
                         className="sm:aspect-square"
                       />
                     ))}
-                    {typingText.trim() && canEditCurrentBoard && (
+                    {typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
                       <ActionTile
                         text="+ Add as Phrase"
                         onClick={handleAddTypingAsPhrase}

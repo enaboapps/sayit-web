@@ -280,6 +280,19 @@ export const addPhraseToBoard = mutation({
       throw new Error('Unauthorized - board');
     }
 
+    // Check for duplicate phrase text on this board
+    const boardPhraseLinks = await ctx.db
+      .query('phraseBoardPhrases')
+      .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
+      .collect();
+
+    for (const link of boardPhraseLinks) {
+      const existingPhrase = await ctx.db.get(link.phraseId);
+      if (existingPhrase && existingPhrase.text === phrase.text) {
+        throw new Error('A phrase with this text already exists on this board');
+      }
+    }
+
     await ctx.db.insert('phraseBoardPhrases', {
       phraseId: args.phraseId,
       boardId: args.boardId,
