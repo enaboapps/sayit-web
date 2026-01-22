@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TabBar from '@/app/components/typing-tabs/TabBar';
 import { TypingTab } from '@/app/types/typing-tabs';
-import { MAX_TABS } from '@/app/components/typing-tabs/utils';
 
 // Mock nanoid to avoid ESM issues
 jest.mock('nanoid', () => ({
@@ -25,6 +24,7 @@ describe('TabBar', () => {
   const mockOnTabClose = jest.fn();
   const mockOnTabCreate = jest.fn();
   const mockOnTabRename = jest.fn();
+  const mockOnManage = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -46,6 +46,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -65,13 +66,14 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
       expect(screen.getByLabelText('Create new tab')).toBeInTheDocument();
     });
 
-    it('enables create button when below MAX_TABS', () => {
+    it('create button is always enabled', () => {
       const tabs = [createTab()];
 
       render(
@@ -82,31 +84,12 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
       const createButton = screen.getByLabelText('Create new tab');
       expect(createButton).not.toBeDisabled();
-    });
-
-    it('disables create button when at MAX_TABS', () => {
-      const tabs = Array.from({ length: MAX_TABS }, (_, i) =>
-        createTab({ id: `tab-${i}`, label: `Tab ${i}` })
-      );
-
-      render(
-        <TabBar
-          tabs={tabs}
-          activeTabId={tabs[0].id}
-          onTabSelect={mockOnTabSelect}
-          onTabClose={mockOnTabClose}
-          onTabCreate={mockOnTabCreate}
-          onTabRename={mockOnTabRename}
-        />
-      );
-
-      const createButton = screen.getByLabelText('Create new tab');
-      expect(createButton).toBeDisabled();
     });
 
     it('renders with no active tab', () => {
@@ -120,6 +103,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -140,35 +124,13 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
       await user.click(screen.getByLabelText('Create new tab'));
 
       expect(mockOnTabCreate).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not call onTabCreate when create button is disabled', async () => {
-      const user = userEvent.setup();
-      const tabs = Array.from({ length: MAX_TABS }, (_, i) =>
-        createTab({ id: `tab-${i}`, label: `Tab ${i}` })
-      );
-
-      render(
-        <TabBar
-          tabs={tabs}
-          activeTabId={tabs[0].id}
-          onTabSelect={mockOnTabSelect}
-          onTabClose={mockOnTabClose}
-          onTabCreate={mockOnTabCreate}
-          onTabRename={mockOnTabRename}
-        />
-      );
-
-      const createButton = screen.getByLabelText('Create new tab');
-      await user.click(createButton);
-
-      expect(mockOnTabCreate).not.toHaveBeenCalled();
     });
 
     it('calls onTabSelect when a tab is selected', async () => {
@@ -186,6 +148,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -209,6 +172,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -229,6 +193,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -253,6 +218,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -270,14 +236,15 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
       expect(screen.getByText('Only Tab')).toBeInTheDocument();
     });
 
-    it('renders with MAX_TABS tabs', () => {
-      const tabs = Array.from({ length: MAX_TABS }, (_, i) =>
+    it('renders with many tabs', () => {
+      const tabs = Array.from({ length: 15 }, (_, i) =>
         createTab({ id: `tab-${i}`, label: `Tab ${i}` })
       );
 
@@ -289,11 +256,12 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
       expect(screen.getByText('Tab 0')).toBeInTheDocument();
-      expect(screen.getByText(`Tab ${MAX_TABS - 1}`)).toBeInTheDocument();
+      expect(screen.getByText('Tab 14')).toBeInTheDocument();
     });
 
     it('handles activeTabId not matching any tab', () => {
@@ -307,6 +275,7 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
@@ -315,7 +284,7 @@ describe('TabBar', () => {
   });
 
   describe('create button tooltip', () => {
-    it('shows keyboard shortcut in tooltip when create is enabled', () => {
+    it('shows keyboard shortcut in tooltip', () => {
       const tabs = [createTab()];
 
       render(
@@ -326,31 +295,12 @@ describe('TabBar', () => {
           onTabClose={mockOnTabClose}
           onTabCreate={mockOnTabCreate}
           onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
         />
       );
 
       const createButton = screen.getByLabelText('Create new tab');
       expect(createButton).toHaveAttribute('title', 'Create new tab (Cmd/Ctrl+T)');
-    });
-
-    it('shows max tabs message in tooltip when create is disabled', () => {
-      const tabs = Array.from({ length: MAX_TABS }, (_, i) =>
-        createTab({ id: `tab-${i}`, label: `Tab ${i}` })
-      );
-
-      render(
-        <TabBar
-          tabs={tabs}
-          activeTabId={tabs[0].id}
-          onTabSelect={mockOnTabSelect}
-          onTabClose={mockOnTabClose}
-          onTabCreate={mockOnTabCreate}
-          onTabRename={mockOnTabRename}
-        />
-      );
-
-      const createButton = screen.getByLabelText('Create new tab');
-      expect(createButton).toHaveAttribute('title', `Maximum of ${MAX_TABS} tabs reached`);
     });
   });
 });
