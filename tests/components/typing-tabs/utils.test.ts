@@ -1,4 +1,4 @@
-import { generateLabelFromText, createDefaultTab, validateTabLabel, MAX_TABS, MAX_LABEL_LENGTH } from '@/app/components/typing-tabs/utils';
+import { generateLabelFromText, createDefaultTab, validateTabLabel, MAX_LABEL_LENGTH } from '@/app/components/typing-tabs/utils';
 
 // Mock nanoid to avoid ESM issues
 jest.mock('nanoid', () => ({
@@ -7,10 +7,6 @@ jest.mock('nanoid', () => ({
 
 describe('typing-tabs utils', () => {
   describe('constants', () => {
-    it('has MAX_TABS constant', () => {
-      expect(MAX_TABS).toBe(10);
-    });
-
     it('has MAX_LABEL_LENGTH constant', () => {
       expect(MAX_LABEL_LENGTH).toBe(20);
     });

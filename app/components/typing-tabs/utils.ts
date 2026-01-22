@@ -1,7 +1,6 @@
 import { nanoid } from 'nanoid';
 import { TypingTab } from '@/app/types/typing-tabs';
 
-export const MAX_TABS = 10;
 export const MAX_LABEL_LENGTH = 20;
 
 export function generateLabelFromText(text: string, tabNumber: number): string {

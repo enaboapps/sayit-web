@@ -4,7 +4,7 @@ import { api } from '@/convex/_generated/api';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { TypingTab, TypingTabsState } from '@/app/types/typing-tabs';
-import { createDefaultTab, validateTabLabel, generateLabelFromText, MAX_TABS } from './utils';
+import { createDefaultTab, validateTabLabel, generateLabelFromText } from './utils';
 
 const STORAGE_KEY = 'typingTabs';
 const DEBOUNCE_DELAY = 300;
@@ -59,8 +59,8 @@ export function useTypingTabs(initialText?: string) {
     if (hasAutoCreated.current) return;
     hasAutoCreated.current = true;
 
-    // Check if active tab has text and we're not at max tabs
-    if (activeTab.text.trim().length > 0 && tabsState.tabs.length < MAX_TABS) {
+    // Check if active tab has text - auto-create a new empty tab
+    if (activeTab.text.trim().length > 0) {
       const newTab = createDefaultTab(tabsState.nextTabNumber);
       setTabsState(prev => ({
         tabs: [...prev.tabs, newTab],
@@ -110,11 +110,6 @@ export function useTypingTabs(initialText?: string) {
 
   // Create a new tab
   const createTab = useCallback(() => {
-    if (tabsState.tabs.length >= MAX_TABS) {
-      alert(`Maximum of ${MAX_TABS} tabs reached`);
-      return;
-    }
-
     const newTab = createDefaultTab(tabsState.nextTabNumber);
     setTabsState(prev => ({
       tabs: [...prev.tabs, newTab],

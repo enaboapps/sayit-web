@@ -1,6 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useTypingTabs } from '@/app/components/typing-tabs/useTypingTabs';
-import { MAX_TABS } from '@/app/components/typing-tabs/utils';
 
 // Mock nanoid to avoid ESM issues
 jest.mock('nanoid', () => {
@@ -168,25 +167,18 @@ describe('useTypingTabs', () => {
       expect(result.current.activeTabId).toBe(result.current.tabs[1].id);
     });
 
-    it('prevents creating tabs beyond MAX_TABS', () => {
+    it('allows creating many tabs without limit', () => {
       const { result } = renderHook(() => useTypingTabs());
 
-      // Create MAX_TABS - 1 additional tabs (we already have 1)
+      // Create 15 additional tabs (we already have 1)
       act(() => {
-        for (let i = 0; i < MAX_TABS - 1; i++) {
+        for (let i = 0; i < 15; i++) {
           result.current.createTab();
         }
       });
 
-      expect(result.current.tabs).toHaveLength(MAX_TABS);
-
-      // Try to create one more
-      act(() => {
-        result.current.createTab();
-      });
-
-      expect(result.current.tabs).toHaveLength(MAX_TABS);
-      expect(global.alert).toHaveBeenCalledWith(`Maximum of ${MAX_TABS} tabs reached`);
+      expect(result.current.tabs).toHaveLength(16);
+      expect(global.alert).not.toHaveBeenCalled();
     });
   });
 
