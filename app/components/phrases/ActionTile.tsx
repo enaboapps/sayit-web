@@ -1,5 +1,7 @@
 'use client';
 
+import { motion } from 'framer-motion';
+
 interface ActionTileProps {
   text: string;
   onClick: () => void;
@@ -8,12 +10,14 @@ interface ActionTileProps {
 
 export default function ActionTile({ text, onClick, className = '' }: ActionTileProps) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
-      className={`aspect-square flex items-center justify-center bg-surface hover:bg-surface-hover active:ring-2 active:ring-orange active:scale-[0.98] rounded-lg border-2 border-dashed border-border transition-all duration-200 ${className}`}
+      className={`flex items-center justify-center bg-surface hover:bg-surface-hover rounded-2xl border-2 border-dashed border-border min-h-[80px] ${className}`}
       aria-label={text}
+      whileTap={{ scale: 0.95 }}
+      transition={{ duration: 0.15 }}
     >
-      <span className="text-text-secondary text-lg">{text}</span>
-    </button>
+      <span className="text-text-secondary text-base sm:text-lg font-medium">{text}</span>
+    </motion.button>
   );
 } 
