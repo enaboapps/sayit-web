@@ -242,6 +242,13 @@ export default function PhrasesInterface() {
               currentBoardIndex={validBoardIndex}
               onBoardChange={handleBoardIndexChange}
               onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
+              onAddBoard={handleAddBoard}
+              onAddPhrase={handleAddPhrase}
+              onReader={handleReader}
+              onEdit={handleEdit}
+              isEditMode={isEditMode}
+              canEditBoard={canEditCurrentBoard}
+              hasPhrases={phrases.length > 0}
             >
               <div className="p-2 pb-32 overflow-auto">
                 <div className="grid grid-cols-2 gap-2">
@@ -323,15 +330,18 @@ export default function PhrasesInterface() {
           )}
         </div>
       )}
-      <PhrasesActionMenu
-        onAddPhrase={handleAddPhrase}
-        onAddBoard={handleAddBoard}
-        onEdit={handleEdit}
-        onReader={handleReader}
-        boardPresent={transformedBoards.length > 0}
-        isEditMode={isEditMode}
-        canEditBoard={canEditCurrentBoard}
-      />
+      {/* Only show FAB on desktop - mobile uses header action buttons */}
+      {!isMobile && (
+        <PhrasesActionMenu
+          onAddPhrase={handleAddPhrase}
+          onAddBoard={handleAddBoard}
+          onEdit={handleEdit}
+          onReader={handleReader}
+          boardPresent={transformedBoards.length > 0}
+          isEditMode={isEditMode}
+          canEditBoard={canEditCurrentBoard}
+        />
+      )}
       <ReaderPopup
         phrases={phrases}
         isOpen={isReaderOpen}
