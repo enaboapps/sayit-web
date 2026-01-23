@@ -46,7 +46,7 @@ function SettingsCategory({ icon, title, description, onClick, value }: Settings
       onClick={onClick}
       className="w-full flex items-center gap-4 p-4 bg-surface rounded-2xl hover:bg-surface-hover transition-all active:scale-[0.98]"
     >
-      <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-2xl">
+      <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-2xl">
         {icon}
       </div>
       <div className="flex-1 text-left">
@@ -298,7 +298,7 @@ export default function SettingsPage() {
               <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
                 <div className="px-8 py-6">
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-3xl">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
                       <Cog6ToothIcon className="w-6 h-6" />
                     </div>
                     <div>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
                     <select
                       value={settings.textSize}
                       onChange={(e) => updateSetting('textSize', e.target.value as TextSize)}
-                      className="w-48 bg-surface-hover text-foreground rounded-2xl px-4 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                      className="w-48 bg-surface-hover text-foreground rounded-2xl px-4 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <option value="small">Small</option>
                       <option value="medium">Medium</option>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
               <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
                 <div className="px-8 py-6">
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-3xl">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
                       <Cog6ToothIcon className="w-6 h-6" />
                     </div>
                     <div>
@@ -336,7 +336,7 @@ export default function SettingsPage() {
                     <select
                       value={settings.enterKeyBehavior}
                       onChange={(e) => updateSetting('enterKeyBehavior', e.target.value as EnterKeyBehavior)}
-                      className="w-48 bg-surface-hover text-foreground rounded-2xl px-4 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                      className="w-48 bg-surface-hover text-foreground rounded-2xl px-4 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <option value="newline">New Line</option>
                       <option value="speak">Speak Text</option>
@@ -358,7 +358,7 @@ export default function SettingsPage() {
             <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
               <div className="px-8 py-6">
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-3xl">
+                  <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
                     <SpeakerWaveIcon className="w-6 h-6" />
                   </div>
                   <div>
@@ -381,7 +381,7 @@ export default function SettingsPage() {
               <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
                 <div className="px-8 py-6">
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-3xl">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
                       <UserCircleIcon className="w-6 h-6" />
                     </div>
                     <div>

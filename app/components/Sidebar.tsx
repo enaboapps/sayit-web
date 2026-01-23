@@ -108,7 +108,7 @@ export default function Sidebar() {
         ) : (
           <Link
             href="/sign-in"
-            className="flex items-center justify-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl hover:scale-110 bg-surface-hover text-text-secondary hover:bg-primary-500/10 hover:text-primary-500"
+            className="flex items-center justify-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl hover:scale-110 bg-surface-hover text-text-secondary hover:bg-primary-950 hover:text-primary-500"
             data-tooltip-id="sidebar-tooltip-sign-in"
             data-tooltip-content="Sign In"
           >
@@ -142,7 +142,7 @@ function SidebarItem({ href, icon, title, isActive, isExpanded }: SidebarItemPro
       } ${
         isActive
           ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
-          : 'bg-surface-hover text-text-secondary hover:bg-primary-500/10 hover:text-primary-500'
+          : 'bg-surface-hover text-text-secondary hover:bg-primary-950 hover:text-primary-500'
       }`}
       data-tooltip-id={!isExpanded ? `sidebar-tooltip-${title}` : undefined}
       data-tooltip-content={!isExpanded ? title : undefined}

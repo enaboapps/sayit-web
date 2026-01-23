@@ -35,7 +35,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="bg-surface rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
-          <div className="mx-auto w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mb-6">
+          <div className="mx-auto w-20 h-20 bg-status-error rounded-3xl flex items-center justify-center mb-6">
             <ExclamationTriangleIcon className="w-10 h-10 text-red-500" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-4">Session Unavailable</h1>
@@ -75,7 +75,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
             </div>
 
             <div className="mt-6 flex items-center justify-between">
-              <div className="flex items-center gap-3 bg-green-500/10 px-4 py-2 rounded-3xl">
+              <div className="flex items-center gap-3 bg-status-success px-4 py-2 rounded-3xl">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-semibold text-green-500">Connected</span>
               </div>
@@ -84,7 +84,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
                 <span className="text-sm font-semibold text-text-secondary">Font Size</span>
                 <button
                   onClick={decreaseFontSize}
-                  className="w-10 h-10 flex items-center justify-center bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
+                  className="w-10 h-10 flex items-center justify-center bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
                   aria-label="Decrease font size"
                   disabled={fontSize <= 12}
                 >
@@ -95,7 +95,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
                 </span>
                 <button
                   onClick={increaseFontSize}
-                  className="w-10 h-10 flex items-center justify-center bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
+                  className="w-10 h-10 flex items-center justify-center bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500 rounded-full transition-all duration-300 shadow-md hover:shadow-lg hover:scale-110 disabled:opacity-50 disabled:hover:scale-100"
                   aria-label="Increase font size"
                   disabled={fontSize >= 64}
                 >

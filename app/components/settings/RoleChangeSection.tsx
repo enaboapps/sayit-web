@@ -25,7 +25,7 @@ export default function RoleChangeSection() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className={`p-3 rounded-full ${
-            profile.role === 'caregiver' ? 'bg-primary-500/20' : 'bg-blue-500/20'
+            profile.role === 'caregiver' ? 'bg-primary-950' : 'bg-status-info'
           }`}>
             {profile.role === 'caregiver' ? (
               <HeartIcon className="w-6 h-6 text-primary-500" />

@@ -99,7 +99,7 @@ export default function TabManagementDialog({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-overlay" />
         </Transition.Child>
 
         {/* Dialog panel with scale animation */}
@@ -141,7 +141,7 @@ export default function TabManagementDialog({
                         className={`
                           border-2 rounded-2xl p-4 cursor-pointer transition-all
                           ${isActive
-                        ? 'border-primary-500 bg-primary-500/10 shadow-lg'
+                        ? 'border-primary-500 bg-surface-hover shadow-lg'
                         : 'border-border hover:border-primary-300 hover:bg-surface-hover'
                       }
                         `}
@@ -184,7 +184,7 @@ export default function TabManagementDialog({
                             </button>
                             <button
                               onClick={(e) => handleCloseTab(e, tab.id)}
-                              className="p-1.5 rounded-full hover:bg-red-500/10 text-text-secondary hover:text-red-500 transition-colors"
+                              className="p-1.5 rounded-full hover:bg-status-error text-text-secondary hover:text-red-500 transition-colors"
                               aria-label={`Close ${tab.label}`}
                             >
                               <XMarkIcon className="w-4 h-4" />
@@ -205,7 +205,7 @@ export default function TabManagementDialog({
                 {tabs.length > 1 && (
                   <button
                     onClick={handleCloseAll}
-                    className="w-full h-12 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-600 border-2 border-red-500/30 transition-all duration-200 font-medium flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-full bg-status-error hover:bg-red-900 text-red-500 hover:text-red-400 border-2 border-red-900 transition-all duration-200 font-medium flex items-center justify-center gap-2"
                   >
                     <XMarkIcon className="w-5 h-5" />
                     <span>Close All (Keep Active)</span>
@@ -214,7 +214,7 @@ export default function TabManagementDialog({
 
                 {/* Confirmation overlay */}
                 {showCloseAllConfirm && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10">
+                  <div className="absolute inset-0 bg-overlay flex items-center justify-center rounded-2xl z-10">
                     <div className="bg-surface p-6 rounded-2xl shadow-2xl max-w-sm mx-4">
                       <h4 className="text-lg font-bold text-foreground mb-2">
                         Close All Other Tabs?

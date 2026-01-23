@@ -48,7 +48,7 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-overlay  flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-foreground">Create Board for Client</h2>
@@ -84,8 +84,8 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
               onClick={() => setAccessLevel('view')}
               className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                 accessLevel === 'view'
-                  ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/30'
-                  : 'border-border hover:border-primary-500/50'
+                  ? 'border-primary-500 bg-primary-950 ring-2 ring-primary-900'
+                  : 'border-border hover:border-primary-700'
               }`}
             >
               <div className="flex items-center justify-center gap-2 mb-1">
@@ -95,7 +95,7 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
               <span className={`text-sm font-medium ${accessLevel === 'view' ? 'text-primary-400' : 'text-text-secondary'}`}>
                 View only
               </span>
-              <p className={`text-xs mt-1 ${accessLevel === 'view' ? 'text-primary-400/70' : 'text-text-tertiary'}`}>
+              <p className={`text-xs mt-1 ${accessLevel === 'view' ? 'text-primary-400' : 'text-text-tertiary'}`}>
                 Can see phrases
               </p>
             </button>
@@ -103,8 +103,8 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
               onClick={() => setAccessLevel('edit')}
               className={`flex-1 p-4 rounded-xl border-2 transition-all ${
                 accessLevel === 'edit'
-                  ? 'border-primary-500 bg-primary-500/20 ring-2 ring-primary-500/30'
-                  : 'border-border hover:border-primary-500/50'
+                  ? 'border-primary-500 bg-primary-950 ring-2 ring-primary-900'
+                  : 'border-border hover:border-primary-700'
               }`}
             >
               <div className="flex items-center justify-center gap-2 mb-1">
@@ -114,7 +114,7 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
               <span className={`text-sm font-medium ${accessLevel === 'edit' ? 'text-primary-400' : 'text-text-secondary'}`}>
                 Can edit
               </span>
-              <p className={`text-xs mt-1 ${accessLevel === 'edit' ? 'text-primary-400/70' : 'text-text-tertiary'}`}>
+              <p className={`text-xs mt-1 ${accessLevel === 'edit' ? 'text-primary-400' : 'text-text-tertiary'}`}>
                 Add & modify phrases
               </p>
             </button>
@@ -122,7 +122,7 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <div className="mb-4 p-3 rounded-xl bg-status-error border border-red-900 text-red-400 text-sm">
             {error}
           </div>
         )}

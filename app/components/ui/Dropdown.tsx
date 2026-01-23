@@ -59,9 +59,9 @@ export function Dropdown<T = string>({
         type="button"
         onClick={() => !disabled && setIsOpen(true)}
         className={cn(
-          'relative w-full py-3 pl-6 pr-10 text-left bg-surface border border-border rounded-3xl shadow-md hover:shadow-lg cursor-default focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:shadow-xl text-base transition-all duration-300',
+          'relative w-full py-3 pl-6 pr-10 text-left bg-surface border border-border rounded-3xl shadow-md hover:shadow-lg cursor-default focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:shadow-xl text-base transition-all duration-300',
           disabled && 'opacity-50 cursor-not-allowed bg-surface-hover',
-          error && 'border-red-500 focus:ring-red-500/50 focus:border-red-500/50'
+          error && 'border-red-500 focus:ring-red-500 focus:border-red-500'
         )}
         disabled={disabled}
       >
@@ -87,7 +87,7 @@ export function Dropdown<T = string>({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="fixed inset-0 bg-overlay" />
           </Transition.Child>
 
           <div className="fixed inset-0 overflow-y-auto">
@@ -160,7 +160,7 @@ export function Dropdown<T = string>({
         </Dialog>
       </Transition>
 
-      {error && <p className="mt-2 text-sm text-red-500 bg-red-500/10 px-4 py-2 rounded-3xl">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-500 bg-status-error px-4 py-2 rounded-3xl">{error}</p>}
     </div>
   );
 }

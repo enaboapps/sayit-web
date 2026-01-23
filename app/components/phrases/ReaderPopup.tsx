@@ -166,7 +166,7 @@ export default function ReaderPopup({
       <div className="absolute top-4 right-4 z-10 safe-area-inset-top">
         <button
           onClick={onClose}
-          className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-colors"
           aria-label="Close reader mode"
         >
           <X className="w-6 h-6 text-white" />
@@ -175,7 +175,7 @@ export default function ReaderPopup({
 
       {/* Counter */}
       <div className="absolute top-4 left-4 z-10 safe-area-inset-top">
-        <span className="text-white/60 text-sm font-medium">
+        <span className="text-gray-400 text-sm font-medium">
           {currentIndex + 1} / {phrases.length}
         </span>
       </div>
@@ -228,7 +228,7 @@ export default function ReaderPopup({
               className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
                 index === currentIndex
                   ? 'bg-white w-6'
-                  : 'bg-white/30 hover:bg-white/50'
+                  : 'bg-gray-600 hover:bg-gray-500'
               }`}
               aria-label={`Go to phrase ${index + 1}`}
             />
@@ -238,7 +238,7 @@ export default function ReaderPopup({
 
       {/* Swipe hint - only shown briefly */}
       <div className="absolute bottom-20 left-0 right-0 text-center">
-        <p className="text-white/40 text-sm">
+        <p className="text-gray-500 text-sm">
           Tap to speak • Swipe to navigate
         </p>
       </div>

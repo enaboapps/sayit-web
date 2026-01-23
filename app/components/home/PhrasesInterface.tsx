@@ -339,7 +339,7 @@ export default function PhrasesInterface() {
       />
       {/* Mobile: TypingDock at bottom, docked above bottom tab bar */}
       {isMobile && (
-        <div className="fixed bottom-20 left-0 right-0 z-40">
+        <div className="fixed bottom-20 left-0 right-0 z-40 bg-surface">
           <TypingDock
             text={typingText}
             onChange={setTypingText}

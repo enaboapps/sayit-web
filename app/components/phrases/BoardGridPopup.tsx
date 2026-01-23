@@ -36,7 +36,7 @@ export default function BoardGridPopup({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/75" />
+          <div className="fixed inset-0 bg-overlay" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -66,7 +66,7 @@ export default function BoardGridPopup({
                         key={board.id}
                         className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                           selectedBoard?.id === board.id
-                            ? 'border-primary-500 bg-primary-500/10 shadow-lg'
+                            ? 'border-primary-500 bg-surface-hover shadow-lg'
                             : 'border-border hover:border-primary-300 hover:shadow-md'
                         }`}
                         onClick={() => {

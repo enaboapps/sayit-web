@@ -62,7 +62,7 @@ export default function FleshOutPopup({ initialText, onClose, onApply }: FleshOu
 
   // The popup container is rendered regardless of subscription status
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50">
       <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-2xl mx-4 transition-all duration-300">
         <div className="flex justify-between items-center p-6 border-b border-border">
           <h2 className="text-xl font-semibold text-foreground">Flesh Out Text</h2>
@@ -76,7 +76,7 @@ export default function FleshOutPopup({ initialText, onClose, onApply }: FleshOu
 
         <div className="p-6">
           <div className="mb-6">
-            <div className="bg-surface-hover/50 p-4 rounded-2xl text-foreground">
+            <div className="bg-surface-hover p-4 rounded-2xl text-foreground">
               {initialText}
             </div>
           </div>
@@ -84,7 +84,7 @@ export default function FleshOutPopup({ initialText, onClose, onApply }: FleshOu
           {/* Wrap the premium functionality with the subscription check */}
           <SubscriptionWrapper
             fallback={
-              <div className="bg-surface-hover/50 p-8 rounded-2xl text-center">
+              <div className="bg-surface-hover p-8 rounded-2xl text-center">
                 <svg className="w-12 h-12 mx-auto text-text-secondary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>

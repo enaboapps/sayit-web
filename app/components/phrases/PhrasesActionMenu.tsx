@@ -54,7 +54,7 @@ export default function PhrasesActionMenu({
       {/* Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-overlay z-40 transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}

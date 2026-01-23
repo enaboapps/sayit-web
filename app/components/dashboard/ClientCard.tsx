@@ -42,7 +42,7 @@ export default function ClientCard({ client }: ClientCardProps) {
   const boardCount = clientBoards?.length ?? 0;
 
   return (
-    <div className="bg-surface rounded-xl border border-border p-4 hover:border-primary-500/30 transition-colors">
+    <div className="bg-surface rounded-xl border border-border p-4 hover:border-primary-900 transition-colors">
       <div className="flex items-center gap-4">
         <div className="p-3 rounded-full bg-surface-hover">
           <UserIcon className="w-6 h-6 text-text-secondary" />
@@ -62,7 +62,7 @@ export default function ClientCard({ client }: ClientCardProps) {
         <div className="flex items-center gap-2">
           <Link
             href={`/dashboard/client/${client.communicatorId}`}
-            className="p-2 rounded-lg bg-primary-500/10 text-primary-500 hover:bg-primary-500/20 transition-colors"
+            className="p-2 rounded-lg bg-surface-hover text-primary-500 hover:bg-primary-950 transition-colors"
             title="View boards"
           >
             <EyeIcon className="w-5 h-5" />
@@ -88,7 +88,7 @@ export default function ClientCard({ client }: ClientCardProps) {
           ) : (
             <button
               onClick={() => setShowConfirm(true)}
-              className="p-2 rounded-lg text-text-tertiary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              className="p-2 rounded-lg text-text-tertiary hover:text-red-500 hover:bg-status-error transition-colors"
               title="Remove client"
             >
               <TrashIcon className="w-5 h-5" />

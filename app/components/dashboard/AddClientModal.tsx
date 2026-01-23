@@ -54,11 +54,11 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-overlay  flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary-500/10">
+            <div className="p-2 rounded-full bg-surface-hover">
               <UserPlusIcon className="w-6 h-6 text-primary-500" />
             </div>
             <h2 className="text-xl font-bold text-foreground">Add Client</h2>
@@ -84,7 +84,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
                 setError(null);
               }}
               placeholder="client@example.com"
-              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
+              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               autoFocus
             />
             <p className="mt-2 text-text-tertiary text-sm">
@@ -93,19 +93,19 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="mb-4 p-3 rounded-xl bg-status-error border border-red-900 text-red-400 text-sm">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+            <div className="mb-4 p-3 rounded-xl bg-status-success border border-green-900 text-green-400 text-sm">
               Request sent! Waiting for {foundProfile?.fullName || foundProfile?.email} to accept.
             </div>
           )}
 
           {foundProfile && !error && !success && (
-            <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+            <div className="mb-4 p-3 rounded-xl bg-status-success border border-green-900 text-green-400 text-sm">
               Found: {foundProfile.fullName || foundProfile.email}
             </div>
           )}

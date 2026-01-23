@@ -5,7 +5,7 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-3xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-3xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -14,9 +14,9 @@ const buttonVariants = cva(
         destructive:
           'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700',
         outline:
-          'border border-border bg-surface text-foreground hover:bg-surface-hover hover:border-primary-500/50',
+          'border border-border bg-surface text-foreground hover:bg-surface-hover hover:border-primary-700',
         secondary:
-          'bg-surface-hover text-foreground hover:bg-primary-500/10 hover:text-primary-500',
+          'bg-surface-hover text-foreground hover:bg-primary-950 hover:text-primary-500',
         ghost: 'hover:bg-surface-hover text-foreground hover:text-primary-500',
         link: 'text-foreground underline-offset-4 hover:underline hover:text-primary-500',
       },
