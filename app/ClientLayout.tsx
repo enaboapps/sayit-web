@@ -45,13 +45,18 @@ export default function ClientLayout({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
-            <div className="min-h-screen flex">
+            <div className="min-h-dvh flex flex-col md:flex-row">
+              {/* Sidebar - hidden on mobile, shown on tablet+ */}
               <Sidebar />
-              <div className="flex-1 md:pl-16">
-                <main className="pb-20 md:pb-0">
+
+              {/* Main content area */}
+              <div className="flex-1 md:pl-16 lg:pl-16">
+                <main className="min-h-dvh pb-20 md:pb-0">
                   {children}
                 </main>
               </div>
+
+              {/* Bottom tab bar - shown on mobile only */}
               <BottomTabBar />
             </div>
           </SettingsProvider>

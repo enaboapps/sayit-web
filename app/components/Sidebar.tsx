@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useQuery } from 'convex/react';
@@ -13,7 +14,8 @@ import {
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
   UsersIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { UserButton } from '@clerk/nextjs';
@@ -23,11 +25,19 @@ export default function Sidebar() {
   const pathname = usePathname();
   const profile = useQuery(api.profiles.getProfile);
   const { isActive: hasSubscription } = useSubscription();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const isCaregiver = profile?.role === 'caregiver';
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-16 bg-surface z-50 shadow-2xl hidden md:flex flex-col">
+    <aside
+      className={`fixed left-0 top-0 h-full z-50 shadow-2xl hidden md:flex flex-col transition-all duration-300 ${
+        isExpanded ? 'w-48' : 'w-16'
+      }`}
+      style={{ backgroundColor: '#242424' }}
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
+    >
       <div className="p-4 flex justify-center items-center">
         <div className="rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
           <Image
@@ -42,9 +52,10 @@ export default function Sidebar() {
       <nav className="flex-1 p-3 space-y-3">
         <SidebarItem
           href="/"
-          icon={<HomeIcon className="w-6 h-6" />}
+          icon={<HomeIcon className="w-6 h-6 flex-shrink-0" />}
           title="Home"
           isActive={pathname === '/'}
+          isExpanded={isExpanded}
         />
 
         {user && isCaregiver && (
@@ -52,9 +63,9 @@ export default function Sidebar() {
             href="/dashboard"
             icon={
               hasSubscription ? (
-                <UsersIcon className="w-6 h-6" />
+                <UsersIcon className="w-6 h-6 flex-shrink-0" />
               ) : (
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   <UsersIcon className="w-6 h-6" />
                   <LockClosedIcon className="w-3 h-3 absolute -bottom-1 -right-1 text-text-tertiary" />
                 </div>
@@ -62,23 +73,26 @@ export default function Sidebar() {
             }
             title={hasSubscription ? 'Clients' : 'Clients (Pro)'}
             isActive={pathname?.startsWith('/dashboard') ?? false}
+            isExpanded={isExpanded}
           />
         )}
 
         {user && (
           <SidebarItem
             href="/settings"
-            icon={<Cog6ToothIcon className="w-6 h-6" />}
+            icon={<Cog6ToothIcon className="w-6 h-6 flex-shrink-0" />}
             title="Settings"
             isActive={pathname === '/settings'}
+            isExpanded={isExpanded}
           />
         )}
 
         <SidebarItem
           href="/support"
-          icon={<QuestionMarkCircleIcon className="w-6 h-6" />}
+          icon={<QuestionMarkCircleIcon className="w-6 h-6 flex-shrink-0" />}
           title="Support"
           isActive={pathname === '/support'}
+          isExpanded={isExpanded}
         />
       </nav>
 
@@ -116,26 +130,36 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   title: string;
   isActive: boolean;
+  isExpanded: boolean;
 }
 
-function SidebarItem({ href, icon, title, isActive }: SidebarItemProps) {
+function SidebarItem({ href, icon, title, isActive, isExpanded }: SidebarItemProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center justify-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl hover:scale-110 ${
+      className={`flex items-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl ${
+        isExpanded ? 'justify-start gap-3 px-3' : 'justify-center hover:scale-110'
+      } ${
         isActive
           ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
           : 'bg-surface-hover text-text-secondary hover:bg-primary-500/10 hover:text-primary-500'
       }`}
-      data-tooltip-id={`sidebar-tooltip-${title}`}
-      data-tooltip-content={title}
+      data-tooltip-id={!isExpanded ? `sidebar-tooltip-${title}` : undefined}
+      data-tooltip-content={!isExpanded ? title : undefined}
     >
       {icon}
-      <Tooltip
-        id={`sidebar-tooltip-${title}`}
-        place="right"
-        className="z-50"
-      />
+      {isExpanded && (
+        <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
+          {title}
+        </span>
+      )}
+      {!isExpanded && (
+        <Tooltip
+          id={`sidebar-tooltip-${title}`}
+          place="right"
+          className="z-50"
+        />
+      )}
     </Link>
   );
 }
