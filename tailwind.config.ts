@@ -104,6 +104,16 @@ const config: Config = {
           active: '#e65100', // Orange-900 - darkest active/pressed
           light: '#ffb74d', // Orange-300 - lighter variant
         },
+        // Solid status backgrounds (replacing transparent versions)
+        status: {
+          error: '#2a1215',      // Dark red background
+          warning: '#2a1f0a',    // Dark amber background
+          success: '#0a2a1a',    // Dark green background
+          info: '#0a1a2a',       // Dark blue background
+          purple: '#1a0a2a',     // Dark purple background
+        },
+        // Overlay/backdrop solid color
+        overlay: '#0a0a0a',     // Near-black for modals
       },
     },
   },

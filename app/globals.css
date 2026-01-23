@@ -8,6 +8,9 @@
   --surface-hover: #2e2e2e;
   --border: #3a3a3a;
 
+  /* Mobile bottom stack height (nav + dock + safe area) */
+  --bottom-stack-height: calc(126px + env(safe-area-inset-bottom, 0px));
+
   /* Text colors with WCAG AAA compliance */
   --text-primary: #f5f5f5;
   --text-secondary: #b8b8b8;
@@ -85,6 +88,11 @@ body {
   }
   .safe-area-inset-top {
     padding-top: max(env(safe-area-inset-top, 0px), 20px);
+  }
+
+  /* Position above the mobile bottom stack (dock + nav) */
+  .bottom-above-stack {
+    bottom: calc(var(--bottom-stack-height) + 16px);
   }
 
   /* Dynamic viewport height utilities */

@@ -23,9 +23,9 @@ export default function ConnectionRequestsBanner() {
       {!isExpanded && (
         <button
           onClick={() => setIsExpanded(true)}
-          className="w-full bg-primary-500/10 border border-primary-500/30 rounded-xl p-4 flex items-center gap-3 hover:bg-primary-500/20 transition-colors text-left"
+          className="w-full bg-surface-hover border border-primary-900 rounded-xl p-4 flex items-center gap-3 hover:bg-primary-950 transition-colors text-left"
         >
-          <div className="p-2 rounded-full bg-primary-500/20">
+          <div className="p-2 rounded-full bg-primary-950">
             <BellAlertIcon className="w-5 h-5 text-primary-500" />
           </div>
           <div className="flex-1">

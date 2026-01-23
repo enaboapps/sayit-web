@@ -106,9 +106,8 @@ export default function BottomTabBar() {
           animate={{ y: 0 }}
           exit={{ y: 100 }}
           transition={{ duration: 0.2 }}
-          className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
         >
-          <div className="bg-surface/95 backdrop-blur-lg border-t border-white/10 shadow-2xl">
+          <div className="border-t border-border shadow-2xl" style={{ backgroundColor: '#242424' }}>
             {/* Safe area padding for notched devices */}
             <div className="flex justify-around items-center px-2 pb-safe">
               {tabs.map((tab) => {
@@ -138,7 +137,7 @@ export default function BottomTabBar() {
                       {active && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute -inset-2 bg-primary-500/10 rounded-2xl -z-10"
+                          className="absolute -inset-2 bg-surface-hover rounded-2xl -z-10"
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         />
                       )}

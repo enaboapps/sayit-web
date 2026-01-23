@@ -7,8 +7,9 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { MobileBottomProvider } from './contexts/MobileBottomContext';
 import Sidebar from './components/Sidebar';
-import BottomTabBar from './components/navigation/BottomTabBar';
+import MobileBottomStack from './components/navigation/MobileBottomStack';
 
 export default function ClientLayout({
   children,
@@ -45,20 +46,22 @@ export default function ClientLayout({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
-            <div className="min-h-dvh flex flex-col md:flex-row">
-              {/* Sidebar - hidden on mobile, shown on tablet+ */}
-              <Sidebar />
+            <MobileBottomProvider>
+              <div className="min-h-dvh flex flex-col md:flex-row">
+                {/* Sidebar - hidden on mobile, shown on tablet+ */}
+                <Sidebar />
 
-              {/* Main content area */}
-              <div className="flex-1 md:pl-16 lg:pl-16">
-                <main className="min-h-dvh pb-20 md:pb-0">
-                  {children}
-                </main>
+                {/* Main content area */}
+                <div className="flex-1 md:pl-16 lg:pl-16">
+                  <main className="min-h-dvh pb-32 md:pb-0">
+                    {children}
+                  </main>
+                </div>
+
+                {/* Mobile bottom stack - dock + tab bar */}
+                <MobileBottomStack />
               </div>
-
-              {/* Bottom tab bar - shown on mobile only */}
-              <BottomTabBar />
-            </div>
+            </MobileBottomProvider>
           </SettingsProvider>
         </AuthProvider>
       </ConvexProviderWithClerk>

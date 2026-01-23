@@ -97,14 +97,14 @@ function AddPhraseForm() {
             {boards === undefined ? (
               <div className="text-text-tertiary">Loading boards...</div>
             ) : boards.length === 0 ? (
-              <div className="text-amber-600 bg-amber-500/10 px-4 py-3 rounded-2xl">
+              <div className="text-amber-600 bg-status-warning px-4 py-3 rounded-2xl">
                 No boards available. Create a board first.
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => setIsBoardPickerOpen(true)}
-                className="w-full flex items-center justify-between bg-surface-hover text-foreground rounded-2xl px-4 py-4 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all"
+                className="w-full flex items-center justify-between bg-surface-hover text-foreground rounded-2xl px-4 py-4 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
               >
                 <div className="flex flex-col items-start">
                   <span className={selectedBoard ? 'font-medium' : 'text-text-tertiary'}>
@@ -133,13 +133,13 @@ function AddPhraseForm() {
           />
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm bg-red-500/10 px-4 py-3 rounded-3xl">
+            <div className="mb-4 text-red-500 text-sm bg-status-error px-4 py-3 rounded-3xl">
               {error}
             </div>
           )}
 
           {isDuplicate && (
-            <div className="mb-4 text-amber-600 text-sm bg-amber-500/10 px-4 py-3 rounded-3xl">
+            <div className="mb-4 text-amber-600 text-sm bg-status-warning px-4 py-3 rounded-3xl">
               This phrase already exists on the board
             </div>
           )}
@@ -174,10 +174,10 @@ function AddPhraseForm() {
                 disabled={!canEdit}
                 className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
                   isSelected
-                    ? 'bg-primary-500/10 border-2 border-primary-500'
+                    ? 'bg-surface-hover border-2 border-primary-500'
                     : canEdit
                     ? 'bg-surface-hover hover:bg-surface border-2 border-transparent'
-                    : 'bg-surface-hover/50 border-2 border-transparent opacity-50 cursor-not-allowed'
+                    : 'bg-surface-hover border-2 border-transparent opacity-50 cursor-not-allowed'
                 }`}
               >
                 <div className="flex flex-col items-start">

@@ -114,8 +114,8 @@ export default function TypingDock({
   };
 
   return (
-    <div className={`bg-surface border-t border-border ${className}`}>
-      <div className="px-3 py-2 pb-safe">
+    <div className={`border-t border-border ${className}`} style={{ backgroundColor: '#242424' }}>
+      <div className="px-3 py-2">
         <AnimatePresence mode="wait">
           {isExpanded ? (
             <motion.div
@@ -136,7 +136,7 @@ export default function TypingDock({
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   placeholder="Type your message..."
-                  className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 pr-12 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                  className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 pr-12 text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
                   rows={3}
                   maxLength={maxChars}
                 />
@@ -164,7 +164,7 @@ export default function TypingDock({
                   <button
                     onClick={onAiAssist}
                     disabled={!text.trim()}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-purple-500/10 text-text-secondary hover:text-purple-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label="AI Assist"
                   >
                     <SparklesIcon className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function TypingDock({
                 <button
                   onClick={handleClear}
                   disabled={!text.trim()}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-red-500/10 text-text-secondary hover:text-red-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                   aria-label="Clear"
                 >
                   <XMarkIcon className="w-4 h-4" />
@@ -223,7 +223,7 @@ export default function TypingDock({
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   placeholder="Type to speak..."
-                  className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 text-base focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                  className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 text-base focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 {/* Expand button */}
                 <button

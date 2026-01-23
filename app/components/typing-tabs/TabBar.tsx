@@ -61,7 +61,7 @@ export default function TabBar({
       <div className="flex items-center gap-2">
         <button
           onClick={onManage}
-          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500"
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500"
           aria-label="Manage tabs"
           title="Manage all tabs"
         >
@@ -70,7 +70,7 @@ export default function TabBar({
 
         <button
           onClick={onTabCreate}
-          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-primary-500/10 text-text-secondary hover:text-primary-500 cursor-pointer"
+          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500 cursor-pointer"
           aria-label="Create new tab"
           title="Create new tab (Cmd/Ctrl+T)"
         >

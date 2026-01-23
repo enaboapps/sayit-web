@@ -73,7 +73,7 @@ export default function AddBoardPage() {
           </div>
 
           {error && (
-            <div className="p-4 bg-red-500/10 rounded-3xl text-red-500 mt-4">
+            <div className="p-4 bg-status-error rounded-3xl text-red-500 mt-4">
               {error}
             </div>
           )}

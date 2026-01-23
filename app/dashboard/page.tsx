@@ -40,7 +40,7 @@ export default function DashboardPage() {
         <SubscriptionWrapper
           fallback={
             <div className="text-center py-16">
-              <div className="p-4 rounded-full bg-primary-500/10 w-fit mx-auto mb-6">
+              <div className="p-4 rounded-full bg-surface-hover w-fit mx-auto mb-6">
                 <UsersIcon className="w-12 h-12 text-primary-500" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-4">Client Management</h2>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
           }
         >
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 rounded-full bg-primary-500/10">
+            <div className="p-3 rounded-full bg-surface-hover">
               <UsersIcon className="w-8 h-8 text-primary-500" />
             </div>
             <div>

@@ -180,7 +180,7 @@ export default function BottomSheet({
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-black/50 z-40"
+            className="fixed inset-0 bg-overlay z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -192,10 +192,11 @@ export default function BottomSheet({
           {/* Bottom Sheet */}
           <motion.div
             ref={sheetRef}
-            className={`fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-3xl shadow-2xl flex flex-col ${className}`}
+            className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl shadow-2xl flex flex-col ${className}`}
             style={{
               maxHeight: '95vh',
               paddingBottom: keyboardHeight > 0 ? keyboardHeight : 'env(safe-area-inset-bottom)',
+              backgroundColor: '#242424',
             }}
             initial={{ y: '100%' }}
             animate={{

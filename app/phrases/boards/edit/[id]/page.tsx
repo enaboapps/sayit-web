@@ -117,7 +117,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
           />
 
           {error && (
-            <div className="mb-4 text-red-500 text-sm bg-red-500/10 px-4 py-3 rounded-3xl">
+            <div className="mb-4 text-red-500 text-sm bg-status-error px-4 py-3 rounded-3xl">
               {error}
             </div>
           )}

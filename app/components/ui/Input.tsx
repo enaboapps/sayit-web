@@ -15,10 +15,10 @@ export default function Input({ label, error, className = '', ...props }: InputP
       )}
       <input
         {...props}
-        className={`block w-full px-6 py-3 bg-surface border border-border rounded-3xl text-foreground text-base placeholder:text-text-tertiary shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500/50 focus:shadow-xl hover:shadow-lg transition-all duration-300 ${className}`}
+        className={`block w-full px-6 py-3 bg-surface border border-border rounded-3xl text-foreground text-base placeholder:text-text-tertiary shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:shadow-xl hover:shadow-lg transition-all duration-300 ${className}`}
       />
       {error && (
-        <div className="mt-2 text-red-500 text-sm bg-red-500/10 px-4 py-2 rounded-3xl">
+        <div className="mt-2 text-red-500 text-sm bg-status-error px-4 py-2 rounded-3xl">
           {error}
         </div>
       )}

@@ -84,7 +84,7 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
       {isActive && (
         <button
           onClick={handleClose}
-          className="p-0.5 rounded-full transition-opacity opacity-100 hover:bg-white/20"
+          className="p-0.5 rounded-full transition-opacity opacity-100 hover:bg-gray-700"
           aria-label={`Close ${tab.label}`}
         >
           <XMarkIcon className="w-4 h-4" />
