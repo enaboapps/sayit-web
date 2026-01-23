@@ -33,22 +33,21 @@ interface TabItem {
   showLock?: boolean;
 }
 
-const baseTabs: TabItem[] = [
-  {
-    href: '/',
-    label: 'Home',
-    iconOutline: <HomeOutline className="w-6 h-6" />,
-    iconSolid: <HomeSolid className="w-6 h-6" />,
-    matchPaths: ['/', '/phrases'],
-  },
-  {
-    href: '/phrases/add',
-    label: 'New',
-    iconOutline: <PlusOutline className="w-6 h-6" />,
-    iconSolid: <PlusSolid className="w-6 h-6" />,
-    matchPaths: ['/phrases/add'],
-  },
-];
+const homeTab: TabItem = {
+  href: '/',
+  label: 'Home',
+  iconOutline: <HomeOutline className="w-6 h-6" />,
+  iconSolid: <HomeSolid className="w-6 h-6" />,
+  matchPaths: ['/', '/phrases'],
+};
+
+const newTab: TabItem = {
+  href: '/phrases/add',
+  label: 'New',
+  iconOutline: <PlusOutline className="w-6 h-6" />,
+  iconSolid: <PlusSolid className="w-6 h-6" />,
+  matchPaths: ['/phrases/add'],
+};
 
 const settingsTab: TabItem = {
   href: '/settings',
@@ -78,7 +77,9 @@ export default function BottomTabBar() {
 
   // Build tabs dynamically based on user state
   const tabs: TabItem[] = [
-    ...baseTabs,
+    homeTab,
+    // Only show New and Settings when logged in
+    ...(user ? [newTab] : []),
     // Add Clients tab for caregivers (between New and Settings)
     ...(isCaregiver ? [{
       href: '/dashboard',
@@ -88,7 +89,7 @@ export default function BottomTabBar() {
       matchPaths: ['/dashboard'],
       showLock: !hasSubscription,
     }] : []),
-    settingsTab,
+    ...(user ? [settingsTab] : []),
     // Show Profile tab only when not logged in
     ...(!user ? [profileTab] : []),
   ];
