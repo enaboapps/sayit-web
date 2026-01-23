@@ -4,18 +4,24 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import { useSubscription } from '@/app/hooks/useSubscription';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HomeIcon as HomeOutline,
   PlusCircleIcon as PlusOutline,
   Cog6ToothIcon as SettingsOutline,
   UserCircleIcon as ProfileOutline,
+  UsersIcon as UsersOutline,
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeSolid,
   PlusCircleIcon as PlusSolid,
   Cog6ToothIcon as SettingsSolid,
   UserCircleIcon as ProfileSolid,
+  UsersIcon as UsersSolid,
 } from '@heroicons/react/24/solid';
 
 interface TabItem {
@@ -24,9 +30,10 @@ interface TabItem {
   iconOutline: React.ReactNode;
   iconSolid: React.ReactNode;
   matchPaths?: string[];
+  showLock?: boolean;
 }
 
-const tabs: TabItem[] = [
+const baseTabs: TabItem[] = [
   {
     href: '/',
     label: 'Home',
@@ -41,27 +48,50 @@ const tabs: TabItem[] = [
     iconSolid: <PlusSolid className="w-6 h-6" />,
     matchPaths: ['/phrases/add'],
   },
-  {
-    href: '/settings',
-    label: 'Settings',
-    iconOutline: <SettingsOutline className="w-6 h-6" />,
-    iconSolid: <SettingsSolid className="w-6 h-6" />,
-    matchPaths: ['/settings'],
-  },
-  {
-    href: '/sign-in',
-    label: 'Profile',
-    iconOutline: <ProfileOutline className="w-6 h-6" />,
-    iconSolid: <ProfileSolid className="w-6 h-6" />,
-    matchPaths: ['/sign-in', '/sign-up'],
-  },
 ];
+
+const settingsTab: TabItem = {
+  href: '/settings',
+  label: 'Settings',
+  iconOutline: <SettingsOutline className="w-6 h-6" />,
+  iconSolid: <SettingsSolid className="w-6 h-6" />,
+  matchPaths: ['/settings'],
+};
+
+const profileTab: TabItem = {
+  href: '/sign-in',
+  label: 'Profile',
+  iconOutline: <ProfileOutline className="w-6 h-6" />,
+  iconSolid: <ProfileSolid className="w-6 h-6" />,
+  matchPaths: ['/sign-in', '/sign-up'],
+};
 
 export default function BottomTabBar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const profile = useQuery(api.profiles.getProfile);
+  const { isActive: hasSubscription } = useSubscription();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const isCaregiver = profile?.role === 'caregiver';
+
+  // Build tabs dynamically based on user state
+  const tabs: TabItem[] = [
+    ...baseTabs,
+    // Add Clients tab for caregivers (between New and Settings)
+    ...(isCaregiver ? [{
+      href: '/dashboard',
+      label: 'Clients',
+      iconOutline: <UsersOutline className="w-6 h-6" />,
+      iconSolid: <UsersSolid className="w-6 h-6" />,
+      matchPaths: ['/dashboard'],
+      showLock: !hasSubscription,
+    }] : []),
+    settingsTab,
+    // Show Profile tab only when not logged in
+    ...(!user ? [profileTab] : []),
+  ];
 
   // Hide on scroll down, show on scroll up
   useEffect(() => {
@@ -90,14 +120,6 @@ export default function BottomTabBar() {
     return pathname === tab.href;
   };
 
-  // Adjust profile tab based on auth state
-  const getTabHref = (tab: TabItem) => {
-    if (tab.label === 'Profile') {
-      return user ? '/settings' : '/sign-in';
-    }
-    return tab.href;
-  };
-
   return (
     <AnimatePresence>
       {isVisible && (
@@ -112,17 +134,11 @@ export default function BottomTabBar() {
             <div className="flex justify-around items-center px-2 pb-safe">
               {tabs.map((tab) => {
                 const active = isActive(tab);
-                const href = getTabHref(tab);
-
-                // Skip profile tab display differently if logged in
-                if (tab.label === 'Profile' && user) {
-                  return null;
-                }
 
                 return (
                   <Link
                     key={tab.label}
-                    href={href}
+                    href={tab.href}
                     className={`flex flex-col items-center justify-center min-w-[64px] min-h-[56px] py-2 px-3 rounded-2xl transition-all duration-200 ${
                       active
                         ? 'text-primary-500'
@@ -134,6 +150,9 @@ export default function BottomTabBar() {
                       className="relative"
                     >
                       {active ? tab.iconSolid : tab.iconOutline}
+                      {tab.showLock && (
+                        <LockClosedIcon className="w-3 h-3 absolute -top-1 -right-1 text-text-tertiary" />
+                      )}
                       {active && (
                         <motion.div
                           layoutId="activeTab"
