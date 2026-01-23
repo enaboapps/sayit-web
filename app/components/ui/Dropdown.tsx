@@ -101,7 +101,7 @@ export function Dropdown<T = string>({
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-surface border border-border shadow-2xl transition-all">
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl border border-border shadow-2xl transition-all" style={{ backgroundColor: '#242424' }}>
                   <div className="flex items-center justify-between p-4 border-b border-border">
                     <Dialog.Title className="text-lg font-semibold text-foreground">
                       {label || 'Select an option'}

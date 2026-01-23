@@ -35,7 +35,7 @@ export default function ShareLinkModal({ shareableLink, onClose, onEndSession }:
 
   return (
     <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
-      <div className="bg-surface rounded-lg shadow-xl max-w-md w-full p-6">
+      <div className="rounded-lg shadow-xl max-w-md w-full p-6" style={{ backgroundColor: '#242424' }}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-foreground">Share Your Typing</h2>
           <button

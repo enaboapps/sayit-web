@@ -50,7 +50,7 @@ export default function BoardGridPopup({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-surface p-8 text-left align-middle shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl p-8 text-left align-middle shadow-2xl transition-all" style={{ backgroundColor: '#242424' }}>
                 <Dialog.Title
                   as="h3"
                   className="text-2xl font-bold leading-6 text-foreground mb-6"

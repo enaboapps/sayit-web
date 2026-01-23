@@ -63,7 +63,7 @@ export default function FleshOutPopup({ initialText, onClose, onApply }: FleshOu
   // The popup container is rendered regardless of subscription status
   return (
     <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50">
-      <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-2xl mx-4 transition-all duration-300">
+      <div className="rounded-3xl shadow-2xl w-full max-w-2xl mx-4 transition-all duration-300" style={{ backgroundColor: '#242424' }}>
         <div className="flex justify-between items-center p-6 border-b border-border">
           <h2 className="text-xl font-semibold text-foreground">Flesh Out Text</h2>
           <button
