@@ -359,6 +359,10 @@ export default function PhrasesInterface() {
             onSpeak={handleSpeak}
             isSpeaking={tts.isSpeaking}
             isAvailable={tts.isAvailable}
+            enableTabs={true}
+            enableShare={!!user}
+            enableFleshOut={true}
+            enableFixText={true}
           />
         </MobileDockPortal>
       )}

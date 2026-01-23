@@ -12,6 +12,7 @@ interface TabManagementDialogProps {
   activeTabId: string | null;
   onSwitchTab: (tabId: string) => void;
   onCloseTab: (tabId: string) => void;
+  onCloseAllTabs: () => void;
   onRenameTab: (tabId: string, newLabel: string) => void;
 }
 
@@ -22,11 +23,11 @@ export default function TabManagementDialog({
   activeTabId,
   onSwitchTab,
   onCloseTab,
+  onCloseAllTabs,
   onRenameTab,
 }: TabManagementDialogProps) {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
-  const [showCloseAllConfirm, setShowCloseAllConfirm] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
 
   // Reset editing state if tab being edited is closed
@@ -74,16 +75,8 @@ export default function TabManagementDialog({
   };
 
   const handleCloseAll = () => {
-    setShowCloseAllConfirm(true);
-  };
-
-  const handleConfirmCloseAll = () => {
-    tabs.forEach(tab => {
-      if (tab.id !== activeTabId) {
-        onCloseTab(tab.id);
-      }
-    });
-    setShowCloseAllConfirm(false);
+    onCloseAllTabs();
+    onClose();
   };
 
   return (
@@ -205,40 +198,13 @@ export default function TabManagementDialog({
                 {tabs.length > 1 && (
                   <button
                     onClick={handleCloseAll}
-                    className="w-full h-12 rounded-full bg-status-error hover:bg-red-900 text-red-500 hover:text-red-400 border-2 border-red-900 transition-all duration-200 font-medium flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all duration-200 font-medium flex items-center justify-center gap-2"
                   >
                     <XMarkIcon className="w-5 h-5" />
-                    <span>Close All (Keep Active)</span>
+                    <span>Close All</span>
                   </button>
                 )}
 
-                {/* Confirmation overlay */}
-                {showCloseAllConfirm && (
-                  <div className="absolute inset-0 bg-overlay flex items-center justify-center rounded-2xl z-10">
-                    <div className="bg-surface p-6 rounded-2xl shadow-2xl max-w-sm mx-4">
-                      <h4 className="text-lg font-bold text-foreground mb-2">
-                        Close All Other Tabs?
-                      </h4>
-                      <p className="text-text-secondary mb-4">
-                        This will close {tabs.length - 1} tab{tabs.length - 1 !== 1 ? 's' : ''} and keep only the active tab.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleConfirmCloseAll}
-                          className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors"
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => setShowCloseAllConfirm(false)}
-                          className="flex-1 px-4 py-2 bg-surface-hover hover:bg-background text-foreground rounded-xl transition-colors"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </Dialog.Panel>
             </Transition.Child>
           </div>

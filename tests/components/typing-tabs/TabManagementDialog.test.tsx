@@ -23,6 +23,7 @@ describe('TabManagementDialog', () => {
   const mockOnClose = jest.fn();
   const mockOnSwitchTab = jest.fn();
   const mockOnCloseTab = jest.fn();
+  const mockOnCloseAllTabs = jest.fn();
   const mockOnRenameTab = jest.fn();
 
   beforeEach(() => {
@@ -41,6 +42,7 @@ describe('TabManagementDialog', () => {
           activeTabId="test-tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -59,6 +61,7 @@ describe('TabManagementDialog', () => {
           activeTabId="test-tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -81,6 +84,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -104,6 +108,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -124,6 +129,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -144,6 +150,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -165,6 +172,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -185,6 +193,7 @@ describe('TabManagementDialog', () => {
           activeTabId="test-tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -206,6 +215,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -230,6 +240,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -254,6 +265,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -280,6 +292,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -304,6 +317,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -328,6 +342,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -351,6 +366,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -374,6 +390,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -399,6 +416,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -426,6 +444,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -452,6 +471,7 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
@@ -465,7 +485,7 @@ describe('TabManagementDialog', () => {
   });
 
   describe('close all functionality', () => {
-    it('shows confirmation when Close All is clicked', async () => {
+    it('calls onCloseAllTabs when Close All is clicked', async () => {
       const user = userEvent.setup();
       const tabs = [
         createTab({ id: 'tab-1', label: 'Tab 1' }),
@@ -480,93 +500,15 @@ describe('TabManagementDialog', () => {
           activeTabId="tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );
 
       await user.click(screen.getByText(/Close All/));
 
-      expect(screen.getByText('Close All Other Tabs?')).toBeInTheDocument();
-      expect(screen.getByText(/This will close 1 tab/)).toBeInTheDocument();
-    });
-
-    it('displays correct count in confirmation', async () => {
-      const user = userEvent.setup();
-      const tabs = [
-        createTab({ id: 'tab-1', label: 'Tab 1' }),
-        createTab({ id: 'tab-2', label: 'Tab 2' }),
-        createTab({ id: 'tab-3', label: 'Tab 3' }),
-      ];
-
-      render(
-        <TabManagementDialog
-          isOpen={true}
-          onClose={mockOnClose}
-          tabs={tabs}
-          activeTabId="tab-1"
-          onSwitchTab={mockOnSwitchTab}
-          onCloseTab={mockOnCloseTab}
-          onRenameTab={mockOnRenameTab}
-        />
-      );
-
-      await user.click(screen.getByText(/Close All/));
-
-      expect(screen.getByText(/This will close 2 tabs/)).toBeInTheDocument();
-    });
-
-    it('closes all tabs except active when confirmed', async () => {
-      const user = userEvent.setup();
-      const tabs = [
-        createTab({ id: 'tab-1', label: 'Tab 1' }),
-        createTab({ id: 'tab-2', label: 'Tab 2' }),
-        createTab({ id: 'tab-3', label: 'Tab 3' }),
-      ];
-
-      render(
-        <TabManagementDialog
-          isOpen={true}
-          onClose={mockOnClose}
-          tabs={tabs}
-          activeTabId="tab-1"
-          onSwitchTab={mockOnSwitchTab}
-          onCloseTab={mockOnCloseTab}
-          onRenameTab={mockOnRenameTab}
-        />
-      );
-
-      await user.click(screen.getByText(/Close All/));
-      await user.click(screen.getByText('Confirm'));
-
-      expect(mockOnCloseTab).toHaveBeenCalledWith('tab-2');
-      expect(mockOnCloseTab).toHaveBeenCalledWith('tab-3');
-      expect(mockOnCloseTab).not.toHaveBeenCalledWith('tab-1');
-    });
-
-    it('cancels close all when Cancel is clicked', async () => {
-      const user = userEvent.setup();
-      const tabs = [
-        createTab({ id: 'tab-1', label: 'Tab 1' }),
-        createTab({ id: 'tab-2', label: 'Tab 2' }),
-      ];
-
-      render(
-        <TabManagementDialog
-          isOpen={true}
-          onClose={mockOnClose}
-          tabs={tabs}
-          activeTabId="tab-1"
-          onSwitchTab={mockOnSwitchTab}
-          onCloseTab={mockOnCloseTab}
-          onRenameTab={mockOnRenameTab}
-        />
-      );
-
-      await user.click(screen.getByText(/Close All/));
-      await user.click(screen.getByText('Cancel'));
-
-      expect(mockOnCloseTab).not.toHaveBeenCalled();
-      expect(screen.queryByText('Close All Other Tabs?')).not.toBeInTheDocument();
+      expect(mockOnCloseAllTabs).toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalled();
     });
   });
 
@@ -583,6 +525,7 @@ describe('TabManagementDialog', () => {
           activeTabId="test-tab-1"
           onSwitchTab={mockOnSwitchTab}
           onCloseTab={mockOnCloseTab}
+          onCloseAllTabs={mockOnCloseAllTabs}
           onRenameTab={mockOnRenameTab}
         />
       );

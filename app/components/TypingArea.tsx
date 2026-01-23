@@ -47,6 +47,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     createTab,
     switchTab,
     closeTab,
+    closeAllTabs,
     renameTab,
     updateActiveTabText,
     switchToTabByIndex,
@@ -428,6 +429,10 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           activeTabId={activeTabId}
           onSwitchTab={switchTab}
           onCloseTab={closeTab}
+          onCloseAllTabs={() => {
+            closeAllTabs();
+            onChange?.('');
+          }}
           onRenameTab={renameTab}
         />
       )}
