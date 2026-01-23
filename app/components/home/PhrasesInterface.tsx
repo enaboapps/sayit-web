@@ -2,7 +2,6 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
 import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
@@ -289,6 +288,11 @@ export default function PhrasesInterface() {
                   isEditMode={isEditMode}
                   onSelectBoard={handleSelectBoard}
                   onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
+                  onAddBoard={handleAddBoard}
+                  onAddPhrase={handleAddPhrase}
+                  onReader={handleReader}
+                  onEdit={handleEdit}
+                  hasPhrases={phrases.length > 0}
                 />
               </div>
 
@@ -329,18 +333,6 @@ export default function PhrasesInterface() {
             </>
           )}
         </div>
-      )}
-      {/* Only show FAB on desktop - mobile uses header action buttons */}
-      {!isMobile && (
-        <PhrasesActionMenu
-          onAddPhrase={handleAddPhrase}
-          onAddBoard={handleAddBoard}
-          onEdit={handleEdit}
-          onReader={handleReader}
-          boardPresent={transformedBoards.length > 0}
-          isEditMode={isEditMode}
-          canEditBoard={canEditCurrentBoard}
-        />
       )}
       <ReaderPopup
         phrases={phrases}

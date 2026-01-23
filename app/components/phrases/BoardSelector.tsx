@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PencilIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import BoardGridPopup from './BoardGridPopup';
+import BoardActionButtons from './BoardActionButtons';
 import { Button } from '@/app/components/ui/Button';
 import type { BoardSummary } from './types';
 
@@ -10,6 +11,12 @@ interface BoardSelectorProps {
   isEditMode: boolean;
   onSelectBoard: (board: BoardSummary) => void;
   onEditBoard: (boardId: string) => void;
+  // Action button props
+  onAddBoard?: () => void;
+  onAddPhrase?: () => void;
+  onReader?: () => void;
+  onEdit?: () => void;
+  hasPhrases?: boolean;
 }
 
 export default function BoardSelector({
@@ -18,6 +25,11 @@ export default function BoardSelector({
   isEditMode,
   onSelectBoard,
   onEditBoard,
+  onAddBoard,
+  onAddPhrase,
+  onReader,
+  onEdit,
+  hasPhrases = false,
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
@@ -59,23 +71,34 @@ export default function BoardSelector({
   // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
-      <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl mb-4 transition-all duration-300">
-        <div
-          className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
-          onClick={() => {
-            if (isEditMode && selectedBoard && canEditSelected) {
-              onEditBoard(selectedBoard.id);
-            }
-          }}
-        >
-          <div className="flex flex-col">
-            <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
-            {renderBoardSubtitle(selectedBoard)}
+      <div className="mb-4">
+        <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <div
+            className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
+            onClick={() => {
+              if (isEditMode && selectedBoard && canEditSelected) {
+                onEditBoard(selectedBoard.id);
+              }
+            }}
+          >
+            <div className="flex flex-col">
+              <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
+              {renderBoardSubtitle(selectedBoard)}
+            </div>
+            {isEditMode && canEditSelected && (
+              <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
+            )}
           </div>
-          {isEditMode && canEditSelected && (
-            <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
-          )}
         </div>
+        <BoardActionButtons
+          onAddBoard={onAddBoard}
+          onAddPhrase={onAddPhrase}
+          onReader={onReader}
+          onEdit={onEdit}
+          isEditMode={isEditMode}
+          canEditBoard={canEditSelected}
+          hasPhrases={hasPhrases}
+        />
       </div>
     );
   }
@@ -83,42 +106,53 @@ export default function BoardSelector({
   // If there are multiple boards, show a button to open the popup
   return (
     <>
-      <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl mb-4 transition-all duration-300">
-        <div
-          className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
-          onClick={() => setIsPopupOpen(true)}
-        >
-          <div className="flex flex-col">
-            <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
-            {renderBoardSubtitle(selectedBoard)}
-          </div>
-          <div className="flex items-center space-x-1">
-            {isEditMode && canEditSelected && (
+      <div className="mb-4">
+        <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <div
+            className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
+            onClick={() => setIsPopupOpen(true)}
+          >
+            <div className="flex flex-col">
+              <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
+              {renderBoardSubtitle(selectedBoard)}
+            </div>
+            <div className="flex items-center space-x-1">
+              {isEditMode && canEditSelected && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    if (selectedBoard) {
+                      onEditBoard(selectedBoard.id);
+                    }
+                  }}
+                >
+                  <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
-                  if (selectedBoard) {
-                    onEditBoard(selectedBoard.id);
-                  }
+                  setIsPopupOpen(true);
                 }}
               >
-                <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
+                <span className="text-text-secondary hover:text-foreground transition-colors duration-200 text-lg">▼</span>
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
-                setIsPopupOpen(true);
-              }}
-            >
-              <span className="text-text-secondary hover:text-foreground transition-colors duration-200 text-lg">▼</span>
-            </Button>
+            </div>
           </div>
         </div>
+        <BoardActionButtons
+          onAddBoard={onAddBoard}
+          onAddPhrase={onAddPhrase}
+          onReader={onReader}
+          onEdit={onEdit}
+          isEditMode={isEditMode}
+          canEditBoard={canEditSelected}
+          hasPhrases={hasPhrases}
+        />
       </div>
 
       <BoardGridPopup
