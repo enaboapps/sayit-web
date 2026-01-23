@@ -248,7 +248,10 @@ export default function BottomSheet({
             )}
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div
+              className="flex-1 overflow-y-auto overscroll-contain"
+              style={{ paddingBottom: 'var(--bottom-stack-height)' }}
+            >
               {children}
             </div>
           </motion.div>
