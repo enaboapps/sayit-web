@@ -15,6 +15,7 @@ import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
 import { useAuth } from '../contexts/AuthContext';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { UserButton } from '@clerk/nextjs';
 
 // Import types from SettingsContext
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
@@ -235,6 +236,21 @@ export default function SettingsPage() {
           snapPoints={[50, 70]}
         >
           <div className="p-4">
+            {/* User Account Section */}
+            <div className="flex items-center gap-4 bg-surface-hover rounded-2xl p-4 mb-6">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-12 h-12 rounded-full'
+                  }
+                }}
+              />
+              <div>
+                <p className="font-semibold text-foreground">Signed In</p>
+                <p className="text-sm text-text-secondary">Tap avatar to manage account</p>
+              </div>
+            </div>
+
             <h3 className="font-semibold text-foreground mb-3">Your Role</h3>
             <p className="text-sm text-text-secondary mb-4">Change how you use SayIt!</p>
             <RoleChangeSection />
