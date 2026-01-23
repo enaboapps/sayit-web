@@ -6,9 +6,8 @@ import { TTSVoice, TTSProviderType } from '@/lib/tts-provider';
 import { useSettings } from '../contexts/SettingsContext';
 import { Dropdown } from '@/app/components/ui/Dropdown';
 import { Slider } from '@/app/components/ui/Slider';
-import SubscriptionWrapper from '@/app/components/SubscriptionWrapper';
 import { useRouter } from 'next/navigation';
-import { PlayCircleIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid';
+import { PlayCircleIcon, StopCircleIcon } from '@heroicons/react/24/solid';
 
 // Extended TTSVoice type to include metadata
 interface ExtendedTTSVoice extends TTSVoice {
@@ -20,262 +19,90 @@ interface ExtendedTTSVoice extends TTSVoice {
 
 export default function TTSSettings() {
   const { settings, updateSetting } = useSettings();
-  const { 
-    voices, 
-    speak, 
-    stop, 
-    isSpeaking, 
+  const {
+    voices,
+    speak,
+    stop,
+    isSpeaking,
     status,
     getVoicesByProvider,
     hasSubscription
   } = useTTS();
-  
+
   const router = useRouter();
-  
+
   const [providerVoices, setProviderVoices] = useState<ExtendedTTSVoice[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-  const [showSubscriptionMessage, setShowSubscriptionMessage] = useState(false);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
-  
-  // Sample text for previews - hardcoded
+
+  // Sample text for previews
   const SAMPLE_TEXT = 'Hello, this is a preview of how this voice sounds.';
-  
-  // Detect mobile device
-  useEffect(() => {
-    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
-  }, []);
 
   // Load provider voices only when voices or provider changes
   useEffect(() => {
     const voicesForProvider = getVoicesByProvider(settings.ttsProvider);
-    console.log(`Got ${voicesForProvider.length} voices for provider ${settings.ttsProvider}`);
     setProviderVoices(voicesForProvider);
   }, [voices, settings.ttsProvider, getVoicesByProvider]);
-  
+
   // Handle default voice selection if needed
   useEffect(() => {
     if (providerVoices.length > 0) {
-      // Check if current voice is from the current provider
       const currentVoiceExists = providerVoices.some(v => v.id === settings.ttsVoiceId);
-      
+
       if (!currentVoiceExists) {
-        console.log('Current voice not found in provider voices, setting default voice to:', providerVoices[0]);
         updateSetting('ttsVoiceId', providerVoices[0].id);
-      } else {
-        console.log('Using existing voice ID:', settings.ttsVoiceId);
       }
     }
   }, [providerVoices, settings.ttsVoiceId, updateSetting]);
 
-  // Alert user when trying to use ElevenLabs without subscription
-  useEffect(() => {
-    if (settings.ttsProvider === 'elevenlabs' && !hasSubscription) {
-      setShowSubscriptionMessage(true);
-    } else {
-      setShowSubscriptionMessage(false);
-    }
-  }, [settings.ttsProvider, hasSubscription]);
-
-  // Safe provider change that prevents loops
+  // Safe provider change
   const handleProviderChange = useCallback((newProvider: TTSProviderType) => {
-    // Don't change if the provider is not available
     if (newProvider === 'elevenlabs' && !status.elevenLabsAvailable) {
       return;
     }
-    
-    // Only update if different
+
     if (settings.ttsProvider !== newProvider) {
-      // If switching to ElevenLabs and no subscription, show message
-      if (newProvider === 'elevenlabs' && !hasSubscription) {
-        setShowSubscriptionMessage(true);
-      }
-      
       updateSetting('ttsProvider', newProvider);
     }
-  }, [settings.ttsProvider, status.elevenLabsAvailable, updateSetting, hasSubscription]);
+  }, [settings.ttsProvider, status.elevenLabsAvailable, updateSetting]);
 
-  // Preview voice function for both providers
+  // Preview voice function
   const previewVoice = useCallback(() => {
     if (isSpeaking) {
       stop();
       setIsPlayingPreview(false);
       return;
     }
-    
+
     setIsPlayingPreview(true);
-    
-    // Different behavior based on provider
+
     if (settings.ttsProvider === 'elevenlabs') {
-      // Find currently selected voice
       const voice = providerVoices.find(v => v.id === settings.ttsVoiceId) as ExtendedTTSVoice;
-      
+
       if (voice?.metadata?.preview_url) {
-        // If the voice has a preview URL, use that
         const audio = new Audio(voice.metadata.preview_url);
         audio.onended = () => setIsPlayingPreview(false);
-        audio.play().catch(error => {
-          console.error('Error playing preview:', error);
-          setIsPlayingPreview(false);
-        });
+        audio.play().catch(() => setIsPlayingPreview(false));
       } else {
-        // Use the TTS API to generate a preview
         speak(SAMPLE_TEXT);
-        
-        // Reset the playing state when done
-        setTimeout(() => {
-          setIsPlayingPreview(false);
-        }, 5000); // Assume preview takes at most 5 seconds
+        setTimeout(() => setIsPlayingPreview(false), 5000);
       }
     } else {
-      // Browser TTS preview
       speak(SAMPLE_TEXT);
-      
-      // Reset the playing state when done
-      setTimeout(() => {
-        setIsPlayingPreview(false);
-      }, 5000);
+      setTimeout(() => setIsPlayingPreview(false), 5000);
     }
-  }, [
-    speak, 
-    stop, 
-    isSpeaking, 
-    settings.ttsProvider,
-    settings.ttsVoiceId, 
-    providerVoices
-  ]);
+  }, [speak, stop, isSpeaking, settings.ttsProvider, settings.ttsVoiceId, providerVoices]);
 
+  // Get selected voice name for display
+  const selectedVoiceName = providerVoices.find(v => v.id === settings.ttsVoiceId)?.name;
 
   return (
     <div className="space-y-6">
-      {/* Provider Selection Section */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-foreground mb-3">Choose Provider</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {/* Browser TTS Card */}
-            <div
-              onClick={() => handleProviderChange('browser')}
-              className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                settings.ttsProvider === 'browser'
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-border hover:border-border'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-foreground">Browser TTS</h4>
-                  <p className="text-sm text-text-secondary">Built-in system voices</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {status.browserTTSAvailable ? (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                      ✓ Available
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                      ✗ Unavailable
-                    </span>
-                  )}
-                  {settings.ttsProvider === 'browser' && (
-                    <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ElevenLabs Card */}
-            <div
-              onClick={() => status.elevenLabsAvailable && handleProviderChange('elevenlabs')}
-              className={`relative p-4 border-2 rounded-lg transition-all ${
-                !status.elevenLabsAvailable
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'cursor-pointer'
-              } ${
-                settings.ttsProvider === 'elevenlabs'
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-border hover:border-border'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-foreground">ElevenLabs</h4>
-                  <p className="text-sm text-text-secondary">High-quality AI voices</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {status.elevenLabsAvailable ? (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                      ✓ Available
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                      ✗ Unavailable
-                    </span>
-                  )}
-                  {!hasSubscription && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                      Premium
-                    </span>
-                  )}
-                  {settings.ttsProvider === 'elevenlabs' && (
-                    <div className="w-2 h-2 bg-primary-500 rounded-full"></div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          {!status.elevenLabsAvailable && (
-            <p className="mt-1 text-xs text-text-secondary">
-              ElevenLabs API key not found. Add one to your environment variables to use high-quality voices.
-            </p>
-          )}
-          {showSubscriptionMessage && settings.ttsProvider === 'elevenlabs' && !hasSubscription && (
-            <div className="mt-2 p-3 bg-yellow-50 rounded-md border border-yellow-200">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-yellow-700">
-                    <span className="font-medium">Premium Feature:</span> Full ElevenLabs voice functionality requires a subscription. You can preview voices, but your speech will use Browser TTS instead.
-                  </p>
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => router.push('/pricing')}
-                      className="text-sm font-medium text-yellow-700 hover:text-yellow-600 underline"
-                    >
-                      Upgrade to Pro
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowSubscriptionMessage(false)}
-                      className="ml-3 text-sm font-medium text-yellow-700 hover:text-yellow-600 underline"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Voice Selection Section */}
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-sm font-medium text-foreground">Voice Selection</h3>
-            <p className="text-xs text-text-secondary mt-1">
-              {providerVoices.length > 0 ?
-                `Choose from ${providerVoices.length} available voices` :
-                'Loading voices...'
-              }
-            </p>
-          </div>
-          
-          <div className="flex space-x-3">
-            <div className="flex-1">
+      {/* Voice Selection Card */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-foreground">Voice</h3>
+        <div className="bg-surface-hover rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 min-w-0">
               <Dropdown
                 options={providerVoices.map(voice => ({
                   value: voice.id,
@@ -284,166 +111,188 @@ export default function TTSSettings() {
                 value={settings.ttsVoiceId}
                 onChange={(value) => updateSetting('ttsVoiceId', value)}
                 placeholder={providerVoices.length === 0 ? 'Loading voices...' : 'Select a voice'}
-                className="w-full"
                 disabled={providerVoices.length === 0}
               />
             </div>
-            
+
             <button
               type="button"
               onClick={previewVoice}
-              disabled={isPlayingPreview || providerVoices.length === 0}
-              className={`inline-flex items-center justify-center px-4 py-2 border border-border shadow-sm text-sm font-medium rounded-md transition-colors ${
-                isPlayingPreview
-                  ? 'text-primary-600 bg-primary-50 border-primary-300'
-                  : 'text-text-secondary bg-surface hover:bg-surface-hover'
-              } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500`}
+              disabled={providerVoices.length === 0}
+              className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-surface border border-border text-text-secondary hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               title={isPlayingPreview ? 'Stop preview' : 'Preview voice'}
             >
               {isPlayingPreview ? (
-                <>
-                  <SpeakerWaveIcon className="h-4 w-4 mr-2" />
-                  <span>Playing...</span>
-                </>
+                <StopCircleIcon className="w-6 h-6 text-primary-500" />
               ) : (
-                <>
-                  <PlayCircleIcon className="h-4 w-4 mr-2" />
-                  <span>Preview</span>
-                </>
+                <PlayCircleIcon className="w-6 h-6" />
               )}
             </button>
           </div>
 
-          {providerVoices.length > 0 && settings.ttsVoiceId && (
-            <div className="text-xs text-text-secondary">
-              Selected: {providerVoices.find(v => v.id === settings.ttsVoiceId)?.name || 'Unknown'}
-            </div>
+          {selectedVoiceName && (
+            <p className="mt-2 text-xs text-text-tertiary">
+              Provider: {settings.ttsProvider === 'browser' ? 'Browser TTS' : 'ElevenLabs'}
+            </p>
           )}
         </div>
+      </div>
 
-        {/* Browser TTS Specific Settings */}
-        {settings.ttsProvider === 'browser' && (
-          <div className="space-y-4">
-            <div className="border-t border-border pt-4">
-              <h3 className="text-sm font-medium text-foreground mb-3">Browser TTS Settings</h3>
-              {isMobile ? (
-                <div className="p-4 bg-primary-50 rounded-lg border border-primary-200">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-primary-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <h4 className="text-sm font-medium text-primary-800">Mobile Device Detected</h4>
-                      <p className="text-sm text-primary-700 mt-1">
-                        Speech rate and pitch are controlled by your device's system settings.
-                        Please adjust these in your device's accessibility options.
-                      </p>
-                    </div>
+      {/* Provider Selection Card */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-foreground">Provider</h3>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Browser TTS Option */}
+          <button
+            type="button"
+            onClick={() => handleProviderChange('browser')}
+            className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+              settings.ttsProvider === 'browser'
+                ? 'border-primary-500 bg-primary-900'
+                : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
+                settings.ttsProvider === 'browser'
+                  ? 'border-primary-500 bg-primary-500'
+                  : 'border-text-tertiary'
+              }`}>
+                {settings.ttsProvider === 'browser' && (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <Slider
-                      value={settings.speechRate}
-                      onChange={(value) => updateSetting('speechRate', value)}
-                      min={0.5}
-                      max={2}
-                      step={0.1}
-                      label="Speech Rate"
-                      description="Adjust how fast the voice speaks"
-                      showTicks
-                    />
-                  </div>
-
-                  <div>
-                    <Slider
-                      value={settings.speechPitch}
-                      onChange={(value) => updateSetting('speechPitch', value)}
-                      min={0.5}
-                      max={2}
-                      step={0.1}
-                      label="Pitch"
-                      description="Adjust the voice pitch (higher or lower tone)"
-                      showTicks
-                    />
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="min-w-0">
+                <span className="block font-medium text-foreground text-sm">Browser TTS</span>
+                <span className="block text-xs text-text-secondary mt-0.5">System voices</span>
+              </div>
             </div>
-          </div>
+          </button>
+
+          {/* ElevenLabs Option */}
+          <button
+            type="button"
+            onClick={() => handleProviderChange('elevenlabs')}
+            disabled={!status.elevenLabsAvailable}
+            className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+              !status.elevenLabsAvailable
+                ? 'opacity-50 cursor-not-allowed border-border bg-surface'
+                : settings.ttsProvider === 'elevenlabs'
+                  ? 'border-primary-500 bg-primary-900'
+                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
+                settings.ttsProvider === 'elevenlabs'
+                  ? 'border-primary-500 bg-primary-500'
+                  : 'border-text-tertiary'
+              }`}>
+                {settings.ttsProvider === 'elevenlabs' && (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground text-sm">ElevenLabs</span>
+                  {!hasSubscription && status.elevenLabsAvailable && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-primary-900 text-primary-400 rounded">
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <span className="block text-xs text-text-secondary mt-0.5">AI voices</span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Subtle subscription note */}
+        {settings.ttsProvider === 'elevenlabs' && !hasSubscription && status.elevenLabsAvailable && (
+          <p className="text-xs text-text-secondary px-1">
+            Pro subscription required for ElevenLabs voices.{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/pricing')}
+              className="text-primary-400 hover:text-primary-300 underline"
+            >
+              Upgrade
+            </button>
+          </p>
         )}
 
-        {/* ElevenLabs Specific Settings */}
-        {settings.ttsProvider === 'elevenlabs' && (
-          <div className="space-y-4">
-            <div className="border-t border-border pt-4">
-              <h3 className="text-sm font-medium text-foreground mb-3">ElevenLabs Settings</h3>
-              <SubscriptionWrapper
-                fallback={
-                  <div className="bg-gradient-to-r from-background to-primary-50 p-6 rounded-lg text-center border border-border">
-                    <div className="flex justify-center mb-4">
-                      <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                      </div>
-                    </div>
-                    <h4 className="text-lg font-semibold text-foreground mb-2">Premium Feature</h4>
-                    <p className="text-text-secondary mb-6">
-                      Advanced ElevenLabs voice controls require a Pro subscription. Voice previews are available, but speech generation uses Browser TTS.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        onClick={() => router.push('/pricing')}
-                        className="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                      >
-                        Upgrade to Pro
-                      </button>
-                      <button
-                        onClick={() => handleProviderChange('browser')}
-                        className="flex-1 py-2 px-4 border border-border text-text-secondary bg-surface hover:bg-surface-hover rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                      >
-                        Use Browser TTS
-                      </button>
-                    </div>
-                  </div>
-                }
-              >
-                <div className="space-y-6">
-                  <div>
-                    <Slider
-                      min={0}
-                      max={1}
-                      step={0.1}
-                      value={settings.ttsStability}
-                      onChange={(value) => updateSetting('ttsStability', value)}
-                      label="Voice Stability"
-                      showTicks
-                      description="Higher stability makes the voice more consistent but less expressive"
-                    />
-                  </div>
-
-                  <div>
-                    <Slider
-                      min={0}
-                      max={1}
-                      step={0.1}
-                      value={settings.ttsSimilarityBoost}
-                      onChange={(value) => updateSetting('ttsSimilarityBoost', value)}
-                      label="Similarity Boost"
-                      showTicks
-                      description="Higher values make the voice more closely match the original voice characteristics"
-                    />
-                  </div>
-                </div>
-              </SubscriptionWrapper>
-            </div>
-          </div>
+        {!status.elevenLabsAvailable && (
+          <p className="text-xs text-text-tertiary px-1">
+            ElevenLabs unavailable. API key not configured.
+          </p>
         )}
+      </div>
+
+      {/* Voice Settings Card */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-foreground">Voice Settings</h3>
+        <div className="bg-surface-hover rounded-2xl p-4 space-y-5">
+          {/* Browser TTS settings */}
+          {settings.ttsProvider === 'browser' && (
+            <>
+              <Slider
+                value={settings.speechRate}
+                onChange={(value) => updateSetting('speechRate', value)}
+                min={0.5}
+                max={2}
+                step={0.1}
+                label="Speed"
+                valueLabel={(v) => `${v.toFixed(1)}x`}
+              />
+
+              <Slider
+                value={settings.speechPitch}
+                onChange={(value) => updateSetting('speechPitch', value)}
+                min={0.5}
+                max={2}
+                step={0.1}
+                label="Pitch"
+                valueLabel={(v) => v.toFixed(1)}
+              />
+            </>
+          )}
+
+          {/* ElevenLabs-specific settings */}
+          {settings.ttsProvider === 'elevenlabs' && hasSubscription && (
+            <>
+              <Slider
+                min={0}
+                max={1}
+                step={0.1}
+                value={settings.ttsStability}
+                onChange={(value) => updateSetting('ttsStability', value)}
+                label="Stability"
+                valueLabel={(v) => v.toFixed(1)}
+              />
+
+              <Slider
+                min={0}
+                max={1}
+                step={0.1}
+                value={settings.ttsSimilarityBoost}
+                onChange={(value) => updateSetting('ttsSimilarityBoost', value)}
+                label="Similarity"
+                valueLabel={(v) => v.toFixed(1)}
+              />
+            </>
+          )}
+
+          {settings.ttsProvider === 'elevenlabs' && !hasSubscription && (
+            <p className="text-xs text-text-tertiary text-center py-2">
+              Advanced voice controls available with Pro subscription
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
-} 
+}
