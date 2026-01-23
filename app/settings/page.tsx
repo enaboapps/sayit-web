@@ -14,6 +14,7 @@ import {
 import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
 import { useAuth } from '../contexts/AuthContext';
 import BottomSheet from '@/app/components/ui/BottomSheet';
+import { Dropdown } from '@/app/components/ui/Dropdown';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { UserButton } from '@clerk/nextjs';
 
@@ -62,27 +63,6 @@ function SettingsCategory({ icon, title, description, onClick, value }: Settings
   );
 }
 
-interface OptionButtonProps {
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}
-
-function OptionButton({ label, selected, onClick }: OptionButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full p-4 rounded-2xl text-left font-medium transition-all ${
-        selected
-          ? 'bg-primary-500 text-white'
-          : 'bg-surface-hover text-foreground hover:bg-surface'
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
 export default function SettingsPage() {
   const { settings, updateSetting } = useSettings();
   const { user } = useAuth();
@@ -112,19 +92,22 @@ export default function SettingsPage() {
     );
   }
 
-  const textSizeLabels: Record<TextSize, string> = {
-    small: 'Small',
-    medium: 'Medium',
-    large: 'Large',
-    xlarge: 'Extra Large'
-  };
+  const textSizeOptions = [
+    { value: 'small' as TextSize, label: 'Small' },
+    { value: 'medium' as TextSize, label: 'Medium' },
+    { value: 'large' as TextSize, label: 'Large' },
+    { value: 'xlarge' as TextSize, label: 'Extra Large' },
+  ];
 
-  const enterKeyLabels: Record<EnterKeyBehavior, string> = {
-    newline: 'New Line',
-    speak: 'Speak Text',
-    clear: 'Clear Text',
-    speakAndClear: 'Speak & Clear'
-  };
+  const enterKeyOptions = [
+    { value: 'newline' as EnterKeyBehavior, label: 'New Line' },
+    { value: 'speak' as EnterKeyBehavior, label: 'Speak Text' },
+    { value: 'clear' as EnterKeyBehavior, label: 'Clear Text' },
+    { value: 'speakAndClear' as EnterKeyBehavior, label: 'Speak & Clear' },
+  ];
+
+  const getLabel = <T extends string>(options: { value: T; label: string }[], value: T) =>
+    options.find(o => o.value === value)?.label ?? value;
 
   // Mobile layout with categories
   if (isMobile) {
@@ -152,7 +135,7 @@ export default function SettingsPage() {
               title="Text & Display"
               description="Font size, enter key behavior"
               onClick={() => setActiveSheet('text')}
-              value={textSizeLabels[settings.textSize]}
+              value={getLabel(textSizeOptions, settings.textSize)}
             />
 
             {/* Account - only when logged in */}
@@ -196,35 +179,18 @@ export default function SettingsPage() {
           snapPoints={[60, 80]}
         >
           <div className="p-4 space-y-6">
-            {/* Text Size */}
-            <div>
-              <h3 className="font-semibold text-foreground mb-3">Text Size</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {(['small', 'medium', 'large', 'xlarge'] as TextSize[]).map((size) => (
-                  <OptionButton
-                    key={size}
-                    label={textSizeLabels[size]}
-                    selected={settings.textSize === size}
-                    onClick={() => updateSetting('textSize', size)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Enter Key Behavior */}
-            <div>
-              <h3 className="font-semibold text-foreground mb-3">Enter Key Behavior</h3>
-              <div className="space-y-2">
-                {(['newline', 'speak', 'clear', 'speakAndClear'] as EnterKeyBehavior[]).map((behavior) => (
-                  <OptionButton
-                    key={behavior}
-                    label={enterKeyLabels[behavior]}
-                    selected={settings.enterKeyBehavior === behavior}
-                    onClick={() => updateSetting('enterKeyBehavior', behavior)}
-                  />
-                ))}
-              </div>
-            </div>
+            <Dropdown
+              label="Text Size"
+              options={textSizeOptions}
+              value={settings.textSize}
+              onChange={(value) => updateSetting('textSize', value)}
+            />
+            <Dropdown
+              label="Enter Key Behavior"
+              options={enterKeyOptions}
+              value={settings.enterKeyBehavior}
+              onChange={(value) => updateSetting('enterKeyBehavior', value)}
+            />
           </div>
         </BottomSheet>
 
@@ -323,16 +289,12 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <select
+                    <Dropdown
+                      options={textSizeOptions}
                       value={settings.textSize}
-                      onChange={(e) => updateSetting('textSize', e.target.value as TextSize)}
-                      className="w-48 bg-surface-hover text-foreground rounded-2xl px-4 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
-                      <option value="xlarge">Extra Large</option>
-                    </select>
+                      onChange={(value) => updateSetting('textSize', value)}
+                      className="w-48"
+                    />
                   </div>
                 </div>
               </div>
@@ -349,16 +311,12 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <select
+                    <Dropdown
+                      options={enterKeyOptions}
                       value={settings.enterKeyBehavior}
-                      onChange={(e) => updateSetting('enterKeyBehavior', e.target.value as EnterKeyBehavior)}
-                      className="w-48 bg-surface-hover text-foreground rounded-2xl px-4 py-2 border border-border focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="newline">New Line</option>
-                      <option value="speak">Speak Text</option>
-                      <option value="clear">Clear Text</option>
-                      <option value="speakAndClear">Speak & Clear Text</option>
-                    </select>
+                      onChange={(value) => updateSetting('enterKeyBehavior', value)}
+                      className="w-48"
+                    />
                   </div>
                 </div>
               </div>
