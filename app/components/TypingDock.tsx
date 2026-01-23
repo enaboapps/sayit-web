@@ -114,8 +114,8 @@ export default function TypingDock({
   };
 
   return (
-    <div className={`bg-surface border-t border-border ${className}`}>
-      <div className="px-3 py-2 pb-safe">
+    <div className={`border-t border-border ${className}`} style={{ backgroundColor: '#242424' }}>
+      <div className="px-3 py-2">
         <AnimatePresence mode="wait">
           {isExpanded ? (
             <motion.div

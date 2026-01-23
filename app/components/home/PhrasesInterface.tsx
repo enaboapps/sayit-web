@@ -11,6 +11,7 @@ import TypingArea from '../TypingArea';
 import TypingDock from '../TypingDock';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
+import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
@@ -337,18 +338,6 @@ export default function PhrasesInterface() {
         onClose={handleCloseReader}
         onSpeak={handleSpeakInReader}
       />
-      {/* Mobile: TypingDock at bottom, docked above bottom tab bar */}
-      {isMobile && (
-        <div className="fixed bottom-20 left-0 right-0 z-40 bg-surface">
-          <TypingDock
-            text={typingText}
-            onChange={setTypingText}
-            onSpeak={handleSpeak}
-            isSpeaking={tts.isSpeaking}
-            isAvailable={tts.isAvailable}
-          />
-        </div>
-      )}
       {/* Mobile: Board picker popup */}
       <BoardGridPopup
         boards={transformedBoards}
@@ -359,6 +348,18 @@ export default function PhrasesInterface() {
         onSelectBoard={handleSelectBoard}
         onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
       />
+      {/* Mobile: TypingDock portaled into bottom stack */}
+      {isMobile && (
+        <MobileDockPortal>
+          <TypingDock
+            text={typingText}
+            onChange={setTypingText}
+            onSpeak={handleSpeak}
+            isSpeaking={tts.isSpeaking}
+            isAvailable={tts.isAvailable}
+          />
+        </MobileDockPortal>
+      )}
     </>
   );
 }
