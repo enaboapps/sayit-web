@@ -21,10 +21,11 @@ const buttonVariants = cva(
         link: 'text-foreground underline-offset-4 hover:underline hover:text-primary-500',
       },
       size: {
-        default: 'h-10 px-6 py-2',
-        sm: 'h-8 rounded-3xl px-4 text-xs',
-        lg: 'h-12 rounded-3xl px-10',
-        icon: 'h-10 w-10',
+        // All sizes meet minimum 44px touch target requirement
+        default: 'h-11 min-h-[44px] px-6 py-2',
+        sm: 'h-10 min-h-[44px] rounded-3xl px-4 text-xs',
+        lg: 'h-12 min-h-[48px] rounded-3xl px-10',
+        icon: 'h-11 w-11 min-h-[44px] min-w-[44px]',
       },
     },
     defaultVariants: {
@@ -56,11 +57,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
 
+    // Check for reduced motion preference
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
         transition={{ duration: 0.2 }}
         ref={ref}
         {...(props as ButtonAsMotionProps)}

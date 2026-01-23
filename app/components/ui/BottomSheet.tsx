@@ -237,10 +237,10 @@ export default function BottomSheet({
                 {showCloseButton && (
                   <button
                     onClick={onClose}
-                    className="p-2 -mr-2 rounded-full hover:bg-surface-hover transition-colors"
+                    className="p-3 -mr-2 min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-hover transition-colors flex items-center justify-center"
                     aria-label="Close"
                   >
-                    <XMarkIcon className="w-5 h-5 text-text-secondary" />
+                    <XMarkIcon className="w-6 h-6 text-text-secondary" />
                   </button>
                 )}
               </div>

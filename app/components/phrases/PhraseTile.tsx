@@ -63,10 +63,15 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
     }
   };
 
+  // Check for reduced motion preference
+  const prefersReducedMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   return (
     <motion.div
       className={`relative bg-surface rounded-2xl shadow-md cursor-pointer
         flex flex-col items-center justify-center min-h-[80px]
+        focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
         ${onEdit ? 'ring-2 ring-blue-400' : ''}
         ${isSpeaking ? 'ring-2 ring-orange' : ''}
         ${className}`}
@@ -77,12 +82,22 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
       onMouseDown={handleTouchStart}
       onMouseUp={handleTouchEnd}
       onMouseLeave={handleTouchEnd}
-      whileTap={{ scale: 0.95 }}
-      animate={{
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
+      whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+      animate={prefersReducedMotion ? undefined : {
         scale: isPressed ? 0.95 : 1,
         backgroundColor: isPressed ? 'var(--surface-hover)' : 'var(--surface)',
       }}
       transition={{ duration: 0.15 }}
+      role="button"
+      tabIndex={0}
+      aria-label={onEdit ? `Edit phrase: ${phrase.text}` : `Speak phrase: ${phrase.text}`}
+      aria-pressed={isSpeaking}
     >
       {onEdit && (
         <div className="absolute top-2 right-2 z-10">
