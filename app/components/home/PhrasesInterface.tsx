@@ -6,6 +6,7 @@ import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
 import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
 import TypingArea from '../TypingArea';
+import TypingDock from '../TypingDock';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
 import PhraseTile from '../phrases/PhraseTile';
@@ -14,6 +15,7 @@ import type { BoardSummary, PhraseSummary } from '../phrases/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 export default function PhrasesInterface() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function PhrasesInterface() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isReaderOpen, setIsReaderOpen] = useState(false);
   const selectedBoardId = uiPreferences.selectedBoardId;
+  const isMobile = useIsMobile();
 
   const shouldLoadBoards = !authLoading && !!user;
   const showAuthPrompt = !authLoading && !user;
@@ -178,16 +181,25 @@ export default function PhrasesInterface() {
   // Check if current board allows editing
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
+  const handleSpeak = () => {
+    if (typingText.trim()) {
+      tts.speak(typingText);
+    }
+  };
+
   return (
     <>
-      <div className="flex-none">
-        <TypingArea
-          initialText={typingText}
-          text={typingText}
-          tts={tts}
-          onChange={(text) => setTypingText(text)}
-        />
-      </div>
+      {/* Desktop: TypingArea at top */}
+      {!isMobile && (
+        <div className="flex-none">
+          <TypingArea
+            initialText={typingText}
+            text={typingText}
+            tts={tts}
+            onChange={(text) => setTypingText(text)}
+          />
+        </div>
+      )}
       {showAuthPrompt ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -269,6 +281,18 @@ export default function PhrasesInterface() {
         onClose={handleCloseReader}
         onSpeak={handleSpeakInReader}
       />
+      {/* Mobile: TypingDock at bottom, docked above bottom tab bar */}
+      {isMobile && (
+        <div className="fixed bottom-20 left-0 right-0 z-40">
+          <TypingDock
+            text={typingText}
+            onChange={setTypingText}
+            onSpeak={handleSpeak}
+            isSpeaking={tts.isSpeaking}
+            isAvailable={tts.isAvailable}
+          />
+        </div>
+      )}
     </>
   );
 }
