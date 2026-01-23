@@ -2,7 +2,6 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
 import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
@@ -242,6 +241,13 @@ export default function PhrasesInterface() {
               currentBoardIndex={validBoardIndex}
               onBoardChange={handleBoardIndexChange}
               onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
+              onAddBoard={handleAddBoard}
+              onAddPhrase={handleAddPhrase}
+              onReader={handleReader}
+              onEdit={handleEdit}
+              isEditMode={isEditMode}
+              canEditBoard={canEditCurrentBoard}
+              hasPhrases={phrases.length > 0}
             >
               <div className="p-2 pb-32 overflow-auto">
                 <div className="grid grid-cols-2 gap-2">
@@ -282,6 +288,11 @@ export default function PhrasesInterface() {
                   isEditMode={isEditMode}
                   onSelectBoard={handleSelectBoard}
                   onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
+                  onAddBoard={handleAddBoard}
+                  onAddPhrase={handleAddPhrase}
+                  onReader={handleReader}
+                  onEdit={handleEdit}
+                  hasPhrases={phrases.length > 0}
                 />
               </div>
 
@@ -323,15 +334,6 @@ export default function PhrasesInterface() {
           )}
         </div>
       )}
-      <PhrasesActionMenu
-        onAddPhrase={handleAddPhrase}
-        onAddBoard={handleAddBoard}
-        onEdit={handleEdit}
-        onReader={handleReader}
-        boardPresent={transformedBoards.length > 0}
-        isEditMode={isEditMode}
-        canEditBoard={canEditCurrentBoard}
-      />
       <ReaderPopup
         phrases={phrases}
         isOpen={isReaderOpen}

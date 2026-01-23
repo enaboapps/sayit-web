@@ -4,6 +4,7 @@ import { useCallback, useRef } from 'react';
 import { motion, PanInfo, AnimatePresence } from 'framer-motion';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import type { BoardSummary } from './types';
+import BoardActionButtons from './BoardActionButtons';
 
 interface SwipeableBoardNavigatorProps {
   boards: BoardSummary[];
@@ -11,6 +12,14 @@ interface SwipeableBoardNavigatorProps {
   onBoardChange: (index: number) => void;
   onOpenBoardPicker?: () => void;
   children: React.ReactNode;
+  // Action button props
+  onAddBoard?: () => void;
+  onAddPhrase?: () => void;
+  onReader?: () => void;
+  onEdit?: () => void;
+  isEditMode?: boolean;
+  canEditBoard?: boolean;
+  hasPhrases?: boolean;
 }
 
 export default function SwipeableBoardNavigator({
@@ -19,6 +28,13 @@ export default function SwipeableBoardNavigator({
   onBoardChange,
   onOpenBoardPicker,
   children,
+  onAddBoard,
+  onAddPhrase,
+  onReader,
+  onEdit,
+  isEditMode = false,
+  canEditBoard = true,
+  hasPhrases = false,
 }: SwipeableBoardNavigatorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentBoard = boards[currentBoardIndex];
@@ -114,6 +130,17 @@ export default function SwipeableBoardNavigator({
           <ChevronRightIcon className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Action Buttons Row */}
+      <BoardActionButtons
+        onAddBoard={onAddBoard}
+        onAddPhrase={onAddPhrase}
+        onReader={onReader}
+        onEdit={onEdit}
+        isEditMode={isEditMode}
+        canEditBoard={canEditBoard}
+        hasPhrases={hasPhrases}
+      />
 
       {/* Dot Indicators */}
       {boards.length > 1 && (
