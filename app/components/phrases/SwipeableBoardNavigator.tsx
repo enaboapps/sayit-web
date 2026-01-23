@@ -87,19 +87,21 @@ export default function SwipeableBoardNavigator({
     <div className="flex flex-col">
       {/* Board Header with Navigation */}
       <div className="flex items-center justify-between px-4 py-3 bg-surface rounded-t-2xl">
-        {/* Previous Arrow */}
-        <button
-          onClick={goToPrevious}
-          disabled={!hasPrevious}
-          className={`p-2 rounded-full transition-all duration-200 ${
-            hasPrevious
-              ? 'hover:bg-surface-hover text-foreground'
-              : 'text-text-tertiary cursor-not-allowed'
-          }`}
-          aria-label="Previous board"
-        >
-          <ChevronLeftIcon className="w-5 h-5" />
-        </button>
+        {/* Previous Arrow - only show if multiple boards */}
+        {boards.length > 1 && (
+          <button
+            onClick={goToPrevious}
+            disabled={!hasPrevious}
+            className={`p-2 rounded-full transition-all duration-200 ${
+              hasPrevious
+                ? 'hover:bg-surface-hover text-foreground'
+                : 'text-text-tertiary cursor-not-allowed'
+            }`}
+            aria-label="Previous board"
+          >
+            <ChevronLeftIcon className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Board Name (tappable to open picker) */}
         <button
@@ -116,19 +118,21 @@ export default function SwipeableBoardNavigator({
           )}
         </button>
 
-        {/* Next Arrow */}
-        <button
-          onClick={goToNext}
-          disabled={!hasNext}
-          className={`p-2 rounded-full transition-all duration-200 ${
-            hasNext
-              ? 'hover:bg-surface-hover text-foreground'
-              : 'text-text-tertiary cursor-not-allowed'
-          }`}
-          aria-label="Next board"
-        >
-          <ChevronRightIcon className="w-5 h-5" />
-        </button>
+        {/* Next Arrow - only show if multiple boards */}
+        {boards.length > 1 && (
+          <button
+            onClick={goToNext}
+            disabled={!hasNext}
+            className={`p-2 rounded-full transition-all duration-200 ${
+              hasNext
+                ? 'hover:bg-surface-hover text-foreground'
+                : 'text-text-tertiary cursor-not-allowed'
+            }`}
+            aria-label="Next board"
+          >
+            <ChevronRightIcon className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Action Buttons Row */}
