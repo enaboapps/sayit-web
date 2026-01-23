@@ -1,16 +1,17 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Volume2, X } from 'lucide-react';
-import { Tooltip } from 'react-tooltip';
-import { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+
 interface ReaderPopupProps {
   phrases: {
     id?: string;
     text: string;
   }[];
-  isOpen: boolean
-  onClose: () => void
-  onSpeak: (text: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onSpeak: (text: string) => void;
 }
 
 export default function ReaderPopup({
@@ -20,31 +21,75 @@ export default function ReaderPopup({
   onSpeak,
 }: ReaderPopupProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const popupRef = useRef<HTMLDivElement>(null);
+  const [direction, setDirection] = useState(0);
+  const lastTapRef = useRef<number>(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPhrase = phrases[currentIndex];
 
-  const goToPrevious = () => {
+  const goToPrevious = useCallback(() => {
+    if (phrases.length <= 1) return;
+    setDirection(-1);
     const newIndex = currentIndex > 0 ? currentIndex - 1 : phrases.length - 1;
     setCurrentIndex(newIndex);
     if (phrases[newIndex]) {
       onSpeak(phrases[newIndex].text);
     }
-  };
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(20);
+  }, [currentIndex, phrases, onSpeak]);
 
-  const goToNext = () => {
+  const goToNext = useCallback(() => {
+    if (phrases.length <= 1) return;
+    setDirection(1);
     const newIndex = currentIndex < phrases.length - 1 ? currentIndex + 1 : 0;
     setCurrentIndex(newIndex);
     if (phrases[newIndex]) {
       onSpeak(phrases[newIndex].text);
     }
-  };
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(20);
+  }, [currentIndex, phrases, onSpeak]);
 
-  const handleSpeak = () => {
+  const handleSpeak = useCallback(() => {
     if (currentPhrase) {
       onSpeak(currentPhrase.text);
+      // Haptic feedback
+      if (navigator.vibrate) navigator.vibrate(30);
     }
-  };
+  }, [currentPhrase, onSpeak]);
+
+  // Handle tap and double-tap
+  const handleTap = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+
+    if (timeSinceLastTap < 300) {
+      // Double tap - repeat speak
+      handleSpeak();
+    } else {
+      // Single tap - speak
+      handleSpeak();
+    }
+
+    lastTapRef.current = now;
+  }, [handleSpeak]);
+
+  // Handle swipe gestures
+  const handleDragEnd = useCallback(
+    (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const threshold = 50;
+      const velocity = info.velocity.x;
+      const offset = info.offset.x;
+
+      if (offset < -threshold || velocity < -500) {
+        goToNext();
+      } else if (offset > threshold || velocity > 500) {
+        goToPrevious();
+      }
+    },
+    [goToNext, goToPrevious]
+  );
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -52,21 +97,21 @@ export default function ReaderPopup({
       if (!isOpen) return;
 
       switch (event.key) {
-      case 'Escape':
-        onClose();
-        break;
-      case 'ArrowLeft':
-        event.preventDefault();
-        goToPrevious();
-        break;
-      case 'ArrowRight':
-        event.preventDefault();
-        goToNext();
-        break;
-      case ' ':
-        event.preventDefault();
-        handleSpeak();
-        break;
+        case 'Escape':
+          onClose();
+          break;
+        case 'ArrowLeft':
+          event.preventDefault();
+          goToPrevious();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goToNext();
+          break;
+        case ' ':
+          event.preventDefault();
+          handleSpeak();
+          break;
       }
     };
 
@@ -77,113 +122,125 @@ export default function ReaderPopup({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, currentPhrase]);
-
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
+  }, [isOpen, goToPrevious, goToNext, handleSpeak, onClose]);
 
   // Reset index when phrases change
   useEffect(() => {
     setCurrentIndex(0);
   }, [phrases]);
 
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !phrases.length) {
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div
-        ref={popupRef}
-        className="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">
-            Reader Mode
-          </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-text-secondary">
-              {currentIndex + 1} of {phrases.length}
-            </span>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-surface-hover rounded-full transition-colors"
-              data-tooltip-id="close-reader-tooltip"
-              data-tooltip-content="Close reader mode (ESC)"
-            >
-              <X className="w-5 h-5 text-text-secondary" />
-            </button>
-          </div>
-        </div>
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+    }),
+  };
 
-        {/* Phrase Display */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 p-8 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#9CA3AF #F3F4F6' }}>
-            <p className="text-xl md:text-2xl lg:text-3xl text-foreground leading-relaxed break-words hyphens-auto text-center">
+  return (
+    <div className="fixed inset-0 z-50 bg-black flex flex-col">
+      {/* Close button */}
+      <div className="absolute top-4 right-4 z-10 safe-area-inset-top">
+        <button
+          onClick={onClose}
+          className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          aria-label="Close reader mode"
+        >
+          <X className="w-6 h-6 text-white" />
+        </button>
+      </div>
+
+      {/* Counter */}
+      <div className="absolute top-4 left-4 z-10 safe-area-inset-top">
+        <span className="text-white/60 text-sm font-medium">
+          {currentIndex + 1} / {phrases.length}
+        </span>
+      </div>
+
+      {/* Main content area - swipeable */}
+      <motion.div
+        ref={containerRef}
+        className="flex-1 flex items-center justify-center cursor-pointer select-none touch-pan-y"
+        onClick={handleTap}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={handleDragEnd}
+      >
+        <AnimatePresence initial={false} custom={direction} mode="wait">
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: 'spring', stiffness: 300, damping: 30 },
+              opacity: { duration: 0.15 },
+            }}
+            className="px-8 md:px-16 max-w-4xl"
+          >
+            <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white font-medium leading-relaxed text-center">
               {currentPhrase?.text}
             </p>
-          </div>
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+
+      {/* Dot indicators */}
+      {phrases.length > 1 && (
+        <div className="flex items-center justify-center gap-2 pb-8 safe-area-inset-bottom">
+          {phrases.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setDirection(index > currentIndex ? 1 : -1);
+                setCurrentIndex(index);
+                if (phrases[index]) {
+                  onSpeak(phrases[index].text);
+                }
+                if (navigator.vibrate) navigator.vibrate(20);
+              }}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                index === currentIndex
+                  ? 'bg-white w-6'
+                  : 'bg-white/30 hover:bg-white/50'
+              }`}
+              aria-label={`Go to phrase ${index + 1}`}
+            />
+          ))}
         </div>
+      )}
 
-        {/* Navigation Controls */}
-        <div className="flex items-center justify-center gap-4 p-4 border-t border-border">
-          <button
-            onClick={goToPrevious}
-            disabled={phrases.length <= 1}
-            className="flex items-center justify-center w-12 h-12 bg-background hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
-            data-tooltip-id="previous-tooltip"
-            data-tooltip-content="Previous phrase (←)"
-          >
-            <ChevronLeft className="w-6 h-6 text-text-primary" />
-          </button>
-
-          <button
-            onClick={handleSpeak}
-            className="flex items-center justify-center w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors"
-            data-tooltip-id="speak-tooltip"
-            data-tooltip-content="Speak phrase (Spacebar)"
-          >
-            <Volume2 className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={goToNext}
-            disabled={phrases.length <= 1}
-            className="flex items-center justify-center w-12 h-12 bg-background hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
-            data-tooltip-id="next-tooltip"
-            data-tooltip-content="Next phrase (→)"
-          >
-            <ChevronRight className="w-6 h-6 text-text-primary" />
-          </button>
-        </div>
-
-        {/* Keyboard Shortcuts Info */}
-        <div className="px-4 pb-4">
-          <p className="text-xs text-text-secondary text-center">
-            Use arrow keys to navigate • Spacebar to speak • ESC to close
-          </p>
-        </div>
-
-        {/* Tooltips */}
-        <Tooltip id="close-reader-tooltip" place="bottom" />
-        <Tooltip id="previous-tooltip" place="top" />
-        <Tooltip id="speak-tooltip" place="top" />
-        <Tooltip id="next-tooltip" place="top" />
+      {/* Swipe hint - only shown briefly */}
+      <div className="absolute bottom-20 left-0 right-0 text-center">
+        <p className="text-white/40 text-sm">
+          Tap to speak • Swipe to navigate
+        </p>
       </div>
     </div>
   );
