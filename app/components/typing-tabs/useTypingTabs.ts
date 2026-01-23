@@ -223,6 +223,16 @@ export function useTypingTabs(initialText?: string) {
     }
   }, [tabsState.tabs, tabsState.activeTabId, switchTab]);
 
+  // Close all tabs (resets to a single empty tab)
+  const closeAllTabs = useCallback(() => {
+    const newTab = createDefaultTab(1);
+    setTabsState({
+      tabs: [newTab],
+      activeTabId: newTab.id,
+      nextTabNumber: 2,
+    });
+  }, []);
+
   return {
     tabs: tabsState.tabs,
     activeTab,
@@ -230,6 +240,7 @@ export function useTypingTabs(initialText?: string) {
     createTab,
     switchTab,
     closeTab,
+    closeAllTabs,
     renameTab,
     updateActiveTabText,
     switchToTabByIndex,
