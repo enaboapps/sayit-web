@@ -7,14 +7,12 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HomeIcon as HomeOutline,
-  Squares2X2Icon as BoardsOutline,
   PlusCircleIcon as PlusOutline,
   Cog6ToothIcon as SettingsOutline,
   UserCircleIcon as ProfileOutline,
 } from '@heroicons/react/24/outline';
 import {
   HomeIcon as HomeSolid,
-  Squares2X2Icon as BoardsSolid,
   PlusCircleIcon as PlusSolid,
   Cog6ToothIcon as SettingsSolid,
   UserCircleIcon as ProfileSolid,
@@ -35,13 +33,6 @@ const tabs: TabItem[] = [
     iconOutline: <HomeOutline className="w-6 h-6" />,
     iconSolid: <HomeSolid className="w-6 h-6" />,
     matchPaths: ['/', '/phrases'],
-  },
-  {
-    href: '/phrases/boards',
-    label: 'Boards',
-    iconOutline: <BoardsOutline className="w-6 h-6" />,
-    iconSolid: <BoardsSolid className="w-6 h-6" />,
-    matchPaths: ['/phrases/boards'],
   },
   {
     href: '/phrases/add',
