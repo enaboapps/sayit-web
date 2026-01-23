@@ -8,6 +8,7 @@ import { ConvexReactClient } from 'convex/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import Sidebar from './components/Sidebar';
+import BottomTabBar from './components/navigation/BottomTabBar';
 
 export default function ClientLayout({
   children,
@@ -46,11 +47,12 @@ export default function ClientLayout({
           <SettingsProvider>
             <div className="min-h-screen flex">
               <Sidebar />
-              <div className="flex-1 pl-16">
-                <main>
+              <div className="flex-1 md:pl-16">
+                <main className="pb-20 md:pb-0">
                   {children}
                 </main>
               </div>
+              <BottomTabBar />
             </div>
           </SettingsProvider>
         </AuthProvider>

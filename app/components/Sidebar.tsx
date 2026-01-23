@@ -27,7 +27,7 @@ export default function Sidebar() {
   const isCaregiver = profile?.role === 'caregiver';
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-16 bg-surface z-50 shadow-2xl flex flex-col">
+    <aside className="fixed left-0 top-0 h-full w-16 bg-surface z-50 shadow-2xl hidden md:flex flex-col">
       <div className="p-4 flex justify-center items-center">
         <div className="rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
           <Image
