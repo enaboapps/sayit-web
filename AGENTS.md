@@ -9,7 +9,7 @@ SayIt! is an AI-powered augmentative and alternative communication (AAC) web app
 - TypeScript
 - Convex (realtime data and storage)
 - Clerk (authentication)
-- DeepInfra AI SDK (AI features)
+- OpenRouter with Google Gemini (AI features)
 - ElevenLabs (text-to-speech)
 - Tailwind CSS + Framer Motion
 

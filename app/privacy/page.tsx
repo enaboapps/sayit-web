@@ -90,7 +90,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li><strong>Purpose:</strong> Store and sync user data, phrases, boards, and typing sessions</li>
               <li><strong>Data processed:</strong> User profiles, phrases, boards, typing session content</li>
-              <li><strong>Privacy policy:</strong> <a href="https://convex.dev/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://convex.dev/privacy</a></li>
+              <li><strong>Privacy policy:</strong> <a href="https://www.convex.dev/legal/privacy/v2024-03-21" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://www.convex.dev/legal/privacy</a></li>
               <li><strong>Location:</strong> United States</li>
             </ul>
 
@@ -103,11 +103,12 @@ export default function PrivacyPolicyPage() {
               <li><strong>Note:</strong> We do not store payment card details; they are handled entirely by Stripe</li>
             </ul>
 
-            <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">3.4 DeepInfra (AI Processing)</h3>
+            <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">3.4 OpenRouter (AI Processing)</h3>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li><strong>Purpose:</strong> Power AI features including phrase generation and "Flesh Out" functionality</li>
               <li><strong>Data processed:</strong> Text prompts you submit for AI processing, generated responses</li>
-              <li><strong>Privacy policy:</strong> <a href="https://deepinfra.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://deepinfra.com/privacy</a></li>
+              <li><strong>Model used:</strong> Google Gemini 2.5 Flash (via OpenRouter)</li>
+              <li><strong>Privacy policy:</strong> <a href="https://openrouter.ai/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://openrouter.ai/privacy</a></li>
               <li><strong>Data retention:</strong> Requests are processed in real-time and not stored long-term</li>
             </ul>
 
@@ -115,7 +116,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li><strong>Purpose:</strong> Provide high-quality voice synthesis for text-to-speech</li>
               <li><strong>Data processed:</strong> Text submitted for speech synthesis</li>
-              <li><strong>Privacy policy:</strong> <a href="https://elevenlabs.io/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://elevenlabs.io/privacy</a></li>
+              <li><strong>Privacy policy:</strong> <a href="https://elevenlabs.io/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://elevenlabs.io/privacy-policy</a></li>
               <li><strong>Data retention:</strong> Real-time processing only, audio not stored</li>
               <li><strong>Fallback:</strong> If ElevenLabs is unavailable, we use your browser's built-in Web Speech API</li>
             </ul>
@@ -180,7 +181,7 @@ export default function PrivacyPolicyPage() {
               By using AI features ("Flesh Out," phrase generation), you acknowledge:
             </p>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
-              <li>Your prompts are sent to DeepInfra for processing</li>
+              <li>Your prompts are sent to OpenRouter (using Google Gemini) for processing</li>
               <li>Generated content is based on AI models and may vary</li>
               <li>You consent to AI processing when using these features</li>
               <li>We do not use your prompts to train AI models</li>
