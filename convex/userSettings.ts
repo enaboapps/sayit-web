@@ -4,7 +4,7 @@ import { getUserIdentity } from './users';
 
 // Default settings that match SettingsContext defaults
 const defaultSettings = {
-  textSize: 'medium' as const,
+  textSize: 16, // Font size in pixels
   speechRate: 1.0,
   speechPitch: 1.0,
   speechVolume: 1.0,
@@ -41,7 +41,7 @@ export const getUserSettings = query({
 // Mutation to initialize settings (called on first sign-in or when settings don't exist)
 export const initializeSettings = mutation({
   args: {
-    textSize: v.union(v.literal('small'), v.literal('medium'), v.literal('large'), v.literal('xlarge')),
+    textSize: v.number(), // Font size in pixels (8-72)
     speechRate: v.number(),
     speechPitch: v.number(),
     speechVolume: v.number(),
@@ -66,6 +66,9 @@ export const initializeSettings = mutation({
     }
 
     // Validate numeric fields
+    if (!Number.isFinite(args.textSize) || args.textSize < 8 || args.textSize > 72) {
+      throw new Error('textSize must be a valid number between 8 and 72');
+    }
     if (!Number.isFinite(args.speechRate) || args.speechRate < 0.1 || args.speechRate > 2.0) {
       throw new Error('speechRate must be a valid number between 0.1 and 2.0');
     }
@@ -124,7 +127,7 @@ export const initializeSettings = mutation({
 // Mutation to update settings (supports partial updates)
 export const updateSettings = mutation({
   args: {
-    textSize: v.optional(v.union(v.literal('small'), v.literal('medium'), v.literal('large'), v.literal('xlarge'))),
+    textSize: v.optional(v.number()), // Font size in pixels (8-72)
     speechRate: v.optional(v.number()),
     speechPitch: v.optional(v.number()),
     speechVolume: v.optional(v.number()),
@@ -166,6 +169,11 @@ export const updateSettings = mutation({
     }
 
     // Validate numeric fields
+    if (updates.textSize !== undefined) {
+      if (!Number.isFinite(updates.textSize) || updates.textSize < 8 || updates.textSize > 72) {
+        throw new Error('textSize must be a valid number between 8 and 72');
+      }
+    }
     if (updates.speechRate !== undefined) {
       if (!Number.isFinite(updates.speechRate) || updates.speechRate < 0.1 || updates.speechRate > 2.0) {
         throw new Error('speechRate must be a valid number between 0.1 and 2.0');

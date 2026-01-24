@@ -16,11 +16,11 @@ import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
 import { useAuth } from '../contexts/AuthContext';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import { Dropdown } from '@/app/components/ui/Dropdown';
+import { Slider } from '@/app/components/ui/Slider';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { UserButton } from '@clerk/nextjs';
 
 // Import types from SettingsContext
-type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
 // Import TTSSettings dynamically with SSR disabled
@@ -92,13 +92,6 @@ export default function SettingsPage() {
       </div>
     );
   }
-
-  const textSizeOptions = [
-    { value: 'small' as TextSize, label: 'Small' },
-    { value: 'medium' as TextSize, label: 'Medium' },
-    { value: 'large' as TextSize, label: 'Large' },
-    { value: 'xlarge' as TextSize, label: 'Extra Large' },
-  ];
 
   const enterKeyOptions = [
     { value: 'newline' as EnterKeyBehavior, label: 'New Line' },
@@ -179,11 +172,14 @@ export default function SettingsPage() {
           snapPoints={[60, 80]}
         >
           <div className="p-4 space-y-6">
-            <Dropdown
+            <Slider
               label="Text Size"
-              options={textSizeOptions}
+              min={8}
+              max={72}
+              step={2}
               value={settings.textSize}
               onChange={(value) => updateSetting('textSize', value)}
+              valueLabel={(v) => `${v}px`}
             />
             <Dropdown
               label="Enter Key Behavior"
@@ -288,12 +284,14 @@ export default function SettingsPage() {
                       <p className="text-sm text-text-secondary mt-1">Adjust the size of text in the typing area</p>
                     </div>
                   </div>
-                  <div className="flex justify-end">
-                    <Dropdown
-                      options={textSizeOptions}
+                  <div className="mt-4">
+                    <Slider
+                      min={8}
+                      max={72}
+                      step={2}
                       value={settings.textSize}
                       onChange={(value) => updateSetting('textSize', value)}
-                      className="w-48"
+                      valueLabel={(v) => `${v}px`}
                     />
                   </div>
                 </div>

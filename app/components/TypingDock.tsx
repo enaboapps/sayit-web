@@ -98,14 +98,8 @@ export default function TypingDock({
     }
   }, [enableTabs, text, activeTab.text, updateActiveTabText]);
 
-  // Text size classes
-  const textSizeClasses = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-xl',
-    xlarge: 'text-2xl',
-  };
-  const currentTextSizeClass = textSizeClasses[settings.textSize];
+  // Text size from settings (now a number in px)
+  const textSizePx = settings.textSize;
 
   // Auto-expand when text gets long (but don't change fullscreen)
   useEffect(() => {
@@ -329,9 +323,9 @@ export default function TypingDock({
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     placeholder="Type your message..."
-                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} ${currentTextSizeClass} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${isFullscreen ? 'flex-1' : ''}`}
+                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${isFullscreen ? 'flex-1' : ''}`}
                     rows={isFullscreen ? undefined : 3}
-                    style={isFullscreen ? { minHeight: '100%' } : undefined}
+                    style={{ fontSize: `${textSizePx}px`, ...(isFullscreen ? { minHeight: '100%' } : {}) }}
                   />
                   {/* Control buttons (when tabs are not enabled) */}
                   {!enableTabs && (
@@ -516,7 +510,8 @@ export default function TypingDock({
                       onFocus={handleFocus}
                       onBlur={handleBlur}
                       placeholder="Type to speak..."
-                      className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 ${currentTextSizeClass} focus:outline-none focus:ring-2 focus:ring-primary-500`}
+                      className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      style={{ fontSize: `${textSizePx}px` }}
                     />
                     {/* Expand button */}
                     <button

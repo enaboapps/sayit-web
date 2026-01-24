@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { TTSProviderType } from '@/lib/tts-provider';
 import { useAuth } from './AuthContext';
 
-type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
+type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 type TypingDockMode = 'compact' | 'expanded' | 'fullscreen';
 
@@ -44,7 +44,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: Settings = {
-  textSize: 'medium',
+  textSize: 16,
   speechRate: 1.0,
   speechPitch: 1.0,
   speechVolume: 1.0,
