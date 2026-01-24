@@ -8,6 +8,7 @@ import { useAuth } from './AuthContext';
 
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
+type TypingDockMode = 'compact' | 'expanded' | 'fullscreen';
 
 interface Settings {
   textSize: TextSize;
@@ -28,6 +29,7 @@ interface UIPreferences {
   selectedBoardId: string | null;
   typingShareFontSize: number;
   activeTypingTabId: string | null;
+  typingDockMode: TypingDockMode;
 }
 
 type AllSettings = Settings & UIPreferences;
@@ -60,6 +62,7 @@ const defaultUIPreferences: UIPreferences = {
   selectedBoardId: null,
   typingShareFontSize: 18,
   activeTypingTabId: null,
+  typingDockMode: 'compact',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -82,6 +85,7 @@ function loadFromLocalStorage(): AllSettings {
   const selectedBoardId = localStorage.getItem('selectedBoardId');
   const typingShareFontSize = localStorage.getItem('typing-share-font-size');
   const activeTypingTabId = localStorage.getItem('activeTypingTabId');
+  const typingDockMode = localStorage.getItem('typingDockMode');
 
   const parsedFontSize = typingShareFontSize ? parseInt(typingShareFontSize, 10) : defaultUIPreferences.typingShareFontSize;
   const validFontSize = !isNaN(parsedFontSize)
@@ -99,12 +103,19 @@ function loadFromLocalStorage(): AllSettings {
     }
   };
 
+  // Parse typing dock mode
+  const validTypingDockModes = ['compact', 'expanded', 'fullscreen'];
+  const parsedTypingDockMode = typingDockMode && validTypingDockModes.includes(typingDockMode)
+    ? typingDockMode as TypingDockMode
+    : defaultUIPreferences.typingDockMode;
+
   const uiPreferences: UIPreferences = {
     typingAreaVisible: parseBooleanSafely(typingAreaVisible, defaultUIPreferences.typingAreaVisible),
     typingAreaExpanded: parseBooleanSafely(typingAreaExpanded, defaultUIPreferences.typingAreaExpanded),
     selectedBoardId: selectedBoardId || defaultUIPreferences.selectedBoardId,
     typingShareFontSize: validFontSize,
     activeTypingTabId: activeTypingTabId || defaultUIPreferences.activeTypingTabId,
+    typingDockMode: parsedTypingDockMode,
   };
 
   return { ...settings, ...uiPreferences };
@@ -143,6 +154,7 @@ function saveToLocalStorage(allSettings: AllSettings) {
   } else {
     localStorage.removeItem('activeTypingTabId');
   }
+  localStorage.setItem('typingDockMode', allSettings.typingDockMode);
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -193,6 +205,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         selectedBoardId: localSettings.selectedBoardId ?? undefined,
         typingShareFontSize: localSettings.typingShareFontSize,
         activeTypingTabId: localSettings.activeTypingTabId ?? undefined,
+        typingDockMode: localSettings.typingDockMode,
       })
         .then(() => {
           console.log('Settings migrated to Convex successfully');
@@ -221,6 +234,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         selectedBoardId: convexSettings.selectedBoardId ?? null,
         typingShareFontSize: convexSettings.typingShareFontSize,
         activeTypingTabId: convexSettings.activeTypingTabId ?? null,
+        typingDockMode: (convexSettings.typingDockMode as TypingDockMode) ?? defaultUIPreferences.typingDockMode,
       };
 
       setAllSettings(serverSettings);
@@ -313,6 +327,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     selectedBoardId: allSettings.selectedBoardId,
     typingShareFontSize: allSettings.typingShareFontSize,
     activeTypingTabId: allSettings.activeTypingTabId,
+    typingDockMode: allSettings.typingDockMode,
   };
 
   return (

@@ -57,6 +57,7 @@ export const initializeSettings = mutation({
     typingShareFontSize: v.number(),
     typingTabs: v.optional(v.string()),
     activeTypingTabId: v.optional(v.string()),
+    typingDockMode: v.optional(v.union(v.literal('compact'), v.literal('expanded'), v.literal('fullscreen'))),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -113,6 +114,7 @@ export const initializeSettings = mutation({
       typingShareFontSize: args.typingShareFontSize,
       typingTabs: args.typingTabs,
       activeTypingTabId: args.activeTypingTabId,
+      typingDockMode: args.typingDockMode,
       lastSyncedAt: now,
       updatedAt: now,
     });
@@ -138,6 +140,7 @@ export const updateSettings = mutation({
     typingShareFontSize: v.optional(v.number()),
     typingTabs: v.optional(v.string()),
     activeTypingTabId: v.optional(v.string()),
+    typingDockMode: v.optional(v.union(v.literal('compact'), v.literal('expanded'), v.literal('fullscreen'))),
     lastSyncedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -217,6 +220,7 @@ export const updateSettings = mutation({
     if (updates.typingShareFontSize !== undefined) updateData.typingShareFontSize = updates.typingShareFontSize;
     if (updates.typingTabs !== undefined) updateData.typingTabs = updates.typingTabs;
     if (updates.activeTypingTabId !== undefined) updateData.activeTypingTabId = updates.activeTypingTabId;
+    if (updates.typingDockMode !== undefined) updateData.typingDockMode = updates.typingDockMode;
 
     await ctx.db.patch(settings._id, updateData);
 
