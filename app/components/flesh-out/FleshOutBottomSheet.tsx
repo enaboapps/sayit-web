@@ -22,7 +22,7 @@ const MODES: { mode: GenerationMode; label: string }[] = [
   { mode: 'think', label: 'I think...' },
   { mode: 'ask', label: 'I want to ask...' },
   { mode: 'like', label: 'I like...' },
-  { mode: 'dislike', label: "I don't like..." },
+  { mode: 'dislike', label: 'I don\'t like...' },
   { mode: 'remember', label: 'I remember...' },
   { mode: 'wonder', label: 'I wonder...' },
   { mode: 'hope', label: 'I hope...' },

@@ -127,27 +127,27 @@ export default function TypingDock({
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         switch (settings.enterKeyBehavior) {
-          case 'speak':
+        case 'speak':
+          if (text.trim()) onSpeak();
+          break;
+        case 'clear':
+          onChange('');
+          break;
+        case 'speakAndClear':
+          if (text.trim()) {
+            onSpeak();
+            setTimeout(() => onChange(''), 100);
+          }
+          break;
+        case 'newline':
+        default:
+          if (isExpanded) {
+            onChange(text + '\n');
+          } else {
+            // In compact mode, enter speaks
             if (text.trim()) onSpeak();
-            break;
-          case 'clear':
-            onChange('');
-            break;
-          case 'speakAndClear':
-            if (text.trim()) {
-              onSpeak();
-              setTimeout(() => onChange(''), 100);
-            }
-            break;
-          case 'newline':
-          default:
-            if (isExpanded) {
-              onChange(text + '\n');
-            } else {
-              // In compact mode, enter speaks
-              if (text.trim()) onSpeak();
-            }
-            break;
+          }
+          break;
         }
       }
     },
@@ -536,8 +536,8 @@ export default function TypingDock({
                       isSpeaking
                         ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                         : text.trim()
-                        ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                        : 'bg-surface-hover text-text-tertiary'
+                          ? 'bg-primary-500 hover:bg-primary-600 text-white'
+                          : 'bg-surface-hover text-text-tertiary'
                     }`}
                     whileTap={{ scale: 0.95 }}
                     aria-label={isSpeaking ? 'Stop' : 'Speak'}

@@ -176,8 +176,8 @@ function AddPhraseForm() {
                   isSelected
                     ? 'bg-surface-hover border-2 border-primary-500'
                     : canEdit
-                    ? 'bg-surface-hover hover:bg-surface border-2 border-transparent'
-                    : 'bg-surface-hover border-2 border-transparent opacity-50 cursor-not-allowed'
+                      ? 'bg-surface-hover hover:bg-surface border-2 border-transparent'
+                      : 'bg-surface-hover border-2 border-transparent opacity-50 cursor-not-allowed'
                 }`}
               >
                 <div className="flex flex-col items-start">
