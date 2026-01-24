@@ -1,5 +1,41 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
 
+/**
+ * ElevenLabs Text-to-Speech Provider
+ *
+ * This module provides streaming audio playback using the ElevenLabs API with
+ * session-based cancellation to handle race conditions from rapid speak/stop calls.
+ *
+ * ## Architecture Overview
+ *
+ * ### Session-Based Cancellation
+ * Each call to speak() or stop() increments a session ID. All async operations
+ * (streaming, buffering, playback) check this ID via isSessionActive() before
+ * proceeding. This prevents race conditions when:
+ * - User rapidly clicks speak/stop
+ * - A new speak() is called before the previous one finishes
+ * - stop() is called mid-stream
+ *
+ * ### Streaming Modes
+ * 1. **MediaSource API (preferred)**: Real-time streaming playback for browsers
+ *    that support it. Audio chunks are appended to a SourceBuffer as they arrive,
+ *    allowing playback to start before the full response is received.
+ *
+ * 2. **Blob Fallback**: For browsers without MediaSource support. Collects all
+ *    chunks into a Blob before playing. Higher latency but better compatibility.
+ *
+ * ### Cleanup Responsibilities
+ * - stop() handles all cleanup: cancels reader, aborts fetch, revokes blob URLs
+ * - Event listeners are removed before audio element cleanup
+ * - Blob URLs are revoked in onended/onerror handlers or delayed cleanup
+ *
+ * ### Error Handling
+ * - Rapid requests (<2s apart) suppress error callbacks to avoid noise
+ * - AbortError from fetch cancellation is silently ignored
+ * - Session cancellation causes graceful early returns (no errors)
+ * - Falls back to WebSpeech TTS on ElevenLabs failures
+ */
+
 // Define interfaces for our types
 export interface Voice {
   voice_id: string;
@@ -15,17 +51,33 @@ export interface VoiceSettings {
   similarity_boost: number;
 }
 
+/**
+ * Singleton TTS provider using ElevenLabs API with streaming support.
+ * Falls back to browser's WebSpeech API when ElevenLabs is unavailable.
+ */
 export class ElevenLabsTTS {
   private static instance: ElevenLabsTTS;
   private apiKey: string;
   private voices: Voice[] = [];
   private audio: HTMLAudioElement | null = null;
   private isSpeaking: boolean = false;
-  private currentSessionId: number = 0;  // Incremented each speak()/stop(), async ops check this
+
+  /**
+   * Session ID for cancellation tracking.
+   * Incremented on each speak() or stop() call. Async operations compare their
+   * captured session ID against this to determine if they should continue.
+   */
+  private currentSessionId: number = 0;
+
   private fallbackTTS: WebSpeechTTS;
   private abortController: AbortController | null = null;
+
+  /** Active stream reader, stored for cleanup on stop() */
   private activeReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
+  /** Timestamp of last request, used for rapid-request detection */
   private lastRequestTime: number = 0;
+
   private callbacks: {
     onStart?: () => void;
     onEnd?: () => void;
@@ -106,6 +158,21 @@ export class ElevenLabsTTS {
     return this.voices.find(voice => voice.voice_id === voiceId);
   }
 
+  /**
+   * Speaks the given text using ElevenLabs TTS.
+   *
+   * This method:
+   * 1. Stops any ongoing speech (cancels previous session)
+   * 2. Creates a new session ID for cancellation tracking
+   * 3. Makes API request with abort controller
+   * 4. Plays audio via streaming (MediaSource) or buffered mode
+   *
+   * @param text - The text to speak
+   * @param options.voiceId - ElevenLabs voice ID (defaults to first available or Rachel)
+   * @param options.stability - Voice stability 0-1 (default 0.5)
+   * @param options.similarityBoost - Similarity boost 0-1 (default 0.5)
+   * @param options.streaming - Use streaming playback (default true)
+   */
   public async speak(text: string, options?: {
     voiceId?: string;
     stability?: number;
@@ -223,6 +290,18 @@ export class ElevenLabsTTS {
     }
   }
 
+  /**
+   * Plays audio from a streaming response body.
+   *
+   * Uses MediaSource API for real-time streaming when supported. Falls back to
+   * collecting all chunks into a Blob for browsers without MediaSource support.
+   *
+   * The isSessionActive callback is checked frequently to enable graceful
+   * cancellation when stop() is called or a new speak() starts.
+   *
+   * @param body - ReadableStream from fetch response
+   * @param isSessionActive - Callback that returns false if session was cancelled
+   */
   private async playStreamingAudio(body: ReadableStream<Uint8Array>, isSessionActive: () => boolean) {
     // Fallback for browsers without MediaSource support
     if (!('MediaSource' in window) || !MediaSource.isTypeSupported('audio/mpeg')) {
@@ -426,6 +505,20 @@ export class ElevenLabsTTS {
     await this.audio.play();
   }
 
+  /**
+   * Stops any ongoing speech and cleans up resources.
+   *
+   * This method:
+   * 1. Increments session ID (invalidates all running async operations)
+   * 2. Cancels active stream reader
+   * 3. Aborts pending fetch request
+   * 4. Pauses and cleans up audio element
+   * 5. Revokes blob URLs to prevent memory leaks
+   * 6. Calls onEnd callback if was speaking
+   *
+   * All async operations check isSessionActive() and will exit gracefully
+   * when they detect the session ID has changed.
+   */
   public stop() {
     // Increment session ID - this invalidates all running async operations
     // They will check isSessionActive() and exit gracefully
