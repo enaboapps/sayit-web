@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ interface TypingAreaProps {
   text?: string  // External text to sync with active tab
   tts: {
     speak: (text: string) => void;
+    stop: () => void;
     isSpeaking: boolean;
     isAvailable: boolean;
   }
@@ -33,7 +34,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
-  const { speak, isSpeaking, isAvailable } = tts;
+  const { speak, stop, isSpeaking, isAvailable } = tts;
   const typingShare = useTypingShare();
   const shareableLink = typingShare.getShareableLink();
   const isVisible = uiPreferences.typingAreaVisible;
@@ -97,10 +98,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [createTab, closeTab, activeTabId, switchToTabByIndex, switchToPreviousTab, switchToNextTab]);
 
-  useEffect(() => {
-    console.log('Current text size:', settings.textSize);
-  }, [settings.textSize]);
-
   const textSizeClasses = {
     small: 'text-sm',
     medium: 'text-lg',
@@ -109,7 +106,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   };
 
   const currentTextSizeClass = textSizeClasses[settings.textSize];
-  console.log('Applied text size class:', currentTextSizeClass);
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -140,7 +136,9 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   };
 
   const handleSpeak = () => {
-    if (text.trim()) {
+    if (isSpeaking) {
+      stop();
+    } else if (text.trim()) {
       speak(text);
       textareaRef.current?.focus();
     }
@@ -269,15 +267,24 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 onClick={handleSpeak}
                 className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                   isSpeaking
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                     : 'bg-surface hover:bg-surface-hover text-foreground hover:text-primary-500'
                 }`}
                 data-tooltip-id="speak-tooltip"
                 data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
-                disabled={!isAvailable || !text.trim()}
+                disabled={!isAvailable || (!isSpeaking && !text.trim())}
               >
-                <ChatBubbleLeftIcon className="w-5 h-5" />
-                <span>Speak</span>
+                {isSpeaking ? (
+                  <>
+                    <StopIcon className="w-5 h-5" />
+                    <span>Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <SpeakerWaveIcon className="w-5 h-5" />
+                    <span>Speak</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleFleshOut}

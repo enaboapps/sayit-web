@@ -12,6 +12,7 @@ import {
   ShareIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
+  StopIcon,
 } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +28,7 @@ interface TypingDockProps {
   text: string;
   onChange: (text: string) => void;
   onSpeak: () => void;
+  onStop?: () => void;
   isSpeaking?: boolean;
   isAvailable?: boolean;
   className?: string;
@@ -41,6 +43,7 @@ export default function TypingDock({
   text,
   onChange,
   onSpeak,
+  onStop,
   isSpeaking = false,
   isAvailable = true,
   className = '',
@@ -442,20 +445,29 @@ export default function TypingDock({
                   {/* Spacer */}
                   <div className="flex-1" />
 
-                  {/* Speak button - primary CTA */}
+                  {/* Speak/Stop button - primary CTA */}
                   <motion.button
-                    onClick={onSpeak}
-                    disabled={!isAvailable || !text.trim()}
+                    onClick={isSpeaking ? onStop : onSpeak}
+                    disabled={!isAvailable || (!isSpeaking && !text.trim())}
                     className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                       isSpeaking
-                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                         : 'bg-primary-500 hover:bg-primary-600 text-white'
                     }`}
                     whileTap={{ scale: 0.95 }}
-                    aria-label={isSpeaking ? 'Speaking...' : 'Speak'}
+                    aria-label={isSpeaking ? 'Stop' : 'Speak'}
                   >
-                    <SpeakerWaveIcon className={`w-5 h-5 ${isSpeaking ? 'animate-pulse' : ''}`} />
-                    <span>{isSpeaking ? 'Speaking...' : 'Speak'}</span>
+                    {isSpeaking ? (
+                      <>
+                        <StopIcon className="w-5 h-5" />
+                        <span>Stop</span>
+                      </>
+                    ) : (
+                      <>
+                        <SpeakerWaveIcon className="w-5 h-5" />
+                        <span>Speak</span>
+                      </>
+                    )}
                   </motion.button>
                 </div>
               </motion.div>
@@ -503,21 +515,25 @@ export default function TypingDock({
                     </button>
                   </div>
 
-                  {/* Speak button - primary CTA */}
+                  {/* Speak/Stop button - primary CTA */}
                   <motion.button
-                    onClick={onSpeak}
-                    disabled={!isAvailable || !text.trim()}
+                    onClick={isSpeaking ? onStop : onSpeak}
+                    disabled={!isAvailable || (!isSpeaking && !text.trim())}
                     className={`flex-shrink-0 p-4 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                       isSpeaking
-                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                         : text.trim()
                         ? 'bg-primary-500 hover:bg-primary-600 text-white'
                         : 'bg-surface-hover text-text-tertiary'
                     }`}
                     whileTap={{ scale: 0.95 }}
-                    aria-label={isSpeaking ? 'Speaking...' : 'Speak'}
+                    aria-label={isSpeaking ? 'Stop' : 'Speak'}
                   >
-                    <SpeakerWaveIcon className={`w-6 h-6 ${isSpeaking ? 'animate-pulse' : ''}`} />
+                    {isSpeaking ? (
+                      <StopIcon className="w-6 h-6" />
+                    ) : (
+                      <SpeakerWaveIcon className="w-6 h-6" />
+                    )}
                   </motion.button>
                 </div>
               </motion.div>
