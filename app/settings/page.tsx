@@ -135,7 +135,6 @@ export default function SettingsPage() {
               title="Text & Display"
               description="Font size, enter key behavior"
               onClick={() => setActiveSheet('text')}
-              value={getLabel(textSizeOptions, settings.textSize)}
             />
 
             {/* Account - only when logged in */}
