@@ -61,6 +61,7 @@ export default function TypingDock({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const prevTextRef = useRef(text); // Track previous text to detect external changes
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
 
@@ -87,9 +88,13 @@ export default function TypingDock({
   } = useTypingTabs(text);
 
   // Sync tabs text with external text prop when tabs are enabled
+  // Only sync when text prop changes externally, not when activeTab.text changes
   useEffect(() => {
-    if (enableTabs && text !== activeTab.text) {
-      updateActiveTabText(text);
+    if (enableTabs && text !== prevTextRef.current) {
+      prevTextRef.current = text;
+      if (text !== activeTab.text) {
+        updateActiveTabText(text);
+      }
     }
   }, [enableTabs, text, activeTab.text, updateActiveTabText]);
 
