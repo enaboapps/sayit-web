@@ -90,10 +90,6 @@ export default function TypingDock({
     }
   }, [enableTabs, text, activeTab.text, updateActiveTabText]);
 
-  // Character count
-  const charCount = text.length;
-  const maxChars = 500;
-
   // Text size classes
   const textSizeClasses = {
     small: 'text-sm',
@@ -320,7 +316,6 @@ export default function TypingDock({
                     className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} ${currentTextSizeClass} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${isFullscreen ? 'flex-1' : ''}`}
                     rows={isFullscreen ? undefined : 3}
                     style={isFullscreen ? { minHeight: '100%' } : undefined}
-                    maxLength={maxChars}
                   />
                   {/* Control buttons (when tabs are not enabled) */}
                   {!enableTabs && (
@@ -349,15 +344,12 @@ export default function TypingDock({
                   )}
                 </div>
 
-                {/* Character count and error */}
-                <div className="flex justify-between items-center px-1">
-                  <span className={`text-xs ${charCount > maxChars * 0.9 ? 'text-orange-500' : 'text-text-tertiary'}`}>
-                    {charCount}/{maxChars}
-                  </span>
-                  {error && (
+                {/* Error display */}
+                {error && (
+                  <div className="px-1">
                     <span className="text-xs text-red-500">{error}</span>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Row 1: AI Features (when text exists) */}
                 {text.trim() && (enableFleshOut || enableFixText || (enableShare && user)) && (
