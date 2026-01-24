@@ -1,7 +1,7 @@
 'use client';
 
 import { PencilIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface PhraseTileProps {
@@ -45,6 +45,15 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
+  }, []);
+
+  // Cleanup timer on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+      }
+    };
   }, []);
 
   const handleClick = () => {
