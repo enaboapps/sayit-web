@@ -34,6 +34,16 @@ export default function BottomSheet({
   const [currentSnapIndex, setCurrentSnapIndex] = useState(initialSnap);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
+  // Use refs for callbacks to avoid re-registering event listeners
+  const onCloseRef = useRef(onClose);
+  const isOpenRef = useRef(isOpen);
+
+  // Keep refs in sync with props
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    isOpenRef.current = isOpen;
+  }, [onClose, isOpen]);
+
   // Calculate snap point heights (in viewport height percentage)
   const getSnapHeight = useCallback((snapPercent: number) => {
     return `${snapPercent}vh`;
@@ -60,17 +70,17 @@ export default function BottomSheet({
     };
   }, []);
 
-  // Handle ESC key to close
+  // Handle ESC key to close - uses refs to avoid re-registering listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+      if (e.key === 'Escape' && isOpenRef.current) {
+        onCloseRef.current();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, []); // Empty deps - listener registered once, refs handle updates
 
   // Focus trap
   useEffect(() => {
