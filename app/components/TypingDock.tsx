@@ -10,6 +10,8 @@ import {
   ChevronDownIcon,
   ArrowPathIcon,
   ShareIcon,
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
 } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,7 +49,6 @@ export default function TypingDock({
   enableFleshOut = false,
   enableFixText = false,
 }: TypingDockProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +58,13 @@ export default function TypingDock({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { settings } = useSettings();
+  const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
+
+  // Get current mode from settings
+  const dockMode = uiPreferences.typingDockMode;
+  const isExpanded = dockMode === 'expanded' || dockMode === 'fullscreen';
+  const isFullscreen = dockMode === 'fullscreen';
 
   // Typing share hook
   const typingShare = useTypingShare();
@@ -97,12 +103,12 @@ export default function TypingDock({
   };
   const currentTextSizeClass = textSizeClasses[settings.textSize];
 
-  // Auto-expand when text gets long
+  // Auto-expand when text gets long (but don't change fullscreen)
   useEffect(() => {
-    if (text.length > 50 && !isExpanded) {
-      setIsExpanded(true);
+    if (text.length > 50 && dockMode === 'compact') {
+      updateUIPreference('typingDockMode', 'expanded');
     }
-  }, [text, isExpanded]);
+  }, [text, dockMode, updateUIPreference]);
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -150,9 +156,9 @@ export default function TypingDock({
 
   const handleBlur = () => {
     setIsFocused(false);
-    // Collapse if text is short
-    if (text.length <= 50) {
-      setIsExpanded(false);
+    // Collapse if text is short (but don't change fullscreen)
+    if (text.length <= 50 && dockMode === 'expanded') {
+      updateUIPreference('typingDockMode', 'compact');
     }
   };
 
@@ -167,14 +173,25 @@ export default function TypingDock({
   };
 
   const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
+    // Cycle: compact -> expanded -> compact
+    const newMode = dockMode === 'compact' ? 'expanded' : 'compact';
+    updateUIPreference('typingDockMode', newMode);
     // Focus the appropriate input after toggle
     setTimeout(() => {
-      if (!isExpanded) {
+      if (newMode === 'expanded') {
         textareaRef.current?.focus();
       } else {
         inputRef.current?.focus();
       }
+    }, 100);
+  };
+
+  const toggleFullscreen = () => {
+    const newMode = isFullscreen ? 'expanded' : 'fullscreen';
+    updateUIPreference('typingDockMode', newMode);
+    // Focus textarea in both expanded and fullscreen modes
+    setTimeout(() => {
+      textareaRef.current?.focus();
     }, 100);
   };
 
@@ -242,17 +259,20 @@ export default function TypingDock({
 
   return (
     <>
-      <div className={`border-t border-border ${className}`} style={{ backgroundColor: '#242424' }}>
-        <div className="px-3 py-2">
+      <div
+        className={`border-t border-border ${className} ${isFullscreen ? 'fixed inset-0 z-50 flex flex-col' : ''}`}
+        style={{ backgroundColor: '#242424' }}
+      >
+        <div className={`px-3 py-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
           <AnimatePresence mode="wait">
             {isExpanded ? (
               <motion.div
                 key="expanded"
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: isFullscreen ? '100%' : 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-2"
+                className={`space-y-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}
               >
                 {/* Tab indicator row (expanded mode) */}
                 {enableTabs && (
@@ -262,18 +282,33 @@ export default function TypingDock({
                       activeTab={activeTab}
                       onClick={() => setShowTabList(true)}
                     />
-                    <button
-                      onClick={toggleExpanded}
-                      className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                      aria-label="Collapse"
-                    >
-                      <ChevronDownIcon className="w-4 h-4 text-text-secondary" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {/* Fullscreen toggle */}
+                      <button
+                        onClick={toggleFullscreen}
+                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                      >
+                        {isFullscreen ? (
+                          <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
+                        ) : (
+                          <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
+                        )}
+                      </button>
+                      {/* Collapse button */}
+                      <button
+                        onClick={toggleExpanded}
+                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                        aria-label="Collapse"
+                      >
+                        <ChevronDownIcon className="w-4 h-4 text-text-secondary" />
+                      </button>
+                    </div>
                   </div>
                 )}
 
                 {/* Expanded textarea */}
-                <div className="relative">
+                <div className={`relative ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
                   <textarea
                     ref={textareaRef}
                     value={text}
@@ -282,19 +317,35 @@ export default function TypingDock({
                     onFocus={handleFocus}
                     onBlur={handleBlur}
                     placeholder="Type your message..."
-                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-12'} ${currentTextSizeClass} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500`}
-                    rows={3}
+                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} ${currentTextSizeClass} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${isFullscreen ? 'flex-1' : ''}`}
+                    rows={isFullscreen ? undefined : 3}
+                    style={isFullscreen ? { minHeight: '100%' } : undefined}
                     maxLength={maxChars}
                   />
-                  {/* Collapse button (when tabs are not enabled) */}
+                  {/* Control buttons (when tabs are not enabled) */}
                   {!enableTabs && (
-                    <button
-                      onClick={toggleExpanded}
-                      className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-surface transition-colors"
-                      aria-label="Collapse"
-                    >
-                      <ChevronDownIcon className="w-4 h-4 text-text-secondary" />
-                    </button>
+                    <div className="absolute top-2 right-2 flex items-center gap-1">
+                      {/* Fullscreen toggle */}
+                      <button
+                        onClick={toggleFullscreen}
+                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                      >
+                        {isFullscreen ? (
+                          <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
+                        ) : (
+                          <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
+                        )}
+                      </button>
+                      {/* Collapse button */}
+                      <button
+                        onClick={toggleExpanded}
+                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                        aria-label="Collapse"
+                      >
+                        <ChevronDownIcon className="w-4 h-4 text-text-secondary" />
+                      </button>
+                    </div>
                   )}
                 </div>
 
