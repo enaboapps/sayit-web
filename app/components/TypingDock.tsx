@@ -243,16 +243,24 @@ export default function TypingDock({
   const handleShare = async () => {
     if (!enableShare || !user) return;
 
+    // Prevent multiple clicks while creating session
+    if (typingShare.isCreating) return;
+
     if (typingShare.isSharing) {
       setShowShareSheet(true);
       return;
     }
 
-    await typingShare.createSession();
+    try {
+      await typingShare.createSession();
 
-    if (typingShare.isSharing) {
-      typingShare.updateContent(text);
-      setShowShareSheet(true);
+      if (typingShare.isSharing) {
+        typingShare.updateContent(text);
+        setShowShareSheet(true);
+      }
+    } catch (err) {
+      console.error('Error creating share session:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create share session');
     }
   };
 
