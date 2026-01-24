@@ -14,7 +14,6 @@ interface BoardSelectorProps {
   // Action button props
   onAddBoard?: () => void;
   onAddPhrase?: () => void;
-  onReader?: () => void;
   onEdit?: () => void;
   hasPhrases?: boolean;
 }
@@ -27,7 +26,6 @@ export default function BoardSelector({
   onEditBoard,
   onAddBoard,
   onAddPhrase,
-  onReader,
   onEdit,
   hasPhrases = false,
 }: BoardSelectorProps) {
@@ -93,11 +91,9 @@ export default function BoardSelector({
         <BoardActionButtons
           onAddBoard={onAddBoard}
           onAddPhrase={onAddPhrase}
-          onReader={onReader}
           onEdit={onEdit}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
-          hasPhrases={hasPhrases}
         />
       </div>
     );
@@ -147,11 +143,9 @@ export default function BoardSelector({
         <BoardActionButtons
           onAddBoard={onAddBoard}
           onAddPhrase={onAddPhrase}
-          onReader={onReader}
           onEdit={onEdit}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
-          hasPhrases={hasPhrases}
         />
       </div>
 

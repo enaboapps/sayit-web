@@ -2,7 +2,6 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
 import BoardGridPopup from '../phrases/BoardGridPopup';
@@ -26,7 +25,6 @@ export default function PhrasesInterface() {
   const { uiPreferences, updateUIPreference } = useSettings();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isReaderOpen, setIsReaderOpen] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const selectedBoardId = uiPreferences.selectedBoardId;
   const isMobile = useIsMobile();
@@ -133,18 +131,6 @@ export default function PhrasesInterface() {
     router.push('/phrases/boards/add');
   };
 
-  const handleReader = () => {
-    setIsReaderOpen(true);
-  };
-
-  const handleCloseReader = () => {
-    setIsReaderOpen(false);
-  };
-
-  const handleSpeakInReader = (text: string) => {
-    tts.speak(text);
-  };
-
   const handleSelectBoard = (board: BoardSummary | string) => {
     const boardId = typeof board === 'string' ? board : board.id;
     updateUIPreference('selectedBoardId', boardId);
@@ -243,7 +229,6 @@ export default function PhrasesInterface() {
               onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
               onAddBoard={handleAddBoard}
               onAddPhrase={handleAddPhrase}
-              onReader={handleReader}
               onEdit={handleEdit}
               isEditMode={isEditMode}
               canEditBoard={canEditCurrentBoard}
@@ -290,7 +275,6 @@ export default function PhrasesInterface() {
                   onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
                   onAddBoard={handleAddBoard}
                   onAddPhrase={handleAddPhrase}
-                  onReader={handleReader}
                   onEdit={handleEdit}
                   hasPhrases={phrases.length > 0}
                 />
@@ -334,12 +318,6 @@ export default function PhrasesInterface() {
           )}
         </div>
       )}
-      <ReaderPopup
-        phrases={phrases}
-        isOpen={isReaderOpen}
-        onClose={handleCloseReader}
-        onSpeak={handleSpeakInReader}
-      />
       {/* Mobile: Board picker popup */}
       <BoardGridPopup
         boards={transformedBoards}
