@@ -335,6 +335,7 @@ export default function PhrasesInterface() {
             text={typingText}
             onChange={setTypingText}
             onSpeak={handleSpeak}
+            onStop={tts.stop}
             isSpeaking={tts.isSpeaking}
             isAvailable={tts.isAvailable}
             enableTabs={true}
