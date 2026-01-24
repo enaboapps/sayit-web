@@ -66,7 +66,7 @@ export default defineSchema({
     userId: v.string(), // Clerk user ID
 
     // Main Settings (from SettingsContext)
-    textSize: v.union(v.literal('small'), v.literal('medium'), v.literal('large'), v.literal('xlarge')),
+    textSize: v.number(), // Font size in pixels (8-72)
     speechRate: v.number(),
     speechPitch: v.number(),
     speechVolume: v.number(),

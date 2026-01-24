@@ -98,14 +98,8 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [createTab, closeTab, activeTabId, switchToTabByIndex, switchToPreviousTab, switchToNextTab]);
 
-  const textSizeClasses = {
-    small: 'text-sm',
-    medium: 'text-lg',
-    large: 'text-2xl',
-    xlarge: 'text-4xl',
-  };
-
-  const currentTextSizeClass = textSizeClasses[settings.textSize];
+  // Text size from settings (now a number in px)
+  const textSizePx = settings.textSize;
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -217,7 +211,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl`}
+              className="w-full bg-transparent text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl"
               value={text}
               onChange={(e) => {
                 updateActiveTabText(e.target.value);
@@ -250,6 +244,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
               }}
               placeholder="Type your message here..."
               style={{
+                fontSize: `${textSizePx}px`,
                 minHeight: textareaHeight,
                 maxHeight: textareaHeight,
                 lineHeight: '1.5',
