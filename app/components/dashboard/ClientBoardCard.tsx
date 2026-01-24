@@ -55,8 +55,8 @@ export default function ClientBoardCard({ board }: ClientBoardCardProps) {
         <span
           className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
             accessLevel === 'edit'
-              ? 'bg-green-500/10 text-green-400'
-              : 'bg-blue-500/10 text-blue-400'
+              ? 'bg-status-success text-green-400'
+              : 'bg-status-info text-blue-400'
           }`}
         >
           {accessLevel === 'edit' ? (
@@ -92,7 +92,7 @@ export default function ClientBoardCard({ board }: ClientBoardCardProps) {
             <button
               onClick={handleRemove}
               disabled={isUpdating}
-              className="px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-sm text-red-400 hover:bg-status-error rounded-lg transition-colors disabled:opacity-50"
             >
               Confirm
             </button>
@@ -100,7 +100,7 @@ export default function ClientBoardCard({ board }: ClientBoardCardProps) {
         ) : (
           <button
             onClick={() => setShowRemoveConfirm(true)}
-            className="p-1.5 text-text-secondary hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+            className="p-1.5 text-text-secondary hover:text-red-400 hover:bg-status-error rounded-lg transition-colors"
           >
             <TrashIcon className="w-4 h-4" />
           </button>

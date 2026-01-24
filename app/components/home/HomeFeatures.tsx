@@ -1,70 +1,71 @@
-import TypingArea from '@/app/components/TypingArea';
-import { useTTS } from '@/lib/hooks/useTTS';
+'use client';
+
 import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/ui/Button';
 import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 export default function HomeFeatures() {
-  const tts = useTTS();
   const router = useRouter();
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-none">
-        <TypingArea initialText={''} tts={tts} />
-      </div>
-      <div className="flex-1 flex flex-col items-center justify-center p-8">
-        <div className="max-w-2xl text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-6">
-            SayIt! - Your Voice, Your Words
-          </h1>
-          <p className="text-xl text-text-secondary mb-8">
-            A simple, powerful way to communicate with pre-recorded phrases
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-surface p-6 rounded-lg shadow-sm transition-colors duration-200">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Easy to Use</h3>
-              <p className="text-text-secondary">
-                Create and organize your phrases into boards for quick access
-              </p>
-            </div>
-            <div className="bg-surface p-6 rounded-lg shadow-sm transition-colors duration-200">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Customizable</h3>
-              <p className="text-text-secondary">
-                Add your own phrases and organize them however you like
-              </p>
-            </div>
-            <div className="bg-surface p-6 rounded-lg shadow-sm transition-colors duration-200">
-              <h3 className="text-lg font-semibold text-foreground mb-2">Accessible</h3>
-              <p className="text-text-secondary">
-                Designed to be accessible and easy to use for everyone
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-            <Button
-              onClick={() => router.push('/sign-in')}
-              size="lg"
-            >
-              Sign In
-            </Button>
-            <Button
-              onClick={() => router.push('/sign-up')}
-              variant="outline"
-              size="lg"
-            >
-              Sign Up
-            </Button>
-          </div>
-
-          <div className="mt-8 text-center">
-            <Link href="/privacy" className="text-sm text-text-secondary hover:text-text-primary transition-colors duration-200">
-              Privacy Policy
-            </Link>
-          </div>
+    <div className="flex-1 flex flex-col items-center justify-center p-8">
+      <motion.div
+        className="flex flex-col items-center text-center max-w-sm w-full"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        {/* App Icon */}
+        <div className="mb-6">
+          <Image
+            src="/icons/app-icon.png"
+            alt="SayIt! App Icon"
+            width={96}
+            height={96}
+            className="rounded-2xl shadow-lg"
+            priority
+          />
         </div>
-      </div>
+
+        {/* Title */}
+        <h1 className="text-4xl font-bold text-foreground mb-2">
+          SayIt!
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-lg text-text-secondary mb-10">
+          Your Voice, Your Words
+        </p>
+
+        {/* Buttons */}
+        <div className="flex flex-col gap-4 w-full mb-10">
+          <Button
+            onClick={() => router.push('/sign-in')}
+            size="lg"
+            className="w-full"
+          >
+            Sign In
+          </Button>
+          <Button
+            onClick={() => router.push('/sign-up')}
+            variant="outline"
+            size="lg"
+            className="w-full"
+          >
+            Create Account
+          </Button>
+        </div>
+
+        {/* Privacy Policy */}
+        <Link
+          href="/privacy"
+          className="text-sm text-text-secondary hover:text-text-primary transition-colors duration-200"
+        >
+          Privacy Policy
+        </Link>
+      </motion.div>
     </div>
   );
-} 
+}

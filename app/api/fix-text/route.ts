@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
 import { fixText } from '@/lib/openrouter';
 
-export const config = {
-  runtime: 'nodejs',
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-  },
-};
+// Next.js App Router route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {

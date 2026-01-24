@@ -50,7 +50,7 @@ export default function ConnectionRequestCard({ request }: ConnectionRequestCard
   return (
     <div className="bg-surface rounded-xl border border-border p-4">
       <div className="flex items-center gap-4">
-        <div className="p-3 rounded-full bg-primary-500/10">
+        <div className="p-3 rounded-full bg-surface-hover">
           <UserIcon className="w-6 h-6 text-primary-500" />
         </div>
 
@@ -66,7 +66,7 @@ export default function ConnectionRequestCard({ request }: ConnectionRequestCard
           <button
             onClick={handleReject}
             disabled={isProcessing}
-            className="p-2 rounded-lg bg-surface-hover hover:bg-red-500/10 text-text-secondary hover:text-red-500 transition-colors disabled:opacity-50"
+            className="p-2 rounded-lg bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-colors disabled:opacity-50"
             title="Decline"
           >
             <XMarkIcon className="w-5 h-5" />

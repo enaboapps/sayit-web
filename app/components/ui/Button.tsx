@@ -5,7 +5,7 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-3xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-3xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -14,17 +14,18 @@ const buttonVariants = cva(
         destructive:
           'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700',
         outline:
-          'border border-border bg-surface text-foreground hover:bg-surface-hover hover:border-primary-500/50',
+          'border border-border bg-surface text-foreground hover:bg-surface-hover hover:border-primary-700',
         secondary:
-          'bg-surface-hover text-foreground hover:bg-primary-500/10 hover:text-primary-500',
+          'bg-surface-hover text-foreground hover:bg-primary-950 hover:text-primary-500',
         ghost: 'hover:bg-surface-hover text-foreground hover:text-primary-500',
         link: 'text-foreground underline-offset-4 hover:underline hover:text-primary-500',
       },
       size: {
-        default: 'h-10 px-6 py-2',
-        sm: 'h-8 rounded-3xl px-4 text-xs',
-        lg: 'h-12 rounded-3xl px-10',
-        icon: 'h-10 w-10',
+        // All sizes meet minimum 44px touch target requirement
+        default: 'h-11 min-h-[44px] px-6 py-2',
+        sm: 'h-10 min-h-[44px] rounded-3xl px-4 text-xs',
+        lg: 'h-12 min-h-[48px] rounded-3xl px-10',
+        icon: 'h-11 w-11 min-h-[44px] min-w-[44px]',
       },
     },
     defaultVariants: {
@@ -56,11 +57,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       );
     }
 
+    // Check for reduced motion preference
+    const prefersReducedMotion = typeof window !== 'undefined'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
         transition={{ duration: 0.2 }}
         ref={ref}
         {...(props as ButtonAsMotionProps)}

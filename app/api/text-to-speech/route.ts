@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 
-export const config = {
-  runtime: 'nodejs',
-  api: {
-    bodyParser: {
-      sizeLimit: '1mb',
-    },
-  },
-};
+// Next.js App Router route segment config
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { text, voiceId, stability, similarityBoost } = body;
+    const { text, voiceId, stability, similarityBoost, streaming } = body;
 
     if (!text) {
       return NextResponse.json(
@@ -42,7 +37,29 @@ export async function POST(request: Request) {
       apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
     });
 
-    // Use Flash v2.5 model with voice settings
+    // Use streaming if requested
+    if (streaming) {
+      const audioStream = await client.textToSpeech.stream(voiceId, {
+        text: text,
+        modelId: 'eleven_flash_v2_5',
+        voiceSettings: {
+          stability: stability ?? 0.5,
+          similarityBoost: similarityBoost ?? 0.5,
+        },
+      });
+
+      // Return streaming response
+      return new Response(audioStream as unknown as ReadableStream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'audio/mpeg',
+          'Transfer-Encoding': 'chunked',
+          'Cache-Control': 'no-cache',
+        },
+      });
+    }
+
+    // Non-streaming fallback (original behavior)
     const audioStream = await client.textToSpeech.convert(voiceId, {
       text: text,
       modelId: 'eleven_flash_v2_5',

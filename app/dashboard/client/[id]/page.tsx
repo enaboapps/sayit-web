@@ -60,7 +60,7 @@ export default function ClientDetailPage({ params }: PageProps) {
         <SubscriptionWrapper
           fallback={
             <div className="text-center py-16">
-              <div className="p-4 rounded-full bg-primary-500/10 w-fit mx-auto mb-6">
+              <div className="p-4 rounded-full bg-surface-hover w-fit mx-auto mb-6">
                 <UserIcon className="w-12 h-12 text-primary-500" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-2">Client Management</h2>
@@ -77,7 +77,7 @@ export default function ClientDetailPage({ params }: PageProps) {
           }
         >
           <div className="flex items-center gap-4 mb-8">
-            <div className="p-3 rounded-full bg-primary-500/10">
+            <div className="p-3 rounded-full bg-surface-hover">
               <UserIcon className="w-8 h-8 text-primary-500" />
             </div>
             <div className="flex-1">

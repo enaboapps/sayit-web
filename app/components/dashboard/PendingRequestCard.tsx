@@ -37,9 +37,9 @@ export default function PendingRequestCard({ request }: PendingRequestCardProps)
   const displayName = request.communicator?.fullName || request.communicator?.email || 'Unknown';
 
   return (
-    <div className="bg-surface rounded-xl border border-yellow-500/30 p-4">
+    <div className="bg-surface rounded-xl border border-yellow-900 p-4">
       <div className="flex items-center gap-4">
-        <div className="p-3 rounded-full bg-yellow-500/10">
+        <div className="p-3 rounded-full bg-status-warning">
           <UserIcon className="w-6 h-6 text-yellow-500" />
         </div>
 
@@ -75,7 +75,7 @@ export default function PendingRequestCard({ request }: PendingRequestCardProps)
           ) : (
             <button
               onClick={() => setShowConfirm(true)}
-              className="p-2 rounded-lg text-text-tertiary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              className="p-2 rounded-lg text-text-tertiary hover:text-red-500 hover:bg-status-error transition-colors"
               title="Cancel request"
             >
               <XMarkIcon className="w-5 h-5" />

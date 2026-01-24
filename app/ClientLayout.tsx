@@ -7,7 +7,9 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
+import { MobileBottomProvider } from './contexts/MobileBottomContext';
 import Sidebar from './components/Sidebar';
+import MobileBottomStack from './components/navigation/MobileBottomStack';
 
 export default function ClientLayout({
   children,
@@ -44,14 +46,22 @@ export default function ClientLayout({
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
-            <div className="min-h-screen flex">
-              <Sidebar />
-              <div className="flex-1 pl-16">
-                <main>
-                  {children}
-                </main>
+            <MobileBottomProvider>
+              <div className="min-h-dvh flex flex-col md:flex-row">
+                {/* Sidebar - hidden on mobile, shown on tablet+ */}
+                <Sidebar />
+
+                {/* Main content area */}
+                <div className="flex-1 md:pl-16 lg:pl-16">
+                  <main className="min-h-dvh pb-32 md:pb-0">
+                    {children}
+                  </main>
+                </div>
+
+                {/* Mobile bottom stack - dock + tab bar */}
+                <MobileBottomStack />
               </div>
-            </div>
+            </MobileBottomProvider>
           </SettingsProvider>
         </AuthProvider>
       </ConvexProviderWithClerk>

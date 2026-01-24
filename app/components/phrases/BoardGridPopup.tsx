@@ -36,7 +36,7 @@ export default function BoardGridPopup({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/75" />
+          <div className="fixed inset-0 bg-overlay" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -50,7 +50,7 @@ export default function BoardGridPopup({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl bg-surface p-8 text-left align-middle shadow-2xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-3xl p-8 text-left align-middle shadow-2xl transition-all" style={{ backgroundColor: '#242424' }}>
                 <Dialog.Title
                   as="h3"
                   className="text-2xl font-bold leading-6 text-foreground mb-6"
@@ -66,7 +66,7 @@ export default function BoardGridPopup({
                         key={board.id}
                         className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                           selectedBoard?.id === board.id
-                            ? 'border-primary-500 bg-primary-500/10 shadow-lg'
+                            ? 'border-primary-500 bg-surface-hover shadow-lg'
                             : 'border-border hover:border-primary-300 hover:shadow-md'
                         }`}
                         onClick={() => {

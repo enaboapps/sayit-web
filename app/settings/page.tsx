@@ -6,13 +6,17 @@ import dynamic from 'next/dynamic';
 import {
   Cog6ToothIcon,
   SpeakerWaveIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  DocumentTextIcon,
+  InformationCircleIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import { SettingsCard } from '@/app/components/ui/SettingsCard';
-import { SettingsSection } from '@/app/components/ui/SettingsSection';
-import { Dropdown } from '@/app/components/ui/Dropdown';
 import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
 import { useAuth } from '../contexts/AuthContext';
+import BottomSheet from '@/app/components/ui/BottomSheet';
+import { Dropdown } from '@/app/components/ui/Dropdown';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { UserButton } from '@clerk/nextjs';
 
 // Import types from SettingsContext
 type TextSize = 'small' | 'medium' | 'large' | 'xlarge';
@@ -30,10 +34,43 @@ const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
   )
 });
 
+interface SettingsCategoryProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+  value?: string;
+}
+
+function SettingsCategory({ icon, title, description, onClick, value }: SettingsCategoryProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-4 p-4 bg-surface rounded-2xl hover:bg-surface-hover transition-all active:scale-[0.98]"
+    >
+      <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-2xl">
+        {icon}
+      </div>
+      <div className="flex-1 text-left">
+        <h3 className="font-semibold text-foreground">{title}</h3>
+        <p className="text-sm text-text-secondary">{description}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {value && <span className="text-sm text-text-tertiary">{value}</span>}
+        <ChevronRightIcon className="w-5 h-5 text-text-tertiary" />
+      </div>
+    </button>
+  );
+}
+
 export default function SettingsPage() {
   const { settings, updateSetting } = useSettings();
   const { user } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const isMobile = useIsMobile();
+
+  // Sheet states
+  const [activeSheet, setActiveSheet] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -43,20 +80,181 @@ export default function SettingsPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto p-6">
-          <div className="space-y-8">
+        <div className="max-w-4xl mx-auto p-4 md:p-6">
+          <div className="space-y-4">
             <div className="animate-pulse h-10 bg-gradient-to-r from-surface-hover to-surface rounded-3xl w-48"></div>
-            <div className="space-y-6">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="animate-pulse h-40 bg-gradient-to-r from-surface-hover to-surface rounded-3xl shadow-2xl"></div>
-              ))}
-            </div>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="animate-pulse h-20 bg-gradient-to-r from-surface-hover to-surface rounded-2xl"></div>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
+  const textSizeOptions = [
+    { value: 'small' as TextSize, label: 'Small' },
+    { value: 'medium' as TextSize, label: 'Medium' },
+    { value: 'large' as TextSize, label: 'Large' },
+    { value: 'xlarge' as TextSize, label: 'Extra Large' },
+  ];
+
+  const enterKeyOptions = [
+    { value: 'newline' as EnterKeyBehavior, label: 'New Line' },
+    { value: 'speak' as EnterKeyBehavior, label: 'Speak Text' },
+    { value: 'clear' as EnterKeyBehavior, label: 'Clear Text' },
+    { value: 'speakAndClear' as EnterKeyBehavior, label: 'Speak & Clear' },
+  ];
+
+  const getLabel = <T extends string>(options: { value: T; label: string }[], value: T) =>
+    options.find(o => o.value === value)?.label ?? value;
+
+  // Mobile layout with categories
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-32">
+        <div className="p-4">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+          </div>
+
+          {/* Categories */}
+          <div className="space-y-3">
+            {/* Voice & Speech */}
+            <SettingsCategory
+              icon={<SpeakerWaveIcon className="w-6 h-6" />}
+              title="Voice & Speech"
+              description="TTS provider, voice selection"
+              onClick={() => setActiveSheet('voice')}
+            />
+
+            {/* Text & Display */}
+            <SettingsCategory
+              icon={<DocumentTextIcon className="w-6 h-6" />}
+              title="Text & Display"
+              description="Font size, enter key behavior"
+              onClick={() => setActiveSheet('text')}
+            />
+
+            {/* Account - only when logged in */}
+            {user && (
+              <SettingsCategory
+                icon={<UserCircleIcon className="w-6 h-6" />}
+                title="Account"
+                description="Profile, role settings"
+                onClick={() => setActiveSheet('account')}
+              />
+            )}
+
+            {/* About */}
+            <SettingsCategory
+              icon={<InformationCircleIcon className="w-6 h-6" />}
+              title="About"
+              description="Version, support, privacy"
+              onClick={() => setActiveSheet('about')}
+            />
+          </div>
+        </div>
+
+        {/* Voice & Speech Sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'voice'}
+          onClose={() => setActiveSheet(null)}
+          title="Voice & Speech"
+          snapPoints={[70, 90]}
+          initialSnap={1}
+        >
+          <div className="p-4">
+            <TTSSettings />
+          </div>
+        </BottomSheet>
+
+        {/* Text & Display Sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'text'}
+          onClose={() => setActiveSheet(null)}
+          title="Text & Display"
+          snapPoints={[60, 80]}
+        >
+          <div className="p-4 space-y-6">
+            <Dropdown
+              label="Text Size"
+              options={textSizeOptions}
+              value={settings.textSize}
+              onChange={(value) => updateSetting('textSize', value)}
+            />
+            <Dropdown
+              label="Enter Key Behavior"
+              options={enterKeyOptions}
+              value={settings.enterKeyBehavior}
+              onChange={(value) => updateSetting('enterKeyBehavior', value)}
+            />
+          </div>
+        </BottomSheet>
+
+        {/* Account Sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'account'}
+          onClose={() => setActiveSheet(null)}
+          title="Account"
+          snapPoints={[50, 70]}
+        >
+          <div className="p-4">
+            {/* User Account Section */}
+            <div className="flex items-center gap-4 bg-surface-hover rounded-2xl p-4 mb-6">
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: 'w-12 h-12 rounded-full'
+                  }
+                }}
+              />
+              <div>
+                <p className="font-semibold text-foreground">Signed In</p>
+                <p className="text-sm text-text-secondary">Tap avatar to manage account</p>
+              </div>
+            </div>
+
+            <h3 className="font-semibold text-foreground mb-3">Your Role</h3>
+            <p className="text-sm text-text-secondary mb-4">Change how you use SayIt!</p>
+            <RoleChangeSection />
+          </div>
+        </BottomSheet>
+
+        {/* About Sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'about'}
+          onClose={() => setActiveSheet(null)}
+          title="About"
+          snapPoints={[50, 70]}
+        >
+          <div className="p-4 space-y-4">
+            <div className="bg-surface-hover rounded-2xl p-4">
+              <h3 className="font-semibold text-foreground">SayIt!</h3>
+              <p className="text-sm text-text-secondary mt-1">Version 1.21.0</p>
+            </div>
+
+            <a
+              href="/support"
+              className="block w-full p-4 bg-surface-hover rounded-2xl text-foreground font-medium hover:bg-surface transition-all"
+            >
+              Support & Help
+            </a>
+
+            <a
+              href="/privacy"
+              className="block w-full p-4 bg-surface-hover rounded-2xl text-foreground font-medium hover:bg-surface transition-all"
+            >
+              Privacy Policy
+            </a>
+          </div>
+        </BottomSheet>
+      </div>
+    );
+  }
+
+  // Desktop layout (existing)
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto p-6">
@@ -72,79 +270,102 @@ export default function SettingsPage() {
 
         <div className="space-y-8">
           {/* Text & Behavior Settings */}
-          <SettingsSection 
-            title="Text & Behavior" 
-            description="Configure text size and input behavior"
-          >
-            <SettingsCard
-              title="Text Size"
-              description="Adjust the size of text in the typing area"
-              icon={<Cog6ToothIcon className="w-6 h-6" />}
-            >
-              <div className="flex justify-end">
-                <Dropdown
-                  options={[
-                    { value: 'small', label: 'Small' },
-                    { value: 'medium', label: 'Medium' },
-                    { value: 'large', label: 'Large' },
-                    { value: 'xlarge', label: 'Extra Large' }
-                  ]}
-                  value={settings.textSize}
-                  onChange={(value) => updateSetting('textSize', value as TextSize)}
-                  className="w-48"
-                />
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Text & Behavior</h2>
+              <p className="text-sm text-text-secondary mt-1">Configure text size and input behavior</p>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+                <div className="px-8 py-6">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                      <Cog6ToothIcon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Text Size</h3>
+                      <p className="text-sm text-text-secondary mt-1">Adjust the size of text in the typing area</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Dropdown
+                      options={textSizeOptions}
+                      value={settings.textSize}
+                      onChange={(value) => updateSetting('textSize', value)}
+                      className="w-48"
+                    />
+                  </div>
+                </div>
               </div>
-            </SettingsCard>
 
-            <SettingsCard
-              title="Enter Key Behavior"
-              description="Choose what happens when you press Enter in the typing area"
-              icon={<Cog6ToothIcon className="w-6 h-6" />}
-            >
-              <div className="flex justify-end">
-                <Dropdown
-                  options={[
-                    { value: 'newline', label: 'New Line' },
-                    { value: 'speak', label: 'Speak Text' },
-                    { value: 'clear', label: 'Clear Text' },
-                    { value: 'speakAndClear', label: 'Speak & Clear Text' }
-                  ]}
-                  value={settings.enterKeyBehavior}
-                  onChange={(value) => updateSetting('enterKeyBehavior', value as EnterKeyBehavior)}
-                  className="w-48"
-                />
+              <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+                <div className="px-8 py-6">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                      <Cog6ToothIcon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Enter Key Behavior</h3>
+                      <p className="text-sm text-text-secondary mt-1">Choose what happens when you press Enter</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Dropdown
+                      options={enterKeyOptions}
+                      value={settings.enterKeyBehavior}
+                      onChange={(value) => updateSetting('enterKeyBehavior', value)}
+                      className="w-48"
+                    />
+                  </div>
+                </div>
               </div>
-            </SettingsCard>
-          </SettingsSection>
+            </div>
+          </section>
 
           {/* Text-to-Speech Settings */}
-          <SettingsSection
-            title="Text-to-Speech"
-            description="Configure voice and speech settings"
-          >
-            <SettingsCard
-              title="Voice Settings"
-              description="Choose your preferred text-to-speech voice and provider"
-              icon={<SpeakerWaveIcon className="w-6 h-6" />}
-            >
-              <TTSSettings />
-            </SettingsCard>
-          </SettingsSection>
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Text-to-Speech</h2>
+              <p className="text-sm text-text-secondary mt-1">Configure voice and speech settings</p>
+            </div>
+            <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+              <div className="px-8 py-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                    <SpeakerWaveIcon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">Voice Settings</h3>
+                    <p className="text-sm text-text-secondary mt-1">Choose your preferred text-to-speech voice</p>
+                  </div>
+                </div>
+                <TTSSettings />
+              </div>
+            </div>
+          </section>
 
           {/* Account Settings - Only show when logged in */}
           {user && (
-            <SettingsSection
-              title="Account"
-              description="Manage your account settings"
-            >
-              <SettingsCard
-                title="Your Role"
-                description="Change how you use SayIt!"
-                icon={<UserCircleIcon className="w-6 h-6" />}
-              >
-                <RoleChangeSection />
-              </SettingsCard>
-            </SettingsSection>
+            <section className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Account</h2>
+                <p className="text-sm text-text-secondary mt-1">Manage your account settings</p>
+              </div>
+              <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+                <div className="px-8 py-6">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                      <UserCircleIcon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Your Role</h3>
+                      <p className="text-sm text-text-secondary mt-1">Change how you use SayIt!</p>
+                    </div>
+                  </div>
+                  <RoleChangeSection />
+                </div>
+              </div>
+            </section>
           )}
         </div>
       </div>

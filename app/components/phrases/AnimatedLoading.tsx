@@ -12,7 +12,7 @@ export default function AnimatedLoading() {
         {/* Main spinner */}
         <div className="relative w-16 h-16">
           <motion.div
-            className="absolute inset-0 border-4 border-primary-500/20 rounded-full"
+            className="absolute inset-0 border-4 border-border rounded-full"
           />
           <motion.div
             className="absolute inset-0 border-4 border-transparent border-t-primary-500 rounded-full"

@@ -1,5 +1,41 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
 
+/**
+ * ElevenLabs Text-to-Speech Provider
+ *
+ * This module provides streaming audio playback using the ElevenLabs API with
+ * session-based cancellation to handle race conditions from rapid speak/stop calls.
+ *
+ * ## Architecture Overview
+ *
+ * ### Session-Based Cancellation
+ * Each call to speak() or stop() increments a session ID. All async operations
+ * (streaming, buffering, playback) check this ID via isSessionActive() before
+ * proceeding. This prevents race conditions when:
+ * - User rapidly clicks speak/stop
+ * - A new speak() is called before the previous one finishes
+ * - stop() is called mid-stream
+ *
+ * ### Streaming Modes
+ * 1. **MediaSource API (preferred)**: Real-time streaming playback for browsers
+ *    that support it. Audio chunks are appended to a SourceBuffer as they arrive,
+ *    allowing playback to start before the full response is received.
+ *
+ * 2. **Blob Fallback**: For browsers without MediaSource support. Collects all
+ *    chunks into a Blob before playing. Higher latency but better compatibility.
+ *
+ * ### Cleanup Responsibilities
+ * - stop() handles all cleanup: cancels reader, aborts fetch, revokes blob URLs
+ * - Event listeners are removed before audio element cleanup
+ * - Blob URLs are revoked in onended/onerror handlers or delayed cleanup
+ *
+ * ### Error Handling
+ * - Rapid requests (<2s apart) suppress error callbacks to avoid noise
+ * - AbortError from fetch cancellation is silently ignored
+ * - Session cancellation causes graceful early returns (no errors)
+ * - Falls back to WebSpeech TTS on ElevenLabs failures
+ */
+
 // Define interfaces for our types
 export interface Voice {
   voice_id: string;
@@ -15,15 +51,33 @@ export interface VoiceSettings {
   similarity_boost: number;
 }
 
+/**
+ * Singleton TTS provider using ElevenLabs API with streaming support.
+ * Falls back to browser's WebSpeech API when ElevenLabs is unavailable.
+ */
 export class ElevenLabsTTS {
   private static instance: ElevenLabsTTS;
   private apiKey: string;
   private voices: Voice[] = [];
   private audio: HTMLAudioElement | null = null;
   private isSpeaking: boolean = false;
+
+  /**
+   * Session ID for cancellation tracking.
+   * Incremented on each speak() or stop() call. Async operations compare their
+   * captured session ID against this to determine if they should continue.
+   */
+  private currentSessionId: number = 0;
+
   private fallbackTTS: WebSpeechTTS;
   private abortController: AbortController | null = null;
+
+  /** Active stream reader, stored for cleanup on stop() */
+  private activeReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
+  /** Timestamp of last request, used for rapid-request detection */
   private lastRequestTime: number = 0;
+
   private callbacks: {
     onStart?: () => void;
     onEnd?: () => void;
@@ -104,10 +158,26 @@ export class ElevenLabsTTS {
     return this.voices.find(voice => voice.voice_id === voiceId);
   }
 
+  /**
+   * Speaks the given text using ElevenLabs TTS.
+   *
+   * This method:
+   * 1. Stops any ongoing speech (cancels previous session)
+   * 2. Creates a new session ID for cancellation tracking
+   * 3. Makes API request with abort controller
+   * 4. Plays audio via streaming (MediaSource) or buffered mode
+   *
+   * @param text - The text to speak
+   * @param options.voiceId - ElevenLabs voice ID (defaults to first available or Rachel)
+   * @param options.stability - Voice stability 0-1 (default 0.5)
+   * @param options.similarityBoost - Similarity boost 0-1 (default 0.5)
+   * @param options.streaming - Use streaming playback (default true)
+   */
   public async speak(text: string, options?: {
     voiceId?: string;
     stability?: number;
     similarityBoost?: number;
+    streaming?: boolean;
   }) {
     if (!this.apiKey) {
       console.warn('ElevenLabs API key not found, falling back to browser TTS');
@@ -117,6 +187,13 @@ export class ElevenLabsTTS {
 
     // Stop any ongoing speech and API requests
     this.stop();
+
+    // Increment session ID - all async operations will check against this
+    this.currentSessionId++;
+    const sessionId = this.currentSessionId;
+
+    // Helper to check if this session is still active
+    const isSessionActive = () => sessionId === this.currentSessionId;
 
     // Track request timing
     const currentTime = Date.now();
@@ -133,31 +210,22 @@ export class ElevenLabsTTS {
 
     // If no valid voice ID, use the first available voice or default to Rachel
     if (!voiceExists) {
-      if (this.voices.length > 0) {
-        voiceId = this.voices[0].voice_id;
-        console.log(`Using first available voice: ${voiceId} (${this.voices[0].name})`);
-      } else {
-        voiceId = '21m00Tcm4TlvDq8ikWAM'; // Default voice - Rachel
-        console.log(`Using default Rachel voice: ${voiceId}`);
-      }
-    } else {
-      console.log(`Using selected voice: ${voiceId}`);
+      voiceId = this.voices.length > 0
+        ? this.voices[0].voice_id
+        : '21m00Tcm4TlvDq8ikWAM'; // Default voice - Rachel
     }
 
     const stability = options?.stability ?? 0.5;
     const similarityBoost = options?.similarityBoost ?? 0.5;
-
-    console.log(`ElevenLabs TTS settings - Stability: ${stability}, Similarity Boost: ${similarityBoost}`);
+    const useStreaming = options?.streaming ?? true;
 
     try {
       this.callbacks.onStart?.();
       this.isSpeaking = true;
 
-      console.log('ElevenLabs speaking with voice ID:', voiceId);
-
-      // Check if request was aborted before making API call
-      if (this.abortController?.signal.aborted) {
-        console.log('Speech request was aborted before API call');
+      // Check if session was cancelled before making API call
+      if (!isSessionActive()) {
+        this.isSpeaking = false;
         return;
       }
 
@@ -172,13 +240,14 @@ export class ElevenLabsTTS {
           voiceId: voiceId,
           stability: stability,
           similarityBoost: similarityBoost,
+          streaming: useStreaming,
         }),
         signal: this.abortController.signal,
       });
 
-      // Check if request was aborted after API call
-      if (this.abortController?.signal.aborted) {
-        console.log('Speech request was aborted after API call');
+      // Check if session was cancelled
+      if (!isSessionActive()) {
+        this.isSpeaking = false;
         return;
       }
 
@@ -186,42 +255,24 @@ export class ElevenLabsTTS {
         throw new Error(`API request failed: ${response.statusText}`);
       }
 
-      // Get the audio data as a blob
-      const audioBlob = await response.blob();
-
-      // Final check before playing
-      if (this.abortController?.signal.aborted) {
-        console.log('Speech request was aborted before playback');
-        return;
+      if (useStreaming && response.body) {
+        // Streaming playback using MediaSource API
+        await this.playStreamingAudio(response.body, isSessionActive);
+      } else {
+        // Non-streaming fallback
+        await this.playBufferedAudio(response, isSessionActive);
       }
-
-      const audioUrl = URL.createObjectURL(audioBlob);
-      this.audio = new Audio(audioUrl);
-
-      this.audio.onended = () => {
-        this.isSpeaking = false;
-        this.callbacks.onEnd?.();
-        if (this.audio) {
-          URL.revokeObjectURL(this.audio.src);
-        }
-      };
-
-      this.audio.onerror = (event) => {
-        this.isSpeaking = false;
-        this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
-        if (this.audio) {
-          URL.revokeObjectURL(this.audio.src);
-        }
-      };
-
-      await this.audio.play();
     } catch (error) {
       this.isSpeaking = false;
 
-      // Don't log or fallback if the request was intentionally aborted
+      // Don't log or fallback if session was cancelled
+      if (!isSessionActive()) {
+        return;
+      }
+
+      // Also check for AbortError
       const err = error as Error & { name?: string };
-      if (err?.name === 'AbortError' || this.abortController?.signal.aborted) {
-        console.log('Speech request was cancelled');
+      if (err?.name === 'AbortError') {
         return;
       }
 
@@ -234,16 +285,254 @@ export class ElevenLabsTTS {
       // Only show error and fallback if this isn't a rapid request
       if (!isRapidRequest) {
         this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
-        // Fall back to browser TTS on error
         this.fallbackTTS.speak(text);
-      } else {
-        console.log('Skipping fallback due to rapid request');
       }
     }
   }
 
+  /**
+   * Plays audio from a streaming response body.
+   *
+   * Uses MediaSource API for real-time streaming when supported. Falls back to
+   * collecting all chunks into a Blob for browsers without MediaSource support.
+   *
+   * The isSessionActive callback is checked frequently to enable graceful
+   * cancellation when stop() is called or a new speak() starts.
+   *
+   * @param body - ReadableStream from fetch response
+   * @param isSessionActive - Callback that returns false if session was cancelled
+   */
+  private async playStreamingAudio(body: ReadableStream<Uint8Array>, isSessionActive: () => boolean) {
+    // Fallback for browsers without MediaSource support
+    if (!('MediaSource' in window) || !MediaSource.isTypeSupported('audio/mpeg')) {
+      // Collect all chunks and play as blob
+      const reader = body.getReader();
+      this.activeReader = reader;
+      const chunks: Uint8Array[] = [];
+
+      try {
+        while (true) {
+          if (!isSessionActive()) return;
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) chunks.push(value);
+        }
+      } catch (error) {
+        if (!isSessionActive()) return;
+        throw error;
+      }
+
+      if (!isSessionActive()) return;
+
+      const blob = new Blob(chunks as BlobPart[], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(blob);
+      this.audio = new Audio(audioUrl);
+
+      this.audio.onended = () => {
+        if (!isSessionActive()) return;
+        this.isSpeaking = false;
+        this.activeReader = null;
+        this.callbacks.onEnd?.();
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      this.audio.onerror = (event) => {
+        if (!isSessionActive()) return;
+        this.isSpeaking = false;
+        this.activeReader = null;
+        this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      await this.audio.play();
+      return;
+    }
+
+    // Use MediaSource for streaming playback
+    const mediaSource = new MediaSource();
+    const audioUrl = URL.createObjectURL(mediaSource);
+    this.audio = new Audio(audioUrl);
+
+    const reader = body.getReader();
+    this.activeReader = reader;
+    let sourceBuffer: SourceBuffer | null = null;
+    const pendingChunks: Uint8Array[] = [];
+    let isAppending = false;
+
+    const appendNextChunk = () => {
+      // Don't append if session is no longer active
+      if (!isSessionActive()) return;
+      if (!sourceBuffer || isAppending || pendingChunks.length === 0) return;
+      if (sourceBuffer.updating) return;
+      if (mediaSource.readyState !== 'open') return;
+
+      isAppending = true;
+      const chunk = pendingChunks.shift()!;
+
+      // Double-check session is still active
+      if (!isSessionActive() || mediaSource.readyState !== 'open') {
+        isAppending = false;
+        return;
+      }
+
+      try {
+        const buffer = chunk.slice().buffer;
+        sourceBuffer.appendBuffer(buffer);
+      } catch {
+        // Silently ignore errors - expected when session ends
+        isAppending = false;
+      }
+    };
+
+    mediaSource.addEventListener('sourceopen', async () => {
+      if (!isSessionActive()) return;
+
+      try {
+        sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+
+        sourceBuffer.addEventListener('updateend', () => {
+          isAppending = false;
+          if (isSessionActive()) {
+            appendNextChunk();
+          }
+        });
+
+        const readStream = async () => {
+          try {
+            while (true) {
+              if (!isSessionActive()) return;
+
+              const { done, value } = await reader.read();
+
+              if (done) {
+                // Wait for all pending chunks to be appended
+                const waitForBuffers = () => {
+                  if (!isSessionActive()) return;
+                  if (pendingChunks.length === 0 && !isAppending && sourceBuffer && !sourceBuffer.updating) {
+                    if (mediaSource.readyState === 'open') {
+                      try {
+                        mediaSource.endOfStream();
+                      } catch {
+                        // Ignore - MediaSource may be closed
+                      }
+                    }
+                  } else {
+                    setTimeout(waitForBuffers, 50);
+                  }
+                };
+                waitForBuffers();
+                break;
+              }
+
+              if (value && isSessionActive()) {
+                pendingChunks.push(value);
+                appendNextChunk();
+              }
+            }
+          } catch (error) {
+            if (!isSessionActive()) return;
+            console.error('Error reading stream:', error);
+          }
+        };
+
+        readStream();
+
+        // Start playback
+        if (isSessionActive() && this.audio) {
+          this.audio.play().catch(e => {
+            if (isSessionActive()) {
+              console.error('Error starting playback:', e);
+            }
+          });
+        }
+
+      } catch (e) {
+        if (!isSessionActive()) return;
+        console.error('Error setting up MediaSource:', e);
+        this.callbacks.onError?.(e instanceof Error ? e : new Error(String(e)));
+      }
+    });
+
+    this.audio.onended = () => {
+      if (!isSessionActive()) return;
+      this.isSpeaking = false;
+      this.activeReader = null;
+      this.callbacks.onEnd?.();
+      URL.revokeObjectURL(audioUrl);
+    };
+
+    this.audio.onerror = (event) => {
+      this.isSpeaking = false;
+      this.activeReader = null;
+      this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+      URL.revokeObjectURL(audioUrl);
+    };
+  }
+
+  private async playBufferedAudio(response: Response, isSessionActive: () => boolean) {
+    // Get the audio data as a blob
+    let audioBlob: Blob;
+    try {
+      audioBlob = await response.blob();
+    } catch (error) {
+      if (!isSessionActive()) return;
+      throw error;
+    }
+
+    if (!isSessionActive()) return;
+
+    const audioUrl = URL.createObjectURL(audioBlob);
+    this.audio = new Audio(audioUrl);
+
+    this.audio.onended = () => {
+      if (!isSessionActive()) return;
+      this.isSpeaking = false;
+      this.callbacks.onEnd?.();
+      if (this.audio) {
+        URL.revokeObjectURL(this.audio.src);
+      }
+    };
+
+    this.audio.onerror = (event) => {
+      if (!isSessionActive()) return;
+      this.isSpeaking = false;
+      this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+      if (this.audio) {
+        URL.revokeObjectURL(this.audio.src);
+      }
+    };
+
+    await this.audio.play();
+  }
+
+  /**
+   * Stops any ongoing speech and cleans up resources.
+   *
+   * This method:
+   * 1. Increments session ID (invalidates all running async operations)
+   * 2. Cancels active stream reader
+   * 3. Aborts pending fetch request
+   * 4. Pauses and cleans up audio element
+   * 5. Revokes blob URLs to prevent memory leaks
+   * 6. Calls onEnd callback if was speaking
+   *
+   * All async operations check isSessionActive() and will exit gracefully
+   * when they detect the session ID has changed.
+   */
   public stop() {
-    // Abort any ongoing API requests
+    // Increment session ID - this invalidates all running async operations
+    // They will check isSessionActive() and exit gracefully
+    this.currentSessionId++;
+
+    // Cancel the active reader if it exists to properly clean up the stream
+    if (this.activeReader) {
+      this.activeReader.cancel().catch(() => {
+        // Ignore errors during cancel - stream may already be closed
+      });
+      this.activeReader = null;
+    }
+
+    // Abort any pending fetch request
     if (this.abortController) {
       this.abortController.abort();
       this.abortController = null;
@@ -254,23 +543,31 @@ export class ElevenLabsTTS {
       this.audio.onended = null;
       this.audio.onerror = null;
 
+      // Pause playback
       this.audio.pause();
-      this.audio.currentTime = 0;
 
-      // Ensure the audio source is properly cleaned up
-      const audioSrc = this.audio.src;
-      this.audio.src = '';
-
-      // Clean up the blob URL
-      if (audioSrc && audioSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(audioSrc);
-      }
+      // Delay cleanup to let async operations notice the session change
+      const audioToClean = this.audio;
+      setTimeout(() => {
+        if (audioToClean) {
+          const audioSrc = audioToClean.src;
+          audioToClean.src = '';
+          if (audioSrc && audioSrc.startsWith('blob:')) {
+            URL.revokeObjectURL(audioSrc);
+          }
+        }
+      }, 100);
 
       this.audio = null;
     }
 
+    const wasSpeaking = this.isSpeaking;
     this.isSpeaking = false;
-    // Don't call onEnd callback here as this is a manual stop
+
+    // Call onEnd callback to update UI state
+    if (wasSpeaking) {
+      this.callbacks.onEnd?.();
+    }
   }
 
   public pause() {

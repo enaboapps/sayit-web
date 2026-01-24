@@ -1,17 +1,28 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { generateText as aiGenerateText } from 'ai';
 
-if (!process.env.OPENROUTER_API_KEY) {
-  throw new Error('OPENROUTER_API_KEY is not set in environment variables');
-}
-
-const openrouter = createOpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
-
 // Model configuration (easy to change)
 const MODEL = 'google/gemini-2.5-flash';
+
+// Lazy-initialized client to avoid build-time env var requirement
+let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
+
+/**
+ * Get the OpenRouter client, creating it lazily on first use.
+ * Throws an error if OPENROUTER_API_KEY is not set.
+ */
+function getOpenRouterClient() {
+  if (!openrouterClient) {
+    if (!process.env.OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY is not set in environment variables');
+    }
+    openrouterClient = createOpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: process.env.OPENROUTER_API_KEY,
+    });
+  }
+  return openrouterClient;
+}
 
 const sharedGuidelines = `
 Guidelines:
@@ -220,6 +231,7 @@ export async function generate(
   options?: GenerationOptions
 ): Promise<Record<string, unknown>> {
   try {
+    const openrouter = getOpenRouterClient();
     const { text } = await aiGenerateText({
       model: openrouter(MODEL),
       system: systemPrompts[type],

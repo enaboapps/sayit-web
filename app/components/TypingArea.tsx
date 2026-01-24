@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +18,7 @@ interface TypingAreaProps {
   text?: string  // External text to sync with active tab
   tts: {
     speak: (text: string) => void;
+    stop: () => void;
     isSpeaking: boolean;
     isAvailable: boolean;
   }
@@ -33,7 +34,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
-  const { speak, isSpeaking, isAvailable } = tts;
+  const { speak, stop, isSpeaking, isAvailable } = tts;
   const typingShare = useTypingShare();
   const shareableLink = typingShare.getShareableLink();
   const isVisible = uiPreferences.typingAreaVisible;
@@ -47,6 +48,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     createTab,
     switchTab,
     closeTab,
+    closeAllTabs,
     renameTab,
     updateActiveTabText,
     switchToTabByIndex,
@@ -96,10 +98,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [createTab, closeTab, activeTabId, switchToTabByIndex, switchToPreviousTab, switchToNextTab]);
 
-  useEffect(() => {
-    console.log('Current text size:', settings.textSize);
-  }, [settings.textSize]);
-
   const textSizeClasses = {
     small: 'text-sm',
     medium: 'text-lg',
@@ -108,7 +106,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   };
 
   const currentTextSizeClass = textSizeClasses[settings.textSize];
-  console.log('Applied text size class:', currentTextSizeClass);
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -139,7 +136,9 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   };
 
   const handleSpeak = () => {
-    if (text.trim()) {
+    if (isSpeaking) {
+      stop();
+    } else if (text.trim()) {
       speak(text);
       textareaRef.current?.focus();
     }
@@ -218,7 +217,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
-              className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl`}
+              className={`w-full bg-transparent text-foreground ${currentTextSizeClass} placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl`}
               value={text}
               onChange={(e) => {
                 updateActiveTabText(e.target.value);
@@ -257,30 +256,39 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
               }}
             />
             {error && (
-              <div className="absolute bottom-0 left-0 right-0 bg-red-500/10 text-red-400 p-4 text-sm rounded-b-3xl backdrop-blur-sm transition-all duration-200">
+              <div className="absolute bottom-0 left-0 right-0 bg-status-error text-red-400 p-4 text-sm rounded-b-3xl  transition-all duration-200">
                 {error}
               </div>
             )}
           </div>
           {text.trim() && (
-            <div className="flex flex-wrap gap-2 p-4 bg-surface-hover/50 transition-colors duration-200">
+            <div className="flex flex-wrap gap-2 p-4 bg-surface-hover transition-colors duration-200">
               <button
                 onClick={handleSpeak}
                 className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                   isSpeaking
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                    : 'bg-surface hover:bg-primary-500/10 text-foreground hover:text-primary-500'
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                    : 'bg-surface hover:bg-surface-hover text-foreground hover:text-primary-500'
                 }`}
                 data-tooltip-id="speak-tooltip"
                 data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
-                disabled={!isAvailable || !text.trim()}
+                disabled={!isAvailable || (!isSpeaking && !text.trim())}
               >
-                <ChatBubbleLeftIcon className="w-5 h-5" />
-                <span>Speak</span>
+                {isSpeaking ? (
+                  <>
+                    <StopIcon className="w-5 h-5" />
+                    <span>Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <SpeakerWaveIcon className="w-5 h-5" />
+                    <span>Speak</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleFleshOut}
-                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-purple-500/10 text-foreground hover:text-purple-500"
+                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-purple text-foreground hover:text-purple-500"
                 data-tooltip-id="flesh-out-tooltip"
                 data-tooltip-content="Flesh out with AI"
                 disabled={!text.trim()}
@@ -292,7 +300,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 fallback={
                   <button
                     onClick={() => window.location.href = '/pricing'}
-                    className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-amber-500/10 text-foreground hover:text-amber-500"
+                    className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-warning text-foreground hover:text-amber-500"
                     data-tooltip-id="fix-text-tooltip"
                     data-tooltip-content="Fix Text (Pro feature)"
                   >
@@ -306,7 +314,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                   className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                     isFixingText
                       ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                      : 'bg-surface hover:bg-purple-500/10 text-foreground hover:text-purple-500'
+                      : 'bg-surface hover:bg-status-purple text-foreground hover:text-purple-500'
                   }`}
                   data-tooltip-id="fix-text-tooltip"
                   data-tooltip-content="Fix grammar and spelling"
@@ -327,7 +335,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
               </SubscriptionWrapper>
               <button
                 onClick={handleClear}
-                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-red-500/10 text-foreground hover:text-red-500"
+                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-error text-foreground hover:text-red-500"
                 data-tooltip-id="clear-tooltip"
                 data-tooltip-content="Clear"
               >
@@ -337,13 +345,13 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
             </div>
           )}
           {user && (
-            <div className="p-4 pt-0 bg-surface-hover/50 transition-colors duration-200">
+            <div className="p-4 pt-0 bg-surface-hover transition-colors duration-200">
               <button
                 onClick={handleShare}
                 className={`w-full h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                   typingShare.isSharing
                     ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                    : 'bg-surface hover:bg-green-500/10 text-foreground hover:text-green-500'
+                    : 'bg-surface hover:bg-status-success text-foreground hover:text-green-500'
                 }`}
                 data-tooltip-id="share-tooltip"
                 data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
@@ -428,6 +436,10 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           activeTabId={activeTabId}
           onSwitchTab={switchTab}
           onCloseTab={closeTab}
+          onCloseAllTabs={() => {
+            closeAllTabs();
+            onChange?.('');
+          }}
           onRenameTab={renameTab}
         />
       )}

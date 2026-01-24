@@ -13,7 +13,7 @@ export default function OfflinePage() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background">
       <div className="bg-surface rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
         <div className="mb-6">
-          <div className="mx-auto w-20 h-20 bg-primary-500/10 rounded-3xl flex items-center justify-center">
+          <div className="mx-auto w-20 h-20 bg-surface-hover rounded-3xl flex items-center justify-center">
             <ArrowPathIcon className="w-10 h-10 text-primary-500" />
           </div>
         </div>

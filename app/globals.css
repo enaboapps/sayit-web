@@ -8,6 +8,9 @@
   --surface-hover: #2e2e2e;
   --border: #3a3a3a;
 
+  /* Mobile bottom stack height (nav + dock + safe area) */
+  --bottom-stack-height: calc(126px + env(safe-area-inset-bottom, 0px));
+
   /* Text colors with WCAG AAA compliance */
   --text-primary: #f5f5f5;
   --text-secondary: #b8b8b8;
@@ -56,4 +59,118 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
+
+  /* Safe area padding for notched devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Safe area margins */
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mt-safe {
+    margin-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Combined safe area insets */
+  .safe-area-inset-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  }
+  .safe-area-inset-top {
+    padding-top: max(env(safe-area-inset-top, 0px), 20px);
+  }
+
+  /* Position above the mobile bottom stack (dock + nav) */
+  .bottom-above-stack {
+    bottom: calc(var(--bottom-stack-height) + 16px);
+  }
+
+  /* Dynamic viewport height utilities */
+  .h-dvh {
+    height: 100dvh;
+  }
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+  .max-h-dvh {
+    max-height: 100dvh;
+  }
+
+  /* Touch-friendly tap targets (minimum 44x44px) */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .touch-target-lg {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  /* Mobile-first spacing helpers */
+  .p-mobile {
+    padding: 16px;
+  }
+  @media (min-width: 768px) {
+    .p-mobile {
+      padding: 24px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .p-mobile {
+      padding: 32px;
+    }
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #666666;
+    --text-secondary: #d0d0d0;
+    --text-tertiary: #a0a0a0;
+  }
+}
+
+/* Focus visible styles for better keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Skip link for screen readers */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--surface);
+  color: var(--foreground);
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
 }

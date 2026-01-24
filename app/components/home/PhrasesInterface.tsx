@@ -2,18 +2,21 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
-import PhrasesActionMenu from '../phrases/PhrasesActionMenu';
-import ReaderPopup from '../phrases/ReaderPopup';
 import BoardSelector from '../phrases/BoardSelector';
+import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
+import BoardGridPopup from '../phrases/BoardGridPopup';
 import TypingArea from '../TypingArea';
+import TypingDock from '../TypingDock';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect } from 'react';
+import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 export default function PhrasesInterface() {
   const router = useRouter();
@@ -22,8 +25,9 @@ export default function PhrasesInterface() {
   const { uiPreferences, updateUIPreference } = useSettings();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const selectedBoardId = uiPreferences.selectedBoardId;
+  const isMobile = useIsMobile();
 
   const shouldLoadBoards = !authLoading && !!user;
   const showAuthPrompt = !authLoading && !user;
@@ -127,18 +131,6 @@ export default function PhrasesInterface() {
     router.push('/phrases/boards/add');
   };
 
-  const handleReader = () => {
-    setIsReaderOpen(true);
-  };
-
-  const handleCloseReader = () => {
-    setIsReaderOpen(false);
-  };
-
-  const handleSpeakInReader = (text: string) => {
-    tts.speak(text);
-  };
-
   const handleSelectBoard = (board: BoardSummary | string) => {
     const boardId = typeof board === 'string' ? board : board.id;
     updateUIPreference('selectedBoardId', boardId);
@@ -175,19 +167,39 @@ export default function PhrasesInterface() {
 
   const selectedBoard = transformedBoards.find(board => board.id === selectedBoardId) || null;
 
+  // Get current board index for swipeable navigator
+  const currentBoardIndex = transformedBoards.findIndex(board => board.id === selectedBoardId);
+  const validBoardIndex = currentBoardIndex >= 0 ? currentBoardIndex : 0;
+
+  // Handle board index change for swipeable navigation
+  const handleBoardIndexChange = (index: number) => {
+    if (transformedBoards[index]) {
+      updateUIPreference('selectedBoardId', transformedBoards[index].id);
+    }
+  };
+
   // Check if current board allows editing
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
+  const handleSpeak = () => {
+    if (typingText.trim()) {
+      tts.speak(typingText);
+    }
+  };
+
   return (
     <>
-      <div className="flex-none">
-        <TypingArea
-          initialText={typingText}
-          text={typingText}
-          tts={tts}
-          onChange={(text) => setTypingText(text)}
-        />
-      </div>
+      {/* Desktop: TypingArea at top */}
+      {!isMobile && (
+        <div className="flex-none">
+          <TypingArea
+            initialText={typingText}
+            text={typingText}
+            tts={tts}
+            onChange={(text) => setTypingText(text)}
+          />
+        </div>
+      )}
       {showAuthPrompt ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -208,66 +220,131 @@ export default function PhrasesInterface() {
         </div>
       ) : (
         <div className="flex-1 flex flex-col">
-          <div className="flex-none">
-            <BoardSelector
+          {/* Mobile: Swipeable Board Navigator */}
+          {isMobile ? (
+            <SwipeableBoardNavigator
               boards={transformedBoards}
-              selectedBoard={selectedBoard}
+              currentBoardIndex={validBoardIndex}
+              onBoardChange={handleBoardIndexChange}
+              onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
+              onAddBoard={handleAddBoard}
+              onAddPhrase={handleAddPhrase}
+              onEdit={handleEdit}
               isEditMode={isEditMode}
-              onSelectBoard={handleSelectBoard}
-              onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
-            />
-          </div>
-
-          <div className="flex-1 p-1 overflow-auto">
-            {!loading && (
-              <div className="flex flex-col h-full">
-                <div className="flex-1 p-1 overflow-auto">
-                  <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-1 h-full">
-                    {phrases.map((phrase) => (
-                      <PhraseTile
-                        key={phrase.id}
-                        phrase={phrase}
-                        onPress={() => handlePhrasePress(phrase)}
-                        onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                        className="sm:aspect-square"
-                      />
-                    ))}
-                    {typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
-                      <ActionTile
-                        text="+ Add as Phrase"
-                        onClick={handleAddTypingAsPhrase}
-                        className="sm:aspect-square"
-                      />
-                    )}
-                    {isEditMode && canEditCurrentBoard && (
-                      <ActionTile
-                        text="+ Add Phrase"
-                        onClick={handleAddPhrase}
-                        className="sm:aspect-square"
-                      />
-                    )}
-                  </div>
+              canEditBoard={canEditCurrentBoard}
+              hasPhrases={phrases.length > 0}
+            >
+              <div className="p-2 pb-32 overflow-auto">
+                <div className="grid grid-cols-2 gap-2">
+                  {phrases.map((phrase) => (
+                    <PhraseTile
+                      key={phrase.id}
+                      phrase={phrase}
+                      onPress={() => handlePhrasePress(phrase)}
+                      onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+                      onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+                      className="aspect-square"
+                    />
+                  ))}
+                  {typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
+                    <ActionTile
+                      text="+ Add as Phrase"
+                      onClick={handleAddTypingAsPhrase}
+                      className="aspect-square"
+                    />
+                  )}
+                  {isEditMode && canEditCurrentBoard && (
+                    <ActionTile
+                      text="+ Add Phrase"
+                      onClick={handleAddPhrase}
+                      className="aspect-square"
+                    />
+                  )}
                 </div>
               </div>
-            )}
-          </div>
+            </SwipeableBoardNavigator>
+          ) : (
+            /* Desktop: Traditional Board Selector */
+            <>
+              <div className="flex-none">
+                <BoardSelector
+                  boards={transformedBoards}
+                  selectedBoard={selectedBoard}
+                  isEditMode={isEditMode}
+                  onSelectBoard={handleSelectBoard}
+                  onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
+                  onAddBoard={handleAddBoard}
+                  onAddPhrase={handleAddPhrase}
+                  onEdit={handleEdit}
+                  hasPhrases={phrases.length > 0}
+                />
+              </div>
+
+              <div className="flex-1 p-1 overflow-auto">
+                {!loading && (
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 p-1 overflow-auto">
+                      <div className="grid grid-cols-2 gap-2 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {phrases.map((phrase) => (
+                          <PhraseTile
+                            key={phrase.id}
+                            phrase={phrase}
+                            onPress={() => handlePhrasePress(phrase)}
+                            onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+                            onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+                            className="aspect-square"
+                          />
+                        ))}
+                        {typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
+                          <ActionTile
+                            text="+ Add as Phrase"
+                            onClick={handleAddTypingAsPhrase}
+                            className="aspect-square"
+                          />
+                        )}
+                        {isEditMode && canEditCurrentBoard && (
+                          <ActionTile
+                            text="+ Add Phrase"
+                            onClick={handleAddPhrase}
+                            className="aspect-square"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
-      <PhrasesActionMenu
-        onAddPhrase={handleAddPhrase}
-        onAddBoard={handleAddBoard}
-        onEdit={handleEdit}
-        onReader={handleReader}
-        boardPresent={transformedBoards.length > 0}
+      {/* Mobile: Board picker popup */}
+      <BoardGridPopup
+        boards={transformedBoards}
+        selectedBoard={selectedBoard}
         isEditMode={isEditMode}
-        canEditBoard={canEditCurrentBoard}
+        isOpen={isBoardPickerOpen}
+        onClose={() => setIsBoardPickerOpen(false)}
+        onSelectBoard={handleSelectBoard}
+        onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
       />
-      <ReaderPopup
-        phrases={phrases}
-        isOpen={isReaderOpen}
-        onClose={handleCloseReader}
-        onSpeak={handleSpeakInReader}
-      />
+      {/* Mobile: TypingDock portaled into bottom stack */}
+      {isMobile && (
+        <MobileDockPortal>
+          <TypingDock
+            text={typingText}
+            onChange={setTypingText}
+            onSpeak={handleSpeak}
+            onStop={tts.stop}
+            isSpeaking={tts.isSpeaking}
+            isAvailable={tts.isAvailable}
+            enableTabs={true}
+            enableShare={!!user}
+            enableFleshOut={true}
+            enableFixText={true}
+          />
+        </MobileDockPortal>
+      )}
     </>
   );
 }

@@ -125,7 +125,7 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
           />
 
           {error && (
-            <div className="mt-4 text-red-500 text-sm bg-red-500/10 px-4 py-3 rounded-3xl">
+            <div className="mt-4 text-red-500 text-sm bg-status-error px-4 py-3 rounded-3xl">
               {error}
             </div>
           )}

@@ -20,7 +20,7 @@ export function SettingsCard({
       <div className="px-8 py-6">
         <div className="flex items-center space-x-4 mb-6">
           {icon && (
-            <div className="flex-shrink-0 text-primary-500 bg-primary-500/10 p-3 rounded-3xl">
+            <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
               {icon}
             </div>
           )}

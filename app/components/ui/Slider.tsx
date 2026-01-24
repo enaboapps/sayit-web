@@ -171,7 +171,7 @@ export function Slider({
     <div className={className}>
       {label && (
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700 text-text-secondary">
+          <label className="block text-sm font-medium text-foreground">
             {label}
           </label>
           <span className={cn(

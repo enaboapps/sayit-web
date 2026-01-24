@@ -39,12 +39,12 @@ export default function RoleChangeModal({ currentRole, onClose, onSuccess }: Rol
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-      <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full p-6">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
+      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6" style={{ backgroundColor: '#242424' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-500/20 rounded-full">
+            <div className="p-2 bg-status-error rounded-full">
               <ExclamationTriangleIcon className="w-6 h-6 text-red-500" />
             </div>
             <h2 className="text-xl font-bold text-foreground">Change Role</h2>
@@ -58,7 +58,7 @@ export default function RoleChangeModal({ currentRole, onClose, onSuccess }: Rol
         </div>
 
         {/* Warning */}
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6">
+        <div className="bg-status-error border border-red-900 rounded-xl p-4 mb-6">
           <p className="text-red-400 font-medium mb-2">Warning: This action cannot be undone</p>
           <div className="text-text-secondary text-sm">
             {currentRole === 'caregiver' ? (
@@ -95,7 +95,7 @@ export default function RoleChangeModal({ currentRole, onClose, onSuccess }: Rol
             value={confirmationInput}
             onChange={(e) => setConfirmationInput(e.target.value.toUpperCase())}
             placeholder={CONFIRMATION_PHRASE}
-            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500"
+            className="w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             autoComplete="off"
             spellCheck={false}
           />
