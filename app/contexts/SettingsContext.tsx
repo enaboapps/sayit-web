@@ -67,6 +67,20 @@ const defaultUIPreferences: UIPreferences = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+// Helper to convert textSize from old enum to number
+function normalizeTextSize(value: number | string): number {
+  if (typeof value === 'number') {
+    return value;
+  }
+  const enumMap: Record<string, number> = {
+    small: 12,
+    medium: 16,
+    large: 24,
+    xlarge: 32,
+  };
+  return enumMap[value] ?? 16;
+}
+
 // Helper function to load settings from localStorage
 function loadFromLocalStorage(): AllSettings {
   if (typeof window === 'undefined') {
@@ -75,9 +89,14 @@ function loadFromLocalStorage(): AllSettings {
 
   // Load main settings
   const savedSettings = localStorage.getItem('settings');
-  const settings = savedSettings
-    ? { ...defaultSettings, ...JSON.parse(savedSettings) }
-    : defaultSettings;
+  const parsedSettings = savedSettings ? JSON.parse(savedSettings) : {};
+
+  // Normalize textSize from old enum format if needed
+  if (parsedSettings.textSize !== undefined) {
+    parsedSettings.textSize = normalizeTextSize(parsedSettings.textSize);
+  }
+
+  const settings = { ...defaultSettings, ...parsedSettings };
 
   // Load UI preferences from various localStorage keys
   const typingAreaVisible = localStorage.getItem('typingAreaVisible');
@@ -219,7 +238,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } else if (convexSettings) {
       // Settings exist in Convex - update from server
       const serverSettings: AllSettings = {
-        textSize: convexSettings.textSize,
+        textSize: normalizeTextSize(convexSettings.textSize),
         speechRate: convexSettings.speechRate,
         speechPitch: convexSettings.speechPitch,
         speechVolume: convexSettings.speechVolume,
