@@ -431,9 +431,19 @@ export class ElevenLabsTTS {
     // They will check isSessionActive() and exit gracefully
     this.currentSessionId++;
 
-    // Clear references
-    this.activeReader = null;
-    this.abortController = null;
+    // Cancel the active reader if it exists to properly clean up the stream
+    if (this.activeReader) {
+      this.activeReader.cancel().catch(() => {
+        // Ignore errors during cancel - stream may already be closed
+      });
+      this.activeReader = null;
+    }
+
+    // Abort any pending fetch request
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
 
     if (this.audio) {
       // Remove event listeners to prevent callbacks after stopping
