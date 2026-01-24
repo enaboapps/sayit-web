@@ -15,7 +15,6 @@ interface SwipeableBoardNavigatorProps {
   // Action button props
   onAddBoard?: () => void;
   onAddPhrase?: () => void;
-  onReader?: () => void;
   onEdit?: () => void;
   isEditMode?: boolean;
   canEditBoard?: boolean;
@@ -30,7 +29,6 @@ export default function SwipeableBoardNavigator({
   children,
   onAddBoard,
   onAddPhrase,
-  onReader,
   onEdit,
   isEditMode = false,
   canEditBoard = true,
@@ -139,11 +137,9 @@ export default function SwipeableBoardNavigator({
       <BoardActionButtons
         onAddBoard={onAddBoard}
         onAddPhrase={onAddPhrase}
-        onReader={onReader}
         onEdit={onEdit}
         isEditMode={isEditMode}
         canEditBoard={canEditBoard}
-        hasPhrases={hasPhrases}
       />
 
       {/* Dot Indicators */}

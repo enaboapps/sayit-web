@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import {
   PlusIcon,
-  BookOpenIcon,
   PencilIcon,
   CheckIcon,
   Squares2X2Icon,
@@ -13,21 +12,17 @@ import {
 interface BoardActionButtonsProps {
   onAddBoard?: () => void;
   onAddPhrase?: () => void;
-  onReader?: () => void;
   onEdit?: () => void;
   isEditMode?: boolean;
   canEditBoard?: boolean;
-  hasPhrases?: boolean;
 }
 
 export default function BoardActionButtons({
   onAddBoard,
   onAddPhrase,
-  onReader,
   onEdit,
   isEditMode = false,
   canEditBoard = true,
-  hasPhrases = false,
 }: BoardActionButtonsProps) {
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
@@ -50,10 +45,9 @@ export default function BoardActionButtons({
   }, [isAddMenuOpen]);
 
   const showAddButton = onAddBoard || (onAddPhrase && canEditBoard);
-  const showReaderButton = hasPhrases && onReader;
   const showEditButton = canEditBoard && onEdit;
 
-  if (!showAddButton && !showReaderButton && !showEditButton) {
+  if (!showAddButton && !showEditButton) {
     return null;
   }
 
@@ -106,18 +100,6 @@ export default function BoardActionButtons({
             </div>
           )}
         </div>
-      )}
-
-      {/* Reader - only if board has phrases */}
-      {showReaderButton && (
-        <button
-          onClick={onReader}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-surface-hover text-text-secondary text-sm"
-          aria-label="Open reader"
-        >
-          <BookOpenIcon className="w-4 h-4" />
-          <span>Reader</span>
-        </button>
       )}
 
       {/* Edit/Done - only if can edit */}
