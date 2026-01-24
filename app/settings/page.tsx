@@ -3,6 +3,7 @@
 import { useSettings } from '../contexts/SettingsContext';
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { version } from '../../package.json';
 import {
   Cog6ToothIcon,
   SpeakerWaveIcon,
@@ -232,7 +233,7 @@ export default function SettingsPage() {
           <div className="p-4 space-y-4">
             <div className="bg-surface-hover rounded-2xl p-4">
               <h3 className="font-semibold text-foreground">SayIt!</h3>
-              <p className="text-sm text-text-secondary mt-1">Version 1.21.0</p>
+              <p className="text-sm text-text-secondary mt-1">Version {version}</p>
             </div>
 
             <a
