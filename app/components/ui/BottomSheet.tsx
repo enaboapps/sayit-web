@@ -180,7 +180,7 @@ export default function BottomSheet({
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 bg-overlay z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -219,8 +219,11 @@ export default function BottomSheet({
           >
             {/* Drag Handle */}
             {showHandle && (
-              <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
+              <div className="flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
                 <div className="w-10 h-1 bg-border rounded-full" />
+                {closeOnBackdropClick && (
+                  <span className="text-xs text-text-tertiary mt-1.5">Tap outside to close</span>
+                )}
               </div>
             )}
 
