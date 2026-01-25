@@ -55,6 +55,7 @@ jest.mock('@/lib/hooks/useTypingShare', () => ({
 
 const mockTTS = {
   speak: jest.fn(),
+  stop: jest.fn(),
   isSpeaking: false,
   isAvailable: true,
 };
@@ -264,7 +265,6 @@ describe('TypingArea', () => {
       render(<TypingArea text="Some text" tts={mockTTS} />);
 
       expect(screen.getByText('Speak')).toBeInTheDocument();
-      expect(screen.getByText('Flesh Out')).toBeInTheDocument();
       expect(screen.getByText('Clear')).toBeInTheDocument();
     });
 
@@ -272,7 +272,6 @@ describe('TypingArea', () => {
       render(<TypingArea text="" tts={mockTTS} />);
 
       expect(screen.queryByText('Speak')).not.toBeInTheDocument();
-      expect(screen.queryByText('Flesh Out')).not.toBeInTheDocument();
       expect(screen.queryByText('Clear')).not.toBeInTheDocument();
     });
   });

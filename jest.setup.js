@@ -43,7 +43,7 @@ jest.mock('@clerk/nextjs', () => ({
   }),
   ClerkProvider: ({ children }) => children,
   SignedIn: ({ children }) => children,
-  SignedOut: ({ children }) => null,
+  SignedOut: () => null,
 }));
 
 // Mock convex/react

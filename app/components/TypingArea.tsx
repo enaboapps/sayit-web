@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,8 +33,15 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
   const { speak, stop, isSpeaking, isAvailable } = tts;
-  const typingShare = useTypingShare();
-  const shareableLink = typingShare.getShareableLink();
+  const {
+    isSharing,
+    isCreating,
+    updateContent,
+    createSession,
+    endSession,
+    getShareableLink,
+  } = useTypingShare();
+  const shareableLink = getShareableLink();
   const isVisible = uiPreferences.typingAreaVisible;
   const isExpanded = uiPreferences.typingAreaExpanded;
 
@@ -61,7 +68,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     if (externalText !== undefined && externalText !== activeTab.text) {
       updateActiveTabText(externalText);
     }
-  }, [externalText, updateActiveTabText]);
+  }, [externalText, activeTab.text, updateActiveTabText]);
 
   // Keyboard shortcuts for tabs
   useEffect(() => {
@@ -101,21 +108,21 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
 
   // Update shared session content when text changes
   useEffect(() => {
-    if (typingShare.isSharing) {
-      typingShare.updateContent(text);
+    if (isSharing) {
+      updateContent(text);
     }
-  }, [text, typingShare.isSharing, typingShare.updateContent]);
+  }, [text, isSharing, updateContent]);
 
   const handleShare = async () => {
-    if (typingShare.isSharing) {
+    if (isSharing) {
       setShowShareModal(true);
       return;
     }
 
-    await typingShare.createSession();
+    await createSession();
 
-    if (typingShare.isSharing) {
-      typingShare.updateContent(text);
+    if (isSharing) {
+      updateContent(text);
       setShowShareModal(true);
     }
   };
@@ -320,15 +327,15 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
               <button
                 onClick={handleShare}
                 className={`w-full h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
-                  typingShare.isSharing
+                  isSharing
                     ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                     : 'bg-surface hover:bg-status-success text-foreground hover:text-green-500'
                 }`}
                 data-tooltip-id="share-tooltip"
-                data-tooltip-content={typingShare.isSharing ? 'View share link' : 'Share your typing'}
-                disabled={typingShare.isCreating}
+                data-tooltip-content={isSharing ? 'View share link' : 'Share your typing'}
+                disabled={isCreating}
               >
-                {typingShare.isCreating ? (
+                {isCreating ? (
                   <>
                     <ArrowPathIcon className="w-5 h-5 animate-spin" />
                     <span>Creating...</span>
@@ -336,7 +343,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 ) : (
                   <>
                     <ShareIcon className="w-5 h-5" />
-                    <span>{typingShare.isSharing ? 'Sharing Active' : 'Share'}</span>
+                    <span>{isSharing ? 'Sharing Active' : 'Share'}</span>
                   </>
                 )}
               </button>
@@ -388,7 +395,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           shareableLink={shareableLink}
           onClose={() => setShowShareModal(false)}
           onEndSession={async () => {
-            await typingShare.endSession();
+            await endSession();
             setShowShareModal(false);
           }}
         />

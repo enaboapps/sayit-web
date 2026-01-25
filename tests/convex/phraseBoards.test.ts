@@ -548,10 +548,6 @@ describe('phraseBoards', () => {
         _id: 'board-1',
         forClientId: 'client-1',
       });
-      const client2Board = createBoard({
-        _id: 'board-2',
-        forClientId: 'client-2',
-      });
 
       mockCtx.auth.getUserIdentity.mockResolvedValue({
         subject: 'caregiver-1',

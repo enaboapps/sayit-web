@@ -15,7 +15,6 @@ interface BoardSelectorProps {
   onAddBoard?: () => void;
   onAddPhrase?: () => void;
   onEdit?: () => void;
-  hasPhrases?: boolean;
 }
 
 export default function BoardSelector({
@@ -27,7 +26,6 @@ export default function BoardSelector({
   onAddBoard,
   onAddPhrase,
   onEdit,
-  hasPhrases = false,
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 

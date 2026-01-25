@@ -3,7 +3,7 @@ import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { useAuth } from '@/app/contexts/AuthContext';
-import { TypingTab, TypingTabsState } from '@/app/types/typing-tabs';
+import { TypingTabsState } from '@/app/types/typing-tabs';
 import { createDefaultTab, validateTabLabel, generateLabelFromText } from './utils';
 
 const STORAGE_KEY = 'typingTabs';
@@ -116,7 +116,7 @@ export function useTypingTabs(initialText?: string) {
       activeTabId: newTab.id,
       nextTabNumber: prev.nextTabNumber + 1,
     }));
-  }, [tabsState.tabs.length, tabsState.nextTabNumber]);
+  }, [tabsState.nextTabNumber]);
 
   // Switch to a different tab
   const switchTab = useCallback((tabId: string) => {

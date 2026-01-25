@@ -100,9 +100,6 @@ export default function SettingsPage() {
     { value: 'speakAndClear' as EnterKeyBehavior, label: 'Speak & Clear' },
   ];
 
-  const getLabel = <T extends string>(options: { value: T; label: string }[], value: T) =>
-    options.find(o => o.value === value)?.label ?? value;
-
   // Mobile layout with categories
   if (isMobile) {
     return (

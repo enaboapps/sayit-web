@@ -14,8 +14,7 @@ import {
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
   UsersIcon,
-  LockClosedIcon,
-  ChevronRightIcon
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { UserButton } from '@clerk/nextjs';

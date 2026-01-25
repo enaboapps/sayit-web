@@ -2,24 +2,6 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getUserIdentity } from './users';
 
-// Default settings that match SettingsContext defaults
-const defaultSettings = {
-  textSize: 16, // Font size in pixels
-  speechRate: 1.0,
-  speechPitch: 1.0,
-  speechVolume: 1.0,
-  speechVoice: '',
-  enterKeyBehavior: 'newline' as const,
-  ttsProvider: 'browser' as const,
-  ttsVoiceId: '',
-  ttsStability: 0.5,
-  ttsSimilarityBoost: 0.5,
-  typingAreaVisible: true,
-  typingAreaExpanded: false,
-  selectedBoardId: null,
-  typingShareFontSize: 18,
-};
-
 // Query to get user settings
 export const getUserSettings = query({
   args: {},

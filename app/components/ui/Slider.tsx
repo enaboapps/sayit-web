@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 interface SliderProps {
@@ -81,7 +81,7 @@ export function Slider({
   };
 
   // Get value at a specific point on the slider
-  const getValueFromPosition = (positionX: number) => {
+  const getValueFromPosition = useCallback((positionX: number) => {
     const rect = sliderRef.current?.getBoundingClientRect();
     if (!rect) return value;
     
@@ -92,7 +92,7 @@ export function Slider({
     // Round to nearest step
     const roundedValue = Math.round(newValue / step) * step;
     return parseFloat(roundedValue.toFixed(5));
-  };
+  }, [max, min, step, value]);
   
   // Handle slider track click
   const handleTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -125,7 +125,7 @@ export function Slider({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, min, max, step, onChange]);
+  }, [isDragging, getValueFromPosition, onChange]);
 
   // Handle touch events
   useEffect(() => {
@@ -165,7 +165,7 @@ export function Slider({
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isDragging, onChange]);
+  }, [isDragging, getValueFromPosition, onChange]);
 
   return (
     <div className={className}>

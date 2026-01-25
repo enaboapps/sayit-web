@@ -49,7 +49,6 @@ export default function TypingDock({
   enableShare = false,
   enableFixText = false,
 }: TypingDockProps) {
-  const [isFocused, setIsFocused] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showShareSheet, setShowShareSheet] = useState(false);
@@ -67,8 +66,15 @@ export default function TypingDock({
   const isFullscreen = dockMode === 'fullscreen';
 
   // Typing share hook
-  const typingShare = useTypingShare();
-  const shareableLink = typingShare.getShareableLink();
+  const {
+    isSharing,
+    isCreating,
+    updateContent,
+    createSession,
+    endSession,
+    getShareableLink,
+  } = useTypingShare();
+  const shareableLink = getShareableLink();
 
   // Typing tabs hook (only used when enableTabs is true)
   const {
@@ -106,10 +112,10 @@ export default function TypingDock({
 
   // Update shared session content when text changes
   useEffect(() => {
-    if (enableShare && typingShare.isSharing) {
-      typingShare.updateContent(text);
+    if (enableShare && isSharing) {
+      updateContent(text);
     }
-  }, [text, enableShare, typingShare.isSharing, typingShare.updateContent]);
+  }, [text, enableShare, isSharing, updateContent]);
 
   // Handle Enter key
   const handleKeyDown = useCallback(
@@ -144,12 +150,7 @@ export default function TypingDock({
     [settings.enterKeyBehavior, text, onSpeak, onChange, isExpanded]
   );
 
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
-
   const handleBlur = () => {
-    setIsFocused(false);
     // Collapse if text is short (but don't change fullscreen)
     if (text.length <= 50 && dockMode === 'expanded') {
       updateUIPreference('typingDockMode', 'compact');
@@ -223,31 +224,6 @@ export default function TypingDock({
     }
   };
 
-  // Share handler
-  const handleShare = async () => {
-    if (!enableShare || !user) return;
-
-    // Prevent multiple clicks while creating session
-    if (typingShare.isCreating) return;
-
-    if (typingShare.isSharing) {
-      setShowShareSheet(true);
-      return;
-    }
-
-    try {
-      await typingShare.createSession();
-
-      if (typingShare.isSharing) {
-        typingShare.updateContent(text);
-        setShowShareSheet(true);
-      }
-    } catch (err) {
-      console.error('Error creating share session:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create share session');
-    }
-  };
-
   return (
     <>
       <div
@@ -305,7 +281,6 @@ export default function TypingDock({
                     value={text}
                     onChange={(e) => onChange(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    onFocus={handleFocus}
                     onBlur={handleBlur}
                     placeholder="Type your message..."
                     className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${isFullscreen ? 'flex-1' : ''}`}
@@ -393,7 +368,7 @@ export default function TypingDock({
                       <button
                         onClick={() => setShowShareSheet(true)}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
-                          typingShare.isSharing
+                          isSharing
                             ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                             : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
                         }`}
@@ -401,7 +376,7 @@ export default function TypingDock({
                       >
                         <ShareIcon className="w-4 h-4" />
                         <span className="text-sm font-medium">
-                          {typingShare.isSharing ? 'Sharing' : 'Share'}
+                          {isSharing ? 'Sharing' : 'Share'}
                         </span>
                       </button>
                     )}
@@ -479,7 +454,6 @@ export default function TypingDock({
                       value={text}
                       onChange={(e) => onChange(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      onFocus={handleFocus}
                       onBlur={handleBlur}
                       placeholder="Type to speak..."
                       className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -527,17 +501,17 @@ export default function TypingDock({
         <ShareBottomSheet
           isOpen={showShareSheet}
           onClose={() => setShowShareSheet(false)}
-          isSharing={typingShare.isSharing}
-          isCreating={typingShare.isCreating}
+          isSharing={isSharing}
+          isCreating={isCreating}
           shareableLink={shareableLink}
           onStartSharing={async () => {
-            await typingShare.createSession();
-            if (typingShare.isSharing) {
-              typingShare.updateContent(text);
+            await createSession();
+            if (isSharing) {
+              updateContent(text);
             }
           }}
           onEndSession={async () => {
-            await typingShare.endSession();
+            await endSession();
           }}
         />
       )}

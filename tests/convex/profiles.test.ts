@@ -321,7 +321,6 @@ describe('profiles', () => {
         }),
       });
 
-      const identity = await mockCtx.auth.getUserIdentity();
       const profile = await mockDb.query('profiles').withIndex('by_user_id').unique();
 
       const throwIfNoProfile = () => {

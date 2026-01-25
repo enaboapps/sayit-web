@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 interface MobileBottomContextType {

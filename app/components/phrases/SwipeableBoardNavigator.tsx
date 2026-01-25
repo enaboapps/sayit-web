@@ -18,7 +18,6 @@ interface SwipeableBoardNavigatorProps {
   onEdit?: () => void;
   isEditMode?: boolean;
   canEditBoard?: boolean;
-  hasPhrases?: boolean;
 }
 
 export default function SwipeableBoardNavigator({
@@ -32,7 +31,6 @@ export default function SwipeableBoardNavigator({
   onEdit,
   isEditMode = false,
   canEditBoard = true,
-  hasPhrases = false,
 }: SwipeableBoardNavigatorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const currentBoard = boards[currentBoardIndex];

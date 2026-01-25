@@ -232,7 +232,6 @@ export default function PhrasesInterface() {
               onEdit={handleEdit}
               isEditMode={isEditMode}
               canEditBoard={canEditCurrentBoard}
-              hasPhrases={phrases.length > 0}
             >
               <div className="p-2 pb-32 overflow-auto">
                 <div className="grid grid-cols-2 gap-2">
@@ -276,7 +275,6 @@ export default function PhrasesInterface() {
                   onAddBoard={handleAddBoard}
                   onAddPhrase={handleAddPhrase}
                   onEdit={handleEdit}
-                  hasPhrases={phrases.length > 0}
                 />
               </div>
 
