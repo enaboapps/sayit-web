@@ -8,8 +8,8 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     // Check for API key first
-    if (!process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY) {
-      console.error('NEXT_PUBLIC_ELEVENLABS_API_KEY is not set');
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.error('ELEVENLABS_API_KEY is not set');
       return NextResponse.json(
         { error: 'API configuration error' },
         { status: 500 },
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     const client = new ElevenLabsClient({
-      apiKey: process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY,
+      apiKey: process.env.ELEVENLABS_API_KEY,
     });
 
     // Use streaming if requested
