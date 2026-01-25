@@ -37,6 +37,13 @@ export default function Sidebar() {
       style={{ backgroundColor: '#242424' }}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
+      onFocusCapture={() => setIsExpanded(true)}
+      onBlurCapture={(event) => {
+        const nextTarget = event.relatedTarget as Node | null;
+        if (!event.currentTarget.contains(nextTarget)) {
+          setIsExpanded(false);
+        }
+      }}
     >
       <div className="p-4 flex justify-center items-center">
         <div className="rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
@@ -111,6 +118,7 @@ export default function Sidebar() {
             className="flex items-center justify-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl hover:scale-110 bg-surface-hover text-text-secondary hover:bg-primary-950 hover:text-primary-500"
             data-tooltip-id="sidebar-tooltip-sign-in"
             data-tooltip-content="Sign In"
+            aria-label="Sign in"
           >
             <ArrowRightStartOnRectangleIcon className="w-6 h-6" />
             <Tooltip
@@ -146,6 +154,8 @@ function SidebarItem({ href, icon, title, isActive, isExpanded }: SidebarItemPro
       }`}
       data-tooltip-id={!isExpanded ? `sidebar-tooltip-${title}` : undefined}
       data-tooltip-content={!isExpanded ? title : undefined}
+      aria-label={title}
+      aria-current={isActive ? 'page' : undefined}
     >
       {icon}
       {isExpanded && (

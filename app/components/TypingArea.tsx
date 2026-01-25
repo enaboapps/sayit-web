@@ -375,6 +375,8 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
             className="h-10 flex-1 bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground transition-all duration-200 flex items-center justify-center rounded-full shadow-md hover:shadow-lg hover:scale-105"
             data-tooltip-id="expand-tooltip"
             data-tooltip-content={isExpanded ? 'Collapse typing area' : 'Expand typing area'}
+            aria-label={isExpanded ? 'Collapse typing area' : 'Expand typing area'}
+            aria-expanded={isExpanded}
           >
             {isExpanded ? (
               <ArrowsPointingInIcon className="w-4 h-4" />
@@ -388,6 +390,8 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           className={`h-10 bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground transition-all duration-200 flex items-center justify-center rounded-full shadow-md hover:shadow-lg hover:scale-105 ${isVisible ? 'flex-1' : 'w-full'}`}
           data-tooltip-id="toggle-tooltip"
           data-tooltip-content={isVisible ? 'Hide typing area' : 'Show typing area'}
+          aria-label={isVisible ? 'Hide typing area' : 'Show typing area'}
+          aria-pressed={isVisible}
         >
           {isVisible ? (
             <ChevronUpIcon className="w-5 h-5" />

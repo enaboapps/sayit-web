@@ -20,8 +20,9 @@ export default function SubscriptionWrapper({
   // While checking subscription status, show a minimal loading indicator
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-4 min-h-[200px]">
+      <div className="flex justify-center items-center p-4 min-h-[200px]" role="status" aria-live="polite" aria-busy="true">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+        <span className="sr-only">Loading subscription status</span>
       </div>
     );
   }
