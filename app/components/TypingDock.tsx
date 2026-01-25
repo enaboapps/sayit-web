@@ -25,8 +25,7 @@ import SubscriptionWrapper from './SubscriptionWrapper';
 import ShareBottomSheet from './typing-share/ShareBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
-import DoubleEnterHint from './typing/DoubleEnterHint';
-import UndoClearHint from './typing/UndoClearHint';
+import ActionPromptBanner from './typing/ActionPromptBanner';
 
 interface TypingDockProps {
   text: string;
@@ -193,6 +192,12 @@ export default function TypingDock({
   });
 
   const showDoubleEnterHint = settings.doubleEnterEnabled && isPending;
+  const doubleEnterActionLabel: Record<EnterKeyBehavior, string> = {
+    newline: 'add a new line',
+    speak: 'speak',
+    clear: 'clear',
+    speakAndClear: 'speak and clear',
+  };
 
   // Auto-expand when text gets long (but don't change fullscreen)
   useEffect(() => {
@@ -363,11 +368,12 @@ export default function TypingDock({
                     rows={isFullscreen ? undefined : 3}
                     style={{ fontSize: `${textSizePx}px`, ...(isFullscreen ? { minHeight: '100%' } : {}) }}
                   />
-                  {showDoubleEnterHint && (
-                    <DoubleEnterHint
-                      action={settings.doubleEnterAction}
+                  {showDoubleEnterHint && !showUndoHint && (
+                    <ActionPromptBanner
+                      variant="doubleEnter"
+                      actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
                       remainingMs={remainingMs}
-                      className="px-1 pt-2 text-xs text-text-tertiary"
+                      className="mt-2"
                     />
                   )}
                   {/* Control buttons (when tabs are not enabled) */}
@@ -508,10 +514,11 @@ export default function TypingDock({
                   </motion.button>
                 </div>
                 {showUndoHint && (
-                  <UndoClearHint
+                  <ActionPromptBanner
+                    variant="undo"
                     remainingMs={undoRemainingMs}
                     onUndo={undo}
-                    className="px-1"
+                    className="mt-2"
                   />
                 )}
               </motion.div>
@@ -585,18 +592,20 @@ export default function TypingDock({
                     )}
                   </motion.button>
                 </div>
-                {showDoubleEnterHint && (
-                  <DoubleEnterHint
-                    action={settings.doubleEnterAction}
-                    remainingMs={remainingMs}
-                    className="px-1 text-xs text-text-tertiary"
-                  />
-                )}
                 {showUndoHint && (
-                  <UndoClearHint
+                  <ActionPromptBanner
+                    variant="undo"
                     remainingMs={undoRemainingMs}
                     onUndo={undo}
-                    className="px-1"
+                    className="mt-2"
+                  />
+                )}
+                {showDoubleEnterHint && !showUndoHint && (
+                  <ActionPromptBanner
+                    variant="doubleEnter"
+                    actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
+                    remainingMs={remainingMs}
+                    className="mt-2"
                   />
                 )}
               </motion.div>

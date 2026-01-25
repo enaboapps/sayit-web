@@ -13,8 +13,7 @@ import ShareLinkModal from './typing-share/ShareLinkModal';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
-import DoubleEnterHint from './typing/DoubleEnterHint';
-import UndoClearHint from './typing/UndoClearHint';
+import ActionPromptBanner from './typing/ActionPromptBanner';
 
 interface TypingAreaProps {
   initialText?: string
@@ -262,6 +261,12 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   });
 
   const showDoubleEnterHint = settings.doubleEnterEnabled && isPending;
+  const doubleEnterActionLabel: Record<EnterKeyBehavior, string> = {
+    newline: 'add a new line',
+    speak: 'speak',
+    clear: 'clear',
+    speakAndClear: 'speak and clear',
+  };
 
   return (
     <div className="flex flex-col">
@@ -303,11 +308,12 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 lineHeight: '1.5',
               }}
             />
-            {showDoubleEnterHint && (
-              <DoubleEnterHint
-                action={settings.doubleEnterAction}
+            {showDoubleEnterHint && !showUndoHint && (
+              <ActionPromptBanner
+                variant="doubleEnter"
+                actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
                 remainingMs={remainingMs}
-                className="px-8 pb-2 text-xs text-text-tertiary"
+                className="mx-6 mb-3"
               />
             )}
             {error && (
@@ -391,7 +397,8 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
           )}
           {showUndoHint && (
             <div className="px-4 pb-3 bg-surface-hover transition-colors duration-200">
-              <UndoClearHint
+              <ActionPromptBanner
+                variant="undo"
                 remainingMs={undoRemainingMs}
                 onUndo={undo}
               />
