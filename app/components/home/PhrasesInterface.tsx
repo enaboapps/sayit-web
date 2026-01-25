@@ -340,7 +340,6 @@ export default function PhrasesInterface() {
             isAvailable={tts.isAvailable}
             enableTabs={true}
             enableShare={!!user}
-            enableFleshOut={true}
             enableFixText={true}
           />
         </MobileDockPortal>

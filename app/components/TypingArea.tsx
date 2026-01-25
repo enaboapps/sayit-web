@@ -5,7 +5,6 @@ import { ChatBubbleLeftIcon, XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPat
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
-import FleshOutPopup from './flesh-out/FleshOutPopup';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
 import ShareLinkModal from './typing-share/ShareLinkModal';
@@ -27,7 +26,6 @@ interface TypingAreaProps {
 
 export default function TypingArea({ initialText = '', text: externalText, tts, onChange }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
-  const [showFleshOutPopup, setShowFleshOutPopup] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
@@ -136,18 +134,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
       speak(text);
       textareaRef.current?.focus();
     }
-  };
-
-  const handleFleshOut = () => {
-    if (!text.trim()) return;
-    setShowFleshOutPopup(true);
-  };
-
-  const handleApplyFleshedOutText = (newText: string) => {
-    updateActiveTabText(newText);
-    onChange?.(newText);
-    setShowFleshOutPopup(false);
-    textareaRef.current?.focus();
   };
 
   const handleFixText = async () => {
@@ -281,16 +267,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                   </>
                 )}
               </button>
-              <button
-                onClick={handleFleshOut}
-                className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-purple text-foreground hover:text-purple-500"
-                data-tooltip-id="flesh-out-tooltip"
-                data-tooltip-content="Flesh out with AI"
-                disabled={!text.trim()}
-              >
-                <ArrowPathIcon className="w-5 h-5" />
-                <span>Flesh Out</span>
-              </button>
               <SubscriptionWrapper
                 fallback={
                   <button
@@ -401,20 +377,11 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
         </button>
       </div>
       <Tooltip id="speak-tooltip" />
-      <Tooltip id="flesh-out-tooltip" />
       <Tooltip id="fix-text-tooltip" />
       <Tooltip id="clear-tooltip" />
       <Tooltip id="expand-tooltip" />
       <Tooltip id="toggle-tooltip" />
       <Tooltip id="share-tooltip" />
-
-      {showFleshOutPopup && (
-        <FleshOutPopup
-          initialText={text}
-          onClose={() => setShowFleshOutPopup(false)}
-          onApply={handleApplyFleshedOutText}
-        />
-      )}
 
       {showShareModal && shareableLink && (
         <ShareLinkModal
