@@ -131,21 +131,21 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     }
   };
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     updateActiveTabText('');
     setError(null);
     onChange?.('');
     textareaRef.current?.focus();
-  };
+  }, [onChange, updateActiveTabText]);
 
-  const handleSpeak = () => {
+  const handleSpeak = useCallback(() => {
     if (isSpeaking) {
       stop();
     } else if (text.trim()) {
       speak(text);
       textareaRef.current?.focus();
     }
-  };
+  }, [isSpeaking, speak, stop, text]);
 
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
