@@ -3,6 +3,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence, PanInfo, useAnimation } from 'framer-motion';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 
 export interface BottomSheetProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export default function BottomSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
   const [currentSnapIndex, setCurrentSnapIndex] = useState(initialSnap);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const { height: viewportHeight, innerHeight } = useVisualViewport();
 
   // Use refs for callbacks to avoid re-registering event listeners
   const onCloseRef = useRef(onClose);
@@ -52,23 +53,7 @@ export default function BottomSheet({
   // Get the current snap point percentage
   const currentSnapPercent = snapPoints[currentSnapIndex] || snapPoints[0];
 
-  // Handle keyboard visibility (for mobile)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleResize = () => {
-      // Detect virtual keyboard by comparing visualViewport to window height
-      if (window.visualViewport) {
-        const keyboardH = window.innerHeight - window.visualViewport.height;
-        setKeyboardHeight(keyboardH > 100 ? keyboardH : 0);
-      }
-    };
-
-    window.visualViewport?.addEventListener('resize', handleResize);
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-    };
-  }, []);
+  const keyboardHeight = viewportHeight && innerHeight ? Math.max(0, innerHeight - viewportHeight) : 0;
 
   // Handle ESC key to close - uses refs to avoid re-registering listener
   useEffect(() => {
