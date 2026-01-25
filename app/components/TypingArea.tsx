@@ -8,11 +8,13 @@ import { useAuth } from '../contexts/AuthContext';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
+import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import ShareLinkModal from './typing-share/ShareLinkModal';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
 import DoubleEnterHint from './typing/DoubleEnterHint';
+import UndoClearHint from './typing/UndoClearHint';
 
 interface TypingAreaProps {
   initialText?: string
@@ -34,6 +36,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
   const [showShareModal, setShowShareModal] = useState(false);
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const prevActiveTabIdRef = useRef<string | null>(null);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
   const { speak, stop, isSpeaking, isAvailable } = tts;
@@ -73,6 +76,16 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
       updateActiveTabText(externalText);
     }
   }, [externalText, activeTab.text, updateActiveTabText]);
+
+  useEffect(() => {
+    if (!activeTabId) return;
+
+    if (prevActiveTabIdRef.current && prevActiveTabIdRef.current !== activeTabId) {
+      onChange?.(activeTab.text);
+    }
+
+    prevActiveTabIdRef.current = activeTabId;
+  }, [activeTabId, activeTab.text, onChange]);
 
   // Keyboard shortcuts for tabs
   useEffect(() => {
@@ -131,12 +144,39 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     }
   };
 
+  const { clearWithUndo, undo, canUndo, remainingMs: undoRemainingMs, entry } = useUndoClear({
+    timeoutMs: 20000,
+    onRestore: ({ tabId, text: restoredText }) => {
+      if (tabId !== activeTabId && tabId) {
+        switchTab(tabId);
+        setTimeout(() => {
+          updateActiveTabText(restoredText);
+          onChange?.(restoredText);
+          textareaRef.current?.focus();
+        }, 0);
+        return;
+      }
+
+      updateActiveTabText(restoredText);
+      onChange?.(restoredText);
+      textareaRef.current?.focus();
+    },
+  });
+
+  const showUndoHint = canUndo && entry?.tabId === (activeTabId || 'default');
+
   const handleClear = useCallback(() => {
-    updateActiveTabText('');
-    setError(null);
-    onChange?.('');
-    textareaRef.current?.focus();
-  }, [onChange, updateActiveTabText]);
+    clearWithUndo({
+      tabId: activeTabId || 'default',
+      text,
+      onClear: () => {
+        updateActiveTabText('');
+        setError(null);
+        onChange?.('');
+        textareaRef.current?.focus();
+      },
+    });
+  }, [activeTabId, clearWithUndo, onChange, text, updateActiveTabText]);
 
   const handleSpeak = useCallback(() => {
     if (isSpeaking) {
@@ -347,6 +387,14 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 <XMarkIcon className="w-5 h-5" />
                 <span>Clear</span>
               </button>
+            </div>
+          )}
+          {showUndoHint && (
+            <div className="px-4 pb-3 bg-surface-hover transition-colors duration-200">
+              <UndoClearHint
+                remainingMs={undoRemainingMs}
+                onUndo={undo}
+              />
             </div>
           )}
           {user && (
