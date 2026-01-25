@@ -8,7 +8,9 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   try {
     // Check for API key first
-    if (!process.env.ELEVENLABS_API_KEY) {
+    const apiKey = process.env.ELEVENLABS_API_KEY?.replace(/^\uFEFF/, '').trim();
+
+    if (!apiKey) {
       console.error('ELEVENLABS_API_KEY is not set');
       return NextResponse.json(
         { error: 'API configuration error' },
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     const client = new ElevenLabsClient({
-      apiKey: process.env.ELEVENLABS_API_KEY,
+      apiKey,
     });
 
     // Use streaming if requested
