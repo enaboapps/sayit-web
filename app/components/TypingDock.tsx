@@ -97,7 +97,7 @@ export default function TypingDock({
     updateActiveTabText,
   } = useTypingTabs(text);
 
-  const { clearWithUndo, undo, canUndo, remainingMs: undoRemainingMs, entry } = useUndoClear({
+  const { clearWithUndo, undo, resetUndo, canUndo, remainingMs: undoRemainingMs, entry } = useUndoClear({
     timeoutMs: 20000,
     onRestore: ({ tabId, text: restoredText }) => {
       if (tabId !== activeTabId && tabId) {
@@ -115,8 +115,6 @@ export default function TypingDock({
       textareaRef.current?.focus();
     },
   });
-
-  const showUndoHint = canUndo && entry?.tabId === (activeTabId || 'default');
 
   // Sync tabs text with external text prop when tabs are enabled
   // Only sync when text prop changes externally, not when activeTab.text changes
@@ -143,11 +141,18 @@ export default function TypingDock({
   const textSizePx = settings.textSize;
   const currentText = enableTabs ? activeTab.text : text;
 
-  const handleClear = useCallback(() => {
+  const showUndoHint = canUndo
+    && entry?.tabId === (activeTabId || 'default')
+    && currentText.trim().length === 0;
+
+  const clearTextWithUndo = useCallback((textToClear: string) => {
     clearWithUndo({
       tabId: activeTabId || 'default',
-      text: currentText,
+      text: textToClear,
       onClear: () => {
+        if (enableTabs) {
+          updateActiveTabText('');
+        }
         onChange('');
         setError(null);
         if (isExpanded) {
@@ -157,7 +162,18 @@ export default function TypingDock({
         }
       },
     });
-  }, [activeTabId, clearWithUndo, currentText, isExpanded, onChange]);
+  }, [activeTabId, clearWithUndo, enableTabs, isExpanded, onChange, updateActiveTabText]);
+
+  const handleClear = useCallback(() => {
+    clearTextWithUndo(currentText);
+  }, [clearTextWithUndo, currentText]);
+
+  useEffect(() => {
+    if (!canUndo) return;
+    if (currentText.trim().length > 0) {
+      resetUndo();
+    }
+  }, [canUndo, currentText, resetUndo]);
 
   const runEnterAction = useCallback((action: EnterKeyBehavior) => {
     switch (action) {
@@ -165,12 +181,15 @@ export default function TypingDock({
       if (currentText.trim()) onSpeak();
       break;
     case 'clear':
-      handleClear();
+      clearTextWithUndo(currentText);
       break;
     case 'speakAndClear':
       if (currentText.trim()) {
         onSpeak();
-        setTimeout(() => onChange(''), 100);
+        const textSnapshot = currentText;
+        setTimeout(() => {
+          clearTextWithUndo(textSnapshot);
+        }, 100);
       }
       break;
     case 'newline':
@@ -356,6 +375,9 @@ export default function TypingDock({
                     ref={textareaRef}
                     value={currentText}
                     onChange={(e) => {
+                      if (canUndo && e.target.value.trim().length > 0) {
+                        resetUndo();
+                      }
                       if (enableTabs) {
                         updateActiveTabText(e.target.value);
                       }
@@ -548,13 +570,16 @@ export default function TypingDock({
                     <input
                       ref={inputRef}
                       type="text"
-                      value={currentText}
-                      onChange={(e) => {
-                        if (enableTabs) {
-                          updateActiveTabText(e.target.value);
-                        }
-                        onChange(e.target.value);
-                      }}
+                    value={currentText}
+                    onChange={(e) => {
+                      if (canUndo && e.target.value.trim().length > 0) {
+                        resetUndo();
+                      }
+                      if (enableTabs) {
+                        updateActiveTabText(e.target.value);
+                      }
+                      onChange(e.target.value);
+                    }}
                       onKeyDown={handleKeyDown}
                       onBlur={handleBlur}
                       placeholder="Type to speak..."

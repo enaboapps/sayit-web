@@ -143,7 +143,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     }
   };
 
-  const { clearWithUndo, undo, canUndo, remainingMs: undoRemainingMs, entry } = useUndoClear({
+  const { clearWithUndo, undo, resetUndo, canUndo, remainingMs: undoRemainingMs, entry } = useUndoClear({
     timeoutMs: 20000,
     onRestore: ({ tabId, text: restoredText }) => {
       if (tabId !== activeTabId && tabId) {
@@ -162,7 +162,9 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     },
   });
 
-  const showUndoHint = canUndo && entry?.tabId === (activeTabId || 'default');
+  const showUndoHint = canUndo
+    && entry?.tabId === (activeTabId || 'default')
+    && activeTab.text.trim().length === 0;
 
   const handleClear = useCallback(() => {
     clearWithUndo({
@@ -176,6 +178,13 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
       },
     });
   }, [activeTabId, clearWithUndo, onChange, text, updateActiveTabText]);
+
+  useEffect(() => {
+    if (!canUndo) return;
+    if (text.trim().length > 0) {
+      resetUndo();
+    }
+  }, [canUndo, resetUndo, text]);
 
   const handleSpeak = useCallback(() => {
     if (isSpeaking) {
@@ -287,6 +296,9 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
               className="w-full bg-transparent text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl"
               value={text}
               onChange={(e) => {
+                if (canUndo && e.target.value.trim().length > 0) {
+                  resetUndo();
+                }
                 updateActiveTabText(e.target.value);
                 onChange?.(e.target.value);
                 setError(null);
