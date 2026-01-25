@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
@@ -71,7 +71,8 @@ export default function BottomTabBar() {
   const profile = useQuery(api.profiles.getProfile);
   const { isActive: hasSubscription } = useSubscription();
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
+  const isVisibleRef = useRef(true);
 
   const isCaregiver = profile?.role === 'caregiver';
 
@@ -98,19 +99,19 @@ export default function BottomTabBar() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const nextIsVisible = !(currentScrollY > lastScrollYRef.current && currentScrollY > 100);
 
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
+      if (nextIsVisible !== isVisibleRef.current) {
+        isVisibleRef.current = nextIsVisible;
+        setIsVisible(nextIsVisible);
       }
 
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const isActive = (tab: TabItem) => {
     if (tab.matchPaths) {

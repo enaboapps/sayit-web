@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
 
 // Query: Get all phrase boards for current user (owned + assigned to them)
@@ -9,6 +10,47 @@ export const getPhraseBoards = query({
     if (!identity) {
       return [];
     }
+
+    const phraseCache = new Map<string, Doc<'phrases'> | null>();
+    const profileCache = new Map<string, Doc<'profiles'> | null>();
+
+    const getCachedPhrase = async (phraseId: Id<'phrases'>) => {
+      const cacheKey = phraseId.toString();
+      if (phraseCache.has(cacheKey)) {
+        return phraseCache.get(cacheKey) ?? null;
+      }
+
+      const phrase = await ctx.db.get(phraseId);
+      phraseCache.set(cacheKey, phrase ?? null);
+      return phrase ?? null;
+    };
+
+    const getCachedProfile = async (userId: string) => {
+      if (profileCache.has(userId)) {
+        return profileCache.get(userId) ?? null;
+      }
+
+      const profile = await ctx.db
+        .query('profiles')
+        .withIndex('by_user_id', (q) => q.eq('userId', userId))
+        .first();
+      profileCache.set(userId, profile ?? null);
+      return profile ?? null;
+    };
+
+    const loadBoardPhrases = async (boardId: Id<'phraseBoards'>) => {
+      const phraseBoardPhrases = await ctx.db
+        .query('phraseBoardPhrases')
+        .withIndex('by_board', (q) => q.eq('boardId', boardId))
+        .collect();
+
+      return await Promise.all(
+        phraseBoardPhrases.map(async (pbp) => {
+          const phrase = await getCachedPhrase(pbp.phraseId);
+          return { ...pbp, phrase };
+        })
+      );
+    };
 
     // Get boards owned by the user (caregiver's boards)
     const ownedBoards = await ctx.db
@@ -25,25 +67,12 @@ export const getPhraseBoards = query({
     // Process owned boards - resolve client names if forClientId is set
     const ownedBoardsWithInfo = await Promise.all(
       ownedBoards.map(async (board) => {
-        const phraseBoardPhrases = await ctx.db
-          .query('phraseBoardPhrases')
-          .withIndex('by_board', (q) => q.eq('boardId', board._id))
-          .collect();
-
-        const phrases = await Promise.all(
-          phraseBoardPhrases.map(async (pbp) => {
-            const phrase = await ctx.db.get(pbp.phraseId);
-            return { ...pbp, phrase };
-          })
-        );
+        const phrases = await loadBoardPhrases(board._id);
 
         // Get client name if this board is for a client
         let forClientName = null;
         if (board.forClientId) {
-          const clientProfile = await ctx.db
-            .query('profiles')
-            .withIndex('by_user_id', (q) => q.eq('userId', board.forClientId!))
-            .first();
+          const clientProfile = await getCachedProfile(board.forClientId);
           forClientName = clientProfile?.fullName || clientProfile?.email || 'Client';
         }
 
@@ -62,23 +91,10 @@ export const getPhraseBoards = query({
     // Process assigned boards (boards where this user is the client)
     const assignedBoardsWithInfo = await Promise.all(
       assignedBoards.map(async (board) => {
-        const phraseBoardPhrases = await ctx.db
-          .query('phraseBoardPhrases')
-          .withIndex('by_board', (q) => q.eq('boardId', board._id))
-          .collect();
-
-        const phrases = await Promise.all(
-          phraseBoardPhrases.map(async (pbp) => {
-            const phrase = await ctx.db.get(pbp.phraseId);
-            return { ...pbp, phrase };
-          })
-        );
+        const phrases = await loadBoardPhrases(board._id);
 
         // Get caregiver name
-        const caregiverProfile = await ctx.db
-          .query('profiles')
-          .withIndex('by_user_id', (q) => q.eq('userId', board.userId))
-          .first();
+        const caregiverProfile = await getCachedProfile(board.userId);
 
         return {
           ...board,
@@ -106,6 +122,33 @@ export const getPhraseBoard = query({
       return null;
     }
 
+    const phraseCache = new Map<string, Doc<'phrases'> | null>();
+    const profileCache = new Map<string, Doc<'profiles'> | null>();
+
+    const getCachedPhrase = async (phraseId: Id<'phrases'>) => {
+      const cacheKey = phraseId.toString();
+      if (phraseCache.has(cacheKey)) {
+        return phraseCache.get(cacheKey) ?? null;
+      }
+
+      const phrase = await ctx.db.get(phraseId);
+      phraseCache.set(cacheKey, phrase ?? null);
+      return phrase ?? null;
+    };
+
+    const getCachedProfile = async (userId: string) => {
+      if (profileCache.has(userId)) {
+        return profileCache.get(userId) ?? null;
+      }
+
+      const profile = await ctx.db
+        .query('profiles')
+        .withIndex('by_user_id', (q) => q.eq('userId', userId))
+        .first();
+      profileCache.set(userId, profile ?? null);
+      return profile ?? null;
+    };
+
     const board = await ctx.db.get(args.id);
     if (!board) {
       return null;
@@ -126,7 +169,7 @@ export const getPhraseBoard = query({
 
     const phrases = await Promise.all(
       phraseBoardPhrases.map(async (pbp) => {
-        const phrase = await ctx.db.get(pbp.phraseId);
+        const phrase = await getCachedPhrase(pbp.phraseId);
         return { ...pbp, phrase };
       })
     );
@@ -134,20 +177,14 @@ export const getPhraseBoard = query({
     // Get caregiver name for assigned clients
     let sharedBy = null;
     if (isAssignedClient && !isOwner) {
-      const caregiverProfile = await ctx.db
-        .query('profiles')
-        .withIndex('by_user_id', (q) => q.eq('userId', board.userId))
-        .first();
+      const caregiverProfile = await getCachedProfile(board.userId);
       sharedBy = caregiverProfile?.fullName || caregiverProfile?.email || 'Caregiver';
     }
 
     // Get client name for owner
     let forClientName = null;
     if (isOwner && board.forClientId) {
-      const clientProfile = await ctx.db
-        .query('profiles')
-        .withIndex('by_user_id', (q) => q.eq('userId', board.forClientId!))
-        .first();
+      const clientProfile = await getCachedProfile(board.forClientId);
       forClientName = clientProfile?.fullName || clientProfile?.email || 'Client';
     }
 
