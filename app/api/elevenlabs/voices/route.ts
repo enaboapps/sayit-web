@@ -12,7 +12,7 @@ type ElevenLabsVoice = {
 
 export async function GET() {
   try {
-    const apiKey = process.env.ELEVENLABS_API_KEY;
+    const apiKey = process.env.ELEVENLABS_API_KEY?.replace(/^\uFEFF/, '').trim();
 
     if (!apiKey) {
       return NextResponse.json(
