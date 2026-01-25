@@ -290,10 +290,30 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
             onTabRename={renameTab}
             onManage={() => setShowTabManagementDialog(true)}
           />
-          <div className="flex-1 relative">
+          <div
+            className="flex-1 relative flex flex-col"
+            style={{ minHeight: textareaHeight, maxHeight: textareaHeight }}
+          >
+            {(showUndoHint || showDoubleEnterHint) && (
+              <div className="px-6 pb-3">
+                {showUndoHint ? (
+                  <ActionPromptBanner
+                    variant="undo"
+                    remainingMs={undoRemainingMs}
+                    onUndo={undo}
+                  />
+                ) : (
+                  <ActionPromptBanner
+                    variant="doubleEnter"
+                    actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
+                    remainingMs={remainingMs}
+                  />
+                )}
+              </div>
+            )}
             <textarea
               ref={textareaRef}
-              className="w-full bg-transparent text-foreground placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl"
+              className="w-full flex-1 min-h-0 bg-transparent text-foreground placeholder:text-text-tertiary focus:outline-none resize-none p-8 overflow-auto transition-all duration-300 rounded-3xl"
               value={text}
               onChange={(e) => {
                 if (canUndo && e.target.value.trim().length > 0) {
@@ -315,19 +335,9 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
               placeholder="Type your message here..."
               style={{
                 fontSize: `${textSizePx}px`,
-                minHeight: textareaHeight,
-                maxHeight: textareaHeight,
                 lineHeight: '1.5',
               }}
             />
-            {showDoubleEnterHint && !showUndoHint && (
-              <ActionPromptBanner
-                variant="doubleEnter"
-                actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
-                remainingMs={remainingMs}
-                className="mx-6 mb-3"
-              />
-            )}
             {error && (
               <div className="absolute bottom-0 left-0 right-0 bg-status-error text-red-400 p-4 text-sm rounded-b-3xl  transition-all duration-200">
                 {error}
@@ -405,15 +415,6 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 <XMarkIcon className="w-5 h-5" />
                 <span>Clear</span>
               </button>
-            </div>
-          )}
-          {showUndoHint && (
-            <div className="px-4 pb-3 bg-surface-hover transition-colors duration-200">
-              <ActionPromptBanner
-                variant="undo"
-                remainingMs={undoRemainingMs}
-                onUndo={undo}
-              />
             </div>
           )}
           {user && (
