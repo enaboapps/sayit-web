@@ -17,8 +17,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.log('Received request body:', body);
-    
     const { text, mode } = body;
     
     if (!text) {
@@ -37,16 +35,12 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Attempting to flesh out text:', text, 'with mode:', mode);
-    
     try {
       const result = await generate(mode, text, {
         maxOutputTokens: 200,
         temperature: 0.7,
       });
-      
-      console.log('Successfully generated text:', result);
-      
+
       return NextResponse.json(result);
     } catch (genError) {
       console.error('Error generating text:', genError);

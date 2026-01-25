@@ -5,6 +5,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 
 const STORAGE_KEY = 'typing-share-session-key';
+const SESSION_KEY_LENGTH = 32;
 
 type TypingSession = {
   _id: Id<'typingSessions'>;
@@ -78,7 +79,7 @@ export function useTypingShare() {
     setError(null);
 
     try {
-      const newKey = nanoid(10);
+      const newKey = nanoid(SESSION_KEY_LENGTH);
       const created = await createTypingSession({ sessionKey: newKey });
 
       if (!created) {

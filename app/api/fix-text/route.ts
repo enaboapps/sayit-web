@@ -17,8 +17,6 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    console.log('Received fix text request:', body);
-    
     const { text } = body;
     
     if (!text) {
@@ -29,16 +27,12 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Attempting to fix text:', text);
-    
     try {
       const result = await fixText(text, {
         maxOutputTokens: 200,
         temperature: 0.3, // Lower temperature for more consistent corrections
       });
-      
-      console.log('Successfully fixed text:', result);
-      
+
       return NextResponse.json(result);
     } catch (genError) {
       console.error('Error fixing text:', genError);

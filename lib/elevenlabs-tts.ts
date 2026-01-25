@@ -57,10 +57,12 @@ export interface VoiceSettings {
  */
 export class ElevenLabsTTS {
   private static instance: ElevenLabsTTS;
-  private apiKey: string;
   private voices: Voice[] = [];
   private audio: HTMLAudioElement | null = null;
   private isSpeaking: boolean = false;
+  private isAvailableFlag: boolean = false;
+  private voicesLoaded: boolean = false;
+  private loadingVoices: Promise<void> | null = null;
 
   /**
    * Session ID for cancellation tracking.
@@ -88,9 +90,7 @@ export class ElevenLabsTTS {
   private constructor() {
     // Private constructor to enforce singleton pattern
     this.fallbackTTS = WebSpeechTTS.getInstance();
-    this.apiKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY || '';
-
-    if (this.apiKey && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       this.loadVoices();
     }
   }
@@ -103,35 +103,47 @@ export class ElevenLabsTTS {
   }
 
   private async loadVoices() {
-    if (!this.apiKey) return;
+    if (typeof window === 'undefined') return;
 
-    try {
-      // Call ElevenLabs API directly to get voices
-      const response = await fetch('https://api.elevenlabs.io/v1/voices', {
-        headers: {
-          'xi-api-key': this.apiKey,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to load voices: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      // Map voices to our format
-      this.voices = data.voices.map((voice: Voice) => ({
-        voice_id: voice.voice_id,
-        name: voice.name || 'Unnamed Voice',
-        preview_url: voice.preview_url,
-        description: voice.description || ''
-      }));
-
-      this.callbacks.onVoicesChanged?.(this.voices);
-    } catch (error) {
-      console.error('Error loading ElevenLabs voices:', error);
-      this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+    if (this.loadingVoices) {
+      return this.loadingVoices;
     }
+
+    this.loadingVoices = (async () => {
+      try {
+        const response = await fetch('/api/elevenlabs/voices');
+
+        if (!response.ok) {
+          this.isAvailableFlag = false;
+          this.voices = [];
+          this.callbacks.onVoicesChanged?.(this.voices);
+          return;
+        }
+
+        const data = await response.json();
+
+        this.voices = (data?.voices ?? []).map((voice: Voice) => ({
+          voice_id: voice.voice_id,
+          name: voice.name || 'Unnamed Voice',
+          preview_url: voice.preview_url,
+          description: voice.description || ''
+        }));
+
+        this.isAvailableFlag = true;
+        this.callbacks.onVoicesChanged?.(this.voices);
+      } catch (error) {
+        this.isAvailableFlag = false;
+        this.voices = [];
+        this.callbacks.onVoicesChanged?.(this.voices);
+        console.error('Error loading ElevenLabs voices:', error);
+        this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+      } finally {
+        this.voicesLoaded = true;
+        this.loadingVoices = null;
+      }
+    })();
+
+    return this.loadingVoices;
   }
 
   public setCallbacks(callbacks: {
@@ -179,10 +191,16 @@ export class ElevenLabsTTS {
     similarityBoost?: number;
     streaming?: boolean;
   }) {
-    if (!this.apiKey) {
-      console.warn('ElevenLabs API key not found, falling back to browser TTS');
-      this.fallbackTTS.speak(text);
-      return;
+    if (!this.isAvailableFlag) {
+      if (!this.voicesLoaded) {
+        await this.loadVoices();
+      }
+
+      if (!this.isAvailableFlag) {
+        console.warn('ElevenLabs is not available, falling back to browser TTS');
+        this.fallbackTTS.speak(text);
+        return;
+      }
     }
 
     // Stop any ongoing speech and API requests
@@ -586,6 +604,6 @@ export class ElevenLabsTTS {
   }
 
   public isAvailable(): boolean {
-    return !!this.apiKey;
+    return this.isAvailableFlag;
   }
 }
