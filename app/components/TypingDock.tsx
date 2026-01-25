@@ -18,6 +18,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
+import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import SubscriptionWrapper from './SubscriptionWrapper';
@@ -25,6 +26,7 @@ import ShareBottomSheet from './typing-share/ShareBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
 import DoubleEnterHint from './typing/DoubleEnterHint';
+import UndoClearHint from './typing/UndoClearHint';
 
 interface TypingDockProps {
   text: string;
@@ -63,6 +65,7 @@ export default function TypingDock({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const prevTextRef = useRef(text); // Track previous text to detect external changes
+  const prevActiveTabIdRef = useRef<string | null>(null);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
 
@@ -95,6 +98,27 @@ export default function TypingDock({
     updateActiveTabText,
   } = useTypingTabs(text);
 
+  const { clearWithUndo, undo, canUndo, remainingMs: undoRemainingMs, entry } = useUndoClear({
+    timeoutMs: 20000,
+    onRestore: ({ tabId, text: restoredText }) => {
+      if (tabId !== activeTabId && tabId) {
+        switchTab(tabId);
+        setTimeout(() => {
+          updateActiveTabText(restoredText);
+          onChange(restoredText);
+          textareaRef.current?.focus();
+        }, 0);
+        return;
+      }
+
+      updateActiveTabText(restoredText);
+      onChange(restoredText);
+      textareaRef.current?.focus();
+    },
+  });
+
+  const showUndoHint = canUndo && entry?.tabId === (activeTabId || 'default');
+
   // Sync tabs text with external text prop when tabs are enabled
   // Only sync when text prop changes externally, not when activeTab.text changes
   useEffect(() => {
@@ -106,19 +130,46 @@ export default function TypingDock({
     }
   }, [enableTabs, text, activeTab.text, updateActiveTabText]);
 
+  useEffect(() => {
+    if (!enableTabs || !activeTabId) return;
+
+    if (prevActiveTabIdRef.current && prevActiveTabIdRef.current !== activeTabId) {
+      onChange(activeTab.text);
+    }
+
+    prevActiveTabIdRef.current = activeTabId;
+  }, [activeTabId, activeTab.text, enableTabs, onChange]);
+
   // Text size from settings (now a number in px)
   const textSizePx = settings.textSize;
+  const currentText = enableTabs ? activeTab.text : text;
+
+  const handleClear = useCallback(() => {
+    clearWithUndo({
+      tabId: activeTabId || 'default',
+      text: currentText,
+      onClear: () => {
+        onChange('');
+        setError(null);
+        if (isExpanded) {
+          textareaRef.current?.focus();
+        } else {
+          inputRef.current?.focus();
+        }
+      },
+    });
+  }, [activeTabId, clearWithUndo, currentText, isExpanded, onChange]);
 
   const runEnterAction = useCallback((action: EnterKeyBehavior) => {
     switch (action) {
     case 'speak':
-      if (text.trim()) onSpeak();
+      if (currentText.trim()) onSpeak();
       break;
     case 'clear':
-      onChange('');
+      handleClear();
       break;
     case 'speakAndClear':
-      if (text.trim()) {
+      if (currentText.trim()) {
         onSpeak();
         setTimeout(() => onChange(''), 100);
       }
@@ -126,13 +177,13 @@ export default function TypingDock({
     case 'newline':
     default:
       if (isExpanded) {
-        onChange(text + '\n');
-      } else if (text.trim()) {
+        onChange(currentText + '\n');
+      } else if (currentText.trim()) {
         onSpeak();
       }
       break;
     }
-  }, [isExpanded, onChange, onSpeak, text]);
+  }, [currentText, handleClear, isExpanded, onChange, onSpeak]);
 
   const { handleEnter, resetPending, isPending, remainingMs } = useDoubleEnter({
     enabled: settings.doubleEnterEnabled,
@@ -145,17 +196,17 @@ export default function TypingDock({
 
   // Auto-expand when text gets long (but don't change fullscreen)
   useEffect(() => {
-    if (text.length > 50 && dockMode === 'compact') {
+    if (currentText.length > 50 && dockMode === 'compact') {
       updateUIPreference('typingDockMode', 'expanded');
     }
-  }, [text, dockMode, updateUIPreference]);
+  }, [currentText, dockMode, updateUIPreference]);
 
   // Update shared session content when text changes
   useEffect(() => {
     if (enableShare && isSharing) {
-      updateContent(text);
+      updateContent(currentText);
     }
-  }, [text, enableShare, isSharing, updateContent]);
+  }, [currentText, enableShare, isSharing, updateContent]);
 
   // Handle Enter key
   const handleKeyDown = useCallback(
@@ -176,16 +227,6 @@ export default function TypingDock({
     // Collapse if text is short (but don't change fullscreen)
     if (text.length <= 50 && dockMode === 'expanded') {
       updateUIPreference('typingDockMode', 'compact');
-    }
-  };
-
-  const handleClear = () => {
-    onChange('');
-    setError(null);
-    if (isExpanded) {
-      textareaRef.current?.focus();
-    } else {
-      inputRef.current?.focus();
     }
   };
 
@@ -214,7 +255,7 @@ export default function TypingDock({
 
   // Fix Text handler
   const handleFixText = async () => {
-    if (!text.trim() || isFixingText) return;
+    if (!currentText.trim() || isFixingText) return;
 
     setIsFixingText(true);
     setError(null);
@@ -225,7 +266,7 @@ export default function TypingDock({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text: currentText }),
       });
 
       if (!response.ok) {
@@ -235,7 +276,7 @@ export default function TypingDock({
 
       const data = await response.json();
 
-      if (data.text && data.text !== text) {
+      if (data.text && data.text !== currentText) {
         onChange(data.text);
       }
     } catch (err) {
@@ -308,8 +349,13 @@ export default function TypingDock({
                 <div className={`relative ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
                   <textarea
                     ref={textareaRef}
-                    value={text}
-                    onChange={(e) => onChange(e.target.value)}
+                    value={currentText}
+                    onChange={(e) => {
+                      if (enableTabs) {
+                        updateActiveTabText(e.target.value);
+                      }
+                      onChange(e.target.value);
+                    }}
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
                     placeholder="Type your message..."
@@ -359,7 +405,7 @@ export default function TypingDock({
                 )}
 
                 {/* Row 1: AI Features (when text exists) */}
-                {text.trim() && (enableFixText || (enableShare && user)) && (
+                {currentText.trim() && (enableFixText || (enableShare && user)) && (
                   <div className="flex items-center gap-2">
                     {/* Fix Text button (Pro) */}
                     {enableFixText && (
@@ -377,7 +423,7 @@ export default function TypingDock({
                       >
                         <button
                           onClick={handleFixText}
-                          disabled={!text.trim() || isFixingText}
+                          disabled={!currentText.trim() || isFixingText}
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
                             isFixingText
                               ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
@@ -425,7 +471,7 @@ export default function TypingDock({
                   {/* Clear button */}
                   <button
                     onClick={handleClear}
-                    disabled={!text.trim()}
+                    disabled={!currentText.trim()}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label="Clear"
                   >
@@ -439,7 +485,7 @@ export default function TypingDock({
                   {/* Speak/Stop button - primary CTA */}
                   <motion.button
                     onClick={isSpeaking ? onStop : onSpeak}
-                    disabled={!isAvailable || (!isSpeaking && !text.trim())}
+                    disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
                     className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                       isSpeaking
                         ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
@@ -461,6 +507,13 @@ export default function TypingDock({
                     )}
                   </motion.button>
                 </div>
+                {showUndoHint && (
+                  <UndoClearHint
+                    remainingMs={undoRemainingMs}
+                    onUndo={undo}
+                    className="px-1"
+                  />
+                )}
               </motion.div>
             ) : (
               <motion.div
@@ -488,8 +541,13 @@ export default function TypingDock({
                     <input
                       ref={inputRef}
                       type="text"
-                      value={text}
-                      onChange={(e) => onChange(e.target.value)}
+                      value={currentText}
+                      onChange={(e) => {
+                        if (enableTabs) {
+                          updateActiveTabText(e.target.value);
+                        }
+                        onChange(e.target.value);
+                      }}
                       onKeyDown={handleKeyDown}
                       onBlur={handleBlur}
                       placeholder="Type to speak..."
@@ -509,11 +567,11 @@ export default function TypingDock({
                   {/* Speak/Stop button - primary CTA */}
                   <motion.button
                     onClick={isSpeaking ? onStop : onSpeak}
-                    disabled={!isAvailable || (!isSpeaking && !text.trim())}
+                    disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
                     className={`flex-shrink-0 p-4 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                       isSpeaking
                         ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                        : text.trim()
+                        : currentText.trim()
                           ? 'bg-primary-500 hover:bg-primary-600 text-white'
                           : 'bg-surface-hover text-text-tertiary'
                     }`}
@@ -534,6 +592,13 @@ export default function TypingDock({
                     className="px-1 text-xs text-text-tertiary"
                   />
                 )}
+                {showUndoHint && (
+                  <UndoClearHint
+                    remainingMs={undoRemainingMs}
+                    onUndo={undo}
+                    className="px-1"
+                  />
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -551,7 +616,7 @@ export default function TypingDock({
           onStartSharing={async () => {
             await createSession();
             if (isSharing) {
-              updateContent(text);
+              updateContent(currentText);
             }
           }}
           onEndSession={async () => {
