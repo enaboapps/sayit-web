@@ -19,7 +19,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import SubscriptionWrapper from './SubscriptionWrapper';
-import FleshOutBottomSheet from './flesh-out/FleshOutBottomSheet';
 import ShareBottomSheet from './typing-share/ShareBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
@@ -35,7 +34,6 @@ interface TypingDockProps {
   // Feature flags
   enableTabs?: boolean;
   enableShare?: boolean;
-  enableFleshOut?: boolean;
   enableFixText?: boolean;
 }
 
@@ -49,13 +47,11 @@ export default function TypingDock({
   className = '',
   enableTabs = false,
   enableShare = false,
-  enableFleshOut = false,
   enableFixText = false,
 }: TypingDockProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showFleshOutSheet, setShowFleshOutSheet] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [showTabList, setShowTabList] = useState(false);
 
@@ -227,17 +223,6 @@ export default function TypingDock({
     }
   };
 
-  // Flesh out handler
-  const handleFleshOut = () => {
-    if (!text.trim()) return;
-    setShowFleshOutSheet(true);
-  };
-
-  const handleApplyFleshedOutText = (newText: string) => {
-    onChange(newText);
-    setShowFleshOutSheet(false);
-  };
-
   // Share handler
   const handleShare = async () => {
     if (!enableShare || !user) return;
@@ -362,21 +347,8 @@ export default function TypingDock({
                 )}
 
                 {/* Row 1: AI Features (when text exists) */}
-                {text.trim() && (enableFleshOut || enableFixText || (enableShare && user)) && (
+                {text.trim() && (enableFixText || (enableShare && user)) && (
                   <div className="flex items-center gap-2">
-                    {/* Flesh Out button */}
-                    {enableFleshOut && (
-                      <button
-                        onClick={handleFleshOut}
-                        disabled={!text.trim()}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                        aria-label="Flesh Out"
-                      >
-                        <ArrowPathIcon className="w-4 h-4" />
-                        <span className="text-sm font-medium">Flesh Out</span>
-                      </button>
-                    )}
-
                     {/* Fix Text button (Pro) */}
                     {enableFixText && (
                       <SubscriptionWrapper
@@ -549,16 +521,6 @@ export default function TypingDock({
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Flesh Out Bottom Sheet */}
-      {enableFleshOut && (
-        <FleshOutBottomSheet
-          isOpen={showFleshOutSheet}
-          initialText={text}
-          onClose={() => setShowFleshOutSheet(false)}
-          onApply={handleApplyFleshedOutText}
-        />
-      )}
 
       {/* Share Bottom Sheet */}
       {enableShare && user && (
