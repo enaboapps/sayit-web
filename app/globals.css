@@ -159,6 +159,13 @@ body {
   outline-offset: 2px;
 }
 
+/* Remove focus rings for textareas (global) */
+textarea:focus,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /* Skip link for screen readers */
 .skip-link {
   position: absolute;

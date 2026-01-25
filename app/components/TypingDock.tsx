@@ -370,7 +370,24 @@ export default function TypingDock({
                 )}
 
                 {/* Expanded textarea */}
-                <div className={`relative ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
+                <div className={`relative flex flex-col ${isFullscreen ? 'flex-1 min-h-0' : ''}`}>
+                  {(showUndoHint || showDoubleEnterHint) && (
+                    <div className="mb-2 shrink-0">
+                      {showUndoHint ? (
+                        <ActionPromptBanner
+                          variant="undo"
+                          remainingMs={undoRemainingMs}
+                          onUndo={undo}
+                        />
+                      ) : (
+                        <ActionPromptBanner
+                          variant="doubleEnter"
+                          actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
+                          remainingMs={remainingMs}
+                        />
+                      )}
+                    </div>
+                  )}
                   <textarea
                     ref={textareaRef}
                     value={currentText}
@@ -386,18 +403,13 @@ export default function TypingDock({
                     onKeyDown={handleKeyDown}
                     onBlur={handleBlur}
                     placeholder="Type your message..."
-                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 ${isFullscreen ? 'flex-1' : ''}`}
+                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none ${isFullscreen ? 'flex-1 min-h-0' : ''}`}
                     rows={isFullscreen ? undefined : 3}
-                    style={{ fontSize: `${textSizePx}px`, ...(isFullscreen ? { minHeight: '100%' } : {}) }}
+                    style={{
+                      fontSize: `${textSizePx}px`,
+                      ...(isFullscreen ? { minHeight: '100%' } : {}),
+                    }}
                   />
-                  {showDoubleEnterHint && !showUndoHint && (
-                    <ActionPromptBanner
-                      variant="doubleEnter"
-                      actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
-                      remainingMs={remainingMs}
-                      className="mt-2"
-                    />
-                  )}
                   {/* Control buttons (when tabs are not enabled) */}
                   {!enableTabs && (
                     <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -535,14 +547,6 @@ export default function TypingDock({
                     )}
                   </motion.button>
                 </div>
-                {showUndoHint && (
-                  <ActionPromptBanner
-                    variant="undo"
-                    remainingMs={undoRemainingMs}
-                    onUndo={undo}
-                    className="mt-2"
-                  />
-                )}
               </motion.div>
             ) : (
               <motion.div
@@ -564,11 +568,29 @@ export default function TypingDock({
                   </div>
                 )}
 
-                <div className="flex items-center gap-2">
-                  {/* Compact input */}
-                  <div className="flex-1 relative">
-                    <input
-                      ref={inputRef}
+                <div className="space-y-2">
+                  {(showUndoHint || showDoubleEnterHint) && (
+                    <div>
+                      {showUndoHint ? (
+                        <ActionPromptBanner
+                          variant="undo"
+                          remainingMs={undoRemainingMs}
+                          onUndo={undo}
+                        />
+                      ) : (
+                        <ActionPromptBanner
+                          variant="doubleEnter"
+                          actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
+                          remainingMs={remainingMs}
+                        />
+                      )}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    {/* Compact input */}
+                    <div className="flex-1 relative">
+                      <input
+                        ref={inputRef}
                       type="text"
                     value={currentText}
                     onChange={(e) => {
@@ -583,7 +605,7 @@ export default function TypingDock({
                       onKeyDown={handleKeyDown}
                       onBlur={handleBlur}
                       placeholder="Type to speak..."
-                      className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none"
                       style={{ fontSize: `${textSizePx}px` }}
                     />
                     {/* Expand button */}
@@ -616,23 +638,8 @@ export default function TypingDock({
                       <SpeakerWaveIcon className="w-6 h-6" />
                     )}
                   </motion.button>
+                  </div>
                 </div>
-                {showUndoHint && (
-                  <ActionPromptBanner
-                    variant="undo"
-                    remainingMs={undoRemainingMs}
-                    onUndo={undo}
-                    className="mt-2"
-                  />
-                )}
-                {showDoubleEnterHint && !showUndoHint && (
-                  <ActionPromptBanner
-                    variant="doubleEnter"
-                    actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
-                    remainingMs={remainingMs}
-                    className="mt-2"
-                  />
-                )}
               </motion.div>
             )}
           </AnimatePresence>
