@@ -201,7 +201,7 @@ export default function TypingDock({
       }
       break;
     }
-  }, [currentText, handleClear, isExpanded, onChange, onSpeak]);
+  }, [clearTextWithUndo, currentText, isExpanded, onChange, onSpeak]);
 
   const { handleEnter, resetPending, isPending, remainingMs } = useDoubleEnter({
     enabled: settings.doubleEnterEnabled,
@@ -591,53 +591,53 @@ export default function TypingDock({
                     <div className="flex-1 relative">
                       <input
                         ref={inputRef}
-                      type="text"
-                    value={currentText}
-                    onChange={(e) => {
-                      if (canUndo && e.target.value.trim().length > 0) {
-                        resetUndo();
-                      }
-                      if (enableTabs) {
-                        updateActiveTabText(e.target.value);
-                      }
-                      onChange(e.target.value);
-                    }}
-                      onKeyDown={handleKeyDown}
-                      onBlur={handleBlur}
-                      placeholder="Type to speak..."
-                      className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none"
-                      style={{ fontSize: `${textSizePx}px` }}
-                    />
-                    {/* Expand button */}
-                    <button
-                      onClick={toggleExpanded}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-surface transition-colors"
-                      aria-label="Expand"
-                    >
-                      <ChevronUpIcon className="w-4 h-4 text-text-secondary" />
-                    </button>
-                  </div>
+                        type="text"
+                        value={currentText}
+                        onChange={(e) => {
+                          if (canUndo && e.target.value.trim().length > 0) {
+                            resetUndo();
+                          }
+                          if (enableTabs) {
+                            updateActiveTabText(e.target.value);
+                          }
+                          onChange(e.target.value);
+                        }}
+                        onKeyDown={handleKeyDown}
+                        onBlur={handleBlur}
+                        placeholder="Type to speak..."
+                        className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none"
+                        style={{ fontSize: `${textSizePx}px` }}
+                      />
+                      {/* Expand button */}
+                      <button
+                        onClick={toggleExpanded}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-surface transition-colors"
+                        aria-label="Expand"
+                      >
+                        <ChevronUpIcon className="w-4 h-4 text-text-secondary" />
+                      </button>
+                    </div>
 
-                  {/* Speak/Stop button - primary CTA */}
-                  <motion.button
-                    onClick={isSpeaking ? onStop : onSpeak}
-                    disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
-                    className={`flex-shrink-0 p-4 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
-                      isSpeaking
-                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                        : currentText.trim()
-                          ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                          : 'bg-surface-hover text-text-tertiary'
-                    }`}
-                    whileTap={{ scale: 0.95 }}
-                    aria-label={isSpeaking ? 'Stop' : 'Speak'}
-                  >
-                    {isSpeaking ? (
-                      <StopIcon className="w-6 h-6" />
-                    ) : (
-                      <SpeakerWaveIcon className="w-6 h-6" />
-                    )}
-                  </motion.button>
+                    {/* Speak/Stop button - primary CTA */}
+                    <motion.button
+                      onClick={isSpeaking ? onStop : onSpeak}
+                      disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
+                      className={`flex-shrink-0 p-4 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
+                        isSpeaking
+                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                          : currentText.trim()
+                            ? 'bg-primary-500 hover:bg-primary-600 text-white'
+                            : 'bg-surface-hover text-text-tertiary'
+                      }`}
+                      whileTap={{ scale: 0.95 }}
+                      aria-label={isSpeaking ? 'Stop' : 'Speak'}
+                    >
+                      {isSpeaking ? (
+                        <StopIcon className="w-6 h-6" />
+                      ) : (
+                        <SpeakerWaveIcon className="w-6 h-6" />
+                      )}
+                    </motion.button>
                   </div>
                 </div>
               </motion.div>
