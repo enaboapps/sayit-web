@@ -228,18 +228,18 @@ export default function TypingDock({
 
   return (
     <>
-        <div
-          className={`border-t border-border ${className} ${isFullscreen ? 'fixed left-0 right-0 z-50 flex flex-col' : ''}`}
-          style={
-            isFullscreen
-              ? {
-                top: viewportTop,
-                height: viewportHeight ? `${viewportHeight}px` : '100dvh',
-                backgroundColor: '#242424',
-              }
-              : { backgroundColor: '#242424' }
-          }
-        >
+      <div
+        className={`border-t border-border ${className} ${isFullscreen ? 'fixed left-0 right-0 z-50 flex flex-col' : ''}`}
+        style={
+          isFullscreen
+            ? {
+              top: viewportTop,
+              height: viewportHeight ? `${viewportHeight}px` : '100dvh',
+              backgroundColor: '#242424',
+            }
+            : { backgroundColor: '#242424' }
+        }
+      >
         <div className={`px-3 py-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
           <AnimatePresence mode="wait">
             {isExpanded ? (
