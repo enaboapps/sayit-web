@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import { Dropdown } from '@/app/components/ui/Dropdown';
 import { Slider } from '@/app/components/ui/Slider';
+import { Switch } from '@/app/components/ui/Switch';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { UserButton } from '@clerk/nextjs';
 
@@ -99,6 +100,7 @@ export default function SettingsPage() {
     { value: 'clear' as EnterKeyBehavior, label: 'Clear Text' },
     { value: 'speakAndClear' as EnterKeyBehavior, label: 'Speak & Clear' },
   ];
+  const doubleEnterTimeoutSeconds = Math.round(settings.doubleEnterTimeoutMs / 1000);
 
   // Mobile layout with categories
   if (isMobile) {
@@ -183,6 +185,30 @@ export default function SettingsPage() {
               options={enterKeyOptions}
               value={settings.enterKeyBehavior}
               onChange={(value) => updateSetting('enterKeyBehavior', value)}
+            />
+            <Switch
+              label="Double-Enter"
+              description="Press Enter twice to trigger an action"
+              checked={settings.doubleEnterEnabled}
+              onChange={(value) => updateSetting('doubleEnterEnabled', value)}
+            />
+            <Dropdown
+              label="Double-Enter Action"
+              options={enterKeyOptions}
+              value={settings.doubleEnterAction}
+              onChange={(value) => updateSetting('doubleEnterAction', value)}
+              disabled={!settings.doubleEnterEnabled}
+            />
+            <Slider
+              label="Double-Enter Timeout"
+              description="Time window to press Enter twice"
+              min={1}
+              max={10}
+              step={1}
+              value={doubleEnterTimeoutSeconds}
+              onChange={(value) => updateSetting('doubleEnterTimeoutMs', value * 1000)}
+              valueLabel={(v) => `${v}s`}
+              disabled={!settings.doubleEnterEnabled}
             />
           </div>
         </BottomSheet>
@@ -311,6 +337,47 @@ export default function SettingsPage() {
                       value={settings.enterKeyBehavior}
                       onChange={(value) => updateSetting('enterKeyBehavior', value)}
                       className="w-48"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+                <div className="px-8 py-6">
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                      <Cog6ToothIcon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Double-Enter</h3>
+                      <p className="text-sm text-text-secondary mt-1">Press Enter twice to trigger an action</p>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Switch
+                      label="Enabled"
+                      checked={settings.doubleEnterEnabled}
+                      onChange={(value) => updateSetting('doubleEnterEnabled', value)}
+                    />
+                    <Dropdown
+                      label="Action"
+                      options={enterKeyOptions}
+                      value={settings.doubleEnterAction}
+                      onChange={(value) => updateSetting('doubleEnterAction', value)}
+                      disabled={!settings.doubleEnterEnabled}
+                    />
+                  </div>
+                  <div className="mt-6">
+                    <Slider
+                      label="Timeout"
+                      description="Time window to press Enter twice"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={doubleEnterTimeoutSeconds}
+                      onChange={(value) => updateSetting('doubleEnterTimeoutMs', value * 1000)}
+                      valueLabel={(v) => `${v}s`}
+                      disabled={!settings.doubleEnterEnabled}
                     />
                   </div>
                 </div>
