@@ -10,6 +10,9 @@ type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 type TypingDockMode = 'compact' | 'expanded' | 'fullscreen';
 
+const DOUBLE_ENTER_TIMEOUT_MIN_MS = 1000;
+const DOUBLE_ENTER_TIMEOUT_MAX_MS = 10000;
+
 interface Settings {
   textSize: TextSize;
   speechRate: number;
@@ -17,6 +20,9 @@ interface Settings {
   speechVolume: number;
   speechVoice: string;
   enterKeyBehavior: EnterKeyBehavior;
+  doubleEnterEnabled: boolean;
+  doubleEnterAction: EnterKeyBehavior;
+  doubleEnterTimeoutMs: number;
   ttsProvider: TTSProviderType;
   ttsVoiceId: string;
   ttsStability: number;
@@ -50,6 +56,9 @@ const defaultSettings: Settings = {
   speechVolume: 1.0,
   speechVoice: '',
   enterKeyBehavior: 'newline',
+  doubleEnterEnabled: false,
+  doubleEnterAction: 'speak',
+  doubleEnterTimeoutMs: 1000,
   ttsProvider: 'browser',
   ttsVoiceId: '',
   ttsStability: 0.5,
@@ -81,6 +90,17 @@ function normalizeTextSize(value: number | string): number {
   return enumMap[value] ?? 16;
 }
 
+function normalizeDoubleEnterTimeout(value: number | undefined): number {
+  if (!Number.isFinite(value)) {
+    return defaultSettings.doubleEnterTimeoutMs;
+  }
+
+  return Math.max(
+    DOUBLE_ENTER_TIMEOUT_MIN_MS,
+    Math.min(DOUBLE_ENTER_TIMEOUT_MAX_MS, value as number)
+  );
+}
+
 // Helper function to load settings from localStorage
 function loadFromLocalStorage(): AllSettings {
   if (typeof window === 'undefined') {
@@ -94,6 +114,10 @@ function loadFromLocalStorage(): AllSettings {
   // Normalize textSize from old enum format if needed
   if (parsedSettings.textSize !== undefined) {
     parsedSettings.textSize = normalizeTextSize(parsedSettings.textSize);
+  }
+
+  if (parsedSettings.doubleEnterTimeoutMs !== undefined) {
+    parsedSettings.doubleEnterTimeoutMs = normalizeDoubleEnterTimeout(parsedSettings.doubleEnterTimeoutMs);
   }
 
   const settings = { ...defaultSettings, ...parsedSettings };
@@ -152,6 +176,9 @@ function saveToLocalStorage(allSettings: AllSettings) {
     speechVolume: allSettings.speechVolume,
     speechVoice: allSettings.speechVoice,
     enterKeyBehavior: allSettings.enterKeyBehavior,
+    doubleEnterEnabled: allSettings.doubleEnterEnabled,
+    doubleEnterAction: allSettings.doubleEnterAction,
+    doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(allSettings.doubleEnterTimeoutMs),
     ttsProvider: allSettings.ttsProvider,
     ttsVoiceId: allSettings.ttsVoiceId,
     ttsStability: allSettings.ttsStability,
@@ -215,6 +242,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         speechVolume: localSettings.speechVolume,
         speechVoice: localSettings.speechVoice,
         enterKeyBehavior: localSettings.enterKeyBehavior,
+        doubleEnterEnabled: localSettings.doubleEnterEnabled,
+        doubleEnterAction: localSettings.doubleEnterAction,
+        doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(localSettings.doubleEnterTimeoutMs),
         ttsProvider: localSettings.ttsProvider,
         ttsVoiceId: localSettings.ttsVoiceId,
         ttsStability: localSettings.ttsStability,
@@ -244,6 +274,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         speechVolume: convexSettings.speechVolume,
         speechVoice: convexSettings.speechVoice,
         enterKeyBehavior: convexSettings.enterKeyBehavior,
+        doubleEnterEnabled: convexSettings.doubleEnterEnabled ?? defaultSettings.doubleEnterEnabled,
+        doubleEnterAction: (convexSettings.doubleEnterAction as EnterKeyBehavior) ?? defaultSettings.doubleEnterAction,
+        doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(convexSettings.doubleEnterTimeoutMs ?? defaultSettings.doubleEnterTimeoutMs),
         ttsProvider: convexSettings.ttsProvider,
         ttsVoiceId: convexSettings.ttsVoiceId,
         ttsStability: convexSettings.ttsStability,
@@ -334,6 +367,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     speechVolume: allSettings.speechVolume,
     speechVoice: allSettings.speechVoice,
     enterKeyBehavior: allSettings.enterKeyBehavior,
+    doubleEnterEnabled: allSettings.doubleEnterEnabled,
+    doubleEnterAction: allSettings.doubleEnterAction,
+    doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(allSettings.doubleEnterTimeoutMs),
     ttsProvider: allSettings.ttsProvider,
     ttsVoiceId: allSettings.ttsVoiceId,
     ttsStability: allSettings.ttsStability,

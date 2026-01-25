@@ -17,12 +17,14 @@ import {
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
+import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import ShareBottomSheet from './typing-share/ShareBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
+import DoubleEnterHint from './typing/DoubleEnterHint';
 
 interface TypingDockProps {
   text: string;
@@ -37,6 +39,8 @@ interface TypingDockProps {
   enableShare?: boolean;
   enableFixText?: boolean;
 }
+
+type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
 export default function TypingDock({
   text,
@@ -105,6 +109,40 @@ export default function TypingDock({
   // Text size from settings (now a number in px)
   const textSizePx = settings.textSize;
 
+  const runEnterAction = useCallback((action: EnterKeyBehavior) => {
+    switch (action) {
+    case 'speak':
+      if (text.trim()) onSpeak();
+      break;
+    case 'clear':
+      onChange('');
+      break;
+    case 'speakAndClear':
+      if (text.trim()) {
+        onSpeak();
+        setTimeout(() => onChange(''), 100);
+      }
+      break;
+    case 'newline':
+    default:
+      if (isExpanded) {
+        onChange(text + '\n');
+      } else if (text.trim()) {
+        onSpeak();
+      }
+      break;
+    }
+  }, [isExpanded, onChange, onSpeak, text]);
+
+  const { handleEnter, resetPending, isPending, remainingMs } = useDoubleEnter({
+    enabled: settings.doubleEnterEnabled,
+    timeoutMs: settings.doubleEnterTimeoutMs,
+    onSingleEnter: () => runEnterAction(settings.enterKeyBehavior),
+    onDoubleEnter: () => runEnterAction(settings.doubleEnterAction),
+  });
+
+  const showDoubleEnterHint = settings.doubleEnterEnabled && isPending;
+
   // Auto-expand when text gets long (but don't change fullscreen)
   useEffect(() => {
     if (text.length > 50 && dockMode === 'compact') {
@@ -122,37 +160,19 @@ export default function TypingDock({
   // Handle Enter key
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) {
+        return;
+      }
+
+      if (handleEnter()) {
         e.preventDefault();
-        switch (settings.enterKeyBehavior) {
-        case 'speak':
-          if (text.trim()) onSpeak();
-          break;
-        case 'clear':
-          onChange('');
-          break;
-        case 'speakAndClear':
-          if (text.trim()) {
-            onSpeak();
-            setTimeout(() => onChange(''), 100);
-          }
-          break;
-        case 'newline':
-        default:
-          if (isExpanded) {
-            onChange(text + '\n');
-          } else {
-            // In compact mode, enter speaks
-            if (text.trim()) onSpeak();
-          }
-          break;
-        }
       }
     },
-    [settings.enterKeyBehavior, text, onSpeak, onChange, isExpanded]
+    [handleEnter]
   );
 
   const handleBlur = () => {
+    resetPending();
     // Collapse if text is short (but don't change fullscreen)
     if (text.length <= 50 && dockMode === 'expanded') {
       updateUIPreference('typingDockMode', 'compact');
@@ -297,6 +317,13 @@ export default function TypingDock({
                     rows={isFullscreen ? undefined : 3}
                     style={{ fontSize: `${textSizePx}px`, ...(isFullscreen ? { minHeight: '100%' } : {}) }}
                   />
+                  {showDoubleEnterHint && (
+                    <DoubleEnterHint
+                      action={settings.doubleEnterAction}
+                      remainingMs={remainingMs}
+                      className="px-1 pt-2 text-xs text-text-tertiary"
+                    />
+                  )}
                   {/* Control buttons (when tabs are not enabled) */}
                   {!enableTabs && (
                     <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -500,6 +527,13 @@ export default function TypingDock({
                     )}
                   </motion.button>
                 </div>
+                {showDoubleEnterHint && (
+                  <DoubleEnterHint
+                    action={settings.doubleEnterAction}
+                    remainingMs={remainingMs}
+                    className="px-1 text-xs text-text-tertiary"
+                  />
+                )}
               </motion.div>
             )}
           </AnimatePresence>

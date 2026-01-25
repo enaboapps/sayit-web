@@ -29,6 +29,9 @@ export const initializeSettings = mutation({
     speechVolume: v.number(),
     speechVoice: v.string(),
     enterKeyBehavior: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
+    doubleEnterEnabled: v.boolean(),
+    doubleEnterAction: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
+    doubleEnterTimeoutMs: v.number(),
     ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs')),
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
@@ -60,6 +63,9 @@ export const initializeSettings = mutation({
     if (!Number.isFinite(args.speechVolume) || args.speechVolume < 0.0 || args.speechVolume > 1.0) {
       throw new Error('speechVolume must be a valid number between 0.0 and 1.0');
     }
+    if (!Number.isFinite(args.doubleEnterTimeoutMs) || args.doubleEnterTimeoutMs < 1000 || args.doubleEnterTimeoutMs > 10000) {
+      throw new Error('doubleEnterTimeoutMs must be a valid number between 1000 and 10000');
+    }
     if (!Number.isFinite(args.ttsStability) || args.ttsStability < 0.0 || args.ttsStability > 1.0) {
       throw new Error('ttsStability must be a valid number between 0.0 and 1.0');
     }
@@ -89,6 +95,9 @@ export const initializeSettings = mutation({
       speechVolume: args.speechVolume,
       speechVoice: args.speechVoice,
       enterKeyBehavior: args.enterKeyBehavior,
+      doubleEnterEnabled: args.doubleEnterEnabled,
+      doubleEnterAction: args.doubleEnterAction,
+      doubleEnterTimeoutMs: args.doubleEnterTimeoutMs,
       ttsProvider: args.ttsProvider,
       ttsVoiceId: args.ttsVoiceId,
       ttsStability: args.ttsStability,
@@ -115,6 +124,9 @@ export const updateSettings = mutation({
     speechVolume: v.optional(v.number()),
     speechVoice: v.optional(v.string()),
     enterKeyBehavior: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
+    doubleEnterEnabled: v.optional(v.boolean()),
+    doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
+    doubleEnterTimeoutMs: v.optional(v.number()),
     ttsProvider: v.optional(v.union(v.literal('browser'), v.literal('elevenlabs'))),
     ttsVoiceId: v.optional(v.string()),
     ttsStability: v.optional(v.number()),
@@ -171,6 +183,11 @@ export const updateSettings = mutation({
         throw new Error('speechVolume must be a valid number between 0.0 and 1.0');
       }
     }
+    if (updates.doubleEnterTimeoutMs !== undefined) {
+      if (!Number.isFinite(updates.doubleEnterTimeoutMs) || updates.doubleEnterTimeoutMs < 1000 || updates.doubleEnterTimeoutMs > 10000) {
+        throw new Error('doubleEnterTimeoutMs must be a valid number between 1000 and 10000');
+      }
+    }
     if (updates.ttsStability !== undefined) {
       if (!Number.isFinite(updates.ttsStability) || updates.ttsStability < 0.0 || updates.ttsStability > 1.0) {
         throw new Error('ttsStability must be a valid number between 0.0 and 1.0');
@@ -200,6 +217,9 @@ export const updateSettings = mutation({
     if (updates.speechVolume !== undefined) updateData.speechVolume = updates.speechVolume;
     if (updates.speechVoice !== undefined) updateData.speechVoice = updates.speechVoice;
     if (updates.enterKeyBehavior !== undefined) updateData.enterKeyBehavior = updates.enterKeyBehavior;
+    if (updates.doubleEnterEnabled !== undefined) updateData.doubleEnterEnabled = updates.doubleEnterEnabled;
+    if (updates.doubleEnterAction !== undefined) updateData.doubleEnterAction = updates.doubleEnterAction;
+    if (updates.doubleEnterTimeoutMs !== undefined) updateData.doubleEnterTimeoutMs = updates.doubleEnterTimeoutMs;
     if (updates.ttsProvider !== undefined) updateData.ttsProvider = updates.ttsProvider;
     if (updates.ttsVoiceId !== undefined) updateData.ttsVoiceId = updates.ttsVoiceId;
     if (updates.ttsStability !== undefined) updateData.ttsStability = updates.ttsStability;

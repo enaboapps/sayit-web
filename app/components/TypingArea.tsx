@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import { useTypingShare } from '@/lib/hooks/useTypingShare';
+import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import ShareLinkModal from './typing-share/ShareLinkModal';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
+import DoubleEnterHint from './typing/DoubleEnterHint';
 
 interface TypingAreaProps {
   initialText?: string
@@ -23,6 +25,8 @@ interface TypingAreaProps {
   }
   onChange?: (text: string) => void
 }
+
+type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
 export default function TypingArea({ initialText = '', text: externalText, tts, onChange }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
@@ -188,6 +192,37 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
 
   const textareaHeight = isExpanded ? '30rem' : '10rem';
 
+  const runEnterAction = useCallback((action: EnterKeyBehavior) => {
+    switch (action) {
+    case 'speak':
+      handleSpeak();
+      break;
+    case 'clear':
+      handleClear();
+      break;
+    case 'speakAndClear':
+      if (text.trim()) {
+        speak(text);
+        setTimeout(() => handleClear(), 100);
+      }
+      break;
+    case 'newline':
+    default:
+      updateActiveTabText(text + '\n');
+      onChange?.(text + '\n');
+      break;
+    }
+  }, [handleClear, handleSpeak, onChange, speak, text, updateActiveTabText]);
+
+  const { handleEnter, resetPending, isPending, remainingMs } = useDoubleEnter({
+    enabled: settings.doubleEnterEnabled,
+    timeoutMs: settings.doubleEnterTimeoutMs,
+    onSingleEnter: () => runEnterAction(settings.enterKeyBehavior),
+    onDoubleEnter: () => runEnterAction(settings.doubleEnterAction),
+  });
+
+  const showDoubleEnterHint = settings.doubleEnterEnabled && isPending;
+
   return (
     <div className="flex flex-col">
       {isVisible && (
@@ -212,29 +247,14 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 setError(null);
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) {
+                  return;
+                }
+                if (handleEnter()) {
                   e.preventDefault();
-                  switch (settings.enterKeyBehavior) {
-                  case 'speak':
-                    handleSpeak();
-                    break;
-                  case 'clear':
-                    handleClear();
-                    break;
-                  case 'speakAndClear':
-                    if (text.trim()) {
-                      speak(text);
-                      setTimeout(() => handleClear(), 100);
-                    }
-                    break;
-                  case 'newline':
-                  default:
-                    updateActiveTabText(text + '\n');
-                    onChange?.(text + '\n');
-                    break;
-                  }
                 }
               }}
+              onBlur={resetPending}
               placeholder="Type your message here..."
               style={{
                 fontSize: `${textSizePx}px`,
@@ -243,6 +263,13 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 lineHeight: '1.5',
               }}
             />
+            {showDoubleEnterHint && (
+              <DoubleEnterHint
+                action={settings.doubleEnterAction}
+                remainingMs={remainingMs}
+                className="px-8 pb-2 text-xs text-text-tertiary"
+              />
+            )}
             {error && (
               <div className="absolute bottom-0 left-0 right-0 bg-status-error text-red-400 p-4 text-sm rounded-b-3xl  transition-all duration-200">
                 {error}
