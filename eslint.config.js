@@ -10,7 +10,7 @@ export default [
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
-      '@next': nextPlugin,
+      '@next/next': nextPlugin,
       '@typescript-eslint': tsPlugin,
       'react-hooks': reactHooksPlugin,
     },
