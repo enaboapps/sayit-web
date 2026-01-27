@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   SpeakerWaveIcon,
   SparklesIcon,
   XMarkIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
   ArrowPathIcon,
   ShareIcon,
   ArrowsPointingOutIcon,
@@ -62,7 +60,6 @@ export default function TypingDock({
   const { top: viewportTop, height: viewportHeight } = useVisualViewport();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const prevTextRef = useRef(text); // Track previous text to detect external changes
   const prevActiveTabIdRef = useRef<string | null>(null);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
@@ -70,7 +67,6 @@ export default function TypingDock({
 
   // Get current mode from settings
   const dockMode = uiPreferences.typingDockMode;
-  const isExpanded = dockMode === 'expanded' || dockMode === 'fullscreen';
   const isFullscreen = dockMode === 'fullscreen';
 
   // Typing share hook
@@ -155,14 +151,10 @@ export default function TypingDock({
         }
         onChange('');
         setError(null);
-        if (isExpanded) {
-          textareaRef.current?.focus();
-        } else {
-          inputRef.current?.focus();
-        }
+        textareaRef.current?.focus();
       },
     });
-  }, [activeTabId, clearWithUndo, enableTabs, isExpanded, onChange, updateActiveTabText]);
+  }, [activeTabId, clearWithUndo, enableTabs, onChange, updateActiveTabText]);
 
   const handleClear = useCallback(() => {
     clearTextWithUndo(currentText);
@@ -194,16 +186,12 @@ export default function TypingDock({
       break;
     case 'newline':
     default:
-      if (isExpanded) {
-        onChange(currentText + '\n');
-      } else if (currentText.trim()) {
-        onSpeak();
-      }
+      onChange(currentText + '\n');
       break;
     }
-  }, [clearTextWithUndo, currentText, isExpanded, onChange, onSpeak]);
+  }, [clearTextWithUndo, currentText, onChange, onSpeak]);
 
-  const { handleEnter, resetPending, isPending, remainingMs } = useDoubleEnter({
+  const { handleEnter, isPending, remainingMs } = useDoubleEnter({
     enabled: settings.doubleEnterEnabled,
     timeoutMs: settings.doubleEnterTimeoutMs,
     onSingleEnter: () => runEnterAction(settings.enterKeyBehavior),
@@ -218,12 +206,13 @@ export default function TypingDock({
     speakAndClear: 'speak and clear',
   };
 
-  // Auto-expand when text gets long (but don't change fullscreen)
-  useEffect(() => {
-    if (currentText.length > 50 && dockMode === 'compact') {
-      updateUIPreference('typingDockMode', 'expanded');
-    }
-  }, [currentText, dockMode, updateUIPreference]);
+  const toggleFullscreen = () => {
+    const newMode = isFullscreen ? 'expanded' : 'fullscreen';
+    updateUIPreference('typingDockMode', newMode);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+  };
 
   // Update shared session content when text changes
   useEffect(() => {
@@ -245,37 +234,6 @@ export default function TypingDock({
     },
     [handleEnter]
   );
-
-  const handleBlur = () => {
-    resetPending();
-    // Collapse if text is short (but don't change fullscreen)
-    if (text.length <= 50 && dockMode === 'expanded') {
-      updateUIPreference('typingDockMode', 'compact');
-    }
-  };
-
-  const toggleExpanded = () => {
-    // Cycle: compact -> expanded -> compact
-    const newMode = dockMode === 'compact' ? 'expanded' : 'compact';
-    updateUIPreference('typingDockMode', newMode);
-    // Focus the appropriate input after toggle
-    setTimeout(() => {
-      if (newMode === 'expanded') {
-        textareaRef.current?.focus();
-      } else {
-        inputRef.current?.focus();
-      }
-    }, 100);
-  };
-
-  const toggleFullscreen = () => {
-    const newMode = isFullscreen ? 'expanded' : 'fullscreen';
-    updateUIPreference('typingDockMode', newMode);
-    // Focus textarea in both expanded and fullscreen modes
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 100);
-  };
 
   // Fix Text handler
   const handleFixText = async () => {
@@ -326,9 +284,7 @@ export default function TypingDock({
         }
       >
         <div className={`px-3 py-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
-          <AnimatePresence mode="wait">
-            {isExpanded ? (
-              <motion.div
+          <motion.div
                 key="expanded"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: isFullscreen ? '100%' : 'auto' }}
@@ -336,38 +292,30 @@ export default function TypingDock({
                 transition={{ duration: 0.2 }}
                 className={`space-y-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}
               >
-                {/* Tab indicator row (expanded mode) */}
-                {enableTabs && (
-                  <div className="flex items-center justify-between">
-                    <MobileTabIndicator
-                      tabs={tabs}
-                      activeTab={activeTab}
-                      onClick={() => setShowTabList(true)}
-                    />
-                    <div className="flex items-center gap-1">
-                      {/* Fullscreen toggle */}
-                      <button
-                        onClick={toggleFullscreen}
-                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                      >
-                        {isFullscreen ? (
-                          <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
-                        ) : (
-                          <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
-                        )}
-                      </button>
-                      {/* Collapse button */}
-                      <button
-                        onClick={toggleExpanded}
-                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                        aria-label="Collapse"
-                      >
-                        <ChevronDownIcon className="w-4 h-4 text-text-secondary" />
-                      </button>
+                <div className="flex items-center justify-between">
+                  {enableTabs ? (
+                    <div className="flex-1 flex justify-center">
+                      <MobileTabIndicator
+                        tabs={tabs}
+                        activeTab={activeTab}
+                        onClick={() => setShowTabList(true)}
+                      />
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex-1" />
+                  )}
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                    aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                  >
+                    {isFullscreen ? (
+                      <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
+                    ) : (
+                      <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
+                    )}
+                  </button>
+                </div>
 
                 {/* Expanded textarea */}
                 <div className={`relative flex flex-col ${isFullscreen ? 'flex-1 min-h-0' : ''}`}>
@@ -401,7 +349,6 @@ export default function TypingDock({
                       onChange(e.target.value);
                     }}
                     onKeyDown={handleKeyDown}
-                    onBlur={handleBlur}
                     placeholder="Type your message..."
                     className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none ${isFullscreen ? 'flex-1 min-h-0' : ''}`}
                     rows={isFullscreen ? undefined : 3}
@@ -410,31 +357,6 @@ export default function TypingDock({
                       ...(isFullscreen ? { minHeight: '100%' } : {}),
                     }}
                   />
-                  {/* Control buttons (when tabs are not enabled) */}
-                  {!enableTabs && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1">
-                      {/* Fullscreen toggle */}
-                      <button
-                        onClick={toggleFullscreen}
-                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                        aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                      >
-                        {isFullscreen ? (
-                          <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
-                        ) : (
-                          <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
-                        )}
-                      </button>
-                      {/* Collapse button */}
-                      <button
-                        onClick={toggleExpanded}
-                        className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                        aria-label="Collapse"
-                      >
-                        <ChevronDownIcon className="w-4 h-4 text-text-secondary" />
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Error display */}
@@ -547,102 +469,7 @@ export default function TypingDock({
                     )}
                   </motion.button>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="compact"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-2"
-              >
-                {/* Tab indicator (compact mode) */}
-                {enableTabs && (
-                  <div className="flex justify-center">
-                    <MobileTabIndicator
-                      tabs={tabs}
-                      activeTab={activeTab}
-                      onClick={() => setShowTabList(true)}
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  {(showUndoHint || showDoubleEnterHint) && (
-                    <div>
-                      {showUndoHint ? (
-                        <ActionPromptBanner
-                          variant="undo"
-                          remainingMs={undoRemainingMs}
-                          onUndo={undo}
-                        />
-                      ) : (
-                        <ActionPromptBanner
-                          variant="doubleEnter"
-                          actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
-                          remainingMs={remainingMs}
-                        />
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    {/* Compact input */}
-                    <div className="flex-1 relative">
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={currentText}
-                        onChange={(e) => {
-                          if (canUndo && e.target.value.trim().length > 0) {
-                            resetUndo();
-                          }
-                          if (enableTabs) {
-                            updateActiveTabText(e.target.value);
-                          }
-                          onChange(e.target.value);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onBlur={handleBlur}
-                        placeholder="Type to speak..."
-                        className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-full px-4 py-3 pr-10 focus:outline-none"
-                        style={{ fontSize: `${textSizePx}px` }}
-                      />
-                      {/* Expand button */}
-                      <button
-                        onClick={toggleExpanded}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-surface transition-colors"
-                        aria-label="Expand"
-                      >
-                        <ChevronUpIcon className="w-4 h-4 text-text-secondary" />
-                      </button>
-                    </div>
-
-                    {/* Speak/Stop button - primary CTA */}
-                    <motion.button
-                      onClick={isSpeaking ? onStop : onSpeak}
-                      disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
-                      className={`flex-shrink-0 p-4 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
-                        isSpeaking
-                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                          : currentText.trim()
-                            ? 'bg-primary-500 hover:bg-primary-600 text-white'
-                            : 'bg-surface-hover text-text-tertiary'
-                      }`}
-                      whileTap={{ scale: 0.95 }}
-                      aria-label={isSpeaking ? 'Stop' : 'Speak'}
-                    >
-                      {isSpeaking ? (
-                        <StopIcon className="w-6 h-6" />
-                      ) : (
-                        <SpeakerWaveIcon className="w-6 h-6" />
-                      )}
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          </motion.div>
         </div>
       </div>
 
