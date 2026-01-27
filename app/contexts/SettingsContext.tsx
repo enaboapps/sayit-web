@@ -8,7 +8,7 @@ import { useAuth } from './AuthContext';
 
 type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
-type TypingDockMode = 'compact' | 'expanded' | 'fullscreen';
+type TypingDockMode = 'expanded' | 'fullscreen';
 
 const DOUBLE_ENTER_TIMEOUT_MIN_MS = 1000;
 const DOUBLE_ENTER_TIMEOUT_MAX_MS = 10000;
@@ -71,7 +71,7 @@ const defaultUIPreferences: UIPreferences = {
   selectedBoardId: null,
   typingShareFontSize: 18,
   activeTypingTabId: null,
-  typingDockMode: 'compact',
+  typingDockMode: 'expanded',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -100,6 +100,7 @@ function normalizeDoubleEnterTimeout(value: number | undefined): number {
     Math.min(DOUBLE_ENTER_TIMEOUT_MAX_MS, value as number)
   );
 }
+
 
 // Helper function to load settings from localStorage
 function loadFromLocalStorage(): AllSettings {
@@ -147,7 +148,7 @@ function loadFromLocalStorage(): AllSettings {
   };
 
   // Parse typing dock mode
-  const validTypingDockModes = ['compact', 'expanded', 'fullscreen'];
+  const validTypingDockModes = ['expanded', 'fullscreen'];
   const parsedTypingDockMode = typingDockMode && validTypingDockModes.includes(typingDockMode)
     ? typingDockMode as TypingDockMode
     : defaultUIPreferences.typingDockMode;
@@ -286,7 +287,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         selectedBoardId: convexSettings.selectedBoardId ?? null,
         typingShareFontSize: convexSettings.typingShareFontSize,
         activeTypingTabId: convexSettings.activeTypingTabId ?? null,
-        typingDockMode: (convexSettings.typingDockMode as TypingDockMode) ?? defaultUIPreferences.typingDockMode,
+        typingDockMode: convexSettings.typingDockMode === 'fullscreen'
+          ? 'fullscreen'
+          : defaultUIPreferences.typingDockMode,
       };
 
       setAllSettings(serverSettings);
