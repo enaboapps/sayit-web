@@ -8,7 +8,7 @@ import { useAuth } from './AuthContext';
 
 type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
-type TypingDockMode = 'expanded' | 'fullscreen';
+type TypingDockMode = 'expanded' | 'fullscreen' | 'minimized';
 
 const DOUBLE_ENTER_TIMEOUT_MIN_MS = 1000;
 const DOUBLE_ENTER_TIMEOUT_MAX_MS = 10000;
@@ -148,7 +148,7 @@ function loadFromLocalStorage(): AllSettings {
   };
 
   // Parse typing dock mode
-  const validTypingDockModes = ['expanded', 'fullscreen'];
+  const validTypingDockModes = ['expanded', 'fullscreen', 'minimized'];
   const parsedTypingDockMode = typingDockMode && validTypingDockModes.includes(typingDockMode)
     ? typingDockMode as TypingDockMode
     : defaultUIPreferences.typingDockMode;
@@ -268,6 +268,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         });
     } else if (convexSettings) {
       // Settings exist in Convex - update from server
+      const serverTypingDockMode = convexSettings.typingDockMode as TypingDockMode | undefined;
       const serverSettings: AllSettings = {
         textSize: normalizeTextSize(convexSettings.textSize),
         speechRate: convexSettings.speechRate,
@@ -287,8 +288,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         selectedBoardId: convexSettings.selectedBoardId ?? null,
         typingShareFontSize: convexSettings.typingShareFontSize,
         activeTypingTabId: convexSettings.activeTypingTabId ?? null,
-        typingDockMode: convexSettings.typingDockMode === 'fullscreen'
-          ? 'fullscreen'
+        typingDockMode: serverTypingDockMode === 'fullscreen' || serverTypingDockMode === 'minimized'
+          ? serverTypingDockMode
           : defaultUIPreferences.typingDockMode,
       };
 

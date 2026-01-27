@@ -94,7 +94,7 @@ export default defineSchema({
     typingShareFontSize: v.number(),
     typingTabs: v.optional(v.string()), // JSON stringified TypingTabsState
     activeTypingTabId: v.optional(v.string()),
-    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'))),
+    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
 
     // Metadata for sync tracking
     lastSyncedAt: v.number(),
