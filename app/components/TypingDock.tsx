@@ -386,199 +386,199 @@ export default function TypingDock({
       >
         <div className={`px-3 py-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}>
           <motion.div
-                key="expanded"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: isFullscreen ? '100%' : 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`space-y-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}
-              >
-                <div className="flex items-center justify-between">
-                  {enableTabs ? (
-                    <div className="flex items-center">
-                      <MobileTabIndicator
-                        tabs={tabs}
-                        activeTab={activeTab}
-                        onClick={() => setShowTabList(true)}
-                      />
-                    </div>
-                  ) : (
-                    <div />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={minimizeDock}
-                      className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                      aria-label="Minimize"
-                    >
-                      <MinusIcon className="w-4 h-4 text-text-secondary" />
-                    </button>
-                    <button
-                      onClick={toggleFullscreen}
-                      className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                      aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                    >
-                      {isFullscreen ? (
-                        <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
-                      ) : (
-                        <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Expanded textarea */}
-                <div className={`relative flex flex-col ${isFullscreen ? 'flex-1 min-h-0' : ''}`}>
-                  {(showUndoHint || showDoubleEnterHint) && (
-                    <div className="mb-2 shrink-0">
-                      {showUndoHint ? (
-                        <ActionPromptBanner
-                          variant="undo"
-                          remainingMs={undoRemainingMs}
-                          onUndo={undo}
-                        />
-                      ) : (
-                        <ActionPromptBanner
-                          variant="doubleEnter"
-                          actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
-                          remainingMs={remainingMs}
-                        />
-                      )}
-                    </div>
-                  )}
-                  <textarea
-                    ref={textareaRef}
-                    value={currentText}
-                    onChange={(e) => {
-                      if (canUndo && e.target.value.trim().length > 0) {
-                        resetUndo();
-                      }
-                      if (enableTabs) {
-                        updateActiveTabText(e.target.value);
-                      }
-                      onChange(e.target.value);
-                    }}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your message..."
-                    className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none ${isFullscreen ? 'flex-1 min-h-0' : ''}`}
-                    rows={isFullscreen ? undefined : 3}
-                    style={{
-                      fontSize: `${textSizePx}px`,
-                      ...(isFullscreen ? { minHeight: '100%' } : {}),
-                    }}
+            key="expanded"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: isFullscreen ? '100%' : 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`space-y-2 ${isFullscreen ? 'flex-1 flex flex-col' : ''}`}
+          >
+            <div className="flex items-center justify-between">
+              {enableTabs ? (
+                <div className="flex items-center">
+                  <MobileTabIndicator
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onClick={() => setShowTabList(true)}
                   />
                 </div>
+              ) : (
+                <div />
+              )}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={minimizeDock}
+                  className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                  aria-label="Minimize"
+                >
+                  <MinusIcon className="w-4 h-4 text-text-secondary" />
+                </button>
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                >
+                  {isFullscreen ? (
+                    <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
+                  ) : (
+                    <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
+                  )}
+                </button>
+              </div>
+            </div>
 
-                {/* Error display */}
-                {error && (
-                  <div className="px-1">
-                    <span className="text-xs text-red-500">{error}</span>
-                  </div>
-                )}
-
-                {/* Row 1: AI Features (when text exists) */}
-                {currentText.trim() && (enableFixText || (enableShare && user)) && (
-                  <div className="flex items-center gap-2">
-                    {/* Fix Text button (Pro) */}
-                    {enableFixText && (
-                      <SubscriptionWrapper
-                        fallback={
-                          <button
-                            onClick={() => window.location.href = '/pricing'}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all duration-200"
-                            aria-label="Fix Text (Pro)"
-                          >
-                            <SparklesIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">Fix Text</span>
-                          </button>
-                        }
-                      >
-                        <button
-                          onClick={handleFixText}
-                          disabled={!currentText.trim() || isFixingText}
-                          className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
-                            isFixingText
-                              ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                              : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
-                          }`}
-                          aria-label="Fix Text"
-                        >
-                          {isFixingText ? (
-                            <>
-                              <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                              <span className="text-sm font-medium">Fixing...</span>
-                            </>
-                          ) : (
-                            <>
-                              <SparklesIcon className="w-4 h-4" />
-                              <span className="text-sm font-medium">Fix Text</span>
-                            </>
-                          )}
-                        </button>
-                      </SubscriptionWrapper>
-                    )}
-
-                    {/* Share button */}
-                    {enableShare && user && (
-                      <button
-                        onClick={() => setShowShareSheet(true)}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
-                          isSharing
-                            ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                            : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
-                        }`}
-                        aria-label="Share"
-                      >
-                        <ShareIcon className="w-4 h-4" />
-                        <span className="text-sm font-medium">
-                          {isSharing ? 'Sharing' : 'Share'}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Row 2: Primary Actions */}
-                <div className="flex items-center gap-2">
-                  {/* Clear button */}
-                  <button
-                    onClick={handleClear}
-                    disabled={!currentText.trim()}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Clear"
-                  >
-                    <XMarkIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Clear</span>
-                  </button>
-
-                  {/* Spacer */}
-                  <div className="flex-1" />
-
-                  {/* Speak/Stop button - primary CTA */}
-                  <motion.button
-                    onClick={isSpeaking ? onStop : onSpeak}
-                    disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
-                      isSpeaking
-                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                        : 'bg-primary-500 hover:bg-primary-600 text-white'
-                    }`}
-                    whileTap={{ scale: 0.95 }}
-                    aria-label={isSpeaking ? 'Stop' : 'Speak'}
-                  >
-                    {isSpeaking ? (
-                      <>
-                        <StopIcon className="w-5 h-5" />
-                        <span>Stop</span>
-                      </>
-                    ) : (
-                      <>
-                        <SpeakerWaveIcon className="w-5 h-5" />
-                        <span>Speak</span>
-                      </>
-                    )}
-                  </motion.button>
+            {/* Expanded textarea */}
+            <div className={`relative flex flex-col ${isFullscreen ? 'flex-1 min-h-0' : ''}`}>
+              {(showUndoHint || showDoubleEnterHint) && (
+                <div className="mb-2 shrink-0">
+                  {showUndoHint ? (
+                    <ActionPromptBanner
+                      variant="undo"
+                      remainingMs={undoRemainingMs}
+                      onUndo={undo}
+                    />
+                  ) : (
+                    <ActionPromptBanner
+                      variant="doubleEnter"
+                      actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]}
+                      remainingMs={remainingMs}
+                    />
+                  )}
                 </div>
+              )}
+              <textarea
+                ref={textareaRef}
+                value={currentText}
+                onChange={(e) => {
+                  if (canUndo && e.target.value.trim().length > 0) {
+                    resetUndo();
+                  }
+                  if (enableTabs) {
+                    updateActiveTabText(e.target.value);
+                  }
+                  onChange(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 ${enableTabs ? '' : 'pr-16'} resize-none ${isFullscreen ? 'flex-1 min-h-0' : ''}`}
+                rows={isFullscreen ? undefined : 3}
+                style={{
+                  fontSize: `${textSizePx}px`,
+                  ...(isFullscreen ? { minHeight: '100%' } : {}),
+                }}
+              />
+            </div>
+
+            {/* Error display */}
+            {error && (
+              <div className="px-1">
+                <span className="text-xs text-red-500">{error}</span>
+              </div>
+            )}
+
+            {/* Row 1: AI Features (when text exists) */}
+            {currentText.trim() && (enableFixText || (enableShare && user)) && (
+              <div className="flex items-center gap-2">
+                {/* Fix Text button (Pro) */}
+                {enableFixText && (
+                  <SubscriptionWrapper
+                    fallback={
+                      <button
+                        onClick={() => window.location.href = '/pricing'}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all duration-200"
+                        aria-label="Fix Text (Pro)"
+                      >
+                        <SparklesIcon className="w-4 h-4" />
+                        <span className="text-sm font-medium">Fix Text</span>
+                      </button>
+                    }
+                  >
+                    <button
+                      onClick={handleFixText}
+                      disabled={!currentText.trim() || isFixingText}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+                        isFixingText
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                          : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
+                      }`}
+                      aria-label="Fix Text"
+                    >
+                      {isFixingText ? (
+                        <>
+                          <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                          <span className="text-sm font-medium">Fixing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-4 h-4" />
+                          <span className="text-sm font-medium">Fix Text</span>
+                        </>
+                      )}
+                    </button>
+                  </SubscriptionWrapper>
+                )}
+
+                {/* Share button */}
+                {enableShare && user && (
+                  <button
+                    onClick={() => setShowShareSheet(true)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
+                      isSharing
+                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                        : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
+                    }`}
+                    aria-label="Share"
+                  >
+                    <ShareIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {isSharing ? 'Sharing' : 'Share'}
+                    </span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Row 2: Primary Actions */}
+            <div className="flex items-center gap-2">
+              {/* Clear button */}
+              <button
+                onClick={handleClear}
+                disabled={!currentText.trim()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Clear"
+              >
+                <XMarkIcon className="w-4 h-4" />
+                <span className="text-sm font-medium">Clear</span>
+              </button>
+
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Speak/Stop button - primary CTA */}
+              <motion.button
+                onClick={isSpeaking ? onStop : onSpeak}
+                disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
+                  isSpeaking
+                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
+                    : 'bg-primary-500 hover:bg-primary-600 text-white'
+                }`}
+                whileTap={{ scale: 0.95 }}
+                aria-label={isSpeaking ? 'Stop' : 'Speak'}
+              >
+                {isSpeaking ? (
+                  <>
+                    <StopIcon className="w-5 h-5" />
+                    <span>Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <SpeakerWaveIcon className="w-5 h-5" />
+                    <span>Speak</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
           </motion.div>
         </div>
       </div>
