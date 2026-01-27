@@ -42,7 +42,7 @@ export const initializeSettings = mutation({
     typingShareFontSize: v.number(),
     typingTabs: v.optional(v.string()),
     activeTypingTabId: v.optional(v.string()),
-    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'))),
+    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -137,7 +137,7 @@ export const updateSettings = mutation({
     typingShareFontSize: v.optional(v.number()),
     typingTabs: v.optional(v.string()),
     activeTypingTabId: v.optional(v.string()),
-    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'))),
+    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
     lastSyncedAt: v.number(),
   },
   handler: async (ctx, args) => {

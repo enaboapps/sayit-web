@@ -10,6 +10,7 @@ import {
   ShareIcon,
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
+  MinusIcon,
   StopIcon,
 } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
@@ -68,6 +69,8 @@ export default function TypingDock({
   // Get current mode from settings
   const dockMode = uiPreferences.typingDockMode;
   const isFullscreen = dockMode === 'fullscreen';
+  const isMinimized = dockMode === 'minimized';
+  const lastDockModeRef = useRef<'expanded' | 'fullscreen'>('expanded');
 
   // Typing share hook
   const {
@@ -122,6 +125,12 @@ export default function TypingDock({
       }
     }
   }, [enableTabs, text, activeTab.text, updateActiveTabText]);
+
+  useEffect(() => {
+    if (dockMode === 'expanded' || dockMode === 'fullscreen') {
+      lastDockModeRef.current = dockMode;
+    }
+  }, [dockMode]);
 
   useEffect(() => {
     if (!enableTabs || !activeTabId) return;
@@ -214,6 +223,17 @@ export default function TypingDock({
     }, 100);
   };
 
+  const minimizeDock = () => {
+    updateUIPreference('typingDockMode', 'minimized');
+  };
+
+  const restoreDock = () => {
+    updateUIPreference('typingDockMode', lastDockModeRef.current);
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+  };
+
   // Update shared session content when text changes
   useEffect(() => {
     if (enableShare && isSharing) {
@@ -269,6 +289,87 @@ export default function TypingDock({
     }
   };
 
+  if (isMinimized) {
+    return (
+      <>
+        <button
+          onClick={restoreDock}
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] right-4 z-50 flex items-center justify-center rounded-full bg-surface-hover text-text-secondary shadow-lg p-3 hover:bg-surface transition-colors md:bottom-4"
+          aria-label="Open typing dock"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="2.5" y="7" width="19" height="9" rx="2" />
+            <path d="M6 11h.01M9 11h.01M12 11h.01M15 11h.01M18 11h.01" />
+            <path d="M6 14h12" />
+          </svg>
+        </button>
+
+        {/* Share Bottom Sheet */}
+        {enableShare && user && (
+          <ShareBottomSheet
+            isOpen={showShareSheet}
+            onClose={() => setShowShareSheet(false)}
+            isSharing={isSharing}
+            isCreating={isCreating}
+            shareableLink={shareableLink}
+            onStartSharing={async () => {
+              await createSession();
+              if (isSharing) {
+                updateContent(currentText);
+              }
+            }}
+            onEndSession={async () => {
+              await endSession();
+            }}
+          />
+        )}
+
+        {/* Tab List Bottom Sheet */}
+        {enableTabs && (
+          <MobileTabList
+            isOpen={showTabList}
+            onClose={() => setShowTabList(false)}
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onSwitchTab={(tabId) => {
+              switchTab(tabId);
+              const tab = tabs.find(t => t.id === tabId);
+              if (tab) {
+                onChange(tab.text);
+              }
+            }}
+            onCloseTab={(tabId) => {
+              closeTab(tabId);
+              // Update the text to the new active tab's text
+              const remainingTabs = tabs.filter(t => t.id !== tabId);
+              if (remainingTabs.length > 0) {
+                onChange(remainingTabs[0].text);
+              }
+            }}
+            onCloseAllTabs={() => {
+              closeAllTabs();
+              onChange('');
+            }}
+            onCreateTab={() => {
+              createTab();
+              onChange('');
+            }}
+            onRenameTab={renameTab}
+          />
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <div
@@ -294,7 +395,7 @@ export default function TypingDock({
               >
                 <div className="flex items-center justify-between">
                   {enableTabs ? (
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex items-center">
                       <MobileTabIndicator
                         tabs={tabs}
                         activeTab={activeTab}
@@ -302,19 +403,28 @@ export default function TypingDock({
                       />
                     </div>
                   ) : (
-                    <div className="flex-1" />
+                    <div />
                   )}
-                  <button
-                    onClick={toggleFullscreen}
-                    className="p-1.5 rounded-full hover:bg-surface transition-colors"
-                    aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                  >
-                    {isFullscreen ? (
-                      <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
-                    ) : (
-                      <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={minimizeDock}
+                      className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                      aria-label="Minimize"
+                    >
+                      <MinusIcon className="w-4 h-4 text-text-secondary" />
+                    </button>
+                    <button
+                      onClick={toggleFullscreen}
+                      className="p-1.5 rounded-full hover:bg-surface transition-colors"
+                      aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                    >
+                      {isFullscreen ? (
+                        <ArrowsPointingInIcon className="w-4 h-4 text-text-secondary" />
+                      ) : (
+                        <ArrowsPointingOutIcon className="w-4 h-4 text-text-secondary" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Expanded textarea */}
