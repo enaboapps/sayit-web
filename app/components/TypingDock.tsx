@@ -477,64 +477,44 @@ export default function TypingDock({
             )}
 
             {/* Row 1: AI Features (when text exists) */}
-            {currentText.trim() && (enableFixText || (enableShare && user)) && (
+            {currentText.trim() && enableFixText && (
               <div className="flex items-center gap-2">
                 {/* Fix Text button (Pro) */}
-                {enableFixText && (
-                  <SubscriptionWrapper
-                    fallback={
-                      <button
-                        onClick={() => window.location.href = '/pricing'}
-                        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all duration-200"
-                        aria-label="Fix Text (Pro)"
-                      >
+                <SubscriptionWrapper
+                  fallback={
+                    <button
+                      onClick={() => window.location.href = '/pricing'}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all duration-200"
+                      aria-label="Fix Text (Pro)"
+                    >
+                      <SparklesIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Fix Text</span>
+                    </button>
+                  }
+                >
+                  <button
+                    onClick={handleFixText}
+                    disabled={!currentText.trim() || isFixingText}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isFixingText
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                        : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
+                    }`}
+                    aria-label="Fix Text"
+                  >
+                    {isFixingText ? (
+                      <>
+                        <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                        <span className="text-sm font-medium">Fixing...</span>
+                      </>
+                    ) : (
+                      <>
                         <SparklesIcon className="w-4 h-4" />
                         <span className="text-sm font-medium">Fix Text</span>
-                      </button>
-                    }
-                  >
-                    <button
-                      onClick={handleFixText}
-                      disabled={!currentText.trim() || isFixingText}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
-                        isFixingText
-                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                          : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
-                      }`}
-                      aria-label="Fix Text"
-                    >
-                      {isFixingText ? (
-                        <>
-                          <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                          <span className="text-sm font-medium">Fixing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <SparklesIcon className="w-4 h-4" />
-                          <span className="text-sm font-medium">Fix Text</span>
-                        </>
-                      )}
-                    </button>
-                  </SubscriptionWrapper>
-                )}
-
-                {/* Share button */}
-                {enableShare && user && (
-                  <button
-                    onClick={() => setShowShareSheet(true)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
-                      isSharing
-                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                        : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
-                    }`}
-                    aria-label="Share"
-                  >
-                    <ShareIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      {isSharing ? 'Sharing' : 'Share'}
-                    </span>
+                      </>
+                    )}
                   </button>
-                )}
+                </SubscriptionWrapper>
               </div>
             )}
 
@@ -550,6 +530,24 @@ export default function TypingDock({
                 <XMarkIcon className="w-4 h-4" />
                 <span className="text-sm font-medium">Clear</span>
               </button>
+
+              {/* Share button */}
+              {enableShare && user && (
+                <button
+                  onClick={() => setShowShareSheet(true)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
+                    isSharing
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                      : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
+                  }`}
+                  aria-label="Share"
+                >
+                  <ShareIcon className="w-4 h-4" />
+                  <span className="text-sm font-medium">
+                    {isSharing ? 'Sharing' : 'Share'}
+                  </span>
+                </button>
+              )}
 
               {/* Spacer */}
               <div className="flex-1" />
