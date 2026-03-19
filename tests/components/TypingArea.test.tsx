@@ -41,9 +41,9 @@ jest.mock('@/app/contexts/AuthContext', () => ({
   })),
 }));
 
-// Mock useTypingShare hook
-jest.mock('@/lib/hooks/useTypingShare', () => ({
-  useTypingShare: jest.fn(() => ({
+// Mock useLiveTyping hook
+jest.mock('@/lib/hooks/useLiveTyping', () => ({
+  useLiveTyping: jest.fn(() => ({
     isSharing: false,
     isCreating: false,
     createSession: jest.fn(),

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ClipboardIcon, CheckIcon, ArrowPathIcon, ShareIcon, StopIcon } from '@heroicons/react/24/outline';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 
-interface ShareBottomSheetProps {
+interface LiveTypingBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   isSharing: boolean;
@@ -14,7 +14,7 @@ interface ShareBottomSheetProps {
   onEndSession: () => Promise<void>;
 }
 
-export default function ShareBottomSheet({
+export default function LiveTypingBottomSheet({
   isOpen,
   onClose,
   isSharing,
@@ -22,7 +22,7 @@ export default function ShareBottomSheet({
   shareableLink,
   onStartSharing,
   onEndSession,
-}: ShareBottomSheetProps) {
+}: LiveTypingBottomSheetProps) {
   const [copied, setCopied] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
 
@@ -42,7 +42,7 @@ export default function ShareBottomSheet({
     try {
       await onStartSharing();
     } catch (err) {
-      console.error('Failed to start sharing:', err);
+      console.error('Failed to start live typing:', err);
     }
   };
 
@@ -52,7 +52,7 @@ export default function ShareBottomSheet({
       await onEndSession();
       onClose();
     } catch (err) {
-      console.error('Failed to end session:', err);
+      console.error('Failed to end live typing session:', err);
     } finally {
       setIsEnding(false);
     }
@@ -62,16 +62,16 @@ export default function ShareBottomSheet({
     <BottomSheet
       isOpen={isOpen}
       onClose={onClose}
-      title="Share Session"
+      title="Live Typing Session"
       snapPoints={[40]}
       initialSnap={0}
     >
       <div className="p-4 space-y-4">
         {!isSharing ? (
-          /* Not sharing - show start button */
+          /* Not active - show start button */
           <div className="text-center py-4">
             <ShareIcon className="w-12 h-12 mx-auto text-text-secondary mb-3" />
-            <h3 className="text-lg font-medium text-foreground mb-2">Share Your Typing</h3>
+            <h3 className="text-lg font-medium text-foreground mb-2">Live Typing</h3>
             <p className="text-text-secondary text-sm mb-6">
               Let others see what you're typing in real-time. The session expires in 24 hours.
             </p>
@@ -93,17 +93,17 @@ export default function ShareBottomSheet({
               ) : (
                 <>
                   <ShareIcon className="w-5 h-5" />
-                  <span>Start Sharing</span>
+                  <span>Start Live Typing</span>
                 </>
               )}
             </button>
           </div>
         ) : (
-          /* Currently sharing - show link and controls */
+          /* Currently active - show link and controls */
           <div className="space-y-4">
             <div className="bg-status-success p-3 rounded-xl flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-green-400 text-sm font-medium">Sharing Active</span>
+              <span className="text-green-400 text-sm font-medium">Live Typing Active</span>
             </div>
 
             <p className="text-text-secondary text-sm">
@@ -149,7 +149,7 @@ export default function ShareBottomSheet({
               ) : (
                 <>
                   <StopIcon className="w-5 h-5" />
-                  <span>End Session</span>
+                  <span>End Live Typing</span>
                 </>
               )}
             </button>

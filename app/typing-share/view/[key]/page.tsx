@@ -50,7 +50,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
       <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
         <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
           <div className="p-6 sm:p-8">
-            <h1 className="text-3xl font-bold text-foreground">Live Typing Share</h1>
+            <h1 className="text-3xl font-bold text-foreground">Live Typing</h1>
             <p className="text-text-secondary mt-2">
               You are viewing a live typing session. Updates appear in real-time.
             </p>

@@ -6,10 +6,10 @@ import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import SubscriptionWrapper from './SubscriptionWrapper';
-import { useTypingShare } from '@/lib/hooks/useTypingShare';
+import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
-import ShareLinkModal from './typing-share/ShareLinkModal';
+import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
@@ -32,7 +32,7 @@ type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 export default function TypingArea({ initialText = '', text: externalText, tts, onChange }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFixingText, setIsFixingText] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevActiveTabIdRef = useRef<string | null>(null);
@@ -46,7 +46,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     createSession,
     endSession,
     getShareableLink,
-  } = useTypingShare();
+  } = useLiveTyping();
   const shareableLink = getShareableLink();
   const isVisible = uiPreferences.typingAreaVisible;
   const isExpanded = uiPreferences.typingAreaExpanded;
@@ -131,7 +131,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
 
   const handleShare = async () => {
     if (isSharing) {
-      setShowShareModal(true);
+      setShowLiveTypingModal(true);
       return;
     }
 
@@ -139,7 +139,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
 
     if (isSharing) {
       updateContent(text);
-      setShowShareModal(true);
+      setShowLiveTypingModal(true);
     }
   };
 
@@ -426,8 +426,8 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                     ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                     : 'bg-surface hover:bg-status-success text-foreground hover:text-green-500'
                 }`}
-                data-tooltip-id="share-tooltip"
-                data-tooltip-content={isSharing ? 'View share link' : 'Share your typing'}
+                data-tooltip-id="live-typing-tooltip"
+                data-tooltip-content={isSharing ? 'View live typing link' : 'Start live typing'}
                 disabled={isCreating}
               >
                 {isCreating ? (
@@ -438,7 +438,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
                 ) : (
                   <>
                     <ShareIcon className="w-5 h-5" />
-                    <span>{isSharing ? 'Sharing Active' : 'Share'}</span>
+                    <span>{isSharing ? 'Live Typing Active' : 'Live Typing'}</span>
                   </>
                 )}
               </button>
@@ -483,15 +483,15 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
       <Tooltip id="clear-tooltip" />
       <Tooltip id="expand-tooltip" />
       <Tooltip id="toggle-tooltip" />
-      <Tooltip id="share-tooltip" />
+      <Tooltip id="live-typing-tooltip" />
 
-      {showShareModal && shareableLink && (
-        <ShareLinkModal
+      {showLiveTypingModal && shareableLink && (
+        <LiveTypingLinkModal
           shareableLink={shareableLink}
-          onClose={() => setShowShareModal(false)}
+          onClose={() => setShowLiveTypingModal(false)}
           onEndSession={async () => {
             await endSession();
-            setShowShareModal(false);
+            setShowLiveTypingModal(false);
           }}
         />
       )}

@@ -16,7 +16,7 @@ type TypingSession = {
   _creationTime: number;
 } | null;
 
-export function useTypingShare() {
+export function useLiveTyping() {
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -57,7 +57,7 @@ export function useTypingShare() {
       }
       setSessionKey(null);
       setSession(null);
-      setError('This typing session has expired.');
+      setError('This live typing session has expired.');
       return;
     }
 
@@ -83,7 +83,7 @@ export function useTypingShare() {
       const created = await createTypingSession({ sessionKey: newKey });
 
       if (!created) {
-        throw new Error('Failed to create typing session');
+        throw new Error('Failed to create live typing session');
       }
 
       if (typeof window !== 'undefined') {
@@ -100,7 +100,7 @@ export function useTypingShare() {
         _creationTime: created._creationTime,
       });
     } catch (err) {
-      console.error('Error creating typing session:', err);
+      console.error('Error creating live typing session:', err);
       setError(err instanceof Error ? err.message : 'Failed to create session');
     } finally {
       setIsCreating(false);
@@ -119,7 +119,7 @@ export function useTypingShare() {
       try {
         await updateTypingSessionContent({ sessionKey, content });
       } catch (err) {
-        console.error('Error updating typing session:', err);
+        console.error('Error updating live typing session:', err);
       }
     }, 300); // 300ms debounce
   }, [sessionKey, updateTypingSessionContent]);
@@ -137,7 +137,7 @@ export function useTypingShare() {
         window.localStorage.removeItem(STORAGE_KEY);
       }
     } catch (err) {
-      console.error('Error ending typing session:', err);
+      console.error('Error ending live typing session:', err);
       setError(err instanceof Error ? err.message : 'Failed to end session');
     }
   }, [sessionKey, deleteTypingSession]);

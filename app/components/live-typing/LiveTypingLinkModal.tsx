@@ -3,13 +3,13 @@
 import { useState } from 'react';
 import { XMarkIcon, ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-interface ShareLinkModalProps {
+interface LiveTypingLinkModalProps {
   shareableLink: string;
   onClose: () => void;
   onEndSession: () => Promise<void>;
 }
 
-export default function ShareLinkModal({ shareableLink, onClose, onEndSession }: ShareLinkModalProps) {
+export default function LiveTypingLinkModal({ shareableLink, onClose, onEndSession }: LiveTypingLinkModalProps) {
   const [copied, setCopied] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
 
@@ -28,7 +28,7 @@ export default function ShareLinkModal({ shareableLink, onClose, onEndSession }:
     try {
       await onEndSession();
     } catch (err) {
-      console.error('Failed to end session:', err);
+      console.error('Failed to end live typing session:', err);
       setIsEnding(false);
     }
   };
@@ -37,7 +37,7 @@ export default function ShareLinkModal({ shareableLink, onClose, onEndSession }:
     <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
       <div className="rounded-lg shadow-xl max-w-md w-full p-6" style={{ backgroundColor: '#242424' }}>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-foreground">Share Your Typing</h2>
+          <h2 className="text-2xl font-bold text-foreground">Live Typing</h2>
           <button
             onClick={onClose}
             className="text-text-secondary hover:text-foreground transition-colors"
@@ -89,7 +89,7 @@ export default function ShareLinkModal({ shareableLink, onClose, onEndSession }:
             disabled={isEnding}
             className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50"
           >
-            {isEnding ? 'Ending...' : 'End Session'}
+            {isEnding ? 'Ending...' : 'End Live Typing'}
           </button>
         </div>
       </div>

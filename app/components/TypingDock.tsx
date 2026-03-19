@@ -15,13 +15,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useTypingShare } from '@/lib/hooks/useTypingShare';
+import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import SubscriptionWrapper from './SubscriptionWrapper';
-import ShareBottomSheet from './typing-share/ShareBottomSheet';
+import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
 import ActionPromptBanner from './typing/ActionPromptBanner';
@@ -36,7 +36,7 @@ interface TypingDockProps {
   className?: string;
   // Feature flags
   enableTabs?: boolean;
-  enableShare?: boolean;
+  enableLiveTyping?: boolean;
   enableFixText?: boolean;
 }
 
@@ -51,12 +51,12 @@ export default function TypingDock({
   isAvailable = true,
   className = '',
   enableTabs = false,
-  enableShare = false,
+  enableLiveTyping = false,
   enableFixText = false,
 }: TypingDockProps) {
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
   const [showTabList, setShowTabList] = useState(false);
   const { top: viewportTop, height: viewportHeight } = useVisualViewport();
 
@@ -80,7 +80,7 @@ export default function TypingDock({
     createSession,
     endSession,
     getShareableLink,
-  } = useTypingShare();
+  } = useLiveTyping();
   const shareableLink = getShareableLink();
 
   // Typing tabs hook (only used when enableTabs is true)
@@ -236,10 +236,10 @@ export default function TypingDock({
 
   // Update shared session content when text changes
   useEffect(() => {
-    if (enableShare && isSharing) {
+    if (enableLiveTyping && isSharing) {
       updateContent(currentText);
     }
-  }, [currentText, enableShare, isSharing, updateContent]);
+  }, [currentText, enableLiveTyping, isSharing, updateContent]);
 
   // Handle Enter key
   const handleKeyDown = useCallback(
@@ -313,11 +313,11 @@ export default function TypingDock({
           </svg>
         </button>
 
-        {/* Share Bottom Sheet */}
-        {enableShare && user && (
-          <ShareBottomSheet
-            isOpen={showShareSheet}
-            onClose={() => setShowShareSheet(false)}
+        {/* Live Typing Bottom Sheet */}
+        {enableLiveTyping && user && (
+          <LiveTypingBottomSheet
+            isOpen={showLiveTypingSheet}
+            onClose={() => setShowLiveTypingSheet(false)}
             isSharing={isSharing}
             isCreating={isCreating}
             shareableLink={shareableLink}
@@ -531,20 +531,20 @@ export default function TypingDock({
                 <span className="text-sm font-medium">Clear</span>
               </button>
 
-              {/* Share button */}
-              {enableShare && user && (
+              {/* Live Typing button */}
+              {enableLiveTyping && user && (
                 <button
-                  onClick={() => setShowShareSheet(true)}
+                  onClick={() => setShowLiveTypingSheet(true)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
                     isSharing
                       ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                       : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
                   }`}
-                  aria-label="Share"
+                  aria-label="Live Typing"
                 >
                   <ShareIcon className="w-4 h-4" />
                   <span className="text-sm font-medium">
-                    {isSharing ? 'Sharing' : 'Share'}
+                    {isSharing ? 'Live Typing Active' : 'Live Typing'}
                   </span>
                 </button>
               )}
@@ -581,11 +581,11 @@ export default function TypingDock({
         </div>
       </div>
 
-      {/* Share Bottom Sheet */}
-      {enableShare && user && (
-        <ShareBottomSheet
-          isOpen={showShareSheet}
-          onClose={() => setShowShareSheet(false)}
+      {/* Live Typing Bottom Sheet */}
+      {enableLiveTyping && user && (
+        <LiveTypingBottomSheet
+          isOpen={showLiveTypingSheet}
+          onClose={() => setShowLiveTypingSheet(false)}
           isSharing={isSharing}
           isCreating={isCreating}
           shareableLink={shareableLink}
