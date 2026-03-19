@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-import withPWA from 'next-pwa';
+import withSerwist from '@serwist/next';
 
 const nextConfig = {
   images: {
@@ -13,9 +13,8 @@ const nextConfig = {
   turbopack: {}, // Enable Turbopack as default in Next.js 16
 };
 
-export default withPWA({
-  dest: 'public',
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development'
+export default withSerwist({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV !== 'production',
 })(nextConfig);
