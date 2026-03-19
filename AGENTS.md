@@ -90,20 +90,16 @@ This command will:
 git push && git push --tags
 ```
 
-**Step 6: Create GitHub Release**
-```bash
-# Create release with auto-generated notes (no title specified)
-gh release create v1.15.0 --generate-notes
-```
+Pushing the tag triggers the **Release GitHub Action** (`.github/workflows/release.yml`) which will:
+- Build the project
+- Automatically create the GitHub Release with auto-generated notes
 
-The release will:
-- Use the version tag created by `npm version`
-- Auto-generate release notes from merged PRs
+Vercel automatically deploys to production when the release is created.
 
-**Step 7: Close Milestone**
+**Step 6: Close Milestone**
 ```bash
 # Close the milestone (use milestone number from GitHub)
-gh api repos/:owner/:repo/milestones/<number> -X PATCH -f state=closed
+gh api repos/enaboapps/sayit-web/milestones/<number> -X PATCH -f state=closed
 ```
 
 ## Working with AI Agents
