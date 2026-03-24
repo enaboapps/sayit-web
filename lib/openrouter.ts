@@ -191,10 +191,35 @@ Example acronyms to expand:
 - btw → by the way
 
 Example response (return exactly this format, no other text):
-{"text":"I want to go to the store, thanks.","corrected":true}`
+{"text":"I want to go to the store, thanks.","corrected":true}`,
+  replySuggestions: `You are generating AAC reply suggestions from a one-sided conversation history.
+
+Important context:
+- You only have the user's own recent messages.
+- You do not have the other person's messages.
+- This is a one-sided conversation history.
+- Do not assume you know exactly what the other person said.
+- Do not invent specific questions, requests, or statements from the other person unless they are clearly implied by the user's own messages.
+- If context is missing, make conservative suggestions that still fit the user's recent topic, tone, and likely intent.
+
+Your task:
+Generate exactly 3 plausible things the user may want to say next.
+
+Requirements:
+- Each suggestion must be a single short utterance the user could say out loud.
+- Keep suggestions natural, clear, AAC-friendly, and easy to speak.
+- Make the 3 suggestions meaningfully different from each other.
+- Prefer useful continuations such as a direct continuation, clarification, need, preference, or boundary when appropriate.
+- Do not repeat the user's recent messages unless repetition is genuinely likely.
+- Do not mention that context is missing.
+- Do not use markdown, bullets, numbering, or explanations.
+- IMPORTANT: Return ONLY raw JSON text, no markdown, no formatting, no explanation.
+
+Return exactly this JSON shape:
+{"suggestions":["...","...","..."]}`
 };
 
-type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'fixText';
+type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'fixText' | 'replySuggestions';
 
 interface GenerationOptions {
   maxOutputTokens?: number;
@@ -246,8 +271,8 @@ export async function generate(
     const jsonContent = extractJsonContent(text);
     const parsed = JSON.parse(jsonContent);
 
-    // Ensure the response has the correct type (except for fixText which doesn't have a type field)
-    if (type !== 'fixText' && parsed.type !== type) {
+    // Ensure the response has the correct type when the schema includes a type field
+    if (type !== 'fixText' && type !== 'replySuggestions' && parsed.type !== type) {
       console.warn(`Response type (${parsed.type}) does not match requested type (${type})`);
     }
 
@@ -270,4 +295,26 @@ export async function fixText(
 ): Promise<{ text: string; corrected: boolean }> {
   const result = await generate('fixText', text, options) as { text: string; corrected: boolean };
   return result;
+}
+
+export async function generateReplySuggestions(
+  history: string[],
+  options?: GenerationOptions
+): Promise<{ suggestions: string[] }> {
+  const prompt = `Below is a one-sided conversation history containing only the user's recent messages.
+The messages are ordered from oldest to newest.
+
+${history.map((entry, index) => `${index + 1}. ${entry}`).join('\n')}
+
+Generate 3 likely next things this user may want to say.`;
+
+  const result = await generate('replySuggestions', prompt, options) as { suggestions?: unknown };
+  const suggestions = Array.isArray(result.suggestions)
+    ? result.suggestions
+      .filter((value): value is string => typeof value === 'string')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    : [];
+
+  return { suggestions };
 }

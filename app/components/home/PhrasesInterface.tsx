@@ -17,15 +17,17 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import ReplySuggestions from '../typing/ReplySuggestions';
 
 export default function PhrasesInterface() {
   const router = useRouter();
   const tts = useTTS();
   const { user, loading: authLoading } = useAuth();
-  const { uiPreferences, updateUIPreference } = useSettings();
+  const { settings, uiPreferences, updateUIPreference } = useSettings();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
+  const [suggestionsRefreshToken, setSuggestionsRefreshToken] = useState(0);
   const selectedBoardId = uiPreferences.selectedBoardId;
   const isMobile = useIsMobile();
 
@@ -47,6 +49,11 @@ export default function PhrasesInterface() {
   // Mutations
   const addPhrase = useMutation(api.phrases.addPhrase);
   const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
+  const recordMessage = useMutation(api.conversationHistory.recordMessage);
+  const recentMessages = useQuery(
+    api.conversationHistory.getRecentMessages,
+    shouldLoadBoards ? { limit: 10 } : 'skip'
+  );
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
 
@@ -181,10 +188,61 @@ export default function PhrasesInterface() {
   // Check if current board allows editing
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
-  const handleSpeak = () => {
-    if (typingText.trim()) {
-      tts.speak(typingText);
+  const handleCaptureCompletedMessage = async ({
+    text,
+    source,
+    tabId,
+  }: {
+    text: string;
+    source: 'speak' | 'speakAndClear';
+    tabId?: string | null;
+  }) => {
+    const trimmedText = text.trim();
+    if (!user || !trimmedText) {
+      return;
     }
+
+    const captureMode = settings.messageCaptureMode;
+    const shouldCapture = (
+      captureMode === 'speakOnly'
+      || (captureMode === 'speakAndClearOnly' && source === 'speakAndClear')
+    );
+
+    if (!shouldCapture) {
+      return;
+    }
+
+    try {
+      await recordMessage({
+        text: trimmedText,
+        captureSource: source,
+        tabId: tabId ?? undefined,
+      });
+      setSuggestionsRefreshToken((value) => value + 1);
+    } catch (error) {
+      console.error('Failed to record conversation history:', error);
+    }
+  };
+
+  const handleSpeakFromDock = (source: 'speak' | 'speakAndClear' = 'speak') => {
+    if (!typingText.trim()) {
+      return;
+    }
+
+    tts.speak(typingText);
+    void handleCaptureCompletedMessage({ text: typingText, source });
+  };
+
+  const handleInsertSuggestion = (suggestion: string) => {
+    setTypingText((current) => {
+      const trimmedCurrent = current.trim();
+      if (!trimmedCurrent) {
+        return suggestion;
+      }
+
+      const separator = current.endsWith(' ') || current.endsWith('\n') ? '' : ' ';
+      return `${current}${separator}${suggestion}`;
+    });
   };
 
   return (
@@ -197,7 +255,18 @@ export default function PhrasesInterface() {
             text={typingText}
             tts={tts}
             onChange={(text) => setTypingText(text)}
+            onMessageCompleted={(payload) => {
+              void handleCaptureCompletedMessage(payload);
+            }}
           />
+          <div className="px-2 pb-2">
+            <ReplySuggestions
+              history={(recentMessages ?? []).map((entry) => entry.text)}
+              enabled={settings.aiReplySuggestionsEnabled}
+              refreshToken={suggestionsRefreshToken}
+              onSelectSuggestion={handleInsertSuggestion}
+            />
+          </div>
         </div>
       )}
       {showAuthPrompt ? (
@@ -328,19 +397,27 @@ export default function PhrasesInterface() {
       />
       {/* Mobile: TypingDock portaled into bottom stack */}
       {isMobile && (
-        <MobileDockPortal>
-          <TypingDock
-            text={typingText}
-            onChange={setTypingText}
-            onSpeak={handleSpeak}
-            onStop={tts.stop}
-            isSpeaking={tts.isSpeaking}
-            isAvailable={tts.isAvailable}
-            enableTabs={true}
-            enableLiveTyping={!!user}
-            enableFixText={true}
-          />
-        </MobileDockPortal>
+          <MobileDockPortal>
+            <TypingDock
+              text={typingText}
+              onChange={setTypingText}
+              onSpeak={handleSpeakFromDock}
+              onStop={tts.stop}
+              isSpeaking={tts.isSpeaking}
+              isAvailable={tts.isAvailable}
+              enableTabs={true}
+              enableLiveTyping={!!user}
+              enableFixText={true}
+            />
+            <div className="px-3 pb-3">
+              <ReplySuggestions
+                history={(recentMessages ?? []).map((entry) => entry.text)}
+                enabled={settings.aiReplySuggestionsEnabled}
+                refreshToken={suggestionsRefreshToken}
+                onSelectSuggestion={handleInsertSuggestion}
+              />
+            </div>
+          </MobileDockPortal>
       )}
     </>
   );

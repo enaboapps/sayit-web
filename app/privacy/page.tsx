@@ -49,6 +49,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li><strong>Phrases and boards:</strong> Content you create and save in the application</li>
               <li><strong>Typing sessions:</strong> Shared typing sessions (when you use the sharing feature)</li>
+              <li><strong>Completed message history:</strong> Recent completed messages captured for reply suggestions when enabled</li>
               <li><strong>User preferences:</strong> Text size, voice settings, and other customizations</li>
             </ul>
 
@@ -62,6 +63,7 @@ export default function PrivacyPolicyPage() {
             <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">2.4 AI Interaction Data</h3>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li><strong>Prompts sent to AI services:</strong> Text you submit for phrase generation or "Flesh Out" features</li>
+              <li><strong>Reply suggestion prompts:</strong> Recent completed messages used to generate likely next replies</li>
               <li><strong>Generated content:</strong> AI-generated suggestions and expanded text</li>
               <li><strong>Text-to-speech requests:</strong> Text submitted for voice synthesis</li>
             </ul>
@@ -88,8 +90,8 @@ export default function PrivacyPolicyPage() {
 
             <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">3.2 Convex (Database & Real-time Sync)</h3>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
-              <li><strong>Purpose:</strong> Store and sync user data, phrases, boards, and typing sessions</li>
-              <li><strong>Data processed:</strong> User profiles, phrases, boards, typing session content</li>
+              <li><strong>Purpose:</strong> Store and sync user data, phrases, boards, typing sessions, and recent completed message history</li>
+              <li><strong>Data processed:</strong> User profiles, phrases, boards, typing session content, recent completed messages for suggestions</li>
               <li><strong>Privacy policy:</strong> <a href="https://www.convex.dev/legal/privacy/v2024-03-21" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 hover:underline transition-colors duration-200">https://www.convex.dev/legal/privacy</a></li>
               <li><strong>Location:</strong> United States</li>
             </ul>
@@ -135,6 +137,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Provide the Service:</strong> Create and manage your account, store your data, enable features</li>
               <li><strong>Process payments:</strong> Handle subscription billing and payment processing</li>
               <li><strong>AI features:</strong> Generate phrase suggestions and expand text using AI</li>
+              <li><strong>Reply suggestions:</strong> Infer likely next replies from your recent completed messages</li>
               <li><strong>Text-to-speech:</strong> Convert text to spoken audio</li>
               <li><strong>Improve the Service:</strong> Analyze usage patterns, fix bugs, develop new features</li>
               <li><strong>Communicate:</strong> Send service updates, respond to support requests</li>
@@ -147,6 +150,7 @@ export default function PrivacyPolicyPage() {
               <li><strong>Account data:</strong> Retained until you delete your account</li>
               <li><strong>Phrases and boards:</strong> Retained until you manually delete them</li>
               <li><strong>Typing sessions:</strong> Shared sessions expire after 24 hours of inactivity</li>
+              <li><strong>Completed message history:</strong> Retained to power reply suggestions until deleted or trimmed by retention limits</li>
               <li><strong>AI processing data:</strong> Not retained after response generation (processed in real-time)</li>
               <li><strong>TTS audio:</strong> Not stored (generated in real-time)</li>
               <li><strong>Payment records:</strong> Retained per Stripe's requirements (up to 7 years for legal compliance)</li>
@@ -182,6 +186,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li>Your prompts are sent to OpenRouter (using Google Gemini) for processing</li>
+              <li>If reply suggestions are enabled, recent completed messages may be sent to OpenRouter to infer what you may want to say next</li>
               <li>Generated content is based on AI models and may vary</li>
               <li>You consent to AI processing when using these features</li>
               <li>We do not use your prompts to train AI models</li>

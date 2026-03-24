@@ -29,7 +29,7 @@ import ActionPromptBanner from './typing/ActionPromptBanner';
 interface TypingDockProps {
   text: string;
   onChange: (text: string) => void;
-  onSpeak: () => void;
+  onSpeak: (source?: 'speak' | 'speakAndClear') => void;
   onStop?: () => void;
   isSpeaking?: boolean;
   isAvailable?: boolean;
@@ -179,14 +179,14 @@ export default function TypingDock({
   const runEnterAction = useCallback((action: EnterKeyBehavior) => {
     switch (action) {
     case 'speak':
-      if (currentText.trim()) onSpeak();
+      if (currentText.trim()) onSpeak('speak');
       break;
     case 'clear':
       clearTextWithUndo(currentText);
       break;
     case 'speakAndClear':
       if (currentText.trim()) {
-        onSpeak();
+        onSpeak('speakAndClear');
         const textSnapshot = currentText;
         setTimeout(() => {
           clearTextWithUndo(textSnapshot);
@@ -554,7 +554,7 @@ export default function TypingDock({
 
               {/* Speak/Stop button - primary CTA */}
               <motion.button
-                onClick={isSpeaking ? onStop : onSpeak}
+                onClick={isSpeaking ? onStop : () => onSpeak('speak')}
                 disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                   isSpeaking

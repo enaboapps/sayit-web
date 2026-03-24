@@ -25,11 +25,18 @@ interface TypingAreaProps {
     isAvailable: boolean;
   }
   onChange?: (text: string) => void
+  onMessageCompleted?: (payload: { text: string; source: 'speak' | 'speakAndClear'; tabId?: string | null }) => void
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
-export default function TypingArea({ initialText = '', text: externalText, tts, onChange }: TypingAreaProps) {
+export default function TypingArea({
+  initialText = '',
+  text: externalText,
+  tts,
+  onChange,
+  onMessageCompleted,
+}: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFixingText, setIsFixingText] = useState(false);
   const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
@@ -191,9 +198,14 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
       stop();
     } else if (text.trim()) {
       speak(text);
+      onMessageCompleted?.({
+        text,
+        source: 'speak',
+        tabId: activeTabId,
+      });
       textareaRef.current?.focus();
     }
-  }, [isSpeaking, speak, stop, text]);
+  }, [activeTabId, isSpeaking, onMessageCompleted, speak, stop, text]);
 
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
@@ -251,6 +263,11 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
     case 'speakAndClear':
       if (text.trim()) {
         speak(text);
+        onMessageCompleted?.({
+          text,
+          source: 'speakAndClear',
+          tabId: activeTabId,
+        });
         setTimeout(() => handleClear(), 100);
       }
       break;
@@ -260,7 +277,7 @@ export default function TypingArea({ initialText = '', text: externalText, tts, 
       onChange?.(text + '\n');
       break;
     }
-  }, [handleClear, handleSpeak, onChange, speak, text, updateActiveTabText]);
+  }, [activeTabId, handleClear, handleSpeak, onChange, onMessageCompleted, speak, text, updateActiveTabText]);
 
   const { handleEnter, resetPending, isPending, remainingMs } = useDoubleEnter({
     enabled: settings.doubleEnterEnabled,

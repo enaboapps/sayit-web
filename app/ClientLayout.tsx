@@ -17,11 +17,13 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://placeholder.invalid';
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_Y2xlcmsuc2F5aXQuZGV2JA==';
 
   // Initialize Convex client - memoize to avoid recreating on each render
   const convex = useMemo(
-    () => new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!),
-    []
+    () => new ConvexReactClient(convexUrl),
+    [convexUrl]
   );
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function ClientLayout({
   }, [pathname]);
 
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={clerkPublishableKey}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
