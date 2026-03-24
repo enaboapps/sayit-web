@@ -9,6 +9,7 @@ interface ReplySuggestionsProps {
   enabled: boolean;
   refreshToken: number;
   onSelectSuggestion: (suggestion: string) => void;
+  contextLabel?: string;
   className?: string;
 }
 
@@ -17,6 +18,7 @@ export default function ReplySuggestions({
   enabled,
   refreshToken,
   onSelectSuggestion,
+  contextLabel = 'Based on your recent completed messages',
   className = '',
 }: ReplySuggestionsProps) {
   const { isActive: hasSubscription, loading: subscriptionLoading } = useSubscription();
@@ -47,7 +49,7 @@ export default function ReplySuggestions({
           <SparklesIcon className="h-5 w-5 text-primary-500" />
           <div>
             <p className="text-sm font-semibold text-foreground">Reply suggestions</p>
-            <p className="text-xs text-text-secondary">Based on your recent completed messages</p>
+            <p className="text-xs text-text-secondary">{contextLabel}</p>
           </div>
         </div>
         <button

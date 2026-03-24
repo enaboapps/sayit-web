@@ -8,7 +8,7 @@ import BoardGridPopup from '../phrases/BoardGridPopup';
 import TypingArea from '../TypingArea';
 import TypingDock from '../TypingDock';
 import { useTTS } from '@/lib/hooks/useTTS';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
@@ -29,6 +29,7 @@ export default function PhrasesInterface() {
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const [suggestionsRefreshToken, setSuggestionsRefreshToken] = useState(0);
   const selectedBoardId = uiPreferences.selectedBoardId;
+  const activeTabId = uiPreferences.activeTypingTabId;
   const isMobile = useIsMobile();
 
   const shouldLoadBoards = !authLoading && !!user;
@@ -52,7 +53,7 @@ export default function PhrasesInterface() {
   const recordMessage = useMutation(api.conversationHistory.recordMessage);
   const recentMessages = useQuery(
     api.conversationHistory.getRecentMessages,
-    shouldLoadBoards ? { limit: 10 } : 'skip'
+    shouldLoadBoards ? { limit: 20 } : 'skip'
   );
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
@@ -230,7 +231,11 @@ export default function PhrasesInterface() {
     }
 
     tts.speak(typingText);
-    void handleCaptureCompletedMessage({ text: typingText, source });
+    void handleCaptureCompletedMessage({
+      text: typingText,
+      source,
+      tabId: activeTabId,
+    });
   };
 
   const handleInsertSuggestion = (suggestion: string) => {
@@ -244,6 +249,27 @@ export default function PhrasesInterface() {
       return `${current}${separator}${suggestion}`;
     });
   };
+
+  const suggestionContext = useMemo(() => {
+    const allMessages = recentMessages ?? [];
+    const sameTabMessages = activeTabId
+      ? allMessages.filter((entry) => entry.tabId === activeTabId)
+      : [];
+
+    if (sameTabMessages.length >= 3) {
+      return {
+        history: sameTabMessages.slice(0, 10).map((entry) => entry.text),
+        label: 'Based on recent completed messages in this tab',
+      };
+    }
+
+    return {
+      history: allMessages.slice(0, 10).map((entry) => entry.text),
+      label: activeTabId
+        ? 'Using recent completed messages across tabs until this tab has more history'
+        : 'Based on your recent completed messages',
+    };
+  }, [activeTabId, recentMessages]);
 
   return (
     <>
@@ -261,10 +287,11 @@ export default function PhrasesInterface() {
           />
           <div className="px-2 pb-2">
             <ReplySuggestions
-              history={(recentMessages ?? []).map((entry) => entry.text)}
+              history={suggestionContext.history}
               enabled={settings.aiReplySuggestionsEnabled}
               refreshToken={suggestionsRefreshToken}
               onSelectSuggestion={handleInsertSuggestion}
+              contextLabel={suggestionContext.label}
             />
           </div>
         </div>
@@ -411,10 +438,11 @@ export default function PhrasesInterface() {
             />
             <div className="px-3 pb-3">
               <ReplySuggestions
-                history={(recentMessages ?? []).map((entry) => entry.text)}
+                history={suggestionContext.history}
                 enabled={settings.aiReplySuggestionsEnabled}
                 refreshToken={suggestionsRefreshToken}
                 onSelectSuggestion={handleInsertSuggestion}
+                contextLabel={suggestionContext.label}
               />
             </div>
           </MobileDockPortal>
