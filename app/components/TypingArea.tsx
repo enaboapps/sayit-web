@@ -25,7 +25,7 @@ interface TypingAreaProps {
     isAvailable: boolean;
   }
   onChange?: (text: string) => void
-  onMessageCompleted?: (payload: { text: string; source: 'speak' | 'speakAndClear'; tabId?: string | null }) => void
+  onMessageCompleted?: (payload: { text: string; source: 'speak' | 'speakAndClear' | 'clear'; tabId?: string | null }) => void
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -173,7 +173,15 @@ export default function TypingArea({
     && entry?.tabId === (activeTabId || 'default')
     && activeTab.text.trim().length === 0;
 
-  const handleClear = useCallback(() => {
+  const handleClear = useCallback((source: 'clear' | 'skip' = 'clear') => {
+    if (source === 'clear' && text.trim()) {
+      onMessageCompleted?.({
+        text,
+        source: 'clear',
+        tabId: activeTabId,
+      });
+    }
+
     clearWithUndo({
       tabId: activeTabId || 'default',
       text,
@@ -184,7 +192,7 @@ export default function TypingArea({
         textareaRef.current?.focus();
       },
     });
-  }, [activeTabId, clearWithUndo, onChange, text, updateActiveTabText]);
+  }, [activeTabId, clearWithUndo, onChange, onMessageCompleted, text, updateActiveTabText]);
 
   useEffect(() => {
     if (!canUndo) return;
@@ -258,7 +266,7 @@ export default function TypingArea({
       handleSpeak();
       break;
     case 'clear':
-      handleClear();
+      handleClear('clear');
       break;
     case 'speakAndClear':
       if (text.trim()) {
@@ -268,7 +276,7 @@ export default function TypingArea({
           source: 'speakAndClear',
           tabId: activeTabId,
         });
-        setTimeout(() => handleClear(), 100);
+        setTimeout(() => handleClear('skip'), 100);
       }
       break;
     case 'newline':
@@ -424,7 +432,7 @@ export default function TypingArea({
                 </button>
               </SubscriptionWrapper>
               <button
-                onClick={handleClear}
+                onClick={() => handleClear('clear')}
                 className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-error text-foreground hover:text-red-500"
                 data-tooltip-id="clear-tooltip"
                 data-tooltip-content="Clear"

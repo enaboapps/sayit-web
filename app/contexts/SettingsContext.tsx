@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext';
 type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 type TypingDockMode = 'expanded' | 'fullscreen' | 'minimized';
-type MessageCaptureMode = 'disabled' | 'speakOnly' | 'speakAndClearOnly';
+type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly';
 
 const DOUBLE_ENTER_TIMEOUT_MIN_MS = 1000;
 const DOUBLE_ENTER_TIMEOUT_MAX_MS = 10000;

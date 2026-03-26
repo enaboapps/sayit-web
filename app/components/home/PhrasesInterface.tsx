@@ -27,7 +27,6 @@ export default function PhrasesInterface() {
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
-  const [suggestionsRefreshToken, setSuggestionsRefreshToken] = useState(0);
   const selectedBoardId = uiPreferences.selectedBoardId;
   const activeTabId = uiPreferences.activeTypingTabId;
   const isMobile = useIsMobile();
@@ -195,7 +194,7 @@ export default function PhrasesInterface() {
     tabId,
   }: {
     text: string;
-    source: 'speak' | 'speakAndClear';
+    source: 'speak' | 'speakAndClear' | 'clear';
     tabId?: string | null;
   }) => {
     const trimmedText = text.trim();
@@ -205,7 +204,8 @@ export default function PhrasesInterface() {
 
     const captureMode = settings.messageCaptureMode;
     const shouldCapture = (
-      captureMode === 'speakOnly'
+      (captureMode === 'clearOnly' && source === 'clear')
+      || (captureMode === 'speakOnly' && source === 'speak')
       || (captureMode === 'speakAndClearOnly' && source === 'speakAndClear')
     );
 
@@ -219,7 +219,6 @@ export default function PhrasesInterface() {
         captureSource: source,
         tabId: tabId ?? undefined,
       });
-      setSuggestionsRefreshToken((value) => value + 1);
     } catch (error) {
       console.error('Failed to record conversation history:', error);
     }
@@ -289,7 +288,6 @@ export default function PhrasesInterface() {
             <ReplySuggestions
               history={suggestionContext.history}
               enabled={settings.aiReplySuggestionsEnabled}
-              refreshToken={suggestionsRefreshToken}
               onSelectSuggestion={handleInsertSuggestion}
               contextLabel={suggestionContext.label}
             />
@@ -429,6 +427,9 @@ export default function PhrasesInterface() {
               text={typingText}
               onChange={setTypingText}
               onSpeak={handleSpeakFromDock}
+              onMessageCompleted={(payload) => {
+                void handleCaptureCompletedMessage(payload);
+              }}
               onStop={tts.stop}
               isSpeaking={tts.isSpeaking}
               isAvailable={tts.isAvailable}
@@ -440,7 +441,6 @@ export default function PhrasesInterface() {
               <ReplySuggestions
                 history={suggestionContext.history}
                 enabled={settings.aiReplySuggestionsEnabled}
-                refreshToken={suggestionsRefreshToken}
                 onSelectSuggestion={handleInsertSuggestion}
                 contextLabel={suggestionContext.label}
               />

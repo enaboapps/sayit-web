@@ -30,6 +30,7 @@ interface TypingDockProps {
   text: string;
   onChange: (text: string) => void;
   onSpeak: (source?: 'speak' | 'speakAndClear') => void;
+  onMessageCompleted?: (payload: { text: string; source: 'clear'; tabId?: string | null }) => void;
   onStop?: () => void;
   isSpeaking?: boolean;
   isAvailable?: boolean;
@@ -46,6 +47,7 @@ export default function TypingDock({
   text,
   onChange,
   onSpeak,
+  onMessageCompleted,
   onStop,
   isSpeaking = false,
   isAvailable = true,
@@ -150,7 +152,15 @@ export default function TypingDock({
     && entry?.tabId === (activeTabId || 'default')
     && currentText.trim().length === 0;
 
-  const clearTextWithUndo = useCallback((textToClear: string) => {
+  const clearTextWithUndo = useCallback((textToClear: string, source: 'clear' | 'skip' = 'clear') => {
+    if (source === 'clear' && textToClear.trim()) {
+      onMessageCompleted?.({
+        text: textToClear,
+        source: 'clear',
+        tabId: activeTabId,
+      });
+    }
+
     clearWithUndo({
       tabId: activeTabId || 'default',
       text: textToClear,
@@ -163,10 +173,10 @@ export default function TypingDock({
         textareaRef.current?.focus();
       },
     });
-  }, [activeTabId, clearWithUndo, enableTabs, onChange, updateActiveTabText]);
+  }, [activeTabId, clearWithUndo, enableTabs, onChange, onMessageCompleted, updateActiveTabText]);
 
   const handleClear = useCallback(() => {
-    clearTextWithUndo(currentText);
+    clearTextWithUndo(currentText, 'clear');
   }, [clearTextWithUndo, currentText]);
 
   useEffect(() => {
@@ -182,14 +192,14 @@ export default function TypingDock({
       if (currentText.trim()) onSpeak('speak');
       break;
     case 'clear':
-      clearTextWithUndo(currentText);
+      clearTextWithUndo(currentText, 'clear');
       break;
     case 'speakAndClear':
       if (currentText.trim()) {
         onSpeak('speakAndClear');
         const textSnapshot = currentText;
         setTimeout(() => {
-          clearTextWithUndo(textSnapshot);
+          clearTextWithUndo(textSnapshot, 'skip');
         }, 100);
       }
       break;

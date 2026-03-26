@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type UseReplySuggestionsOptions = {
   history: string[];
   enabled: boolean;
-  refreshToken?: number;
 };
 
 type UseReplySuggestionsResult = {
@@ -16,28 +15,36 @@ type UseReplySuggestionsResult = {
 };
 
 const MIN_HISTORY_ENTRIES = 3;
+const AUTO_REFRESH_DEBOUNCE_MS = 800;
 
 export function useReplySuggestions({
   history,
   enabled,
-  refreshToken = 0,
 }: UseReplySuggestionsOptions): UseReplySuggestionsResult {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const trimmedHistory = useMemo(
     () => history.map((entry) => entry.trim()).filter(Boolean),
     [history]
   );
+  const historyKey = useMemo(() => trimmedHistory.join('\n'), [trimmedHistory]);
 
   const fetchSuggestions = useCallback(async () => {
     if (!enabled || trimmedHistory.length < MIN_HISTORY_ENTRIES) {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
       setSuggestions([]);
       setError(null);
       return;
     }
 
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     setIsLoading(true);
     setError(null);
 
@@ -48,6 +55,7 @@ export function useReplySuggestions({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ history: trimmedHistory }),
+        signal: abortController.signal,
       });
 
       if (!response.ok) {
@@ -67,16 +75,24 @@ export function useReplySuggestions({
 
       setSuggestions(nextSuggestions);
     } catch (err) {
+      if (abortController.signal.aborted) {
+        return;
+      }
       console.error('Failed to fetch reply suggestions:', err);
       setSuggestions([]);
       setError(err instanceof Error ? err.message : 'Failed to fetch suggestions');
     } finally {
-      setIsLoading(false);
+      if (!abortController.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [enabled, trimmedHistory]);
 
   useEffect(() => {
     if (!enabled || trimmedHistory.length < MIN_HISTORY_ENTRIES) {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
       setSuggestions([]);
       setError(null);
       return;
@@ -84,10 +100,16 @@ export function useReplySuggestions({
 
     const timeout = window.setTimeout(() => {
       void fetchSuggestions();
-    }, 400);
+    }, AUTO_REFRESH_DEBOUNCE_MS);
 
-    return () => window.clearTimeout(timeout);
-  }, [enabled, fetchSuggestions, refreshToken, trimmedHistory.length]);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [enabled, fetchSuggestions, historyKey, trimmedHistory.length]);
+
+  useEffect(() => () => {
+    abortControllerRef.current?.abort();
+  }, []);
 
   return {
     suggestions,

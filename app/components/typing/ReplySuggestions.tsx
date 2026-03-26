@@ -7,7 +7,6 @@ import { useSubscription } from '@/app/hooks/useSubscription';
 interface ReplySuggestionsProps {
   history: string[];
   enabled: boolean;
-  refreshToken: number;
   onSelectSuggestion: (suggestion: string) => void;
   contextLabel?: string;
   className?: string;
@@ -16,7 +15,6 @@ interface ReplySuggestionsProps {
 export default function ReplySuggestions({
   history,
   enabled,
-  refreshToken,
   onSelectSuggestion,
   contextLabel = 'Based on your recent completed messages',
   className = '',
@@ -30,7 +28,6 @@ export default function ReplySuggestions({
   } = useReplySuggestions({
     history,
     enabled: enabled && hasSubscription,
-    refreshToken,
   });
 
   if (subscriptionLoading || !enabled || !hasSubscription) {

@@ -31,7 +31,7 @@ export const getRecentMessages = query({
 export const recordMessage = mutation({
   args: {
     text: v.string(),
-    captureSource: v.union(v.literal('speak'), v.literal('speakAndClear')),
+    captureSource: v.union(v.literal('speak'), v.literal('speakAndClear'), v.literal('clear')),
     tabId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {

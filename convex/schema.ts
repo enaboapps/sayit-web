@@ -90,6 +90,7 @@ export default defineSchema({
     messageCaptureMode: v.optional(
       v.union(
         v.literal('disabled'),
+        v.literal('clearOnly'),
         v.literal('speakOnly'),
         v.literal('speakAndClearOnly')
       )
@@ -114,7 +115,7 @@ export default defineSchema({
     userId: v.string(),
     text: v.string(),
     capturedAt: v.number(),
-    captureSource: v.union(v.literal('speak'), v.literal('speakAndClear')),
+    captureSource: v.union(v.literal('speak'), v.literal('speakAndClear'), v.literal('clear')),
     tabId: v.optional(v.string()),
   })
     .index('by_user_id', ['userId'])
