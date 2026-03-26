@@ -3,6 +3,7 @@
 import { ArrowPathIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useReplySuggestions } from '@/lib/hooks/useReplySuggestions';
 import { useSubscription } from '@/app/hooks/useSubscription';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 interface ReplySuggestionsProps {
   history: string[];
@@ -19,6 +20,7 @@ export default function ReplySuggestions({
   contextLabel = 'Based on your recent completed messages',
   className = '',
 }: ReplySuggestionsProps) {
+  const { user, loading: authLoading } = useAuth();
   const { isActive: hasSubscription, loading: subscriptionLoading } = useSubscription();
   const {
     suggestions,
@@ -27,10 +29,10 @@ export default function ReplySuggestions({
     refresh,
   } = useReplySuggestions({
     history,
-    enabled: enabled && hasSubscription,
+    enabled: enabled && !authLoading && !!user && hasSubscription,
   });
 
-  if (subscriptionLoading || !enabled || !hasSubscription) {
+  if (authLoading || subscriptionLoading || !enabled || !user || !hasSubscription) {
     return null;
   }
 

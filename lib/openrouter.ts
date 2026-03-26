@@ -2,7 +2,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { generateText as aiGenerateText } from 'ai';
 
 // Model configuration (easy to change)
-const MODEL = 'google/gemini-2.5-flash';
+const PRIMARY_MODEL = 'openai/gpt-5.4-mini';
+const FALLBACK_MODEL = 'google/gemini-2.5-flash';
 
 // Lazy-initialized client to avoid build-time env var requirement
 let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
@@ -13,12 +14,14 @@ let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
  */
 function getOpenRouterClient() {
   if (!openrouterClient) {
-    if (!process.env.OPENROUTER_API_KEY) {
+    const apiKey = process.env.OPENROUTER_API_KEY?.replace(/^\uFEFF/, '').trim();
+
+    if (!apiKey) {
       throw new Error('OPENROUTER_API_KEY is not set in environment variables');
     }
     openrouterClient = createOpenAI({
       baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey,
     });
   }
   return openrouterClient;
@@ -257,15 +260,28 @@ export async function generate(
 ): Promise<Record<string, unknown>> {
   try {
     const openrouter = getOpenRouterClient();
-    const { text } = await aiGenerateText({
-      model: openrouter(MODEL),
+    const modelConfig = {
       system: systemPrompts[type],
       prompt,
       maxOutputTokens: options?.maxOutputTokens || 200,
       temperature: options?.temperature || 0.7,
       topP: options?.topP || 0.9,
-      topK: options?.topK || 50,
-    });
+    };
+
+    let text: string;
+
+    try {
+      ({ text } = await aiGenerateText({
+        model: openrouter(PRIMARY_MODEL),
+        ...modelConfig,
+      }));
+    } catch (primaryError) {
+      console.warn(`Primary model ${PRIMARY_MODEL} failed for ${type}, falling back to ${FALLBACK_MODEL}:`, primaryError);
+      ({ text } = await aiGenerateText({
+        model: openrouter(FALLBACK_MODEL),
+        ...modelConfig,
+      }));
+    }
 
     // Extract and parse the JSON content
     const jsonContent = extractJsonContent(text);
@@ -306,15 +322,11 @@ The messages are ordered from oldest to newest.
 
 ${history.map((entry, index) => `${index + 1}. ${entry}`).join('\n')}
 
-Generate 3 likely next things this user may want to say.`;
+Generate 3 likely next things this user may want to say.
+IMPORTANT: Return ONLY raw JSON text, no markdown, no formatting, no explanation.
+Return exactly this JSON shape:
+{"suggestions":["...","...","..."]}`;
 
-  const result = await generate('replySuggestions', prompt, options) as { suggestions?: unknown };
-  const suggestions = Array.isArray(result.suggestions)
-    ? result.suggestions
-      .filter((value): value is string => typeof value === 'string')
-      .map((value) => value.trim())
-      .filter(Boolean)
-    : [];
-
-  return { suggestions };
+  const result = await generate('replySuggestions', prompt, options) as { suggestions: string[] };
+  return { suggestions: Array.isArray(result.suggestions) ? result.suggestions : [] };
 }

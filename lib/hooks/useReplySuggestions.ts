@@ -59,20 +59,23 @@ export function useReplySuggestions({
       });
 
       if (!response.ok) {
-        if (response.status === 403) {
+        if (response.status === 401 || response.status === 403) {
           setSuggestions([]);
           setError(null);
           return;
         }
 
-        throw new Error('Failed to fetch suggestions');
+        const error = await response.text();
+        console.error('Failed to fetch suggestions:', error);
+        setSuggestions([]);
+        setError(error);
+        return;
       }
 
       const data = await response.json();
       const nextSuggestions = Array.isArray(data?.suggestions)
         ? data.suggestions.filter((value: unknown): value is string => typeof value === 'string')
         : [];
-
       setSuggestions(nextSuggestions);
     } catch (err) {
       if (abortController.signal.aborted) {
