@@ -8,7 +8,7 @@ import BoardGridPopup from '../phrases/BoardGridPopup';
 import TypingArea from '../TypingArea';
 import TypingDock from '../TypingDock';
 import { useTTS } from '@/lib/hooks/useTTS';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
@@ -17,16 +17,19 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import ReplySuggestions from '../typing/ReplySuggestions';
 
 export default function PhrasesInterface() {
   const router = useRouter();
   const tts = useTTS();
   const { user, loading: authLoading } = useAuth();
-  const { uiPreferences, updateUIPreference } = useSettings();
+  const { settings, uiPreferences, updateUIPreference } = useSettings();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [captureError, setCaptureError] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const selectedBoardId = uiPreferences.selectedBoardId;
+  const activeTabId = uiPreferences.activeTypingTabId;
   const isMobile = useIsMobile();
 
   const shouldLoadBoards = !authLoading && !!user;
@@ -47,6 +50,11 @@ export default function PhrasesInterface() {
   // Mutations
   const addPhrase = useMutation(api.phrases.addPhrase);
   const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
+  const recordMessage = useMutation(api.conversationHistory.recordMessage);
+  const recentMessages = useQuery(
+    api.conversationHistory.getRecentMessages,
+    shouldLoadBoards ? { limit: 20 } : 'skip'
+  );
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
 
@@ -181,11 +189,90 @@ export default function PhrasesInterface() {
   // Check if current board allows editing
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
-  const handleSpeak = () => {
-    if (typingText.trim()) {
-      tts.speak(typingText);
+  const handleCaptureCompletedMessage = async ({
+    text,
+    source,
+    tabId,
+  }: {
+    text: string;
+    source: 'speak' | 'speakAndClear' | 'clear';
+    tabId?: string | null;
+  }) => {
+    const trimmedText = text.trim();
+    if (!user || !trimmedText) {
+      return;
+    }
+
+    const captureMode = settings.messageCaptureMode;
+    const shouldCapture = (
+      (captureMode === 'clearOnly' && source === 'clear')
+      || (captureMode === 'speakOnly' && source === 'speak')
+      || (captureMode === 'speakAndClearOnly' && source === 'speakAndClear')
+      || (captureMode === 'speakAny' && (source === 'speak' || source === 'speakAndClear'))
+    );
+
+    if (!shouldCapture) {
+      return;
+    }
+
+    try {
+      await recordMessage({
+        text: trimmedText,
+        captureSource: source,
+        tabId: tabId ?? undefined,
+      });
+      setCaptureError(false);
+    } catch (error) {
+      console.error('Failed to record conversation history:', error);
+      setCaptureError(true);
     }
   };
+
+  const handleSpeakFromDock = (source: 'speak' | 'speakAndClear' = 'speak') => {
+    if (!typingText.trim()) {
+      return;
+    }
+
+    tts.speak(typingText);
+    void handleCaptureCompletedMessage({
+      text: typingText,
+      source,
+      tabId: activeTabId,
+    });
+  };
+
+  const handleInsertSuggestion = (suggestion: string) => {
+    setTypingText((current) => {
+      const trimmedCurrent = current.trim();
+      if (!trimmedCurrent) {
+        return suggestion;
+      }
+
+      const separator = current.endsWith(' ') || current.endsWith('\n') ? '' : ' ';
+      return `${current}${separator}${suggestion}`;
+    });
+  };
+
+  const suggestionContext = useMemo(() => {
+    const allMessages = recentMessages ?? [];
+    const sameTabMessages = activeTabId
+      ? allMessages.filter((entry) => entry.tabId === activeTabId)
+      : [];
+
+    if (sameTabMessages.length >= 3) {
+      return {
+        history: sameTabMessages.slice(0, 10).map((entry) => entry.text),
+        label: 'Based on recent completed messages in this tab',
+      };
+    }
+
+    return {
+      history: allMessages.slice(0, 10).map((entry) => entry.text),
+      label: activeTabId
+        ? 'Using recent completed messages across tabs until this tab has more history'
+        : 'Based on your recent completed messages',
+    };
+  }, [activeTabId, recentMessages]);
 
   return (
     <>
@@ -197,7 +284,21 @@ export default function PhrasesInterface() {
             text={typingText}
             tts={tts}
             onChange={(text) => setTypingText(text)}
+            onMessageCompleted={(payload) => {
+              void handleCaptureCompletedMessage(payload);
+            }}
           />
+          <div className="px-2 pb-2">
+            {captureError && settings.aiReplySuggestionsEnabled && (
+              <p className="mb-1 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+            )}
+            <ReplySuggestions
+              history={suggestionContext.history}
+              enabled={settings.aiReplySuggestionsEnabled}
+              onSelectSuggestion={handleInsertSuggestion}
+              contextLabel={suggestionContext.label}
+            />
+          </div>
         </div>
       )}
       {showAuthPrompt ? (
@@ -328,19 +429,30 @@ export default function PhrasesInterface() {
       />
       {/* Mobile: TypingDock portaled into bottom stack */}
       {isMobile && (
-        <MobileDockPortal>
-          <TypingDock
-            text={typingText}
-            onChange={setTypingText}
-            onSpeak={handleSpeak}
-            onStop={tts.stop}
-            isSpeaking={tts.isSpeaking}
-            isAvailable={tts.isAvailable}
-            enableTabs={true}
-            enableLiveTyping={!!user}
-            enableFixText={true}
-          />
-        </MobileDockPortal>
+          <MobileDockPortal>
+            <TypingDock
+              text={typingText}
+              onChange={setTypingText}
+              onSpeak={handleSpeakFromDock}
+              onMessageCompleted={(payload) => {
+                void handleCaptureCompletedMessage(payload);
+              }}
+              onStop={tts.stop}
+              isSpeaking={tts.isSpeaking}
+              isAvailable={tts.isAvailable}
+              enableTabs={true}
+              enableLiveTyping={!!user}
+              enableFixText={true}
+              replySuggestions={{
+                history: suggestionContext.history,
+                enabled: settings.aiReplySuggestionsEnabled,
+                onSelect: handleInsertSuggestion,
+              }}
+            />
+            {captureError && settings.aiReplySuggestionsEnabled && (
+              <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+            )}
+          </MobileDockPortal>
       )}
     </>
   );

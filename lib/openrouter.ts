@@ -2,7 +2,11 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { generateText as aiGenerateText } from 'ai';
 
 // Model configuration (easy to change)
-const MODEL = 'google/gemini-2.5-flash';
+const PRIMARY_MODEL = 'google/gemini-2.5-flash';
+const FALLBACK_MODEL = 'openai/gpt-5.4-mini';
+// Reply suggestions use a separate model to avoid affecting existing AI features
+const REPLY_SUGGESTIONS_PRIMARY_MODEL = 'openai/gpt-5.4-mini';
+const REPLY_SUGGESTIONS_FALLBACK_MODEL = 'google/gemini-2.5-flash';
 
 // Lazy-initialized client to avoid build-time env var requirement
 let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
@@ -13,12 +17,15 @@ let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
  */
 function getOpenRouterClient() {
   if (!openrouterClient) {
-    if (!process.env.OPENROUTER_API_KEY) {
+    // Strip UTF-8 BOM that some .env file editors silently prepend to values
+    const apiKey = process.env.OPENROUTER_API_KEY?.replace(/^\uFEFF/, '').trim();
+
+    if (!apiKey) {
       throw new Error('OPENROUTER_API_KEY is not set in environment variables');
     }
     openrouterClient = createOpenAI({
       baseURL: 'https://openrouter.ai/api/v1',
-      apiKey: process.env.OPENROUTER_API_KEY,
+      apiKey,
     });
   }
   return openrouterClient;
@@ -191,10 +198,35 @@ Example acronyms to expand:
 - btw → by the way
 
 Example response (return exactly this format, no other text):
-{"text":"I want to go to the store, thanks.","corrected":true}`
+{"text":"I want to go to the store, thanks.","corrected":true}`,
+  replySuggestions: `You are generating AAC reply suggestions from a one-sided conversation history.
+
+Important context:
+- You only have the user's own recent messages.
+- You do not have the other person's messages.
+- This is a one-sided conversation history.
+- Do not assume you know exactly what the other person said.
+- Do not invent specific questions, requests, or statements from the other person unless they are clearly implied by the user's own messages.
+- If context is missing, make conservative suggestions that still fit the user's recent topic, tone, and likely intent.
+
+Your task:
+Generate exactly 3 plausible things the user may want to say next.
+
+Requirements:
+- Each suggestion must be a single short utterance the user could say out loud.
+- Keep suggestions natural, clear, AAC-friendly, and easy to speak.
+- Make the 3 suggestions meaningfully different from each other.
+- Prefer useful continuations such as a direct continuation, clarification, need, preference, or boundary when appropriate.
+- Do not repeat the user's recent messages unless repetition is genuinely likely.
+- Do not mention that context is missing.
+- Do not use markdown, bullets, numbering, or explanations.
+- IMPORTANT: Return ONLY raw JSON text, no markdown, no formatting, no explanation.
+
+Return exactly this JSON shape:
+{"suggestions":["...","...","..."]}`
 };
 
-type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'fixText';
+type GenerationType = 'want' | 'need' | 'feel' | 'think' | 'ask' | 'like' | 'dislike' | 'remember' | 'wonder' | 'hope' | 'fixText' | 'replySuggestions';
 
 interface GenerationOptions {
   maxOutputTokens?: number;
@@ -232,22 +264,53 @@ export async function generate(
 ): Promise<Record<string, unknown>> {
   try {
     const openrouter = getOpenRouterClient();
-    const { text } = await aiGenerateText({
-      model: openrouter(MODEL),
+    const modelConfig = {
       system: systemPrompts[type],
       prompt,
       maxOutputTokens: options?.maxOutputTokens || 200,
       temperature: options?.temperature || 0.7,
       topP: options?.topP || 0.9,
       topK: options?.topK || 50,
-    });
+    };
+
+    let text: string;
+
+    if (type === 'replySuggestions') {
+      // Reply suggestions use a separate model with fallback
+      try {
+        ({ text } = await aiGenerateText({
+          model: openrouter(REPLY_SUGGESTIONS_PRIMARY_MODEL),
+          ...modelConfig,
+        }));
+      } catch (primaryError) {
+        console.warn(`Primary model ${REPLY_SUGGESTIONS_PRIMARY_MODEL} failed for ${type}, falling back to ${REPLY_SUGGESTIONS_FALLBACK_MODEL}:`, primaryError);
+        ({ text } = await aiGenerateText({
+          model: openrouter(REPLY_SUGGESTIONS_FALLBACK_MODEL),
+          ...modelConfig,
+        }));
+      }
+    } else {
+      // All other generation types keep the standard fallback path
+      try {
+        ({ text } = await aiGenerateText({
+          model: openrouter(PRIMARY_MODEL),
+          ...modelConfig,
+        }));
+      } catch (primaryError) {
+        console.warn(`Primary model ${PRIMARY_MODEL} failed for ${type}, falling back to ${FALLBACK_MODEL}:`, primaryError);
+        ({ text } = await aiGenerateText({
+          model: openrouter(FALLBACK_MODEL),
+          ...modelConfig,
+        }));
+      }
+    }
 
     // Extract and parse the JSON content
     const jsonContent = extractJsonContent(text);
     const parsed = JSON.parse(jsonContent);
 
-    // Ensure the response has the correct type (except for fixText which doesn't have a type field)
-    if (type !== 'fixText' && parsed.type !== type) {
+    // Ensure the response has the correct type when the schema includes a type field
+    if (type !== 'fixText' && type !== 'replySuggestions' && parsed.type !== type) {
       console.warn(`Response type (${parsed.type}) does not match requested type (${type})`);
     }
 
@@ -270,4 +333,22 @@ export async function fixText(
 ): Promise<{ text: string; corrected: boolean }> {
   const result = await generate('fixText', text, options) as { text: string; corrected: boolean };
   return result;
+}
+
+export async function generateReplySuggestions(
+  history: string[],
+  options?: GenerationOptions
+): Promise<{ suggestions: string[] }> {
+  const prompt = `Below is a one-sided conversation history containing only the user's recent messages.
+The messages are ordered from oldest to newest.
+
+${history.map((entry, index) => `${index + 1}. ${entry}`).join('\n')}
+
+Generate 3 likely next things this user may want to say.
+IMPORTANT: Return ONLY raw JSON text, no markdown, no formatting, no explanation.
+Return exactly this JSON shape:
+{"suggestions":["...","...","..."]}`;
+
+  const result = await generate('replySuggestions', prompt, options) as { suggestions: string[] };
+  return { suggestions: Array.isArray(result.suggestions) ? result.suggestions : [] };
 }

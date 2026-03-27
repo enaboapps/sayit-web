@@ -23,6 +23,7 @@ import { UserButton } from '@clerk/nextjs';
 
 // Import types from SettingsContext
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
+type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly' | 'speakAny';
 
 // Import TTSSettings dynamically with SSR disabled
 const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
@@ -101,6 +102,13 @@ export default function SettingsPage() {
     { value: 'speakAndClear' as EnterKeyBehavior, label: 'Speak & Clear' },
   ];
   const doubleEnterTimeoutSeconds = Math.round(settings.doubleEnterTimeoutMs / 1000);
+  const messageCaptureOptions = [
+    { value: 'disabled' as MessageCaptureMode, label: 'Off' },
+    { value: 'clearOnly' as MessageCaptureMode, label: 'On Clear' },
+    { value: 'speakOnly' as MessageCaptureMode, label: 'On Speak Only' },
+    { value: 'speakAndClearOnly' as MessageCaptureMode, label: 'On Speak & Clear Only' },
+    { value: 'speakAny' as MessageCaptureMode, label: 'On Speak or Speak & Clear' },
+  ];
 
   // Mobile layout with categories
   if (isMobile) {
@@ -128,6 +136,13 @@ export default function SettingsPage() {
               title="Text & Display"
               description="Font size, enter key behavior"
               onClick={() => setActiveSheet('text')}
+            />
+
+            <SettingsCategory
+              icon={<Cog6ToothIcon className="w-6 h-6" />}
+              title="AI Suggestions"
+              description="Next reply suggestions and message capture"
+              onClick={() => setActiveSheet('ai')}
             />
 
             {/* Account - only when logged in */}
@@ -160,6 +175,29 @@ export default function SettingsPage() {
         >
           <div className="p-4">
             <TTSSettings />
+          </div>
+        </BottomSheet>
+
+        <BottomSheet
+          isOpen={activeSheet === 'ai'}
+          onClose={() => setActiveSheet(null)}
+          title="AI Suggestions"
+          snapPoints={[60, 80]}
+        >
+          <div className="p-4 space-y-6">
+            <Switch
+              label="Reply Suggestions"
+              description="Show AI-generated likely next replies near the composer"
+              checked={settings.aiReplySuggestionsEnabled}
+              onChange={(value) => updateSetting('aiReplySuggestionsEnabled', value)}
+            />
+            <Dropdown
+              label="Capture Completed Messages"
+              description="Choose which completed messages can be used for suggestions"
+              options={messageCaptureOptions}
+              value={settings.messageCaptureMode}
+              onChange={(value) => updateSetting('messageCaptureMode', value)}
+            />
           </div>
         </BottomSheet>
 
@@ -403,6 +441,39 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <TTSSettings />
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">AI Suggestions</h2>
+              <p className="text-sm text-text-secondary mt-1">Control next reply suggestions and message capture</p>
+            </div>
+            <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+              <div className="px-8 py-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                    <Cog6ToothIcon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">Reply Suggestions</h3>
+                    <p className="text-sm text-text-secondary mt-1">Use recent completed messages to suggest likely next replies</p>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Switch
+                    label="Enabled"
+                    checked={settings.aiReplySuggestionsEnabled}
+                    onChange={(value) => updateSetting('aiReplySuggestionsEnabled', value)}
+                  />
+                  <Dropdown
+                    label="Capture Completed Messages"
+                    options={messageCaptureOptions}
+                    value={settings.messageCaptureMode}
+                    onChange={(value) => updateSetting('messageCaptureMode', value)}
+                  />
+                </div>
               </div>
             </div>
           </section>
