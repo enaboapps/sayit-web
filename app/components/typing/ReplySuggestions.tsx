@@ -10,6 +10,7 @@ interface ReplySuggestionsProps {
   history: string[];
   enabled: boolean;
   onSelectSuggestion: (suggestion: string) => void;
+  variant?: 'card' | 'inline';
   contextLabel?: string;
   className?: string;
 }
@@ -18,6 +19,7 @@ export default function ReplySuggestions({
   history,
   enabled,
   onSelectSuggestion,
+  variant = 'card',
   contextLabel = 'Based on your recent completed messages',
   className = '',
 }: ReplySuggestionsProps) {
@@ -42,13 +44,40 @@ export default function ReplySuggestions({
     return null;
   }
 
+  const chips = (
+    <div className={`flex flex-wrap gap-1.5 ${className}`}>
+      {isLoading
+        ? [0, 1, 2].map((index) => (
+            <div
+              key={index}
+              className="h-8 w-full animate-pulse rounded-xl bg-surface-hover sm:w-[calc(50%-0.25rem)]"
+            />
+          ))
+        : suggestions.map((suggestion, index) => (
+            <button
+              key={`${index}-${suggestion}`}
+              type="button"
+              onClick={() => onSelectSuggestion(suggestion)}
+              className="rounded-xl bg-surface-hover px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-primary-950 hover:text-primary-500"
+            >
+              {suggestion}
+            </button>
+          ))}
+    </div>
+  );
+
+  if (variant === 'inline') {
+    if (!isLoading && suggestions.length === 0) return null;
+    return chips;
+  }
+
   return (
-    <div className={`rounded-3xl border border-border bg-surface px-4 py-3 shadow-md ${className}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <SparklesIcon className="h-5 w-5 text-primary-500" />
+    <div className={`rounded-2xl border border-border bg-surface px-3 py-2.5 shadow-sm ${className}`}>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <SparklesIcon className="h-4 w-4 text-primary-500" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Reply suggestions</p>
+            <p className="text-xs font-semibold text-foreground">Reply suggestions</p>
             <p className="text-xs text-text-secondary">{contextLabel}</p>
           </div>
         </div>
@@ -56,38 +85,14 @@ export default function ReplySuggestions({
           type="button"
           onClick={() => void refresh()}
           disabled={isLoading}
-          className="rounded-full p-2 text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
+          className="rounded-full p-1.5 text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
           aria-label="Refresh reply suggestions"
         >
-          <ArrowPathIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <ArrowPathIcon className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      {isLoading && (
-        <div className="flex flex-wrap gap-2">
-          {[0, 1, 2].map((index) => (
-            <div
-              key={index}
-              className="h-10 w-full animate-pulse rounded-2xl bg-surface-hover sm:w-[calc(50%-0.25rem)]"
-            />
-          ))}
-        </div>
-      )}
-
-      {!isLoading && suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={`${index}-${suggestion}`}
-              type="button"
-              onClick={() => onSelectSuggestion(suggestion)}
-              className="rounded-2xl bg-surface-hover px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-primary-950 hover:text-primary-500"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      )}
+      {chips}
 
       {!isLoading && !error && suggestions.length === 0 && (
         <p className="text-sm text-text-secondary">

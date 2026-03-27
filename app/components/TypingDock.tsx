@@ -20,11 +20,18 @@ import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
+import ReplySuggestions from './typing/ReplySuggestions';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
 import ActionPromptBanner from './typing/ActionPromptBanner';
+
+interface ReplySuggestionsConfig {
+  history: string[];
+  enabled: boolean;
+  onSelect: (suggestion: string) => void;
+}
 
 interface TypingDockProps {
   text: string;
@@ -39,6 +46,7 @@ interface TypingDockProps {
   enableTabs?: boolean;
   enableLiveTyping?: boolean;
   enableFixText?: boolean;
+  replySuggestions?: ReplySuggestionsConfig;
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -55,6 +63,7 @@ export default function TypingDock({
   enableTabs = false,
   enableLiveTyping = false,
   enableFixText = false,
+  replySuggestions,
 }: TypingDockProps) {
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -484,6 +493,16 @@ export default function TypingDock({
               <div className="px-1">
                 <span className="text-xs text-red-500">{error}</span>
               </div>
+            )}
+
+            {/* Reply suggestions (inline variant — no card/header) */}
+            {replySuggestions && (
+              <ReplySuggestions
+                history={replySuggestions.history}
+                enabled={replySuggestions.enabled}
+                onSelectSuggestion={replySuggestions.onSelect}
+                variant="inline"
+              />
             )}
 
             {/* Row 1: AI Features (when text exists) */}

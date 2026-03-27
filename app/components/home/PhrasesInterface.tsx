@@ -443,18 +443,15 @@ export default function PhrasesInterface() {
               enableTabs={true}
               enableLiveTyping={!!user}
               enableFixText={true}
+              replySuggestions={{
+                history: suggestionContext.history,
+                enabled: settings.aiReplySuggestionsEnabled,
+                onSelect: handleInsertSuggestion,
+              }}
             />
-            <div className="px-3 pb-3">
-              {captureError && settings.aiReplySuggestionsEnabled && (
-                <p className="mb-1 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
-              )}
-              <ReplySuggestions
-                history={suggestionContext.history}
-                enabled={settings.aiReplySuggestionsEnabled}
-                onSelectSuggestion={handleInsertSuggestion}
-                contextLabel={suggestionContext.label}
-              />
-            </div>
+            {captureError && settings.aiReplySuggestionsEnabled && (
+              <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+            )}
           </MobileDockPortal>
       )}
     </>
