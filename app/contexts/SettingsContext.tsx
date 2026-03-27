@@ -67,7 +67,7 @@ const defaultSettings: Settings = {
   ttsStability: 0.5,
   ttsSimilarityBoost: 0.5,
   aiReplySuggestionsEnabled: true,
-  messageCaptureMode: 'speakAny',
+  messageCaptureMode: 'speakOnly',
 };
 
 const defaultUIPreferences: UIPreferences = {
