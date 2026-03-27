@@ -48,21 +48,21 @@ export default function ReplySuggestions({
     <div className={`flex flex-wrap gap-1.5 ${className}`}>
       {isLoading
         ? [0, 1, 2].map((index) => (
-            <div
-              key={index}
-              className="h-8 w-full animate-pulse rounded-xl bg-surface-hover sm:w-[calc(50%-0.25rem)]"
-            />
-          ))
+          <div
+            key={index}
+            className="h-8 w-full animate-pulse rounded-xl bg-surface-hover sm:w-[calc(50%-0.25rem)]"
+          />
+        ))
         : suggestions.map((suggestion, index) => (
-            <button
-              key={`${index}-${suggestion}`}
-              type="button"
-              onClick={() => onSelectSuggestion(suggestion)}
-              className="rounded-xl bg-surface-hover px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-primary-950 hover:text-primary-500"
-            >
-              {suggestion}
-            </button>
-          ))}
+          <button
+            key={`${index}-${suggestion}`}
+            type="button"
+            onClick={() => onSelectSuggestion(suggestion)}
+            className="rounded-xl bg-surface-hover px-3 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-primary-950 hover:text-primary-500"
+          >
+            {suggestion}
+          </button>
+        ))}
     </div>
   );
 

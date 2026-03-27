@@ -429,30 +429,30 @@ export default function PhrasesInterface() {
       />
       {/* Mobile: TypingDock portaled into bottom stack */}
       {isMobile && (
-          <MobileDockPortal>
-            <TypingDock
-              text={typingText}
-              onChange={setTypingText}
-              onSpeak={handleSpeakFromDock}
-              onMessageCompleted={(payload) => {
-                void handleCaptureCompletedMessage(payload);
-              }}
-              onStop={tts.stop}
-              isSpeaking={tts.isSpeaking}
-              isAvailable={tts.isAvailable}
-              enableTabs={true}
-              enableLiveTyping={!!user}
-              enableFixText={true}
-              replySuggestions={{
-                history: suggestionContext.history,
-                enabled: settings.aiReplySuggestionsEnabled,
-                onSelect: handleInsertSuggestion,
-              }}
-            />
-            {captureError && settings.aiReplySuggestionsEnabled && (
-              <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
-            )}
-          </MobileDockPortal>
+        <MobileDockPortal>
+          <TypingDock
+            text={typingText}
+            onChange={setTypingText}
+            onSpeak={handleSpeakFromDock}
+            onMessageCompleted={(payload) => {
+              void handleCaptureCompletedMessage(payload);
+            }}
+            onStop={tts.stop}
+            isSpeaking={tts.isSpeaking}
+            isAvailable={tts.isAvailable}
+            enableTabs={true}
+            enableLiveTyping={!!user}
+            enableFixText={true}
+            replySuggestions={{
+              history: suggestionContext.history,
+              enabled: settings.aiReplySuggestionsEnabled,
+              onSelect: handleInsertSuggestion,
+            }}
+          />
+          {captureError && settings.aiReplySuggestionsEnabled && (
+            <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+          )}
+        </MobileDockPortal>
       )}
     </>
   );
