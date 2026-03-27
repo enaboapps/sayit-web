@@ -36,6 +36,8 @@ export const initializeSettings = mutation({
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),
+    aiReplySuggestionsEnabled: v.boolean(),
+    messageCaptureMode: v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny')),
     typingAreaVisible: v.boolean(),
     typingAreaExpanded: v.boolean(),
     selectedBoardId: v.optional(v.string()),
@@ -102,6 +104,8 @@ export const initializeSettings = mutation({
       ttsVoiceId: args.ttsVoiceId,
       ttsStability: args.ttsStability,
       ttsSimilarityBoost: args.ttsSimilarityBoost,
+      aiReplySuggestionsEnabled: args.aiReplySuggestionsEnabled,
+      messageCaptureMode: args.messageCaptureMode,
       typingAreaVisible: args.typingAreaVisible,
       typingAreaExpanded: args.typingAreaExpanded,
       selectedBoardId: args.selectedBoardId,
@@ -131,6 +135,8 @@ export const updateSettings = mutation({
     ttsVoiceId: v.optional(v.string()),
     ttsStability: v.optional(v.number()),
     ttsSimilarityBoost: v.optional(v.number()),
+    aiReplySuggestionsEnabled: v.optional(v.boolean()),
+    messageCaptureMode: v.optional(v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny'))),
     typingAreaVisible: v.optional(v.boolean()),
     typingAreaExpanded: v.optional(v.boolean()),
     selectedBoardId: v.optional(v.string()),
@@ -224,6 +230,8 @@ export const updateSettings = mutation({
     if (updates.ttsVoiceId !== undefined) updateData.ttsVoiceId = updates.ttsVoiceId;
     if (updates.ttsStability !== undefined) updateData.ttsStability = updates.ttsStability;
     if (updates.ttsSimilarityBoost !== undefined) updateData.ttsSimilarityBoost = updates.ttsSimilarityBoost;
+    if (updates.aiReplySuggestionsEnabled !== undefined) updateData.aiReplySuggestionsEnabled = updates.aiReplySuggestionsEnabled;
+    if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
     if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;
     if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;
     if (updates.selectedBoardId !== undefined) updateData.selectedBoardId = updates.selectedBoardId;

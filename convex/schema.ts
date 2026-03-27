@@ -86,6 +86,16 @@ export default defineSchema({
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),
+    aiReplySuggestionsEnabled: v.optional(v.boolean()),
+    messageCaptureMode: v.optional(
+      v.union(
+        v.literal('disabled'),
+        v.literal('clearOnly'),
+        v.literal('speakOnly'),
+        v.literal('speakAndClearOnly'),
+        v.literal('speakAny')
+      )
+    ),
 
     // UI Preferences (consolidated from various components)
     typingAreaVisible: v.boolean(),
@@ -101,4 +111,14 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_user_id', ['userId']),
+
+  conversationHistory: defineTable({
+    userId: v.string(),
+    text: v.string(),
+    capturedAt: v.number(),
+    captureSource: v.union(v.literal('speak'), v.literal('speakAndClear'), v.literal('clear')),
+    tabId: v.optional(v.string()),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_user_id_and_captured_at', ['userId', 'capturedAt']),
 });

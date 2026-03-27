@@ -20,16 +20,24 @@ import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
+import ReplySuggestions from './typing/ReplySuggestions';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
 import ActionPromptBanner from './typing/ActionPromptBanner';
 
+interface ReplySuggestionsConfig {
+  history: string[];
+  enabled: boolean;
+  onSelect: (suggestion: string) => void;
+}
+
 interface TypingDockProps {
   text: string;
   onChange: (text: string) => void;
-  onSpeak: () => void;
+  onSpeak: (source?: 'speak' | 'speakAndClear') => void;
+  onMessageCompleted?: (payload: { text: string; source: 'clear'; tabId?: string | null }) => void;
   onStop?: () => void;
   isSpeaking?: boolean;
   isAvailable?: boolean;
@@ -38,6 +46,7 @@ interface TypingDockProps {
   enableTabs?: boolean;
   enableLiveTyping?: boolean;
   enableFixText?: boolean;
+  replySuggestions?: ReplySuggestionsConfig;
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -46,6 +55,7 @@ export default function TypingDock({
   text,
   onChange,
   onSpeak,
+  onMessageCompleted,
   onStop,
   isSpeaking = false,
   isAvailable = true,
@@ -53,6 +63,7 @@ export default function TypingDock({
   enableTabs = false,
   enableLiveTyping = false,
   enableFixText = false,
+  replySuggestions,
 }: TypingDockProps) {
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +161,15 @@ export default function TypingDock({
     && entry?.tabId === (activeTabId || 'default')
     && currentText.trim().length === 0;
 
-  const clearTextWithUndo = useCallback((textToClear: string) => {
+  const clearTextWithUndo = useCallback((textToClear: string, source: 'clear' | 'skip' = 'clear') => {
+    if (source === 'clear' && textToClear.trim()) {
+      onMessageCompleted?.({
+        text: textToClear,
+        source: 'clear',
+        tabId: activeTabId,
+      });
+    }
+
     clearWithUndo({
       tabId: activeTabId || 'default',
       text: textToClear,
@@ -163,10 +182,10 @@ export default function TypingDock({
         textareaRef.current?.focus();
       },
     });
-  }, [activeTabId, clearWithUndo, enableTabs, onChange, updateActiveTabText]);
+  }, [activeTabId, clearWithUndo, enableTabs, onChange, onMessageCompleted, updateActiveTabText]);
 
   const handleClear = useCallback(() => {
-    clearTextWithUndo(currentText);
+    clearTextWithUndo(currentText, 'clear');
   }, [clearTextWithUndo, currentText]);
 
   useEffect(() => {
@@ -179,17 +198,17 @@ export default function TypingDock({
   const runEnterAction = useCallback((action: EnterKeyBehavior) => {
     switch (action) {
     case 'speak':
-      if (currentText.trim()) onSpeak();
+      if (currentText.trim()) onSpeak('speak');
       break;
     case 'clear':
-      clearTextWithUndo(currentText);
+      clearTextWithUndo(currentText, 'clear');
       break;
     case 'speakAndClear':
       if (currentText.trim()) {
-        onSpeak();
+        onSpeak('speakAndClear');
         const textSnapshot = currentText;
         setTimeout(() => {
-          clearTextWithUndo(textSnapshot);
+          clearTextWithUndo(textSnapshot, 'skip');
         }, 100);
       }
       break;
@@ -476,6 +495,16 @@ export default function TypingDock({
               </div>
             )}
 
+            {/* Reply suggestions (inline variant — no card/header) */}
+            {replySuggestions && (
+              <ReplySuggestions
+                history={replySuggestions.history}
+                enabled={replySuggestions.enabled}
+                onSelectSuggestion={replySuggestions.onSelect}
+                variant="inline"
+              />
+            )}
+
             {/* Row 1: AI Features (when text exists) */}
             {currentText.trim() && enableFixText && (
               <div className="flex items-center gap-2">
@@ -554,7 +583,7 @@ export default function TypingDock({
 
               {/* Speak/Stop button - primary CTA */}
               <motion.button
-                onClick={isSpeaking ? onStop : onSpeak}
+                onClick={isSpeaking ? onStop : () => onSpeak('speak')}
                 disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                   isSpeaking
