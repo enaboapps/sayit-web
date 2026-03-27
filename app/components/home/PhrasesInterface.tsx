@@ -26,6 +26,7 @@ export default function PhrasesInterface() {
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [captureError, setCaptureError] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const selectedBoardId = uiPreferences.selectedBoardId;
   const activeTabId = uiPreferences.activeTypingTabId;
@@ -207,6 +208,7 @@ export default function PhrasesInterface() {
       (captureMode === 'clearOnly' && source === 'clear')
       || (captureMode === 'speakOnly' && source === 'speak')
       || (captureMode === 'speakAndClearOnly' && source === 'speakAndClear')
+      || (captureMode === 'speakAny' && (source === 'speak' || source === 'speakAndClear'))
     );
 
     if (!shouldCapture) {
@@ -219,8 +221,10 @@ export default function PhrasesInterface() {
         captureSource: source,
         tabId: tabId ?? undefined,
       });
+      setCaptureError(false);
     } catch (error) {
       console.error('Failed to record conversation history:', error);
+      setCaptureError(true);
     }
   };
 
@@ -285,6 +289,9 @@ export default function PhrasesInterface() {
             }}
           />
           <div className="px-2 pb-2">
+            {captureError && settings.aiReplySuggestionsEnabled && (
+              <p className="mb-1 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+            )}
             <ReplySuggestions
               history={suggestionContext.history}
               enabled={settings.aiReplySuggestionsEnabled}
@@ -438,6 +445,9 @@ export default function PhrasesInterface() {
               enableFixText={true}
             />
             <div className="px-3 pb-3">
+              {captureError && settings.aiReplySuggestionsEnabled && (
+                <p className="mb-1 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+              )}
               <ReplySuggestions
                 history={suggestionContext.history}
                 enabled={settings.aiReplySuggestionsEnabled}

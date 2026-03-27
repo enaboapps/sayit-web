@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MIN_HISTORY_ENTRIES } from '@/lib/reply-suggestions-constants';
 
 type UseReplySuggestionsOptions = {
   history: string[];
@@ -13,8 +14,6 @@ type UseReplySuggestionsResult = {
   error: string | null;
   refresh: () => Promise<void>;
 };
-
-const MIN_HISTORY_ENTRIES = 3;
 const AUTO_REFRESH_DEBOUNCE_MS = 800;
 
 export function useReplySuggestions({

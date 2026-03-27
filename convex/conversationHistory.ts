@@ -19,12 +19,11 @@ export const getRecentMessages = query({
     const safeLimit = Math.max(1, Math.min(20, Math.floor(args.limit)));
     const entries = await ctx.db
       .query('conversationHistory')
-      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
-      .collect();
+      .withIndex('by_user_id_and_captured_at', (q) => q.eq('userId', identity.subject))
+      .order('desc')
+      .take(safeLimit);
 
-    return entries
-      .sort((a, b) => b.capturedAt - a.capturedAt)
-      .slice(0, safeLimit);
+    return entries;
   },
 });
 
@@ -49,14 +48,14 @@ export const recordMessage = mutation({
       throw new Error(`Text must be ${MAX_MESSAGE_LENGTH} characters or fewer`);
     }
 
-    const recentEntries = await ctx.db
-      .query('conversationHistory')
-      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
-      .collect();
-
     const now = Date.now();
-    const latestEntry = recentEntries
-      .sort((a, b) => b.capturedAt - a.capturedAt)[0];
+
+    // Get the most recent entry for duplicate detection using the compound index
+    const [latestEntry] = await ctx.db
+      .query('conversationHistory')
+      .withIndex('by_user_id_and_captured_at', (q) => q.eq('userId', identity.subject))
+      .order('desc')
+      .take(1);
 
     if (
       latestEntry
@@ -74,14 +73,14 @@ export const recordMessage = mutation({
       tabId: args.tabId,
     });
 
-    const updatedEntries = await ctx.db
+    // Fetch entries beyond the max to prune old ones
+    const allEntries = await ctx.db
       .query('conversationHistory')
-      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .withIndex('by_user_id_and_captured_at', (q) => q.eq('userId', identity.subject))
+      .order('desc')
       .collect();
 
-    const staleEntries = updatedEntries
-      .sort((a, b) => b.capturedAt - a.capturedAt)
-      .slice(MAX_STORED_MESSAGES);
+    const staleEntries = allEntries.slice(MAX_STORED_MESSAGES);
 
     for (const entry of staleEntries) {
       await ctx.db.delete(entry._id);

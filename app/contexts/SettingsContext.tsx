@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext';
 type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 type TypingDockMode = 'expanded' | 'fullscreen' | 'minimized';
-type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly';
+type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly' | 'speakAny';
 
 const DOUBLE_ENTER_TIMEOUT_MIN_MS = 1000;
 const DOUBLE_ENTER_TIMEOUT_MAX_MS = 10000;
@@ -67,7 +67,7 @@ const defaultSettings: Settings = {
   ttsStability: 0.5,
   ttsSimilarityBoost: 0.5,
   aiReplySuggestionsEnabled: true,
-  messageCaptureMode: 'speakOnly',
+  messageCaptureMode: 'speakAny',
 };
 
 const defaultUIPreferences: UIPreferences = {

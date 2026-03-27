@@ -2,8 +2,11 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { generateText as aiGenerateText } from 'ai';
 
 // Model configuration (easy to change)
-const PRIMARY_MODEL = 'openai/gpt-5.4-mini';
-const FALLBACK_MODEL = 'google/gemini-2.5-flash';
+const PRIMARY_MODEL = 'google/gemini-2.5-flash';
+const FALLBACK_MODEL = 'openai/gpt-5.4-mini';
+// Reply suggestions use a separate model to avoid affecting existing AI features
+const REPLY_SUGGESTIONS_PRIMARY_MODEL = 'openai/gpt-5.4-mini';
+const REPLY_SUGGESTIONS_FALLBACK_MODEL = 'google/gemini-2.5-flash';
 
 // Lazy-initialized client to avoid build-time env var requirement
 let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
@@ -14,6 +17,7 @@ let openrouterClient: ReturnType<typeof createOpenAI> | null = null;
  */
 function getOpenRouterClient() {
   if (!openrouterClient) {
+    // Strip UTF-8 BOM that some .env file editors silently prepend to values
     const apiKey = process.env.OPENROUTER_API_KEY?.replace(/^\uFEFF/, '').trim();
 
     if (!apiKey) {
@@ -266,21 +270,39 @@ export async function generate(
       maxOutputTokens: options?.maxOutputTokens || 200,
       temperature: options?.temperature || 0.7,
       topP: options?.topP || 0.9,
+      topK: options?.topK || 50,
     };
 
     let text: string;
 
-    try {
-      ({ text } = await aiGenerateText({
-        model: openrouter(PRIMARY_MODEL),
-        ...modelConfig,
-      }));
-    } catch (primaryError) {
-      console.warn(`Primary model ${PRIMARY_MODEL} failed for ${type}, falling back to ${FALLBACK_MODEL}:`, primaryError);
-      ({ text } = await aiGenerateText({
-        model: openrouter(FALLBACK_MODEL),
-        ...modelConfig,
-      }));
+    if (type === 'replySuggestions') {
+      // Reply suggestions use a separate model with fallback
+      try {
+        ({ text } = await aiGenerateText({
+          model: openrouter(REPLY_SUGGESTIONS_PRIMARY_MODEL),
+          ...modelConfig,
+        }));
+      } catch (primaryError) {
+        console.warn(`Primary model ${REPLY_SUGGESTIONS_PRIMARY_MODEL} failed for ${type}, falling back to ${REPLY_SUGGESTIONS_FALLBACK_MODEL}:`, primaryError);
+        ({ text } = await aiGenerateText({
+          model: openrouter(REPLY_SUGGESTIONS_FALLBACK_MODEL),
+          ...modelConfig,
+        }));
+      }
+    } else {
+      // All other generation types keep the standard fallback path
+      try {
+        ({ text } = await aiGenerateText({
+          model: openrouter(PRIMARY_MODEL),
+          ...modelConfig,
+        }));
+      } catch (primaryError) {
+        console.warn(`Primary model ${PRIMARY_MODEL} failed for ${type}, falling back to ${FALLBACK_MODEL}:`, primaryError);
+        ({ text } = await aiGenerateText({
+          model: openrouter(FALLBACK_MODEL),
+          ...modelConfig,
+        }));
+      }
     }
 
     // Extract and parse the JSON content

@@ -92,7 +92,8 @@ export default defineSchema({
         v.literal('disabled'),
         v.literal('clearOnly'),
         v.literal('speakOnly'),
-        v.literal('speakAndClearOnly')
+        v.literal('speakAndClearOnly'),
+        v.literal('speakAny')
       )
     ),
 

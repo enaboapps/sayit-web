@@ -4,6 +4,7 @@ import { ArrowPathIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useReplySuggestions } from '@/lib/hooks/useReplySuggestions';
 import { useSubscription } from '@/app/hooks/useSubscription';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { MIN_HISTORY_ENTRIES } from '@/lib/reply-suggestions-constants';
 
 interface ReplySuggestionsProps {
   history: string[];
@@ -36,7 +37,7 @@ export default function ReplySuggestions({
     return null;
   }
 
-  const hasEnoughHistory = history.length >= 3;
+  const hasEnoughHistory = history.length >= MIN_HISTORY_ENTRIES;
   if (!hasEnoughHistory && !isLoading) {
     return null;
   }
@@ -75,9 +76,9 @@ export default function ReplySuggestions({
 
       {!isLoading && suggestions.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {suggestions.map((suggestion) => (
+          {suggestions.map((suggestion, index) => (
             <button
-              key={suggestion}
+              key={`${index}-${suggestion}`}
               type="button"
               onClick={() => onSelectSuggestion(suggestion)}
               className="rounded-2xl bg-surface-hover px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-primary-950 hover:text-primary-500"

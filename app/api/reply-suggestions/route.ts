@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { generateReplySuggestions } from '@/lib/openrouter';
+import { MIN_HISTORY_ENTRIES } from '@/lib/reply-suggestions-constants';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-const MIN_HISTORY_ENTRIES = 3;
 
 export async function POST(request: Request) {
   try {

@@ -23,7 +23,7 @@ import { UserButton } from '@clerk/nextjs';
 
 // Import types from SettingsContext
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
-type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly';
+type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly' | 'speakAny';
 
 // Import TTSSettings dynamically with SSR disabled
 const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
@@ -105,8 +105,9 @@ export default function SettingsPage() {
   const messageCaptureOptions = [
     { value: 'disabled' as MessageCaptureMode, label: 'Off' },
     { value: 'clearOnly' as MessageCaptureMode, label: 'On Clear' },
-    { value: 'speakOnly' as MessageCaptureMode, label: 'On Speak' },
-    { value: 'speakAndClearOnly' as MessageCaptureMode, label: 'On Speak & Clear' },
+    { value: 'speakOnly' as MessageCaptureMode, label: 'On Speak Only' },
+    { value: 'speakAndClearOnly' as MessageCaptureMode, label: 'On Speak & Clear Only' },
+    { value: 'speakAny' as MessageCaptureMode, label: 'On Speak or Speak & Clear' },
   ];
 
   // Mobile layout with categories
