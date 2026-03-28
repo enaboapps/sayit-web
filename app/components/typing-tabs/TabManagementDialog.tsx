@@ -81,7 +81,7 @@ export default function TabManagementDialog({
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Dialog as="div" className="relative z-[65]" onClose={onClose}>
         {/* Backdrop with fade animation */}
         <Transition.Child
           as={Fragment}
