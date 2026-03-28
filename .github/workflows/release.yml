@@ -20,6 +20,12 @@ jobs:
 
       - run: npm ci
 
+      - name: Pull Vercel project settings
+        run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: team_U9zs0AFsLTkLlpalDoH22Ru4
+          VERCEL_PROJECT_ID: prj_P7rsaUaL1aHaab6R0gliU7lyHLPq
+
       - name: Build
         run: npx vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
         env:
