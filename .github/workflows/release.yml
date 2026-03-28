@@ -21,10 +21,10 @@ jobs:
       - run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npx vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
         env:
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          VERCEL_ORG_ID: team_U9zs0AFsLTkLlpalDoH22Ru4
+          VERCEL_PROJECT_ID: prj_P7rsaUaL1aHaab6R0gliU7lyHLPq
 
       - name: Create GitHub Release
         run: gh release create ${{ github.ref_name }} --generate-notes
