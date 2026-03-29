@@ -213,10 +213,17 @@ function saveToLocalStorage(allSettings: AllSettings) {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [allSettings, setAllSettings] = useState<AllSettings>(() => loadFromLocalStorage());
+  const [allSettings, setAllSettings] = useState<AllSettings>({
+    ...defaultSettings,
+    ...defaultUIPreferences,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [hasMigrated, setHasMigrated] = useState(false);
+
+  useEffect(() => {
+    setAllSettings(loadFromLocalStorage());
+  }, []);
 
   // Convex hooks - only query when authenticated
   const convexSettings = useQuery(api.userSettings.getUserSettings, user ? {} : 'skip');

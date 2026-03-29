@@ -47,6 +47,7 @@ export default function TypingArea({
   const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const prevExternalTextRef = useRef(externalText);
   const prevActiveTabIdRef = useRef<string | null>(null);
   const hasProcessedInitialExternalTextRef = useRef(false);
   const hasInitializedActiveTabRef = useRef(false);
@@ -80,7 +81,7 @@ export default function TypingArea({
     switchToTabByIndex,
     switchToPreviousTab,
     switchToNextTab,
-  } = useTypingTabs(initialText);
+  } = useTypingTabs(externalText === undefined ? initialText : undefined);
 
   const text = activeTab.text;
   const showOfflineCloudNotice = !isOnline && (enableFixText || (enableLiveTyping && !!user));
@@ -93,15 +94,25 @@ export default function TypingArea({
 
     if (!hasProcessedInitialExternalTextRef.current) {
       hasProcessedInitialExternalTextRef.current = true;
+      prevExternalTextRef.current = externalText;
 
       if (!externalText.trim() && activeTab.text.trim()) {
         onChange?.(activeTab.text);
         return;
       }
+
+      if (externalText !== activeTab.text) {
+        updateActiveTabText(externalText);
+        return;
+      }
     }
 
-    if (externalText !== activeTab.text) {
-      updateActiveTabText(externalText);
+    if (externalText !== prevExternalTextRef.current) {
+      prevExternalTextRef.current = externalText;
+
+      if (externalText !== activeTab.text) {
+        updateActiveTabText(externalText);
+      }
     }
   }, [activeTab.text, externalText, onChange, updateActiveTabText]);
 

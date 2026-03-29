@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TypingArea from '@/app/components/TypingArea';
 
@@ -185,7 +185,7 @@ describe('TypingArea', () => {
       expect(onChange).not.toHaveBeenCalled();
     });
 
-    it('restores a persisted draft instead of overwriting it with an empty text prop', () => {
+    it('restores a persisted draft instead of overwriting it with an empty text prop', async () => {
       localStorageMock.setItem('typingTabs', JSON.stringify({
         tabs: [
           {
@@ -204,7 +204,9 @@ describe('TypingArea', () => {
       const onChange = jest.fn();
       render(<TypingArea text="" tts={mockTTS} onChange={onChange} />);
 
-      expect(screen.getByRole('textbox')).toHaveValue('Restored draft');
+      await waitFor(() => {
+        expect(screen.getByRole('textbox')).toHaveValue('Restored draft');
+      });
       expect(onChange).toHaveBeenCalledWith('Restored draft');
     });
 

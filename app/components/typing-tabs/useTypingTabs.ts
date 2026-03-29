@@ -9,6 +9,15 @@ import { createDefaultTab, validateTabLabel, generateLabelFromText } from './uti
 const STORAGE_KEY = 'typingTabs';
 const DEBOUNCE_DELAY = 300;
 
+function createInitialTabsState(initialText?: string): TypingTabsState {
+  const firstTab = createDefaultTab(1, initialText || '');
+  return {
+    tabs: [firstTab],
+    activeTabId: firstTab.id,
+    nextTabNumber: 2,
+  };
+}
+
 export function useTypingTabs(initialText?: string) {
   const { uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
@@ -16,38 +25,35 @@ export function useTypingTabs(initialText?: string) {
   const persistTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize tabs state
-  const [tabsState, setTabsState] = useState<TypingTabsState>(() => {
-    // Try to load from localStorage first
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as TypingTabsState;
-          if (parsed.tabs.length > 0) {
-            // Migration: Add isCustomLabel field to existing tabs
-            const migratedTabs = parsed.tabs.map(tab => ({
-              ...tab,
-              isCustomLabel: tab.isCustomLabel ?? false,
-            }));
-            return {
-              ...parsed,
-              tabs: migratedTabs,
-            };
-          }
-        } catch (error) {
-          console.error('Failed to parse stored tabs:', error);
+  const [tabsState, setTabsState] = useState<TypingTabsState>(() => createInitialTabsState(initialText));
+  const [hasHydratedStorage, setHasHydratedStorage] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as TypingTabsState;
+        if (parsed.tabs.length > 0) {
+          const migratedTabs = parsed.tabs.map(tab => ({
+            ...tab,
+            isCustomLabel: tab.isCustomLabel ?? false,
+          }));
+          setTabsState({
+            ...parsed,
+            tabs: migratedTabs,
+          });
         }
+      } catch (error) {
+        console.error('Failed to parse stored tabs:', error);
       }
     }
 
-    // Migration: If no tabs exist but initialText exists, create first tab with that text
-    const firstTab = createDefaultTab(1, initialText || '');
-    return {
-      tabs: [firstTab],
-      activeTabId: firstTab.id,
-      nextTabNumber: 2,
-    };
-  });
+    setHasHydratedStorage(true);
+  }, []);
 
   // Get active tab
   const activeTab = tabsState.tabs.find(tab => tab.id === tabsState.activeTabId) || tabsState.tabs[0];
@@ -55,6 +61,8 @@ export function useTypingTabs(initialText?: string) {
   // Auto-create new empty tab on mount if active tab has text
   const hasAutoCreated = useRef(false);
   useEffect(() => {
+    if (!hasHydratedStorage) return;
+
     // Only run once on mount
     if (hasAutoCreated.current) return;
     hasAutoCreated.current = true;
@@ -73,7 +81,7 @@ export function useTypingTabs(initialText?: string) {
         nextTabNumber: prev.nextTabNumber + 1,
       }));
     }
-  }, [activeTab.text, initialText, tabsState.nextTabNumber]);
+  }, [activeTab.text, hasHydratedStorage, initialText, tabsState.nextTabNumber]);
 
   // Persist tabs to localStorage and Convex (debounced)
   const persistTabs = useCallback((state: TypingTabsState) => {
@@ -103,15 +111,23 @@ export function useTypingTabs(initialText?: string) {
 
   // Sync active tab ID to UIPreferences
   useEffect(() => {
+    if (!hasHydratedStorage) {
+      return;
+    }
+
     if (uiPreferences.activeTypingTabId !== tabsState.activeTabId) {
       updateUIPreference('activeTypingTabId', tabsState.activeTabId);
     }
-  }, [tabsState.activeTabId, uiPreferences.activeTypingTabId, updateUIPreference]);
+  }, [hasHydratedStorage, tabsState.activeTabId, uiPreferences.activeTypingTabId, updateUIPreference]);
 
   // Persist tabs whenever they change
   useEffect(() => {
+    if (!hasHydratedStorage) {
+      return;
+    }
+
     persistTabs(tabsState);
-  }, [tabsState, persistTabs]);
+  }, [hasHydratedStorage, tabsState, persistTabs]);
 
   // Create a new tab
   const createTab = useCallback(() => {
