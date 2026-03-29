@@ -6,12 +6,18 @@ import TypingArea from '@/app/components/TypingArea';
 import TypingDock from '@/app/components/TypingDock';
 import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
 import { useTTS } from '@/lib/hooks/useTTS';
 
 export default function GuestCommunication() {
   const [text, setText] = useState('');
   const isMobile = useIsMobile();
   const tts = useTTS();
+  const { messages, recordMessage } = useLocalMessageHistory();
+
+  const handleRestoreMessage = (message: string) => {
+    setText(message);
+  };
 
   return (
     <section className="w-full max-w-5xl mx-auto px-4 pt-6 pb-4">
@@ -40,12 +46,38 @@ export default function GuestCommunication() {
               text={text}
               tts={tts}
               onChange={setText}
+              onMessageCompleted={recordMessage}
               enableFixText={false}
               enableLiveTyping={false}
             />
           </div>
         )}
       </div>
+
+      {messages.length > 0 && (
+        <div className="mt-4 rounded-3xl border border-border bg-surface px-5 py-4 shadow-lg">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Recent on this device</h3>
+              <p className="mt-1 text-xs text-text-secondary">
+                Tap a recent message to bring it back into the typing area.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {messages.slice(0, 5).map((message) => (
+              <button
+                key={message.id}
+                type="button"
+                onClick={() => handleRestoreMessage(message.text)}
+                className="max-w-full rounded-full bg-surface-hover px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-primary-950 hover:text-primary-500"
+              >
+                {message.text}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {isMobile && (
         <MobileDockPortal>
@@ -58,6 +90,10 @@ export default function GuestCommunication() {
               }
 
               tts.speak(text);
+              recordMessage({
+                text,
+                source,
+              });
 
               if (source === 'speakAndClear') {
                 setTimeout(() => {
@@ -65,6 +101,7 @@ export default function GuestCommunication() {
                 }, 100);
               }
             }}
+            onMessageCompleted={recordMessage}
             onStop={tts.stop}
             isSpeaking={tts.isSpeaking}
             isAvailable={tts.isAvailable}

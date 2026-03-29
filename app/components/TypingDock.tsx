@@ -74,6 +74,8 @@ export default function TypingDock({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevTextRef = useRef(text); // Track previous text to detect external changes
   const prevActiveTabIdRef = useRef<string | null>(null);
+  const hasProcessedInitialTextRef = useRef(false);
+  const hasInitializedActiveTabRef = useRef(false);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
 
@@ -129,13 +131,27 @@ export default function TypingDock({
   // Sync tabs text with external text prop when tabs are enabled
   // Only sync when text prop changes externally, not when activeTab.text changes
   useEffect(() => {
-    if (enableTabs && text !== prevTextRef.current) {
+    if (!enableTabs) {
+      return;
+    }
+
+    if (!hasProcessedInitialTextRef.current) {
+      hasProcessedInitialTextRef.current = true;
+      prevTextRef.current = text;
+
+      if (!text.trim() && activeTab.text.trim()) {
+        onChange(activeTab.text);
+        return;
+      }
+    }
+
+    if (text !== prevTextRef.current) {
       prevTextRef.current = text;
       if (text !== activeTab.text) {
         updateActiveTabText(text);
       }
     }
-  }, [enableTabs, text, activeTab.text, updateActiveTabText]);
+  }, [activeTab.text, enableTabs, onChange, text, updateActiveTabText]);
 
   useEffect(() => {
     if (dockMode === 'expanded' || dockMode === 'fullscreen') {
@@ -145,6 +161,12 @@ export default function TypingDock({
 
   useEffect(() => {
     if (!enableTabs || !activeTabId) return;
+
+    if (!hasInitializedActiveTabRef.current) {
+      hasInitializedActiveTabRef.current = true;
+      prevActiveTabIdRef.current = activeTabId;
+      return;
+    }
 
     if (prevActiveTabIdRef.current && prevActiveTabIdRef.current !== activeTabId) {
       onChange(activeTab.text);

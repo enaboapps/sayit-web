@@ -92,7 +92,7 @@ describe('useTypingTabs', () => {
           {
             id: 'stored-tab-1',
             label: 'Stored Tab',
-            text: '', // Use empty text to avoid auto-creation
+            text: 'Restored draft',
             createdAt: Date.now(),
             lastModified: Date.now(),
             isCustomLabel: false,
@@ -107,8 +107,33 @@ describe('useTypingTabs', () => {
 
       expect(result.current.tabs).toHaveLength(1);
       expect(result.current.tabs[0].id).toBe('stored-tab-1');
+      expect(result.current.tabs[0].text).toBe('Restored draft');
       expect(result.current.tabs[0].label).toBe('Stored Tab');
       expect(result.current.activeTabId).toBe('stored-tab-1');
+    });
+
+    it('does not auto-create a new tab when restoring non-empty stored content', () => {
+      const storedState = {
+        tabs: [
+          {
+            id: 'stored-tab-1',
+            label: 'Stored Tab',
+            text: 'Restored draft',
+            createdAt: Date.now(),
+            lastModified: Date.now(),
+            isCustomLabel: false,
+          },
+        ],
+        activeTabId: 'stored-tab-1',
+        nextTabNumber: 2,
+      };
+      localStorageMock.setItem('typingTabs', JSON.stringify(storedState));
+
+      const { result } = renderHook(() => useTypingTabs());
+
+      expect(result.current.tabs).toHaveLength(1);
+      expect(result.current.activeTabId).toBe('stored-tab-1');
+      expect(result.current.activeTab.text).toBe('Restored draft');
     });
 
     it('migrates tabs without isCustomLabel field', () => {

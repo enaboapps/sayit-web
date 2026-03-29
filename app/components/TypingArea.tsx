@@ -47,6 +47,8 @@ export default function TypingArea({
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevActiveTabIdRef = useRef<string | null>(null);
+  const hasProcessedInitialExternalTextRef = useRef(false);
+  const hasInitializedActiveTabRef = useRef(false);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
   const { speak, stop, isSpeaking, isAvailable } = tts;
@@ -82,20 +84,43 @@ export default function TypingArea({
 
   // Sync external text prop with active tab
   useEffect(() => {
-    if (externalText !== undefined && externalText !== activeTab.text) {
+    if (externalText === undefined) {
+      return;
+    }
+
+    if (!hasProcessedInitialExternalTextRef.current) {
+      hasProcessedInitialExternalTextRef.current = true;
+
+      if (!externalText.trim() && activeTab.text.trim()) {
+        onChange?.(activeTab.text);
+        return;
+      }
+    }
+
+    if (externalText !== activeTab.text) {
       updateActiveTabText(externalText);
     }
-  }, [externalText, activeTab.text, updateActiveTabText]);
+  }, [activeTab.text, externalText, onChange, updateActiveTabText]);
 
   useEffect(() => {
     if (!activeTabId) return;
+
+    if (!hasInitializedActiveTabRef.current) {
+      hasInitializedActiveTabRef.current = true;
+      prevActiveTabIdRef.current = activeTabId;
+
+      if (externalText === undefined && activeTab.text.trim()) {
+        onChange?.(activeTab.text);
+      }
+      return;
+    }
 
     if (prevActiveTabIdRef.current && prevActiveTabIdRef.current !== activeTabId) {
       onChange?.(activeTab.text);
     }
 
     prevActiveTabIdRef.current = activeTabId;
-  }, [activeTabId, activeTab.text, onChange]);
+  }, [activeTabId, activeTab.text, externalText, onChange]);
 
   // Keyboard shortcuts for tabs
   useEffect(() => {

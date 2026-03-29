@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
+import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
 import ReplySuggestions from '../typing/ReplySuggestions';
 
 export default function PhrasesInterface() {
@@ -28,6 +29,7 @@ export default function PhrasesInterface() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [captureError, setCaptureError] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
+  const { messages: localRecentMessages, recordMessage: recordLocalMessage } = useLocalMessageHistory();
   const selectedBoardId = uiPreferences.selectedBoardId;
   const activeTabId = uiPreferences.activeTypingTabId;
   const isMobile = useIsMobile();
@@ -215,6 +217,12 @@ export default function PhrasesInterface() {
       return;
     }
 
+    recordLocalMessage({
+      text: trimmedText,
+      source,
+      tabId,
+    });
+
     try {
       await recordMessage({
         text: trimmedText,
@@ -254,7 +262,13 @@ export default function PhrasesInterface() {
   };
 
   const suggestionContext = useMemo(() => {
-    const allMessages = recentMessages ?? [];
+    const fallbackLocalMessages = localRecentMessages.map((entry) => ({
+      text: entry.text,
+      tabId: entry.tabId ?? undefined,
+    }));
+    const allMessages = recentMessages && recentMessages.length > 0
+      ? recentMessages
+      : fallbackLocalMessages;
     const sameTabMessages = activeTabId
       ? allMessages.filter((entry) => entry.tabId === activeTabId)
       : [];
@@ -272,7 +286,7 @@ export default function PhrasesInterface() {
         ? 'Using recent completed messages across tabs until this tab has more history'
         : 'Based on your recent completed messages',
     };
-  }, [activeTabId, recentMessages]);
+  }, [activeTabId, localRecentMessages, recentMessages]);
 
   return (
     <>
