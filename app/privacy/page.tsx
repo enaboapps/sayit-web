@@ -176,8 +176,9 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li>Application resources are cached locally on your device</li>
-              <li>Your data syncs with our servers when you're online</li>
-              <li>Some features require an internet connection (AI, TTS, account sync)</li>
+              <li>Core text communication and browser speech can keep working offline after the app has been opened</li>
+              <li>Your cloud-backed data syncs with our servers when you're online</li>
+              <li>Some features require an internet connection (AI, ElevenLabs, boards, account sync)</li>
             </ul>
 
             <h3 className="text-lg font-semibold text-foreground mt-6 mb-3">6.3 AI-Powered Features</h3>
