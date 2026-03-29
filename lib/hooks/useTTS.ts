@@ -166,6 +166,13 @@ export function useTTS() {
     return ttsRef.current.getVoicesByProvider(providerType);
   }, []);
 
+  const refreshVoices = useCallback(() => {
+    if (!ttsRef.current) return;
+    ttsRef.current.refreshVoices();
+    setVoices(ttsRef.current.getAllVoices());
+    setStatus(ttsRef.current.getStatus());
+  }, []);
+
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
     if (providerType === 'browser') return true;
@@ -184,6 +191,7 @@ export function useTTS() {
     provider,
     switchProvider,
     getVoicesByProvider,
+    refreshVoices,
     status,
     hasSubscription,
     isProviderAvailable
