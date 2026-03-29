@@ -53,6 +53,8 @@ export function useTTS() {
       ttsRef.current = TTSProvider.getInstance();
       
       const tts = ttsRef.current;
+
+      tts.setProvider(settingsRef.current.ttsProvider);
       
       // Set initial state
       setIsAvailable(tts.isAvailable());
