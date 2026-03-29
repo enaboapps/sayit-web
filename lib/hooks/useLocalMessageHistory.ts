@@ -46,21 +46,25 @@ function parseStoredHistory(value: string | null): LocalMessageHistoryEntry[] {
 }
 
 export function useLocalMessageHistory() {
-  const [messages, setMessages] = useState<LocalMessageHistoryEntry[]>(() => {
-    if (typeof window === 'undefined') {
-      return [];
-    }
-
-    return parseStoredHistory(window.localStorage.getItem(STORAGE_KEY));
-  });
+  const [messages, setMessages] = useState<LocalMessageHistoryEntry[]>([]);
+  const [hasHydratedStorage, setHasHydratedStorage] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
+    setMessages(parseStoredHistory(window.localStorage.getItem(STORAGE_KEY)));
+    setHasHydratedStorage(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !hasHydratedStorage) {
+      return;
+    }
+
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
+  }, [hasHydratedStorage, messages]);
 
   const recordMessage = useCallback((payload: RecordLocalMessagePayload) => {
     const trimmedText = payload.text.trim();
