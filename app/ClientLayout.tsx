@@ -9,6 +9,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { MobileBottomProvider } from './contexts/MobileBottomContext';
 import ConnectivityBanner from './components/navigation/ConnectivityBanner';
+import InstallBanner from './components/navigation/InstallBanner';
 import Sidebar from './components/Sidebar';
 import MobileBottomStack from './components/navigation/MobileBottomStack';
 
@@ -55,6 +56,7 @@ export default function ClientLayout({
                 {/* Main content area */}
                 <div className="flex-1 md:pl-16 lg:pl-16">
                   <ConnectivityBanner />
+                  <InstallBanner />
                   <main className="min-h-dvh pb-32 md:pb-0">
                     {children}
                   </main>
