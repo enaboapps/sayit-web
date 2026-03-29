@@ -337,15 +337,7 @@ export default function PhrasesInterface() {
         </div>
       ) : showOfflineBoardsState ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-md text-center">
-            <h2 className="text-xl font-medium text-foreground mb-4">Boards need internet</h2>
-            <p className="text-text-secondary mb-2">
-              Text communication and browser speech are still available, but saved boards and cloud updates are unavailable while offline.
-            </p>
-            <p className="text-sm text-amber-500">
-              Reconnect to load boards, edit phrases, and sync changes.
-            </p>
-          </div>
+          <p className="text-text-secondary">Boards are unavailable offline.</p>
         </div>
       ) : loading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -496,11 +488,6 @@ export default function PhrasesInterface() {
           />
           {captureError && settings.aiReplySuggestionsEnabled && (
             <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
-          )}
-          {!isOnline && user && (
-            <p className="px-3 pb-2 text-xs text-amber-500">
-              Offline: boards, reply suggestions, and cloud sync will reconnect automatically when internet returns.
-            </p>
           )}
         </MobileDockPortal>
       )}
