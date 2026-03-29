@@ -90,9 +90,6 @@ export class ElevenLabsTTS {
   private constructor() {
     // Private constructor to enforce singleton pattern
     this.fallbackTTS = WebSpeechTTS.getInstance();
-    if (typeof window !== 'undefined') {
-      this.loadVoices();
-    }
   }
 
   public static getInstance(): ElevenLabsTTS {
@@ -102,7 +99,7 @@ export class ElevenLabsTTS {
     return ElevenLabsTTS.instance;
   }
 
-  private async loadVoices() {
+  public async loadVoices() {
     if (typeof window === 'undefined') return;
 
     if (this.loadingVoices) {
@@ -113,13 +110,6 @@ export class ElevenLabsTTS {
       try {
         const response = await fetch('/api/elevenlabs/voices');
 
-        if (!response.ok) {
-          this.isAvailableFlag = false;
-          this.voices = [];
-          this.callbacks.onVoicesChanged?.(this.voices);
-          return;
-        }
-
         const data = await response.json();
 
         this.voices = (data?.voices ?? []).map((voice: Voice) => ({
@@ -129,7 +119,7 @@ export class ElevenLabsTTS {
           description: voice.description || ''
         }));
 
-        this.isAvailableFlag = true;
+        this.isAvailableFlag = data?.available ?? this.voices.length > 0;
         this.callbacks.onVoicesChanged?.(this.voices);
       } catch (error) {
         this.isAvailableFlag = false;
@@ -144,6 +134,10 @@ export class ElevenLabsTTS {
     })();
 
     return this.loadingVoices;
+  }
+
+  public hasLoadedVoices(): boolean {
+    return this.voicesLoaded;
   }
 
   public setCallbacks(callbacks: {
