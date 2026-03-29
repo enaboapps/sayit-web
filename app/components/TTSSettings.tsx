@@ -27,6 +27,7 @@ export default function TTSSettings() {
     isSpeaking,
     status,
     getVoicesByProvider,
+    refreshVoices,
     hasSubscription
   } = useTTS();
 
@@ -40,6 +41,12 @@ export default function TTSSettings() {
   const SAMPLE_TEXT = 'Hello, this is a preview of how this voice sounds.';
 
   // Load provider voices only when voices or provider changes
+  useEffect(() => {
+    if (settings.ttsProvider === 'browser') {
+      refreshVoices();
+    }
+  }, [refreshVoices, settings.ttsProvider]);
+
   useEffect(() => {
     const voicesForProvider = getVoicesByProvider(settings.ttsProvider);
     setProviderVoices(voicesForProvider);

@@ -34,18 +34,6 @@ export class TextToSpeech {
 
     // Set up event listener for when voices are loaded
     window.speechSynthesis.onvoiceschanged = () => this.updateVoices();
-
-    // For mobile devices, we need to trigger voice loading
-    // by making a small utterance
-    if (this.voices.length === 0) {
-      const utterance = new SpeechSynthesisUtterance('');
-      utterance.volume = 0;
-      utterance.onend = () => {
-        // After the utterance ends, try to get voices again
-        this.updateVoices();
-      };
-      window.speechSynthesis.speak(utterance);
-    }
   }
 
   private updateVoices() {
@@ -77,6 +65,10 @@ export class TextToSpeech {
     return this.voices.find(voice => voice.voiceURI === voiceURI);
   }
 
+  public refreshVoices() {
+    this.updateVoices();
+  }
+
   public speak(text: string, options?: {
     rate?: number;
     pitch?: number;
@@ -86,6 +78,8 @@ export class TextToSpeech {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
       return;
     }
+
+    this.refreshVoices();
 
     // Stop any ongoing speech
     this.stop();

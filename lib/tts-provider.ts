@@ -144,6 +144,11 @@ export class TTSProvider {
     return this.getAllVoices().find(voice => voice.id === id);
   }
 
+  public refreshVoices() {
+    this.webSpeechTTS.refreshVoices();
+    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+  }
+
   public speak(text: string, options?: {
     voiceId?: string;
     rate?: number;
