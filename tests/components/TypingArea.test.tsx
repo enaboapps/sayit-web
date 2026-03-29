@@ -22,8 +22,11 @@ const mockUpdateUIPreference = jest.fn();
 jest.mock('@/app/contexts/SettingsContext', () => ({
   useSettings: jest.fn(() => ({
     settings: {
-      textSize: 'medium',
+      textSize: 18,
+      doubleEnterEnabled: false,
+      doubleEnterTimeoutMs: 600,
       enterKeyBehavior: 'newline',
+      doubleEnterAction: 'speak',
     },
     uiPreferences: {
       typingAreaVisible: true,
@@ -60,12 +63,34 @@ const mockTTS = {
   isAvailable: true,
 };
 
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock,
+});
+
 // Mock scrollTo for TabBar component
 Element.prototype.scrollTo = jest.fn();
 
 describe('TypingArea', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    localStorageMock.clear();
   });
 
   describe('external text prop synchronization', () => {
@@ -150,6 +175,29 @@ describe('TypingArea', () => {
 
       // onChange should not be called again if text hasn't changed
       expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('restores a persisted draft instead of overwriting it with an empty text prop', () => {
+      localStorageMock.setItem('typingTabs', JSON.stringify({
+        tabs: [
+          {
+            id: 'stored-tab-1',
+            label: 'Stored Draft',
+            text: 'Restored draft',
+            createdAt: Date.now(),
+            lastModified: Date.now(),
+            isCustomLabel: false,
+          },
+        ],
+        activeTabId: 'stored-tab-1',
+        nextTabNumber: 2,
+      }));
+
+      const onChange = jest.fn();
+      render(<TypingArea text="" tts={mockTTS} onChange={onChange} />);
+
+      expect(screen.getByRole('textbox')).toHaveValue('Restored draft');
+      expect(onChange).toHaveBeenCalledWith('Restored draft');
     });
 
     it('replaces existing text when phrase is selected', () => {

@@ -59,6 +59,11 @@ export function useTypingTabs(initialText?: string) {
     if (hasAutoCreated.current) return;
     hasAutoCreated.current = true;
 
+    // Only auto-create a follow-up tab when the hook was seeded with initial text.
+    if (!initialText?.trim()) {
+      return;
+    }
+
     // Check if active tab has text - auto-create a new empty tab
     if (activeTab.text.trim().length > 0) {
       const newTab = createDefaultTab(tabsState.nextTabNumber);
@@ -68,7 +73,7 @@ export function useTypingTabs(initialText?: string) {
         nextTabNumber: prev.nextTabNumber + 1,
       }));
     }
-  }, [activeTab.text, tabsState.tabs.length, tabsState.nextTabNumber]);
+  }, [activeTab.text, initialText, tabsState.nextTabNumber]);
 
   // Persist tabs to localStorage and Convex (debounced)
   const persistTabs = useCallback((state: TypingTabsState) => {
