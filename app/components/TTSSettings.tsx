@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTTS } from '@/lib/hooks/useTTS';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { TTSVoice, TTSProviderType } from '@/lib/tts-provider';
 import { useSettings } from '../contexts/SettingsContext';
 import { Dropdown } from '@/app/components/ui/Dropdown';
@@ -30,6 +31,7 @@ export default function TTSSettings() {
   } = useTTS();
 
   const router = useRouter();
+  const { isOnline } = useOnlineStatus();
 
   const [providerVoices, setProviderVoices] = useState<ExtendedTTSVoice[]>([]);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
@@ -56,14 +58,14 @@ export default function TTSSettings() {
 
   // Safe provider change
   const handleProviderChange = useCallback((newProvider: TTSProviderType) => {
-    if (newProvider === 'elevenlabs' && !status.elevenLabsAvailable) {
+    if (newProvider === 'elevenlabs' && (!status.elevenLabsAvailable || !isOnline)) {
       return;
     }
 
     if (settings.ttsProvider !== newProvider) {
       updateSetting('ttsProvider', newProvider);
     }
-  }, [settings.ttsProvider, status.elevenLabsAvailable, updateSetting]);
+  }, [isOnline, settings.ttsProvider, status.elevenLabsAvailable, updateSetting]);
 
   // Preview voice function
   const previewVoice = useCallback(() => {
@@ -75,7 +77,7 @@ export default function TTSSettings() {
 
     setIsPlayingPreview(true);
 
-    if (settings.ttsProvider === 'elevenlabs') {
+    if (settings.ttsProvider === 'elevenlabs' && isOnline) {
       const voice = providerVoices.find(v => v.id === settings.ttsVoiceId) as ExtendedTTSVoice;
 
       if (voice?.metadata?.preview_url) {
@@ -90,7 +92,7 @@ export default function TTSSettings() {
       speak(SAMPLE_TEXT);
       setTimeout(() => setIsPlayingPreview(false), 5000);
     }
-  }, [speak, stop, isSpeaking, settings.ttsProvider, settings.ttsVoiceId, providerVoices]);
+  }, [isOnline, speak, stop, isSpeaking, settings.ttsProvider, settings.ttsVoiceId, providerVoices]);
 
   // Get selected voice name for display
   const selectedVoiceName = providerVoices.find(v => v.id === settings.ttsVoiceId)?.name;
@@ -175,9 +177,9 @@ export default function TTSSettings() {
           <button
             type="button"
             onClick={() => handleProviderChange('elevenlabs')}
-            disabled={!status.elevenLabsAvailable}
+            disabled={!status.elevenLabsAvailable || !isOnline}
             className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
-              !status.elevenLabsAvailable
+              !status.elevenLabsAvailable || !isOnline
                 ? 'opacity-50 cursor-not-allowed border-border bg-surface'
                 : settings.ttsProvider === 'elevenlabs'
                   ? 'border-primary-500 bg-primary-900'
@@ -225,7 +227,13 @@ export default function TTSSettings() {
           </p>
         )}
 
-        {!status.elevenLabsAvailable && (
+        {!isOnline && (
+          <p className="text-xs text-amber-500 px-1">
+            Offline. Browser TTS still works, but ElevenLabs voices need internet.
+          </p>
+        )}
+
+        {!status.elevenLabsAvailable && isOnline && (
           <p className="text-xs text-text-tertiary px-1">
             ElevenLabs unavailable. API key not configured.
           </p>

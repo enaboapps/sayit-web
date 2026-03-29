@@ -58,8 +58,8 @@ export default function SupportPage() {
               <h3 className="text-lg font-semibold text-foreground mb-2">Can I use SayIt! offline?</h3>
               <p className="text-text-secondary">
                 Yes. If you install SayIt! as a PWA, the app shell can open offline and you can continue typing
-                and using browser text-to-speech. Saved boards, AI features, account management, and cloud sync
-                still require an internet connection.
+                and using browser text-to-speech. Saved boards, Fix Text, reply suggestions, Live Typing,
+                ElevenLabs voices, account management, and cloud sync still require an internet connection.
               </p>
             </div>
 

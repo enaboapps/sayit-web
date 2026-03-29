@@ -18,6 +18,7 @@ import { useSettings } from '../../contexts/SettingsContext';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import ReplySuggestions from '../typing/ReplySuggestions';
 
 export default function PhrasesInterface() {
@@ -25,6 +26,7 @@ export default function PhrasesInterface() {
   const tts = useTTS();
   const { user, loading: authLoading } = useAuth();
   const { settings, uiPreferences, updateUIPreference } = useSettings();
+  const { isOnline } = useOnlineStatus();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [captureError, setCaptureError] = useState(false);
@@ -59,6 +61,7 @@ export default function PhrasesInterface() {
   );
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
+  const showOfflineBoardsState = !isOnline && shouldLoadBoards && boards === undefined;
 
   // Auto-select first board on load or use saved board
   useEffect(() => {
@@ -95,6 +98,10 @@ export default function PhrasesInterface() {
   };
 
   const handleAddPhrase = async () => {
+    if (!isOnline) {
+      return;
+    }
+
     if (!selectedBoardId) {
       console.error('Cannot add phrase: no board selected');
       return;
@@ -103,6 +110,10 @@ export default function PhrasesInterface() {
   };
 
   const handleAddTypingAsPhrase = async () => {
+    if (!isOnline) {
+      return;
+    }
+
     if (!selectedBoardId || !typingText.trim()) {
       console.error('Cannot add phrase: no board selected or empty text');
       return;
@@ -133,11 +144,13 @@ export default function PhrasesInterface() {
   };
 
   const handleEditPhrase = (phrase: PhraseSummary) => {
+    if (!isOnline) return;
     if (!selectedBoardId) return;
     router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoardId}`);
   };
 
   const handleAddBoard = () => {
+    if (!isOnline) return;
     router.push('/phrases/boards/add');
   };
 
@@ -322,6 +335,18 @@ export default function PhrasesInterface() {
             <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
           </div>
         </div>
+      ) : showOfflineBoardsState ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="max-w-md text-center">
+            <h2 className="text-xl font-medium text-foreground mb-4">Boards need internet</h2>
+            <p className="text-text-secondary mb-2">
+              Text communication and browser speech are still available, but saved boards and cloud updates are unavailable while offline.
+            </p>
+            <p className="text-sm text-amber-500">
+              Reconnect to load boards, edit phrases, and sync changes.
+            </p>
+          </div>
+        </div>
       ) : loading ? (
         <div className="flex-1 flex items-center justify-center">
           <AnimatedLoading />
@@ -342,8 +367,8 @@ export default function PhrasesInterface() {
               currentBoardIndex={validBoardIndex}
               onBoardChange={handleBoardIndexChange}
               onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
-              onAddBoard={handleAddBoard}
-              onAddPhrase={handleAddPhrase}
+              onAddBoard={isOnline ? handleAddBoard : undefined}
+              onAddPhrase={isOnline ? handleAddPhrase : undefined}
               onEdit={handleEdit}
               isEditMode={isEditMode}
               canEditBoard={canEditCurrentBoard}
@@ -360,14 +385,14 @@ export default function PhrasesInterface() {
                       className="aspect-square"
                     />
                   ))}
-                  {typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
+                  {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
                     <ActionTile
                       text="+ Add as Phrase"
                       onClick={handleAddTypingAsPhrase}
                       className="aspect-square"
                     />
                   )}
-                  {isEditMode && canEditCurrentBoard && (
+                  {isOnline && isEditMode && canEditCurrentBoard && (
                     <ActionTile
                       text="+ Add Phrase"
                       onClick={handleAddPhrase}
@@ -386,9 +411,12 @@ export default function PhrasesInterface() {
                   selectedBoard={selectedBoard}
                   isEditMode={isEditMode}
                   onSelectBoard={handleSelectBoard}
-                  onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
-                  onAddBoard={handleAddBoard}
-                  onAddPhrase={handleAddPhrase}
+                  onEditBoard={(boardId) => {
+                    if (!isOnline) return;
+                    router.push(`/phrases/boards/edit/${boardId}`);
+                  }}
+                  onAddBoard={isOnline ? handleAddBoard : undefined}
+                  onAddPhrase={isOnline ? handleAddPhrase : undefined}
                   onEdit={handleEdit}
                 />
               </div>
@@ -408,14 +436,14 @@ export default function PhrasesInterface() {
                             className="aspect-square"
                           />
                         ))}
-                        {typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
+                        {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
                           <ActionTile
                             text="+ Add as Phrase"
                             onClick={handleAddTypingAsPhrase}
                             className="aspect-square"
                           />
                         )}
-                        {isEditMode && canEditCurrentBoard && (
+                        {isOnline && isEditMode && canEditCurrentBoard && (
                           <ActionTile
                             text="+ Add Phrase"
                             onClick={handleAddPhrase}
@@ -439,7 +467,10 @@ export default function PhrasesInterface() {
         isOpen={isBoardPickerOpen}
         onClose={() => setIsBoardPickerOpen(false)}
         onSelectBoard={handleSelectBoard}
-        onEditBoard={(boardId) => router.push(`/phrases/boards/edit/${boardId}`)}
+        onEditBoard={(boardId) => {
+          if (!isOnline) return;
+          router.push(`/phrases/boards/edit/${boardId}`);
+        }}
       />
       {/* Mobile: TypingDock portaled into bottom stack */}
       {isMobile && (
@@ -465,6 +496,11 @@ export default function PhrasesInterface() {
           />
           {captureError && settings.aiReplySuggestionsEnabled && (
             <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+          )}
+          {!isOnline && user && (
+            <p className="px-3 pb-2 text-xs text-amber-500">
+              Offline: boards, reply suggestions, and cloud sync will reconnect automatically when internet returns.
+            </p>
           )}
         </MobileDockPortal>
       )}

@@ -56,6 +56,14 @@ jest.mock('@/lib/hooks/useLiveTyping', () => ({
   })),
 }));
 
+jest.mock('@/lib/hooks/useOnlineStatus', () => ({
+  useOnlineStatus: jest.fn(() => ({
+    isOnline: true,
+    wasOffline: false,
+    clearRecoveredState: jest.fn(),
+  })),
+}));
+
 const mockTTS = {
   speak: jest.fn(),
   stop: jest.fn(),

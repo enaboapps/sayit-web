@@ -9,6 +9,7 @@ import SubscriptionWrapper from './SubscriptionWrapper';
 import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
@@ -51,6 +52,7 @@ export default function TypingArea({
   const hasInitializedActiveTabRef = useRef(false);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
+  const { isOnline } = useOnlineStatus();
   const { speak, stop, isSpeaking, isAvailable } = tts;
   const {
     isSharing,
@@ -81,6 +83,7 @@ export default function TypingArea({
   } = useTypingTabs(initialText);
 
   const text = activeTab.text;
+  const showOfflineCloudNotice = !isOnline && (enableFixText || (enableLiveTyping && !!user));
 
   // Sync external text prop with active tab
   useEffect(() => {
@@ -166,6 +169,11 @@ export default function TypingArea({
   }, [text, isSharing, updateContent]);
 
   const handleShare = async () => {
+    if (!isOnline) {
+      setError('Live Typing requires an internet connection.');
+      return;
+    }
+
     if (isSharing) {
       setShowLiveTypingModal(true);
       return;
@@ -246,6 +254,10 @@ export default function TypingArea({
 
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
+    if (!isOnline) {
+      setError('Fix Text requires an internet connection.');
+      return;
+    }
 
     setIsFixingText(true);
     setError(null);
@@ -424,43 +436,56 @@ export default function TypingArea({
                 )}
               </button>
               {enableFixText && (
-                <SubscriptionWrapper
-                  fallback={
-                    <button
-                      onClick={() => window.location.href = '/pricing'}
-                      className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-warning text-foreground hover:text-amber-500"
-                      data-tooltip-id="fix-text-tooltip"
-                      data-tooltip-content="Fix Text (Pro feature)"
-                    >
-                      <SparklesIcon className="w-5 h-5" />
-                      <span>Fix Text</span>
-                    </button>
-                  }
-                >
+                !isOnline ? (
                   <button
-                    onClick={handleFixText}
-                    className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
-                      isFixingText
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                        : 'bg-surface hover:bg-status-purple text-foreground hover:text-purple-500'
-                    }`}
+                    type="button"
+                    disabled={true}
+                    className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md bg-surface text-text-tertiary opacity-60 cursor-not-allowed"
                     data-tooltip-id="fix-text-tooltip"
-                    data-tooltip-content="Fix grammar and spelling"
-                    disabled={!text.trim() || isFixingText}
+                    data-tooltip-content="Fix Text requires internet"
                   >
-                    {isFixingText ? (
-                      <>
-                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                        <span>Fixing...</span>
-                      </>
-                    ) : (
-                      <>
+                    <SparklesIcon className="w-5 h-5" />
+                    <span>Fix Text</span>
+                  </button>
+                ) : (
+                  <SubscriptionWrapper
+                    fallback={
+                      <button
+                        onClick={() => window.location.href = '/pricing'}
+                        className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-warning text-foreground hover:text-amber-500"
+                        data-tooltip-id="fix-text-tooltip"
+                        data-tooltip-content="Fix Text (Pro feature)"
+                      >
                         <SparklesIcon className="w-5 h-5" />
                         <span>Fix Text</span>
-                      </>
-                    )}
-                  </button>
-                </SubscriptionWrapper>
+                      </button>
+                    }
+                  >
+                    <button
+                      onClick={handleFixText}
+                      className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
+                        isFixingText
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                          : 'bg-surface hover:bg-status-purple text-foreground hover:text-purple-500'
+                      }`}
+                      data-tooltip-id="fix-text-tooltip"
+                      data-tooltip-content="Fix grammar and spelling"
+                      disabled={!text.trim() || isFixingText}
+                    >
+                      {isFixingText ? (
+                        <>
+                          <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                          <span>Fixing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-5 h-5" />
+                          <span>Fix Text</span>
+                        </>
+                      )}
+                    </button>
+                  </SubscriptionWrapper>
+                )
               )}
               <button
                 onClick={() => handleClear('clear')}
@@ -478,13 +503,19 @@ export default function TypingArea({
               <button
                 onClick={handleShare}
                 className={`w-full h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
-                  isSharing
-                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                    : 'bg-surface hover:bg-status-success text-foreground hover:text-green-500'
+                  !isOnline
+                    ? 'bg-surface text-text-tertiary'
+                    : isSharing
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                      : 'bg-surface hover:bg-status-success text-foreground hover:text-green-500'
                 }`}
-                data-tooltip-id="live-typing-tooltip"
-                data-tooltip-content={isSharing ? 'View live typing link' : 'Start live typing'}
-                disabled={isCreating}
+                data-tooltip-id={isOnline ? 'live-typing-tooltip' : 'offline-live-typing-tooltip'}
+                data-tooltip-content={
+                  isOnline
+                    ? (isSharing ? 'View live typing link' : 'Start live typing')
+                    : 'Live Typing requires internet'
+                }
+                disabled={isCreating || !isOnline}
               >
                 {isCreating ? (
                   <>
@@ -498,6 +529,13 @@ export default function TypingArea({
                   </>
                 )}
               </button>
+            </div>
+          )}
+          {showOfflineCloudNotice && (
+            <div className="px-4 pb-4 bg-surface-hover">
+              <p className="text-xs text-amber-500">
+                Offline: browser speech still works, but Fix Text and Live Typing require internet.
+              </p>
             </div>
           )}
         </div>
@@ -540,6 +578,7 @@ export default function TypingArea({
       <Tooltip id="expand-tooltip" />
       <Tooltip id="toggle-tooltip" />
       <Tooltip id="live-typing-tooltip" />
+      <Tooltip id="offline-live-typing-tooltip" />
 
       {showLiveTypingModal && shareableLink && (
         <LiveTypingLinkModal

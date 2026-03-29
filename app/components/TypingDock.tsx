@@ -19,6 +19,7 @@ import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import ReplySuggestions from './typing/ReplySuggestions';
 import SubscriptionWrapper from './SubscriptionWrapper';
@@ -78,6 +79,7 @@ export default function TypingDock({
   const hasInitializedActiveTabRef = useRef(false);
   const { settings, uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
+  const { isOnline } = useOnlineStatus();
 
   // Get current mode from settings
   const dockMode = uiPreferences.typingDockMode;
@@ -178,6 +180,7 @@ export default function TypingDock({
   // Text size from settings (now a number in px)
   const textSizePx = settings.textSize;
   const currentText = enableTabs ? activeTab.text : text;
+  const showOfflineCloudNotice = !isOnline && (enableFixText || (enableLiveTyping && !!user) || !!replySuggestions?.enabled);
 
   const showUndoHint = canUndo
     && entry?.tabId === (activeTabId || 'default')
@@ -299,6 +302,10 @@ export default function TypingDock({
   // Fix Text handler
   const handleFixText = async () => {
     if (!currentText.trim() || isFixingText) return;
+    if (!isOnline) {
+      setError('Fix Text requires an internet connection.');
+      return;
+    }
 
     setIsFixingText(true);
     setError(null);
@@ -526,46 +533,65 @@ export default function TypingDock({
                 variant="inline"
               />
             )}
+            {showOfflineCloudNotice && (
+              <div className="px-1">
+                <span className="text-xs text-amber-500">
+                  Offline: browser speech still works, but AI tools and Live Typing need internet.
+                </span>
+              </div>
+            )}
 
             {/* Row 1: AI Features (when text exists) */}
             {currentText.trim() && enableFixText && (
               <div className="flex items-center gap-2">
                 {/* Fix Text button (Pro) */}
-                <SubscriptionWrapper
-                  fallback={
-                    <button
-                      onClick={() => window.location.href = '/pricing'}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all duration-200"
-                      aria-label="Fix Text (Pro)"
-                    >
-                      <SparklesIcon className="w-4 h-4" />
-                      <span className="text-sm font-medium">Fix Text</span>
-                    </button>
-                  }
-                >
+                {!isOnline ? (
                   <button
-                    onClick={handleFixText}
-                    disabled={!currentText.trim() || isFixingText}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isFixingText
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                        : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
-                    }`}
+                    type="button"
+                    disabled={true}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover text-text-tertiary transition-all duration-200 opacity-60 cursor-not-allowed"
                     aria-label="Fix Text"
                   >
-                    {isFixingText ? (
-                      <>
-                        <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                        <span className="text-sm font-medium">Fixing...</span>
-                      </>
-                    ) : (
-                      <>
+                    <SparklesIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">Fix Text</span>
+                  </button>
+                ) : (
+                  <SubscriptionWrapper
+                    fallback={
+                      <button
+                        onClick={() => window.location.href = '/pricing'}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all duration-200"
+                        aria-label="Fix Text (Pro)"
+                      >
                         <SparklesIcon className="w-4 h-4" />
                         <span className="text-sm font-medium">Fix Text</span>
-                      </>
-                    )}
-                  </button>
-                </SubscriptionWrapper>
+                      </button>
+                    }
+                  >
+                    <button
+                      onClick={handleFixText}
+                      disabled={!currentText.trim() || isFixingText}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+                        isFixingText
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                          : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
+                      }`}
+                      aria-label="Fix Text"
+                    >
+                      {isFixingText ? (
+                        <>
+                          <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                          <span className="text-sm font-medium">Fixing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-4 h-4" />
+                          <span className="text-sm font-medium">Fix Text</span>
+                        </>
+                      )}
+                    </button>
+                  </SubscriptionWrapper>
+                )}
               </div>
             )}
 
@@ -587,11 +613,14 @@ export default function TypingDock({
                 <button
                   onClick={() => setShowLiveTypingSheet(true)}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all duration-200 ${
-                    isSharing
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                      : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
+                    !isOnline
+                      ? 'bg-surface-hover text-text-tertiary'
+                      : isSharing
+                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                        : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
                   }`}
                   aria-label="Live Typing"
+                  disabled={!isOnline}
                 >
                   <ShareIcon className="w-4 h-4" />
                   <span className="text-sm font-medium">
