@@ -15,10 +15,7 @@ export async function GET() {
     const apiKey = process.env.ELEVENLABS_API_KEY?.replace(/^\uFEFF/, '').trim();
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API configuration error' },
-        { status: 500 },
-      );
+      return NextResponse.json({ voices: [], available: false });
     }
 
     const response = await fetch('https://api.elevenlabs.io/v1/voices', {
@@ -28,10 +25,7 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: 'Failed to load voices' },
-        { status: response.status },
-      );
+      return NextResponse.json({ voices: [], available: false });
     }
 
     const data = await response.json();
@@ -42,12 +36,9 @@ export async function GET() {
       description: voice.description || '',
     }));
 
-    return NextResponse.json({ voices });
+    return NextResponse.json({ voices, available: voices.length > 0 });
   } catch (error) {
     console.error('Error loading ElevenLabs voices:', error);
-    return NextResponse.json(
-      { error: 'Server error', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 },
-    );
+    return NextResponse.json({ voices: [], available: false });
   }
 }

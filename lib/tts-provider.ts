@@ -102,7 +102,11 @@ export class TTSProvider {
       return;
     }
     
-    if (provider === 'elevenlabs' && !this.elevenlabsTTS.isAvailable()) {
+    if (
+      provider === 'elevenlabs'
+      && this.elevenlabsTTS.hasLoadedVoices()
+      && !this.elevenlabsTTS.isAvailable()
+    ) {
       console.warn('ElevenLabs is not available, staying with browser TTS');
       return;
     }
@@ -149,6 +153,11 @@ export class TTSProvider {
     this.callbacks.onVoicesChanged?.(this.getAllVoices());
   }
 
+  public async loadElevenLabsVoices() {
+    await this.elevenlabsTTS.loadVoices();
+    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+  }
+
   public speak(text: string, options?: {
     voiceId?: string;
     rate?: number;
@@ -169,7 +178,7 @@ export class TTSProvider {
     
     console.log(`Speaking with provider: ${provider}, requested voiceId: ${options?.voiceId}`);
     
-    if (provider === 'elevenlabs' && this.elevenlabsTTS.isAvailable()) {
+    if (provider === 'elevenlabs') {
       // Get all available voices
       const allVoices = this.getAllVoices();
       

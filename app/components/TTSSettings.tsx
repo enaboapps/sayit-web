@@ -28,6 +28,7 @@ export default function TTSSettings() {
     status,
     getVoicesByProvider,
     refreshVoices,
+    loadElevenLabsVoices,
     hasSubscription
   } = useTTS();
 
@@ -46,6 +47,14 @@ export default function TTSSettings() {
       refreshVoices();
     }
   }, [refreshVoices, settings.ttsProvider]);
+
+  useEffect(() => {
+    if (!isOnline) {
+      return;
+    }
+
+    void loadElevenLabsVoices();
+  }, [isOnline, loadElevenLabsVoices]);
 
   useEffect(() => {
     const voicesForProvider = getVoicesByProvider(settings.ttsProvider);

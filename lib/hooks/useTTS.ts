@@ -38,6 +38,16 @@ export function useTTS() {
   }, [settings]);
 
   useEffect(() => {
+    if (!ttsRef.current) {
+      return;
+    }
+
+    ttsRef.current.setProvider(settings.ttsProvider);
+    setProvider(ttsRef.current.getCurrentProvider());
+    setStatus(ttsRef.current.getStatus());
+  }, [settings.ttsProvider]);
+
+  useEffect(() => {
     // Initialize only once
     if (!ttsRef.current) {
       ttsRef.current = TTSProvider.getInstance();
@@ -173,6 +183,13 @@ export function useTTS() {
     setStatus(ttsRef.current.getStatus());
   }, []);
 
+  const loadElevenLabsVoices = useCallback(async () => {
+    if (!ttsRef.current) return;
+    await ttsRef.current.loadElevenLabsVoices();
+    setVoices(ttsRef.current.getAllVoices());
+    setStatus(ttsRef.current.getStatus());
+  }, []);
+
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
     if (providerType === 'browser') return true;
@@ -192,6 +209,7 @@ export function useTTS() {
     switchProvider,
     getVoicesByProvider,
     refreshVoices,
+    loadElevenLabsVoices,
     status,
     hasSubscription,
     isProviderAvailable
