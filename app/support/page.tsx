@@ -57,9 +57,9 @@ export default function SupportPage() {
             <div>
               <h3 className="text-lg font-semibold text-foreground mb-2">Can I use SayIt! offline?</h3>
               <p className="text-text-secondary">
-                Yes! SayIt! is designed as a Progressive Web App (PWA), which means you can install it on your
-                device and use many features offline. Some features like account management and syncing require
-                an internet connection.
+                Yes. If you install SayIt! as a PWA, the app shell can open offline and you can continue typing
+                and using browser text-to-speech. Saved boards, AI features, account management, and cloud sync
+                still require an internet connection.
               </p>
             </div>
 

@@ -5,7 +5,7 @@ import reactHooksPlugin from 'eslint-plugin-react-hooks';
 
 export default [
   {
-    ignores: ['.next/**', 'node_modules/**', 'out/**', '.vercel/**'],
+    ignores: ['.next/**', 'node_modules/**', 'out/**', '.vercel/**', 'next-env.d.ts', '**/*.d.ts'],
   },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
