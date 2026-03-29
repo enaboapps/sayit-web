@@ -24,35 +24,60 @@ Covered by automated tests:
 
 ## Production Runtime Check
 
-Verified locally against `next start` on `http://127.0.0.1:3100`:
+Verified locally against `next start` after scoping Clerk proxy execution to API routes in `proxy.ts`.
+
+Initial failing state:
 
 - `/sw.js`: `200`
-- `/`: `500`
-- `/offline`: `500`
-- `/manifest.json`: `500`
+- `/`: failed
+- `/offline`: failed
+- `/manifest.json`: failed
+
+Resolved state on 2026-03-29:
+
+- `/sw.js`: `200`
+- `/`: `200`
+- `/offline`: `200`
+- `/manifest.json`: `200`
 
 Interpretation:
 
-- The service worker asset is being served in production mode.
-- App routes did not complete successfully under local `next start`, so runtime install/offline validation is still blocked until that production-route failure is understood.
+- The service worker asset is served correctly in production mode.
+- App routes and manifest routing were being impacted by Clerk proxy execution on page/static requests.
+- Limiting proxy execution to `/(api|trpc)(.*)` removed the runtime failure in local production validation.
 
 ## Lighthouse
 
-Attempted locally with:
+Ran locally with:
 
 ```bash
-npx lighthouse http://127.0.0.1:3100/ --chrome-path "C:\Program Files\Google\Chrome\Application\chrome.exe"
+npx lighthouse http://127.0.0.1:3500/ --chrome-path "C:\Program Files\Google\Chrome\Application\chrome.exe"
 ```
 
-Current result:
+Headline scores:
 
-- Audit could not be completed because the production app route was failing locally.
-- The local Windows Lighthouse run also hit a Chrome launcher temp-directory cleanup error (`EPERM`) after the failed attempt.
+- Performance: `76`
+- Accessibility: `100`
+- Best Practices: `54`
+- SEO: `100`
+
+Notable findings surfaced by Lighthouse:
+
+- browser console errors
+- deprecated APIs
+- third-party cookies
+- Chrome DevTools issues
+- back/forward cache prevention
+
+Tooling note:
+
+- Lighthouse 13 no longer exposes the legacy `pwa` category.
+- Installability-specific checks should be supplemented with manual install/offline verification on Android and iOS.
 
 Required follow-up:
 
-1. Re-run Lighthouse after the production route failure is resolved or reproduce in a cleaner browser environment.
-2. Record installability, offline-start, accessibility, and performance findings from the successful run.
+1. Review the Lighthouse JSON in a stable reporting workflow and turn the Best Practices failures into concrete issues if they matter for release.
+2. Complete manual installability/offline checks on real devices.
 
 ## Manual Validation Matrix
 
@@ -82,6 +107,5 @@ Current status: partially validated.
 
 Blocking items:
 
-- successful production-route validation under `next start`
-- completed Lighthouse audit
 - completed real-device install/offline notes
+- explicit Android/iOS install confirmation

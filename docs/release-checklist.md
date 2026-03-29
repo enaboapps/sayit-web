@@ -14,6 +14,7 @@
 - Confirm the production home route loads successfully under `next start`
 - Confirm the manifest is served correctly in production
 - Run Lighthouse against the production build and save the results in `docs/pwa-validation.md`
+- Record supported Lighthouse category scores and any installability-related notes
 - Verify install on Android Chrome
 - Verify Add to Home Screen on iOS Safari
 - Verify offline reopen behavior
