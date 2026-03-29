@@ -57,6 +57,14 @@ jest.mock('@/lib/hooks/useVisualViewport', () => ({
   })),
 }));
 
+jest.mock('@/lib/hooks/useOnlineStatus', () => ({
+  useOnlineStatus: jest.fn(() => ({
+    isOnline: true,
+    wasOffline: false,
+    clearRecoveredState: jest.fn(),
+  })),
+}));
+
 jest.mock('@/app/components/live-typing/LiveTypingBottomSheet', () => ({
   __esModule: true,
   default: () => null,
