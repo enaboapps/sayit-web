@@ -40,14 +40,14 @@ describe('ReplySuggestions', () => {
     });
   });
 
-  it('shows an explicit offline message instead of hiding suggestions state', () => {
+  it('renders nothing when offline instead of showing a redundant message', () => {
     mockUseOnlineStatus.mockReturnValue({
       isOnline: false,
       wasOffline: false,
       clearRecoveredState: jest.fn(),
     });
 
-    render(
+    const { container } = render(
       <ReplySuggestions
         history={['One', 'Two', 'Three']}
         enabled={true}
@@ -55,8 +55,6 @@ describe('ReplySuggestions', () => {
       />
     );
 
-    expect(
-      screen.getByText(/Reply suggestions require internet and will return when you reconnect/i)
-    ).toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 });

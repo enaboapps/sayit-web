@@ -50,7 +50,7 @@ export default function Home() {
           <div className="mx-auto max-w-5xl">
             {isOnline
               ? 'Loading your account is taking longer than expected. Text communication is available below while SayIt! keeps trying to reconnect.'
-              : 'You appear to be offline. Text communication is available below while account and board features wait for internet access.'}
+              : 'You appear to be offline. Text communication is available below.'}
           </div>
         </div>
         <GuestCommunication />

@@ -84,8 +84,6 @@ export default function TypingArea({
   } = useTypingTabs(externalText === undefined ? initialText : undefined);
 
   const text = activeTab.text;
-  const showOfflineCloudNotice = !isOnline && (enableFixText || (enableLiveTyping && !!user));
-
   // Sync external text prop with active tab
   useEffect(() => {
     if (externalText === undefined) {
@@ -181,7 +179,7 @@ export default function TypingArea({
 
   const handleShare = async () => {
     if (!isOnline) {
-      setError('Live Typing requires an internet connection.');
+      setError('Live Typing is unavailable offline.');
       return;
     }
 
@@ -266,7 +264,7 @@ export default function TypingArea({
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
     if (!isOnline) {
-      setError('Fix Text requires an internet connection.');
+      setError('Fix Text is unavailable offline.');
       return;
     }
 
@@ -540,13 +538,6 @@ export default function TypingArea({
                   </>
                 )}
               </button>
-            </div>
-          )}
-          {showOfflineCloudNotice && (
-            <div className="px-4 pb-4 bg-surface-hover">
-              <p className="text-xs text-amber-500">
-                Offline: browser speech still works, but Fix Text and Live Typing require internet.
-              </p>
             </div>
           )}
         </div>

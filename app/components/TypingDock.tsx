@@ -180,8 +180,6 @@ export default function TypingDock({
   // Text size from settings (now a number in px)
   const textSizePx = settings.textSize;
   const currentText = enableTabs ? activeTab.text : text;
-  const showOfflineCloudNotice = !isOnline && (enableFixText || (enableLiveTyping && !!user) || !!replySuggestions?.enabled);
-
   const showUndoHint = canUndo
     && entry?.tabId === (activeTabId || 'default')
     && currentText.trim().length === 0;
@@ -303,7 +301,7 @@ export default function TypingDock({
   const handleFixText = async () => {
     if (!currentText.trim() || isFixingText) return;
     if (!isOnline) {
-      setError('Fix Text requires an internet connection.');
+      setError('Fix Text is unavailable offline.');
       return;
     }
 
@@ -533,14 +531,6 @@ export default function TypingDock({
                 variant="inline"
               />
             )}
-            {showOfflineCloudNotice && (
-              <div className="px-1">
-                <span className="text-xs text-amber-500">
-                  Offline: browser speech still works, but AI tools and Live Typing need internet.
-                </span>
-              </div>
-            )}
-
             {/* Row 1: AI Features (when text exists) */}
             {currentText.trim() && enableFixText && (
               <div className="flex items-center gap-2">

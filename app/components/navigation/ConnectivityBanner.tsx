@@ -48,7 +48,7 @@ export default function ConnectivityBanner() {
         )}
         <p>
           {isOfflineBanner
-            ? 'You are offline. Text communication and browser speech still work, but boards, Fix Text, reply suggestions, Live Typing, ElevenLabs, and cloud sync are unavailable.'
+            ? "You're offline. Text communication and browser speech still work."
             : 'Connection restored. Online features are available again.'}
         </p>
       </div>
