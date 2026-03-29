@@ -1,5 +1,8 @@
-/** @type {import('next').NextConfig} */
-import withSerwist from '@serwist/next';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const nextConfig = {
   images: {
@@ -10,11 +13,10 @@ const nextConfig = {
       },
     ],
   },
-  turbopack: {}, // Enable Turbopack as default in Next.js 16
+  outputFileTracingRoot: __dirname,
+  turbopack: {
+    root: __dirname,
+  },
 };
 
-export default withSerwist({
-  swSrc: 'app/sw.ts',
-  swDest: 'public/sw.js',
-  disable: process.env.NODE_ENV !== 'production',
-})(nextConfig);
+export default nextConfig;
