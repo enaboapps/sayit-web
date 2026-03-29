@@ -26,6 +26,8 @@ interface TypingAreaProps {
   }
   onChange?: (text: string) => void
   onMessageCompleted?: (payload: { text: string; source: 'speak' | 'speakAndClear' | 'clear'; tabId?: string | null }) => void
+  enableFixText?: boolean
+  enableLiveTyping?: boolean
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -36,6 +38,8 @@ export default function TypingArea({
   tts,
   onChange,
   onMessageCompleted,
+  enableFixText = true,
+  enableLiveTyping = true,
 }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFixingText, setIsFixingText] = useState(false);
@@ -394,43 +398,45 @@ export default function TypingArea({
                   </>
                 )}
               </button>
-              <SubscriptionWrapper
-                fallback={
-                  <button
-                    onClick={() => window.location.href = '/pricing'}
-                    className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-warning text-foreground hover:text-amber-500"
-                    data-tooltip-id="fix-text-tooltip"
-                    data-tooltip-content="Fix Text (Pro feature)"
-                  >
-                    <SparklesIcon className="w-5 h-5" />
-                    <span>Fix Text</span>
-                  </button>
-                }
-              >
-                <button
-                  onClick={handleFixText}
-                  className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
-                    isFixingText
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                      : 'bg-surface hover:bg-status-purple text-foreground hover:text-purple-500'
-                  }`}
-                  data-tooltip-id="fix-text-tooltip"
-                  data-tooltip-content="Fix grammar and spelling"
-                  disabled={!text.trim() || isFixingText}
-                >
-                  {isFixingText ? (
-                    <>
-                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                      <span>Fixing...</span>
-                    </>
-                  ) : (
-                    <>
+              {enableFixText && (
+                <SubscriptionWrapper
+                  fallback={
+                    <button
+                      onClick={() => window.location.href = '/pricing'}
+                      className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-warning text-foreground hover:text-amber-500"
+                      data-tooltip-id="fix-text-tooltip"
+                      data-tooltip-content="Fix Text (Pro feature)"
+                    >
                       <SparklesIcon className="w-5 h-5" />
                       <span>Fix Text</span>
-                    </>
-                  )}
-                </button>
-              </SubscriptionWrapper>
+                    </button>
+                  }
+                >
+                  <button
+                    onClick={handleFixText}
+                    className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
+                      isFixingText
+                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                        : 'bg-surface hover:bg-status-purple text-foreground hover:text-purple-500'
+                    }`}
+                    data-tooltip-id="fix-text-tooltip"
+                    data-tooltip-content="Fix grammar and spelling"
+                    disabled={!text.trim() || isFixingText}
+                  >
+                    {isFixingText ? (
+                      <>
+                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                        <span>Fixing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <SparklesIcon className="w-5 h-5" />
+                        <span>Fix Text</span>
+                      </>
+                    )}
+                  </button>
+                </SubscriptionWrapper>
+              )}
               <button
                 onClick={() => handleClear('clear')}
                 className="flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 bg-surface hover:bg-status-error text-foreground hover:text-red-500"
@@ -442,7 +448,7 @@ export default function TypingArea({
               </button>
             </div>
           )}
-          {user && (
+          {enableLiveTyping && user && (
             <div className="p-4 pt-0 bg-surface-hover transition-colors duration-200">
               <button
                 onClick={handleShare}

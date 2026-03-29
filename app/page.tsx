@@ -5,6 +5,7 @@ import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
 import HomeFeatures from '@/app/components/home/HomeFeatures';
+import GuestCommunication from '@/app/components/home/GuestCommunication';
 import PhrasesInterface from '@/app/components/home/PhrasesInterface';
 import ConnectionRequestsBanner from '@/app/components/connection/ConnectionRequestsBanner';
 
@@ -25,7 +26,10 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {!user ? (
-        <HomeFeatures />
+        <>
+          <GuestCommunication />
+          <HomeFeatures />
+        </>
       ) : (
         <>
           <ConnectionRequestsBanner />
