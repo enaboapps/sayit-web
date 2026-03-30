@@ -301,6 +301,10 @@ export default function PhrasesInterface() {
     };
   }, [activeTabId, localRecentMessages, recentMessages]);
 
+  const enableToneControl = isOnline
+    && settings.ttsProvider === 'elevenlabs'
+    && settings.ttsModelPreference === 'high_quality';
+
   return (
     <>
       {/* Desktop: TypingArea at top */}
@@ -314,6 +318,7 @@ export default function PhrasesInterface() {
             onMessageCompleted={(payload) => {
               void handleCaptureCompletedMessage(payload);
             }}
+            enableToneControl={enableToneControl}
           />
           <div className="px-2 pb-2">
             {captureError && settings.aiReplySuggestionsEnabled && (
@@ -480,6 +485,15 @@ export default function PhrasesInterface() {
             enableTabs={true}
             enableLiveTyping={!!user}
             enableFixText={true}
+            enableToneControl={enableToneControl}
+            onSpeakWithTone={(taggedText) => {
+              tts.speak(taggedText);
+              void handleCaptureCompletedMessage({
+                text: typingText,
+                source: 'speak',
+                tabId: activeTabId,
+              });
+            }}
             replySuggestions={{
               history: suggestionContext.history,
               enabled: settings.aiReplySuggestionsEnabled,

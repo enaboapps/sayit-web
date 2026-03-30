@@ -20,8 +20,11 @@ import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
+import { useLongPress } from '@/lib/hooks/useLongPress';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import ReplySuggestions from './typing/ReplySuggestions';
+import ToneSheet, { applyToneTag } from './typing/ToneSheet';
+import type { TonePreset } from './typing/ToneSheet';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
@@ -38,6 +41,7 @@ interface TypingDockProps {
   text: string;
   onChange: (text: string) => void;
   onSpeak: (source?: 'speak' | 'speakAndClear') => void;
+  onSpeakWithTone?: (toneTag: string) => void;
   onMessageCompleted?: (payload: { text: string; source: 'clear'; tabId?: string | null }) => void;
   onStop?: () => void;
   isSpeaking?: boolean;
@@ -47,6 +51,7 @@ interface TypingDockProps {
   enableTabs?: boolean;
   enableLiveTyping?: boolean;
   enableFixText?: boolean;
+  enableToneControl?: boolean;
   replySuggestions?: ReplySuggestionsConfig;
 }
 
@@ -56,6 +61,7 @@ export default function TypingDock({
   text,
   onChange,
   onSpeak,
+  onSpeakWithTone,
   onMessageCompleted,
   onStop,
   isSpeaking = false,
@@ -64,12 +70,14 @@ export default function TypingDock({
   enableTabs = false,
   enableLiveTyping = false,
   enableFixText = false,
+  enableToneControl = false,
   replySuggestions,
 }: TypingDockProps) {
   const [isFixingText, setIsFixingText] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
   const [showTabList, setShowTabList] = useState(false);
+  const [showToneSheet, setShowToneSheet] = useState(false);
   const { top: viewportTop, height: viewportHeight } = useVisualViewport();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -247,6 +255,22 @@ export default function TypingDock({
     timeoutMs: settings.doubleEnterTimeoutMs,
     onSingleEnter: () => runEnterAction(settings.enterKeyBehavior),
     onDoubleEnter: () => runEnterAction(settings.doubleEnterAction),
+  });
+
+  const handleToneSelected = useCallback((tone: TonePreset) => {
+    if (!currentText.trim()) return;
+    onSpeakWithTone?.(applyToneTag(tone, currentText));
+  }, [currentText, onSpeakWithTone]);
+
+  const speakLongPress = useLongPress({
+    delay: 500,
+    onPress: isSpeaking ? onStop : () => onSpeak('speak'),
+    onLongPress: () => {
+      if (currentText.trim() && !isSpeaking) {
+        setShowToneSheet(true);
+      }
+    },
+    enabled: enableToneControl && !isSpeaking,
   });
 
   const showDoubleEnterHint = settings.doubleEnterEnabled && isPending;
@@ -624,7 +648,7 @@ export default function TypingDock({
 
               {/* Speak/Stop button - primary CTA */}
               <motion.button
-                onClick={isSpeaking ? onStop : () => onSpeak('speak')}
+                {...(enableToneControl ? speakLongPress : { onClick: isSpeaking ? onStop : () => onSpeak('speak') })}
                 disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
                   isSpeaking
@@ -632,7 +656,7 @@ export default function TypingDock({
                     : 'bg-primary-500 hover:bg-primary-600 text-white'
                 }`}
                 whileTap={{ scale: 0.95 }}
-                aria-label={isSpeaking ? 'Stop' : 'Speak'}
+                aria-label={isSpeaking ? 'Stop' : enableToneControl ? 'Speak (hold for tone)' : 'Speak'}
               >
                 {isSpeaking ? (
                   <>
@@ -702,6 +726,16 @@ export default function TypingDock({
             onChange('');
           }}
           onRenameTab={renameTab}
+        />
+      )}
+
+      {/* Tone Control Sheet */}
+      {enableToneControl && (
+        <ToneSheet
+          isOpen={showToneSheet}
+          onClose={() => setShowToneSheet(false)}
+          onSelectTone={handleToneSelected}
+          onSpeakWithoutTone={() => onSpeak('speak')}
         />
       )}
     </>
