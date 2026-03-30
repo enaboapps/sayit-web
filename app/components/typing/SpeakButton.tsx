@@ -31,11 +31,11 @@ export default function SpeakButton({
     return (
       <motion.button
         onClick={onStop}
-        className="flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold transition-all duration-200 shadow-md bg-gradient-to-r from-red-500 to-red-600 text-white text-sm"
+        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-200 shadow-lg bg-gradient-to-r from-red-500 to-red-600 text-white text-base"
         whileTap={{ scale: 0.95 }}
         aria-label="Stop"
       >
-        <StopIcon className="w-4 h-4" />
+        <StopIcon className="w-5 h-5" />
         <span>Stop</span>
       </motion.button>
     );
@@ -45,26 +45,26 @@ export default function SpeakButton({
   if (enableToneControl) {
     return (
       <>
-        <div className={`flex items-center rounded-full shadow-md overflow-hidden ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}>
+        <div className={`flex items-center rounded-2xl shadow-lg overflow-hidden ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
           <motion.button
             onClick={onSpeak}
             disabled={disabled}
-            className="flex items-center gap-1.5 pl-4 pr-3 py-2 font-semibold transition-colors duration-200 bg-primary-500 hover:bg-primary-600 text-white text-sm disabled:cursor-not-allowed"
+            className="flex items-center gap-2 pl-6 pr-4 py-3 font-bold transition-colors duration-200 bg-primary-500 hover:bg-primary-600 text-white text-base disabled:cursor-not-allowed"
             whileTap={disabled ? undefined : { scale: 0.97 }}
             aria-label="Speak"
           >
-            <SpeakerWaveIcon className="w-4 h-4" />
+            <SpeakerWaveIcon className="w-5 h-5" />
             <span>Speak</span>
           </motion.button>
-          <div className="w-px h-5 bg-white/20 shrink-0" />
+          <div className="w-px h-6 bg-white/20 shrink-0" />
           <motion.button
             onClick={() => setShowToneSheet(true)}
             disabled={disabled}
-            className="flex items-center px-2.5 py-2 transition-colors duration-200 bg-primary-500 hover:bg-primary-600 text-white disabled:cursor-not-allowed"
+            className="flex items-center px-3.5 py-3 transition-colors duration-200 bg-primary-500 hover:bg-primary-600 text-white disabled:cursor-not-allowed"
             whileTap={disabled ? undefined : { scale: 0.97 }}
             aria-label="Choose tone"
           >
-            <AudioWaveform className="w-3.5 h-3.5" />
+            <AudioWaveform className="w-4 h-4" />
           </motion.button>
         </div>
         <ToneSheet
@@ -85,11 +85,11 @@ export default function SpeakButton({
     <motion.button
       onClick={onSpeak}
       disabled={disabled}
-      className="flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-md bg-primary-500 hover:bg-primary-600 text-white text-sm"
+      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg bg-primary-500 hover:bg-primary-600 text-white text-base"
       whileTap={{ scale: 0.95 }}
       aria-label="Speak"
     >
-      <SpeakerWaveIcon className="w-4 h-4" />
+      <SpeakerWaveIcon className="w-5 h-5" />
       <span>Speak</span>
     </motion.button>
   );

@@ -304,7 +304,7 @@ export default function Composer({
       <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
         {/* Tab bar */}
         {enableTabs && (
-          <div className="shrink-0 border-b border-border">
+          <div className="shrink-0">
             <TabBar
               tabs={tabs}
               activeTabId={activeTabId}
@@ -317,11 +317,11 @@ export default function Composer({
           </div>
         )}
 
-        {/* Main editing area */}
-        <div className="flex-1 flex flex-col min-h-0 p-4 gap-3">
-          {/* Undo / double-enter banners */}
+        {/* Textarea — full bleed, fills the screen */}
+        <div className="flex-1 min-h-0 relative">
+          {/* Undo / double-enter banners — floating overlay */}
           {(showUndoHint || showDoubleEnterHint) && (
-            <div className="shrink-0">
+            <div className="absolute top-3 left-4 right-4 z-10">
               {showUndoHint ? (
                 <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
               ) : (
@@ -330,110 +330,106 @@ export default function Composer({
             </div>
           )}
 
-          {/* Textarea card — the star of the show */}
-          <div className="flex-1 min-h-0 bg-surface-hover rounded-2xl border border-border overflow-hidden">
-            <textarea
-              ref={inputRef}
-              value={currentText}
-              onChange={(e) => handleTextChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="w-full h-full bg-transparent text-foreground placeholder:text-text-tertiary px-5 py-4 resize-none focus:outline-none"
-              style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
-            />
-          </div>
-
-          {/* Reply suggestions */}
-          {replySuggestions && (
-            <div className="shrink-0">
-              <ReplySuggestions
-                history={replySuggestions.history}
-                enabled={replySuggestions.enabled}
-                onSelectSuggestion={replySuggestions.onSelect}
-                variant="inline"
-              />
-            </div>
-          )}
-
-          {/* Error */}
-          {error && (
-            <div className="shrink-0 px-1">
-              <span className="text-xs text-red-500">{error}</span>
-            </div>
-          )}
+          <textarea
+            ref={inputRef}
+            value={currentText}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="What do you want to say?"
+            className="w-full h-full bg-transparent text-foreground placeholder:text-text-tertiary px-6 py-5 resize-none focus:outline-none"
+            style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
+          />
         </div>
 
-        {/* Action toolbar — pinned at bottom */}
-        <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-t border-border bg-surface">
-          {/* Clear */}
-          <button
-            onClick={handleClear}
-            disabled={!currentText.trim()}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-            aria-label="Clear"
-          >
-            <XMarkIcon className="w-4 h-4" />
-            <span>Clear</span>
-          </button>
+        {/* Reply suggestions */}
+        {replySuggestions && (
+          <div className="shrink-0 px-4 pb-2">
+            <ReplySuggestions
+              history={replySuggestions.history}
+              enabled={replySuggestions.enabled}
+              onSelectSuggestion={replySuggestions.onSelect}
+              variant="inline"
+            />
+          </div>
+        )}
 
-          {/* Fix Text */}
-          {enableFixText && (
-            !isOnline ? (
-              <button type="button" disabled className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover text-text-tertiary opacity-60 cursor-not-allowed text-sm font-medium">
-                <SparklesIcon className="w-4 h-4" />
-                <span>Fix</span>
-              </button>
-            ) : (
-              <SubscriptionWrapper
-                fallback={
-                  <button onClick={() => window.location.href = '/pricing'} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all text-sm font-medium">
-                    <SparklesIcon className="w-4 h-4" />
-                    <span>Fix</span>
-                  </button>
-                }
+        {/* Error */}
+        {error && (
+          <div className="shrink-0 px-6 pb-2">
+            <span className="text-sm text-red-400">{error}</span>
+          </div>
+        )}
+
+        {/* Toolbar */}
+        <div className="shrink-0 px-4 pb-4 pt-2">
+          <div className="flex items-center gap-3">
+            {/* Secondary tools */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleClear}
+                disabled={!currentText.trim()}
+                className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-red-500 hover:bg-status-error transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Clear"
               >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+
+              {enableFixText && (
+                !isOnline ? (
+                  <button type="button" disabled className="p-2.5 rounded-xl bg-surface-hover text-text-tertiary opacity-40 cursor-not-allowed">
+                    <SparklesIcon className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <SubscriptionWrapper
+                    fallback={
+                      <button onClick={() => window.location.href = '/pricing'} className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-amber-500 hover:bg-status-warning transition-all">
+                        <SparklesIcon className="w-5 h-5" />
+                      </button>
+                    }
+                  >
+                    <button
+                      onClick={handleFixText}
+                      disabled={!currentText.trim() || isFixingText}
+                      className={`p-2.5 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                        isFixingText ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' : 'bg-surface-hover text-text-secondary hover:text-purple-500 hover:bg-status-purple'
+                      }`}
+                      aria-label="Fix Text"
+                    >
+                      {isFixingText ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+                    </button>
+                  </SubscriptionWrapper>
+                )
+              )}
+
+              {enableLiveTyping && user && (
                 <button
-                  onClick={handleFixText}
-                  disabled={!currentText.trim() || isFixingText}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isFixingText ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
+                  onClick={handleShare}
+                  disabled={!isOnline}
+                  className={`p-2.5 rounded-xl transition-all ${
+                    !isOnline ? 'bg-surface-hover text-text-tertiary opacity-40'
+                      : isSharing ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                        : 'bg-surface-hover text-text-secondary hover:text-green-500 hover:bg-status-success'
                   }`}
+                  aria-label={isSharing ? 'Live Typing Active' : 'Live Typing'}
                 >
-                  {isFixingText ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <SparklesIcon className="w-4 h-4" />}
-                  <span>{isFixingText ? 'Fixing...' : 'Fix'}</span>
+                  <ShareIcon className="w-5 h-5" />
                 </button>
-              </SubscriptionWrapper>
-            )
-          )}
+              )}
+            </div>
 
-          {/* Live Typing */}
-          {enableLiveTyping && user && (
-            <button
-              onClick={handleShare}
-              disabled={!isOnline}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all text-sm font-medium ${
-                !isOnline ? 'bg-surface-hover text-text-tertiary'
-                  : isSharing ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                    : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
-              }`}
-            >
-              <ShareIcon className="w-4 h-4" />
-              <span>{isSharing ? 'Live' : 'Share'}</span>
-            </button>
-          )}
+            {/* Spacer */}
+            <div className="flex-1" />
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Speak — primary CTA, visually prominent */}
-          <SpeakButton
-            onSpeak={() => onSpeak('speak')}
-            onStop={onStop}
-            onSelectTone={handleToneSelected}
-            isSpeaking={isSpeaking}
-            disabled={!isAvailable || !currentText.trim()}
-            enableToneControl={enableToneControl}
-          />
+            {/* Speak — the big action */}
+            <SpeakButton
+              onSpeak={() => onSpeak('speak')}
+              onStop={onStop}
+              onSelectTone={handleToneSelected}
+              isSpeaking={isSpeaking}
+              disabled={!isAvailable || !currentText.trim()}
+              enableToneControl={enableToneControl}
+            />
+          </div>
         </div>
       </div>
 
