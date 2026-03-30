@@ -356,49 +356,62 @@ export default function Composer({
           </div>
         )}
 
-        {/* Main input row */}
-        <div className="flex items-center gap-2 px-3 py-2">
-          {/* Mobile tab indicator */}
-          {enableTabs && (
-            <div className="md:hidden shrink-0">
-              <MobileTabIndicator
-                tabs={tabs}
-                activeTab={activeTab}
-                onClick={() => setShowTabList(true)}
-              />
-            </div>
-          )}
+        {/* Mobile tab indicator row */}
+        {enableTabs && (
+          <div className="flex items-center gap-2 px-3 pt-2 md:hidden">
+            <MobileTabIndicator
+              tabs={tabs}
+              activeTab={activeTab}
+              onClick={() => setShowTabList(true)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowExpanded(true)}
+              className="ml-auto p-1.5 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors"
+              aria-label="Expand editor"
+            >
+              <ArrowsPointingOutIcon className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
+        {/* Main input row */}
+        <div className="flex items-end gap-2 px-3 py-2">
           {/* Text input */}
-          <div className="relative flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
             <textarea
               ref={inputRef}
               value={currentText}
               onChange={(e) => handleTextChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              rows={1}
-              className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-xl px-3 py-2 resize-none overflow-hidden"
+              rows={2}
+              className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-xl px-4 py-2.5 resize-none md:rows-1"
               style={{
                 fontSize: `${Math.min(textSizePx, 20)}px`,
-                maxHeight: '4rem',
-              }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${Math.min(target.scrollHeight, 64)}px`;
               }}
             />
-            {/* Expand button */}
+          </div>
+
+          {/* Expand button (desktop only — mobile has it in tab row or standalone) */}
+          {!enableTabs && (
             <button
               type="button"
               onClick={() => setShowExpanded(true)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface transition-colors"
+              className="shrink-0 p-2 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors md:hidden"
               aria-label="Expand editor"
             >
-              <ArrowsPointingOutIcon className="w-3.5 h-3.5" />
+              <ArrowsPointingOutIcon className="w-4 h-4" />
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowExpanded(true)}
+            className="shrink-0 p-2 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors hidden md:block"
+            aria-label="Expand editor"
+          >
+            <ArrowsPointingOutIcon className="w-4 h-4" />
+          </button>
 
           {/* Speak button */}
           <div className="shrink-0">
