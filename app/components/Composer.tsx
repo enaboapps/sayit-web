@@ -302,20 +302,9 @@ export default function Composer({
   return (
     <>
       <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
-        {/* Undo / double-enter banners */}
-        {(showUndoHint || showDoubleEnterHint) && (
-          <div className="px-4 pt-2 shrink-0">
-            {showUndoHint ? (
-              <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
-            ) : (
-              <ActionPromptBanner variant="doubleEnter" actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]} remainingMs={remainingMs} />
-            )}
-          </div>
-        )}
-
         {/* Tab bar */}
         {enableTabs && (
-          <div className="shrink-0">
+          <div className="shrink-0 border-b border-border">
             <TabBar
               tabs={tabs}
               activeTabId={activeTabId}
@@ -328,69 +317,90 @@ export default function Composer({
           </div>
         )}
 
-        {/* Textarea — fills available space */}
-        <div className="flex-1 p-4 min-h-0">
-          <textarea
-            ref={inputRef}
-            value={currentText}
-            onChange={(e) => handleTextChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            className="w-full h-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 resize-none"
-            style={{ fontSize: `${textSizePx}px` }}
-          />
-        </div>
+        {/* Main editing area */}
+        <div className="flex-1 flex flex-col min-h-0 p-4 gap-3">
+          {/* Undo / double-enter banners */}
+          {(showUndoHint || showDoubleEnterHint) && (
+            <div className="shrink-0">
+              {showUndoHint ? (
+                <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
+              ) : (
+                <ActionPromptBanner variant="doubleEnter" actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]} remainingMs={remainingMs} />
+              )}
+            </div>
+          )}
 
-        {/* Reply suggestions */}
-        {replySuggestions && (
-          <div className="px-4 py-2 shrink-0">
-            <ReplySuggestions
-              history={replySuggestions.history}
-              enabled={replySuggestions.enabled}
-              onSelectSuggestion={replySuggestions.onSelect}
-              variant="inline"
+          {/* Textarea card — the star of the show */}
+          <div className="flex-1 min-h-0 bg-surface-hover rounded-2xl border border-border overflow-hidden">
+            <textarea
+              ref={inputRef}
+              value={currentText}
+              onChange={(e) => handleTextChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              className="w-full h-full bg-transparent text-foreground placeholder:text-text-tertiary px-5 py-4 resize-none focus:outline-none"
+              style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
             />
           </div>
-        )}
 
-        {/* Action bar */}
-        <div className="flex items-center gap-1.5 px-4 py-3 border-t border-border shrink-0 flex-wrap">
+          {/* Reply suggestions */}
+          {replySuggestions && (
+            <div className="shrink-0">
+              <ReplySuggestions
+                history={replySuggestions.history}
+                enabled={replySuggestions.enabled}
+                onSelectSuggestion={replySuggestions.onSelect}
+                variant="inline"
+              />
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="shrink-0 px-1">
+              <span className="text-xs text-red-500">{error}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Action toolbar — pinned at bottom */}
+        <div className="shrink-0 flex items-center gap-2 px-4 py-3 border-t border-border bg-surface">
           {/* Clear */}
           <button
             onClick={handleClear}
             disabled={!currentText.trim()}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Clear"
           >
-            <XMarkIcon className="w-3.5 h-3.5" />
+            <XMarkIcon className="w-4 h-4" />
             <span>Clear</span>
           </button>
 
           {/* Fix Text */}
           {enableFixText && (
             !isOnline ? (
-              <button type="button" disabled className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover text-text-tertiary opacity-60 cursor-not-allowed text-xs font-medium">
-                <SparklesIcon className="w-3.5 h-3.5" />
-                <span>Fix Text</span>
+              <button type="button" disabled className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover text-text-tertiary opacity-60 cursor-not-allowed text-sm font-medium">
+                <SparklesIcon className="w-4 h-4" />
+                <span>Fix</span>
               </button>
             ) : (
               <SubscriptionWrapper
                 fallback={
-                  <button onClick={() => window.location.href = '/pricing'} className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all text-xs font-medium">
-                    <SparklesIcon className="w-3.5 h-3.5" />
-                    <span>Fix Text</span>
+                  <button onClick={() => window.location.href = '/pricing'} className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all text-sm font-medium">
+                    <SparklesIcon className="w-4 h-4" />
+                    <span>Fix</span>
                   </button>
                 }
               >
                 <button
                   onClick={handleFixText}
                   disabled={!currentText.trim() || isFixingText}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
                     isFixingText ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
                   }`}
                 >
-                  {isFixingText ? <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" /> : <SparklesIcon className="w-3.5 h-3.5" />}
-                  <span>{isFixingText ? 'Fixing...' : 'Fix Text'}</span>
+                  {isFixingText ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <SparklesIcon className="w-4 h-4" />}
+                  <span>{isFixingText ? 'Fixing...' : 'Fix'}</span>
                 </button>
               </SubscriptionWrapper>
             )
@@ -401,22 +411,21 @@ export default function Composer({
             <button
               onClick={handleShare}
               disabled={!isOnline}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-xs font-medium ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all text-sm font-medium ${
                 !isOnline ? 'bg-surface-hover text-text-tertiary'
                   : isSharing ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                     : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
               }`}
             >
-              <ShareIcon className="w-3.5 h-3.5" />
-              <span>{isSharing ? 'Live' : 'Live Typing'}</span>
+              <ShareIcon className="w-4 h-4" />
+              <span>{isSharing ? 'Live' : 'Share'}</span>
             </button>
           )}
 
-          {/* Spacer + error */}
+          {/* Spacer */}
           <div className="flex-1" />
-          {error && <span className="text-xs text-red-500 truncate">{error}</span>}
 
-          {/* Speak */}
+          {/* Speak — primary CTA, visually prominent */}
           <SpeakButton
             onSpeak={() => onSpeak('speak')}
             onStop={onStop}
