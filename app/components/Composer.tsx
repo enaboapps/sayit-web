@@ -509,7 +509,7 @@ export default function Composer({
           isOpen={showExpanded}
           onClose={handleExpandedClose}
           title="Compose"
-          snapPoints={[90]}
+          snapPoints={[80]}
           showHandle={true}
           showCloseButton={true}
         >
@@ -553,7 +553,7 @@ export default function Composer({
               </div>
             )}
 
-            {/* Action buttons + speak */}
+            {/* Action buttons + speak + done */}
             <div className="flex items-center gap-2 px-4 py-3 border-t border-border">
               {actionButtons}
               <div className="flex-1" />
@@ -565,6 +565,13 @@ export default function Composer({
                 disabled={!isAvailable || !currentText.trim()}
                 enableToneControl={enableToneControl}
               />
+              <button
+                type="button"
+                onClick={handleExpandedClose}
+                className="px-4 py-2 rounded-full bg-surface-hover text-foreground text-sm font-semibold hover:bg-surface transition-colors"
+              >
+                Done
+              </button>
             </div>
 
             {error && (
