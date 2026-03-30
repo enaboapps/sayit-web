@@ -141,7 +141,7 @@ describe('Composer', () => {
     expect(onChange).toHaveBeenCalled();
   });
 
-  it('shows action buttons when text exists', () => {
+  it('shows action buttons', () => {
     render(
       <Composer
         text="Some text"
@@ -150,19 +150,8 @@ describe('Composer', () => {
       />
     );
 
-    expect(screen.getAllByRole('button', { name: 'Clear' }).length).toBeGreaterThan(0);
-  });
-
-  it('hides action buttons when text is empty', () => {
-    render(
-      <Composer
-        text=""
-        onChange={jest.fn()}
-        onSpeak={jest.fn()}
-      />
-    );
-
-    expect(screen.queryAllByRole('button', { name: 'Clear' })).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
   });
 
   it('restores the active tab draft on mount when tabs enabled', async () => {
