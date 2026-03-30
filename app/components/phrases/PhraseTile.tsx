@@ -78,7 +78,7 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
 
   return (
     <motion.div
-      className={`relative bg-surface rounded-2xl shadow-md cursor-pointer
+      className={`relative bg-surface rounded-xl shadow-md cursor-pointer
         flex flex-col items-center justify-center min-h-[80px]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
         ${onEdit ? 'ring-2 ring-blue-400' : ''}

@@ -8,7 +8,6 @@ import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
 import HomeFeatures from '@/app/components/home/HomeFeatures';
 import GuestCommunication from '@/app/components/home/GuestCommunication';
 import PhrasesInterface from '@/app/components/home/PhrasesInterface';
-import ConnectionRequestsBanner from '@/app/components/connection/ConnectionRequestsBanner';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 
 const STARTUP_FALLBACK_DELAY_MS = 4000;
@@ -67,10 +66,7 @@ export default function Home() {
           <HomeFeatures />
         </>
       ) : (
-        <>
-          <ConnectionRequestsBanner />
-          <PhrasesInterface />
-        </>
+        <PhrasesInterface />
       )}
     </div>
   );

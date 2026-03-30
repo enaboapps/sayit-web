@@ -15,6 +15,7 @@ interface BoardSelectorProps {
   onAddBoard?: () => void;
   onAddPhrase?: () => void;
   onEdit?: () => void;
+  embedded?: boolean;
 }
 
 export default function BoardSelector({
@@ -26,6 +27,7 @@ export default function BoardSelector({
   onAddBoard,
   onAddPhrase,
   onEdit,
+  embedded = false,
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
@@ -64,11 +66,16 @@ export default function BoardSelector({
     return null;
   };
 
+  const cardClass = embedded
+    ? ''
+    : 'bg-surface rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300';
+  const wrapperClass = embedded ? '' : 'mb-4';
+
   // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
-      <div className="mb-4">
-        <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
+      <div className={wrapperClass}>
+        <div className={`flex items-center ${cardClass}`}>
           <div
             className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
             onClick={() => {
@@ -100,8 +107,8 @@ export default function BoardSelector({
   // If there are multiple boards, show a button to open the popup
   return (
     <>
-      <div className="mb-4">
-        <div className="flex items-center bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
+      <div className={wrapperClass}>
+        <div className={`flex items-center ${cardClass}`}>
           <div
             className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
             onClick={() => setIsPopupOpen(true)}

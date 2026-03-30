@@ -107,7 +107,7 @@ export default function TabManagementDialog({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="relative w-full max-w-md rounded-2xl shadow-2xl p-6" style={{ backgroundColor: '#242424' }}>
+              <Dialog.Panel className="relative w-full max-w-md rounded-2xl shadow-2xl p-6 bg-surface">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <Dialog.Title className="text-2xl font-bold text-foreground">

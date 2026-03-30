@@ -128,7 +128,6 @@ describe('Home startup loading fallback', () => {
 
     render(<Home />);
 
-    expect(screen.getByText('Connection Requests')).toBeInTheDocument();
     expect(screen.getByText('Phrases Interface')).toBeInTheDocument();
   });
 });

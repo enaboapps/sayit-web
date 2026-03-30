@@ -131,7 +131,7 @@ export default function BottomTabBar() {
           exit={{ y: 100 }}
           transition={{ duration: 0.2 }}
         >
-          <div className="border-t border-border shadow-2xl" style={{ backgroundColor: '#242424' }}>
+          <div className="border-t border-border shadow-2xl bg-surface">
             {/* Safe area padding for notched devices */}
             <div className="flex justify-around items-center px-2 pb-safe">
               {tabs.map((tab) => {

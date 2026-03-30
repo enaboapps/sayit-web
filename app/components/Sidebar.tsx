@@ -32,8 +32,7 @@ export default function Sidebar() {
     <aside
       className={`fixed left-0 top-0 h-full z-50 shadow-2xl hidden md:flex flex-col transition-all duration-300 ${
         isExpanded ? 'w-48' : 'w-16'
-      }`}
-      style={{ backgroundColor: '#242424' }}
+      } bg-surface`}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
       onFocusCapture={() => setIsExpanded(true)}

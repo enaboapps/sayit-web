@@ -90,6 +90,16 @@ body {
     padding-top: max(env(safe-area-inset-top, 0px), 20px);
   }
 
+  /* Padding to clear the mobile bottom stack (dock + nav) */
+  .pb-bottom-stack {
+    padding-bottom: var(--bottom-stack-height);
+  }
+  @media (min-width: 768px) {
+    .pb-bottom-stack {
+      padding-bottom: 0;
+    }
+  }
+
   /* Position above the mobile bottom stack (dock + nav) */
   .bottom-above-stack {
     bottom: calc(var(--bottom-stack-height) + 16px);

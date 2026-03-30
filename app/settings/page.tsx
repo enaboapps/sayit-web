@@ -113,7 +113,7 @@ export default function SettingsPage() {
   // Mobile layout with categories
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-background pb-32">
+      <div className="min-h-screen bg-background pb-bottom-stack">
         <div className="p-4">
           {/* Header */}
           <div className="mb-6">
