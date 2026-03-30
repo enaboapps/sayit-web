@@ -318,18 +318,7 @@ export default function Composer({
         )}
 
         {/* Textarea — full bleed, fills the screen */}
-        <div className="flex-1 min-h-0 relative">
-          {/* Undo / double-enter banners — floating overlay */}
-          {(showUndoHint || showDoubleEnterHint) && (
-            <div className="absolute top-3 left-4 right-4 z-10">
-              {showUndoHint ? (
-                <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
-              ) : (
-                <ActionPromptBanner variant="doubleEnter" actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]} remainingMs={remainingMs} />
-              )}
-            </div>
-          )}
-
+        <div className="flex-1 min-h-0">
           <textarea
             ref={inputRef}
             value={currentText}
@@ -350,6 +339,17 @@ export default function Composer({
               onSelectSuggestion={replySuggestions.onSelect}
               variant="inline"
             />
+          </div>
+        )}
+
+        {/* Undo / double-enter banners */}
+        {(showUndoHint || showDoubleEnterHint) && (
+          <div className="shrink-0 px-4 pb-2">
+            {showUndoHint ? (
+              <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
+            ) : (
+              <ActionPromptBanner variant="doubleEnter" actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]} remainingMs={remainingMs} />
+            )}
           </div>
         )}
 
