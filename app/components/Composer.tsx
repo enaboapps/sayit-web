@@ -22,7 +22,6 @@ import type { TonePreset } from './typing/ToneSheet';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import ReplySuggestions from './typing/ReplySuggestions';
 import ActionPromptBanner from './typing/ActionPromptBanner';
-import MobileTabIndicator from './typing-tabs/MobileTabIndicator';
 import MobileTabList from './typing-tabs/MobileTabList';
 import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
@@ -318,7 +317,7 @@ export default function Composer({
   return (
     <>
       <div className={`border-t border-border bg-surface ${className}`}>
-        {/* Action prompt banners — floating above composer */}
+        {/* Action prompt banners */}
         {(showUndoHint || showDoubleEnterHint) && (
           <div className="px-3 pt-2">
             {showUndoHint ? (
@@ -329,9 +328,9 @@ export default function Composer({
           </div>
         )}
 
-        {/* Desktop: Tab bar */}
-        {enableTabs && (
-          <div className="hidden md:block">
+        {/* Desktop only: Tab bar + reply suggestions + action row */}
+        <div className="hidden md:block">
+          {enableTabs && (
             <TabBar
               tabs={tabs}
               activeTabId={activeTabId}
@@ -341,43 +340,22 @@ export default function Composer({
               onTabRename={renameTab}
               onManage={() => setShowTabManagement(true)}
             />
-          </div>
-        )}
+          )}
 
-        {/* Reply suggestions (inline) */}
-        {replySuggestions && (
-          <div className="px-3 py-1.5">
-            <ReplySuggestions
-              history={replySuggestions.history}
-              enabled={replySuggestions.enabled}
-              onSelectSuggestion={replySuggestions.onSelect}
-              variant="inline"
-            />
-          </div>
-        )}
+          {replySuggestions && (
+            <div className="px-3 py-1.5">
+              <ReplySuggestions
+                history={replySuggestions.history}
+                enabled={replySuggestions.enabled}
+                onSelectSuggestion={replySuggestions.onSelect}
+                variant="inline"
+              />
+            </div>
+          )}
+        </div>
 
-        {/* Mobile tab indicator row */}
-        {enableTabs && (
-          <div className="flex items-center gap-2 px-3 pt-2 md:hidden">
-            <MobileTabIndicator
-              tabs={tabs}
-              activeTab={activeTab}
-              onClick={() => setShowTabList(true)}
-            />
-            <button
-              type="button"
-              onClick={() => setShowExpanded(true)}
-              className="ml-auto p-1.5 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors"
-              aria-label="Expand editor"
-            >
-              <ArrowsPointingOutIcon className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        {/* Main input row */}
+        {/* Input row — clean on mobile, richer on desktop */}
         <div className="flex items-end gap-2 px-3 py-2">
-          {/* Text input */}
           <div className="flex-1 min-w-0">
             <textarea
               ref={inputRef}
@@ -385,33 +363,22 @@ export default function Composer({
               onChange={(e) => handleTextChange(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Type your message..."
-              rows={2}
-              className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-xl px-4 py-2.5 resize-none md:rows-1"
-              style={{
-                fontSize: `${Math.min(textSizePx, 20)}px`,
-              }}
+              rows={1}
+              className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-xl px-4 py-2.5 resize-none"
+              style={{ fontSize: `${Math.min(textSizePx, 20)}px` }}
             />
           </div>
 
-          {/* Expand button (desktop only — mobile has it in tab row or standalone) */}
-          {!enableTabs && (
+          {/* Clear — icon only on mobile when text exists */}
+          {currentText.trim() && (
             <button
-              type="button"
-              onClick={() => setShowExpanded(true)}
-              className="shrink-0 p-2 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors md:hidden"
-              aria-label="Expand editor"
+              onClick={handleClear}
+              className="shrink-0 p-2 rounded-full text-text-secondary hover:text-red-500 hover:bg-status-error transition-all"
+              aria-label="Clear"
             >
-              <ArrowsPointingOutIcon className="w-4 h-4" />
+              <XMarkIcon className="w-5 h-5" />
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setShowExpanded(true)}
-            className="shrink-0 p-2 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors hidden md:block"
-            aria-label="Expand editor"
-          >
-            <ArrowsPointingOutIcon className="w-4 h-4" />
-          </button>
 
           {/* Speak button */}
           <div className="shrink-0">
@@ -426,20 +393,9 @@ export default function Composer({
           </div>
         </div>
 
-        {/* Secondary action row — only when text exists */}
+        {/* Desktop only: secondary actions when text exists */}
         {currentText.trim() && (
-          <div className="flex items-center gap-1.5 px-3 pb-2">
-            {/* Clear */}
-            <button
-              onClick={handleClear}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all text-xs font-medium"
-              aria-label="Clear"
-            >
-              <XMarkIcon className="w-3.5 h-3.5" />
-              <span>Clear</span>
-            </button>
-
-            {/* Fix Text */}
+          <div className="hidden md:flex items-center gap-1.5 px-3 pb-2">
             {enableFixText && (
               !isOnline ? (
                 <button
@@ -482,7 +438,6 @@ export default function Composer({
               )
             )}
 
-            {/* Live Typing */}
             {enableLiveTyping && user && (
               <button
                 onClick={handleShare}
@@ -500,13 +455,27 @@ export default function Composer({
               </button>
             )}
 
-            {/* Spacer */}
+            <button
+              type="button"
+              onClick={() => setShowExpanded(true)}
+              className="p-1.5 rounded-lg text-text-tertiary hover:text-text-secondary hover:bg-surface-hover transition-colors"
+              aria-label="Expand editor"
+            >
+              <ArrowsPointingOutIcon className="w-4 h-4" />
+            </button>
+
             <div className="flex-1" />
 
-            {/* Error */}
             {error && (
               <span className="text-xs text-red-500 truncate">{error}</span>
             )}
+          </div>
+        )}
+
+        {/* Mobile error display */}
+        {error && (
+          <div className="px-3 pb-1.5 md:hidden">
+            <span className="text-xs text-red-500">{error}</span>
           </div>
         )}
       </div>

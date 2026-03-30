@@ -149,7 +149,7 @@ describe('Composer', () => {
       />
     );
 
-    expect(screen.getByText('Clear')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
   });
 
   it('hides action buttons when text is empty', () => {
@@ -161,7 +161,7 @@ describe('Composer', () => {
       />
     );
 
-    expect(screen.queryByText('Clear')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument();
   });
 
   it('restores the active tab draft on mount when tabs enabled', async () => {
