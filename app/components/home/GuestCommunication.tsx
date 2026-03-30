@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { ChatBubbleBottomCenterTextIcon, WifiIcon } from '@heroicons/react/24/outline';
-import TypingArea from '@/app/components/TypingArea';
-import TypingDock from '@/app/components/TypingDock';
+import Composer from '@/app/components/Composer';
 import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
@@ -42,11 +41,22 @@ export default function GuestCommunication() {
 
         {!isMobile && (
           <div className="p-4">
-            <TypingArea
+            <Composer
               text={text}
-              tts={tts}
               onChange={setText}
+              onSpeak={(source = 'speak') => {
+                if (!text.trim()) return;
+                tts.speak(text);
+                recordMessage({ text, source });
+                if (source === 'speakAndClear') {
+                  setTimeout(() => setText(''), 100);
+                }
+              }}
               onMessageCompleted={recordMessage}
+              onStop={tts.stop}
+              isSpeaking={tts.isSpeaking}
+              isAvailable={tts.isAvailable}
+              enableTabs={true}
               enableFixText={false}
               enableLiveTyping={false}
             />
@@ -81,24 +91,15 @@ export default function GuestCommunication() {
 
       {isMobile && (
         <MobileDockPortal>
-          <TypingDock
+          <Composer
             text={text}
             onChange={setText}
             onSpeak={(source = 'speak') => {
-              if (!text.trim()) {
-                return;
-              }
-
+              if (!text.trim()) return;
               tts.speak(text);
-              recordMessage({
-                text,
-                source,
-              });
-
+              recordMessage({ text, source });
               if (source === 'speakAndClear') {
-                setTimeout(() => {
-                  setText('');
-                }, 100);
+                setTimeout(() => setText(''), 100);
               }
             }}
             onMessageCompleted={recordMessage}
@@ -106,8 +107,8 @@ export default function GuestCommunication() {
             isSpeaking={tts.isSpeaking}
             isAvailable={tts.isAvailable}
             enableTabs={true}
-            enableLiveTyping={false}
             enableFixText={false}
+            enableLiveTyping={false}
           />
         </MobileDockPortal>
       )}

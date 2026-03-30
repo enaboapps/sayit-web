@@ -1,6 +1,5 @@
 'use client';
 
-import { PencilIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
@@ -79,10 +78,10 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
   return (
     <motion.div
       className={`relative bg-surface rounded-xl shadow-md cursor-pointer
-        flex flex-col items-center justify-center min-h-[80px]
+        flex flex-col items-center justify-center min-h-[52px]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
-        ${onEdit ? 'ring-2 ring-blue-400' : ''}
-        ${isSpeaking ? 'ring-2 ring-orange' : ''}
+        ${onEdit ? 'border-l-4 border-blue-400' : ''}
+        ${isSpeaking ? 'border-l-4 border-orange' : ''}
         ${className}`}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
@@ -108,31 +107,10 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
       aria-label={onEdit ? `Edit phrase: ${phrase.text}` : `Speak phrase: ${phrase.text}`}
       aria-pressed={isSpeaking}
     >
-      {onEdit && (
-        <div className="absolute top-2 right-2 z-10">
-          <div className="bg-blue-500 rounded-full p-1.5 shadow-sm">
-            <PencilIcon className="h-4 w-4 text-white" />
-          </div>
-        </div>
-      )}
-      {isSpeaking && !onEdit && (
-        <motion.div
-          className="absolute top-2 right-2 z-10"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        >
-          <div className="bg-orange rounded-full p-1.5 shadow-sm animate-pulse">
-            <SpeakerWaveIcon className="h-4 w-4 text-white" />
-          </div>
-        </motion.div>
-      )}
-      <div className="flex flex-col items-center justify-center w-full h-full p-3">
-        <div className="text-center w-full">
-          <p className="text-foreground text-base sm:text-lg font-semibold line-clamp-3 leading-tight">
-            {phrase.text}
-          </p>
-        </div>
+      <div className="flex items-center justify-center w-full h-full p-2">
+        <p className="text-foreground text-sm sm:text-base font-semibold line-clamp-2 leading-tight text-center w-full">
+          {phrase.text}
+        </p>
       </div>
     </motion.div>
   );

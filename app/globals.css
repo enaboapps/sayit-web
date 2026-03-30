@@ -9,7 +9,7 @@
   --border: #3a3a3a;
 
   /* Mobile bottom stack height (nav + dock + safe area) */
-  --bottom-stack-height: calc(126px + env(safe-area-inset-bottom, 0px));
+  --bottom-stack-height: calc(108px + env(safe-area-inset-bottom, 0px));
 
   /* Text colors with WCAG AAA compliance */
   --text-primary: #f5f5f5;

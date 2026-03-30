@@ -5,11 +5,10 @@ import { Id } from '@/convex/_generated/dataModel';
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
 import BoardGridPopup from '../phrases/BoardGridPopup';
-import TypingArea from '../TypingArea';
-import TypingDock from '../TypingDock';
+import Composer from '../Composer';
+import AACTabs from './AACTabs';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect, useMemo } from 'react';
-import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
@@ -19,7 +18,6 @@ import AnimatedLoading from '../phrases/AnimatedLoading';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import ReplySuggestions from '../typing/ReplySuggestions';
 import ConnectionRequestsBanner from '../connection/ConnectionRequestsBanner';
 
 export default function PhrasesInterface() {
@@ -30,7 +28,8 @@ export default function PhrasesInterface() {
   const { isOnline } = useOnlineStatus();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  const [captureError, setCaptureError] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_captureError, setCaptureError] = useState(false);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const { messages: localRecentMessages, recordMessage: recordLocalMessage } = useLocalMessageHistory();
   const selectedBoardId = uiPreferences.selectedBoardId;
@@ -306,205 +305,129 @@ export default function PhrasesInterface() {
     && settings.ttsProvider === 'elevenlabs'
     && settings.ttsModelPreference === 'high_quality';
 
-  // Desktop: Unified workspace layout
-  if (!isMobile) {
-    return (
-      <>
-        <div className="w-full max-w-6xl mx-auto px-4 py-4 flex flex-col flex-1 gap-4">
-          <ConnectionRequestsBanner />
+  const composer = (
+    <Composer
+      text={typingText}
+      onChange={setTypingText}
+      onSpeak={handleSpeakFromDock}
+      onSpeakWithTone={(taggedText) => {
+        tts.speak(taggedText);
+        void handleCaptureCompletedMessage({
+          text: typingText,
+          source: 'speak',
+          tabId: activeTabId,
+        });
+      }}
+      onMessageCompleted={(payload) => {
+        void handleCaptureCompletedMessage(payload);
+      }}
+      onStop={tts.stop}
+      isSpeaking={tts.isSpeaking}
+      isAvailable={tts.isAvailable}
+      enableTabs={true}
+      enableLiveTyping={!!user}
+      enableFixText={true}
+      enableToneControl={enableToneControl}
+      replySuggestions={{
+        history: suggestionContext.history,
+        enabled: settings.aiReplySuggestionsEnabled,
+        onSelect: handleInsertSuggestion,
+      }}
+    />
+  );
 
-          {showAuthPrompt ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
-                <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
-              </div>
-            </div>
-          ) : showOfflineBoardsState ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-text-secondary">Boards are unavailable offline.</p>
-            </div>
-          ) : loading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <AnimatedLoading />
-            </div>
-          ) : transformedBoards.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
-                <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-surface rounded-2xl border border-border shadow-lg overflow-hidden flex flex-col flex-1">
-              {/* Typing section */}
-              <div className="flex-none border-b border-border">
-                <TypingArea
-                  initialText={typingText}
-                  text={typingText}
-                  tts={tts}
-                  onChange={(text) => setTypingText(text)}
-                  onMessageCompleted={(payload) => {
-                    void handleCaptureCompletedMessage(payload);
-                  }}
-                  enableToneControl={enableToneControl}
-                  embedded={true}
-                />
-              </div>
+  const phraseGrid = (
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+      {phrases.map((phrase) => (
+        <PhraseTile
+          key={phrase.id}
+          phrase={phrase}
+          onPress={() => handlePhrasePress(phrase)}
+          onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+          onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+        />
+      ))}
+      {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
+        <ActionTile text="+ Add" onClick={handleAddTypingAsPhrase} />
+      )}
+      {isOnline && isEditMode && canEditCurrentBoard && (
+        <ActionTile text="+ Phrase" onClick={handleAddPhrase} />
+      )}
+    </div>
+  );
 
-              {/* Reply suggestions */}
-              <div className="flex-none border-b border-border px-4 py-2">
-                {captureError && settings.aiReplySuggestionsEnabled && (
-                  <p className="mb-1 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
-                )}
-                <ReplySuggestions
-                  history={suggestionContext.history}
-                  enabled={settings.aiReplySuggestionsEnabled}
-                  onSelectSuggestion={handleInsertSuggestion}
-                  contextLabel={suggestionContext.label}
-                  variant="inline"
-                />
-              </div>
-
-              {/* Board selector toolbar */}
-              <div className="flex-none border-b border-border">
-                <BoardSelector
-                  boards={transformedBoards}
-                  selectedBoard={selectedBoard}
-                  isEditMode={isEditMode}
-                  onSelectBoard={handleSelectBoard}
-                  onEditBoard={(boardId) => {
-                    if (!isOnline) return;
-                    router.push(`/phrases/boards/edit/${boardId}`);
-                  }}
-                  onAddBoard={isOnline ? handleAddBoard : undefined}
-                  onAddPhrase={isOnline ? handleAddPhrase : undefined}
-                  onEdit={handleEdit}
-                  embedded={true}
-                />
-              </div>
-
-              {/* Phrase grid */}
-              <div className="flex-1 overflow-auto p-3">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {phrases.map((phrase) => (
-                    <PhraseTile
-                      key={phrase.id}
-                      phrase={phrase}
-                      onPress={() => handlePhrasePress(phrase)}
-                      onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                      onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                      className="aspect-square"
-                    />
-                  ))}
-                  {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
-                    <ActionTile
-                      text="+ Add as Phrase"
-                      onClick={handleAddTypingAsPhrase}
-                      className="aspect-square"
-                    />
-                  )}
-                  {isOnline && isEditMode && canEditCurrentBoard && (
-                    <ActionTile
-                      text="+ Add Phrase"
-                      onClick={handleAddPhrase}
-                      className="aspect-square"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+  // Phrases tab content
+  const phrasesContent = showAuthPrompt ? (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
+        <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
+      </div>
+    </div>
+  ) : showOfflineBoardsState ? (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-text-secondary">Boards are unavailable offline.</p>
+    </div>
+  ) : loading ? (
+    <div className="flex-1 flex items-center justify-center">
+      <AnimatedLoading />
+    </div>
+  ) : transformedBoards.length === 0 ? (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
+        <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
+      </div>
+    </div>
+  ) : isMobile ? (
+    <div className="flex-1 flex flex-col">
+      <SwipeableBoardNavigator
+        boards={transformedBoards}
+        currentBoardIndex={validBoardIndex}
+        onBoardChange={handleBoardIndexChange}
+        onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
+        onAddBoard={isOnline ? handleAddBoard : undefined}
+        onAddPhrase={isOnline ? handleAddPhrase : undefined}
+        onEdit={handleEdit}
+        isEditMode={isEditMode}
+        canEditBoard={canEditCurrentBoard}
+      >
+        <div className="p-2 overflow-auto flex-1">
+          {phraseGrid}
         </div>
-
-        {/* Desktop: Board picker popup */}
-        <BoardGridPopup
+      </SwipeableBoardNavigator>
+    </div>
+  ) : (
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="shrink-0">
+        <BoardSelector
           boards={transformedBoards}
           selectedBoard={selectedBoard}
           isEditMode={isEditMode}
-          isOpen={isBoardPickerOpen}
-          onClose={() => setIsBoardPickerOpen(false)}
           onSelectBoard={handleSelectBoard}
           onEditBoard={(boardId) => {
             if (!isOnline) return;
             router.push(`/phrases/boards/edit/${boardId}`);
           }}
+          onAddBoard={isOnline ? handleAddBoard : undefined}
+          onAddPhrase={isOnline ? handleAddPhrase : undefined}
+          onEdit={handleEdit}
+          embedded={true}
         />
-      </>
-    );
-  }
+      </div>
+      <div className="flex-1 overflow-auto p-3">
+        {phraseGrid}
+      </div>
+    </div>
+  );
 
-  // Mobile layout
   return (
     <>
       <ConnectionRequestsBanner />
-      {showAuthPrompt ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
-            <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
-          </div>
-        </div>
-      ) : showOfflineBoardsState ? (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-text-secondary">Boards are unavailable offline.</p>
-        </div>
-      ) : loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <AnimatedLoading />
-        </div>
-      ) : transformedBoards.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
-            <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col">
-          <SwipeableBoardNavigator
-            boards={transformedBoards}
-            currentBoardIndex={validBoardIndex}
-            onBoardChange={handleBoardIndexChange}
-            onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
-            onAddBoard={isOnline ? handleAddBoard : undefined}
-            onAddPhrase={isOnline ? handleAddPhrase : undefined}
-            onEdit={handleEdit}
-            isEditMode={isEditMode}
-            canEditBoard={canEditCurrentBoard}
-          >
-            <div className="p-2 pb-bottom-stack overflow-auto">
-              <div className="grid grid-cols-2 gap-2">
-                {phrases.map((phrase) => (
-                  <PhraseTile
-                    key={phrase.id}
-                    phrase={phrase}
-                    onPress={() => handlePhrasePress(phrase)}
-                    onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                    onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                    className="aspect-square"
-                  />
-                ))}
-                {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
-                  <ActionTile
-                    text="+ Add as Phrase"
-                    onClick={handleAddTypingAsPhrase}
-                    className="aspect-square"
-                  />
-                )}
-                {isOnline && isEditMode && canEditCurrentBoard && (
-                  <ActionTile
-                    text="+ Add Phrase"
-                    onClick={handleAddPhrase}
-                    className="aspect-square"
-                  />
-                )}
-              </div>
-            </div>
-          </SwipeableBoardNavigator>
-        </div>
-      )}
-      {/* Mobile: Board picker popup */}
+      <AACTabs
+        phrasesContent={phrasesContent}
+        typeContent={composer}
+      />
       <BoardGridPopup
         boards={transformedBoards}
         selectedBoard={selectedBoard}
@@ -517,42 +440,6 @@ export default function PhrasesInterface() {
           router.push(`/phrases/boards/edit/${boardId}`);
         }}
       />
-      {/* Mobile: TypingDock portaled into bottom stack */}
-      {isMobile && (
-        <MobileDockPortal>
-          <TypingDock
-            text={typingText}
-            onChange={setTypingText}
-            onSpeak={handleSpeakFromDock}
-            onMessageCompleted={(payload) => {
-              void handleCaptureCompletedMessage(payload);
-            }}
-            onStop={tts.stop}
-            isSpeaking={tts.isSpeaking}
-            isAvailable={tts.isAvailable}
-            enableTabs={true}
-            enableLiveTyping={!!user}
-            enableFixText={true}
-            enableToneControl={enableToneControl}
-            onSpeakWithTone={(taggedText) => {
-              tts.speak(taggedText);
-              void handleCaptureCompletedMessage({
-                text: typingText,
-                source: 'speak',
-                tabId: activeTabId,
-              });
-            }}
-            replySuggestions={{
-              history: suggestionContext.history,
-              enabled: settings.aiReplySuggestionsEnabled,
-              onSelect: handleInsertSuggestion,
-            }}
-          />
-          {captureError && settings.aiReplySuggestionsEnabled && (
-            <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
-          )}
-        </MobileDockPortal>
-      )}
     </>
   );
 }
