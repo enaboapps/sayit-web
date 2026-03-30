@@ -34,8 +34,8 @@ export default function ConnectivityBanner() {
     <div
       className={`sticky top-0 z-40 border-b px-4 py-3 text-sm ${
         isOfflineBanner
-          ? 'border-amber-900 bg-amber-500/10 text-amber-200'
-          : 'border-emerald-900 bg-emerald-500/10 text-emerald-200'
+          ? 'border-amber-900 bg-surface text-amber-200'
+          : 'border-emerald-900 bg-surface text-emerald-200'
       }`}
       role="status"
       aria-live="polite"

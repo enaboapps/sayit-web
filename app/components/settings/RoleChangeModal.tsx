@@ -40,7 +40,7 @@ export default function RoleChangeModal({ currentRole, onClose, onSuccess }: Rol
 
   return (
     <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
-      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6" style={{ backgroundColor: '#242424' }}>
+      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6 bg-surface">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

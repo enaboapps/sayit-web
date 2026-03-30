@@ -55,7 +55,7 @@ export default function AddClientModal({ onClose }: AddClientModalProps) {
 
   return (
     <div className="fixed inset-0 bg-overlay  flex items-center justify-center p-4 z-50">
-      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6" style={{ backgroundColor: '#242424' }}>
+      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6 bg-surface">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-full bg-surface-hover">

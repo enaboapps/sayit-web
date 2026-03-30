@@ -14,7 +14,7 @@ export default function InstallBanner() {
 
   return (
     <div
-      className="sticky top-0 z-30 border-b border-primary-900 bg-primary-500/10 px-4 py-3 text-sm text-primary-100"
+      className="sticky top-0 z-30 border-b border-primary-900 bg-surface px-4 py-3 text-sm text-primary-100"
       role="status"
       aria-live="polite"
     >

@@ -57,7 +57,7 @@ export default function ClientLayout({
                 <div className="flex-1 md:pl-16 lg:pl-16">
                   <ConnectivityBanner />
                   <InstallBanner />
-                  <main className="min-h-dvh pb-32 md:pb-0">
+                  <main className="min-h-dvh pb-bottom-stack">
                     {children}
                   </main>
                 </div>

@@ -33,6 +33,7 @@ interface TypingAreaProps {
   enableFixText?: boolean
   enableLiveTyping?: boolean
   enableToneControl?: boolean
+  embedded?: boolean
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -46,6 +47,7 @@ export default function TypingArea({
   enableFixText = true,
   enableLiveTyping = true,
   enableToneControl = false,
+  embedded = false,
 }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFixingText, setIsFixingText] = useState(false);
@@ -384,7 +386,9 @@ export default function TypingArea({
   return (
     <div className="flex flex-col">
       {isVisible && (
-        <div className="flex flex-col bg-surface shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-3xl">
+        <div className={`flex flex-col overflow-hidden transition-all duration-300 ${
+          embedded ? '' : 'bg-surface shadow-lg rounded-2xl hover:shadow-xl'
+        }`}>
           <TabBar
             tabs={tabs}
             activeTabId={activeTabId}
@@ -571,7 +575,7 @@ export default function TypingArea({
           )}
         </div>
       )}
-      <div className="flex gap-2 mt-2">
+      {!embedded && <div className="flex gap-2 mt-2">
         {isVisible && (
           <button
             onClick={toggleExpanded}
@@ -602,7 +606,7 @@ export default function TypingArea({
             <ChevronDownIcon className="w-5 h-5" />
           )}
         </button>
-      </div>
+      </div>}
       <Tooltip id="speak-tooltip" />
       <Tooltip id="fix-text-tooltip" />
       <Tooltip id="clear-tooltip" />

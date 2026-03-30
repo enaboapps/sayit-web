@@ -16,7 +16,7 @@ export default function MobileBottomStack() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col">
       {/* Dock content slot - portal target */}
-      <div ref={dockRef} style={{ backgroundColor: '#242424' }} />
+      <div ref={dockRef} className="bg-surface" />
       {/* Tab bar */}
       <BottomTabBar />
     </div>

@@ -187,11 +187,10 @@ export default function BottomSheet({
           {/* Bottom Sheet */}
           <motion.div
             ref={sheetRef}
-            className={`fixed bottom-0 left-0 right-0 z-[60] rounded-t-3xl shadow-2xl flex flex-col ${className}`}
+            className={`fixed bottom-0 left-0 right-0 z-[60] rounded-t-3xl shadow-2xl flex flex-col bg-surface ${className}`}
             style={{
               maxHeight: '95vh',
               paddingBottom: keyboardHeight > 0 ? keyboardHeight : 'env(safe-area-inset-bottom)',
-              backgroundColor: '#242424',
             }}
             initial={{ y: '100%' }}
             animate={{
