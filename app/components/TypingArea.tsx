@@ -10,7 +10,10 @@ import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
+import { useLongPress } from '@/lib/hooks/useLongPress';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
+import ToneSheet from './typing/ToneSheet';
+import type { TonePreset } from './typing/ToneSheet';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
@@ -29,6 +32,7 @@ interface TypingAreaProps {
   onMessageCompleted?: (payload: { text: string; source: 'speak' | 'speakAndClear' | 'clear'; tabId?: string | null }) => void
   enableFixText?: boolean
   enableLiveTyping?: boolean
+  enableToneControl?: boolean
 }
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -41,11 +45,13 @@ export default function TypingArea({
   onMessageCompleted,
   enableFixText = true,
   enableLiveTyping = true,
+  enableToneControl = false,
 }: TypingAreaProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFixingText, setIsFixingText] = useState(false);
   const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
+  const [showToneSheet, setShowToneSheet] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevExternalTextRef = useRef(externalText);
   const prevActiveTabIdRef = useRef<string | null>(null);
@@ -261,6 +267,29 @@ export default function TypingArea({
     }
   }, [activeTabId, isSpeaking, onMessageCompleted, speak, stop, text]);
 
+  const handleSpeakWithTone = useCallback((tone: TonePreset) => {
+    if (!text.trim()) return;
+    const taggedText = `${tone.tag} ${text}`;
+    speak(taggedText);
+    onMessageCompleted?.({
+      text,
+      source: 'speak',
+      tabId: activeTabId,
+    });
+    textareaRef.current?.focus();
+  }, [activeTabId, onMessageCompleted, speak, text]);
+
+  const speakLongPress = useLongPress({
+    delay: 500,
+    onPress: handleSpeak,
+    onLongPress: () => {
+      if (text.trim() && !isSpeaking) {
+        setShowToneSheet(true);
+      }
+    },
+    enabled: enableToneControl && !isSpeaking,
+  });
+
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
     if (!isOnline) {
@@ -422,14 +451,14 @@ export default function TypingArea({
           {text.trim() && (
             <div className="flex flex-wrap gap-2 p-4 bg-surface-hover transition-colors duration-200">
               <button
-                onClick={handleSpeak}
+                {...(enableToneControl ? speakLongPress : { onClick: handleSpeak })}
                 className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
                   isSpeaking
                     ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                     : 'bg-surface hover:bg-surface-hover text-foreground hover:text-primary-500'
                 }`}
                 data-tooltip-id="speak-tooltip"
-                data-tooltip-content={isSpeaking ? 'Stop speaking' : 'Speak text'}
+                data-tooltip-content={isSpeaking ? 'Stop speaking' : enableToneControl ? 'Speak text (hold for tone)' : 'Speak text'}
                 disabled={!isAvailable || (!isSpeaking && !text.trim())}
               >
                 {isSpeaking ? (
@@ -606,6 +635,16 @@ export default function TypingArea({
             onChange?.('');
           }}
           onRenameTab={renameTab}
+        />
+      )}
+
+      {/* Tone Control Sheet */}
+      {enableToneControl && (
+        <ToneSheet
+          isOpen={showToneSheet}
+          onClose={() => setShowToneSheet(false)}
+          onSelectTone={handleSpeakWithTone}
+          onSpeakWithoutTone={handleSpeak}
         />
       )}
     </div>
