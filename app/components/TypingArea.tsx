@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, SparklesIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, ShareIcon } from '@heroicons/react/24/outline';
 import { Tooltip } from 'react-tooltip';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,9 +10,9 @@ import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import { useLongPress } from '@/lib/hooks/useLongPress';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
-import ToneSheet, { applyToneTag } from './typing/ToneSheet';
+import SpeakButton from './typing/SpeakButton';
+import { applyToneTag } from './typing/ToneSheet';
 import type { TonePreset } from './typing/ToneSheet';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
@@ -53,7 +53,6 @@ export default function TypingArea({
   const [isFixingText, setIsFixingText] = useState(false);
   const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
   const [showTabManagementDialog, setShowTabManagementDialog] = useState(false);
-  const [showToneSheet, setShowToneSheet] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevExternalTextRef = useRef(externalText);
   const prevActiveTabIdRef = useRef<string | null>(null);
@@ -281,17 +280,6 @@ export default function TypingArea({
     textareaRef.current?.focus();
   }, [activeTabId, onMessageCompleted, speak, text]);
 
-  const speakLongPress = useLongPress({
-    delay: 500,
-    onPress: handleSpeak,
-    onLongPress: () => {
-      if (text.trim() && !isSpeaking) {
-        setShowToneSheet(true);
-      }
-    },
-    enabled: enableToneControl && !isSpeaking,
-  });
-
   const handleFixText = async () => {
     if (!text.trim() || isFixingText) return;
     if (!isOnline) {
@@ -454,29 +442,15 @@ export default function TypingArea({
           </div>
           {text.trim() && (
             <div className="flex flex-wrap gap-2 p-4 bg-surface-hover transition-colors duration-200">
-              <button
-                {...(enableToneControl ? speakLongPress : { onClick: handleSpeak })}
-                className={`flex-1 min-w-[140px] h-12 rounded-full transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg hover:scale-105 ${
-                  isSpeaking
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                    : 'bg-surface hover:bg-surface-hover text-foreground hover:text-primary-500'
-                }`}
-                data-tooltip-id="speak-tooltip"
-                data-tooltip-content={isSpeaking ? 'Stop speaking' : enableToneControl ? 'Speak text (hold for tone)' : 'Speak text'}
-                disabled={!isAvailable || (!isSpeaking && !text.trim())}
-              >
-                {isSpeaking ? (
-                  <>
-                    <StopIcon className="w-5 h-5" />
-                    <span>Stop</span>
-                  </>
-                ) : (
-                  <>
-                    <SpeakerWaveIcon className="w-5 h-5" />
-                    <span>Speak</span>
-                  </>
-                )}
-              </button>
+              <SpeakButton
+                variant="area"
+                onSpeak={handleSpeak}
+                onStop={() => stop()}
+                onSelectTone={handleSpeakWithTone}
+                isSpeaking={isSpeaking}
+                disabled={!isAvailable || !text.trim()}
+                enableToneControl={enableToneControl}
+              />
               {enableFixText && (
                 !isOnline ? (
                   <button
@@ -642,15 +616,6 @@ export default function TypingArea({
         />
       )}
 
-      {/* Tone Control Sheet */}
-      {enableToneControl && (
-        <ToneSheet
-          isOpen={showToneSheet}
-          onClose={() => setShowToneSheet(false)}
-          onSelectTone={handleSpeakWithTone}
-          onSpeakWithoutTone={handleSpeak}
-        />
-      )}
     </div>
   );
 }
