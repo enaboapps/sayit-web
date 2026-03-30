@@ -1,12 +1,20 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { ArrowDownTrayIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt';
 
 export default function InstallBanner() {
   const { mode, isVisible, dismiss, promptInstall } = useInstallPrompt();
+  const [hasMounted, setHasMounted] = useState(false);
 
-  if (!isVisible) {
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  // Defer rendering until after mount to prevent hydration mismatch.
+  // useInstallPrompt checks navigator.userAgent which differs server vs client.
+  if (!hasMounted || !isVisible) {
     return null;
   }
 
