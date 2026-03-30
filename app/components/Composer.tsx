@@ -507,8 +507,8 @@ export default function Composer({
       <AnimatePresence>
         {isMobile && showExpanded && (
           <motion.div
-            className="fixed inset-0 z-[70] flex flex-col bg-surface"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            className="fixed inset-0 z-[70] flex flex-col"
+            style={{ backgroundColor: 'var(--surface, #242424)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
