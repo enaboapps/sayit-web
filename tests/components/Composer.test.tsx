@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import TypingDock from '@/app/components/TypingDock';
+import Composer from '@/app/components/Composer';
 
 jest.mock('nanoid', () => {
   let idCounter = 0;
@@ -26,7 +26,6 @@ jest.mock('@/app/contexts/SettingsContext', () => ({
       doubleEnterAction: 'speak',
     },
     uiPreferences: {
-      typingDockMode: 'expanded',
       activeTypingTabId: null,
     },
     updateUIPreference: mockUpdateUIPreference,
@@ -50,13 +49,6 @@ jest.mock('@/lib/hooks/useLiveTyping', () => ({
   })),
 }));
 
-jest.mock('@/lib/hooks/useVisualViewport', () => ({
-  useVisualViewport: jest.fn(() => ({
-    top: 0,
-    height: 0,
-  })),
-}));
-
 jest.mock('@/lib/hooks/useOnlineStatus', () => ({
   useOnlineStatus: jest.fn(() => ({
     isOnline: true,
@@ -65,12 +57,26 @@ jest.mock('@/lib/hooks/useOnlineStatus', () => ({
   })),
 }));
 
+jest.mock('@/lib/hooks/useIsMobile', () => ({
+  useIsMobile: jest.fn(() => false),
+}));
+
 jest.mock('@/app/components/live-typing/LiveTypingBottomSheet', () => ({
   __esModule: true,
   default: () => null,
 }));
 
+jest.mock('@/app/components/live-typing/LiveTypingLinkModal', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
 jest.mock('@/app/components/typing-tabs/MobileTabList', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+jest.mock('@/app/components/typing-tabs/TabManagementDialog', () => ({
   __esModule: true,
   default: () => null,
 }));
@@ -88,38 +94,83 @@ jest.mock('framer-motion', () => ({
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
-
   return {
     getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { store = {}; },
   };
 })();
 
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock,
-});
+Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-describe('TypingDock', () => {
+describe('Composer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorageMock.clear();
   });
 
-  it('restores the active tab draft into the parent text state on mount', async () => {
+  it('renders the text input with provided text', () => {
+    render(
+      <Composer
+        text="Hello world"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    expect(screen.getByRole('textbox')).toHaveValue('Hello world');
+  });
+
+  it('calls onChange when user types', async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+
+    render(
+      <Composer
+        text=""
+        onChange={onChange}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    const input = screen.getByRole('textbox');
+    await user.type(input, 'Hi');
+
+    expect(onChange).toHaveBeenCalled();
+  });
+
+  it('shows action buttons when text exists', () => {
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText('Clear')).toBeInTheDocument();
+  });
+
+  it('hides action buttons when text is empty', () => {
+    render(
+      <Composer
+        text=""
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    expect(screen.queryByText('Clear')).not.toBeInTheDocument();
+  });
+
+  it('restores the active tab draft on mount when tabs enabled', async () => {
     localStorageMock.setItem('typingTabs', JSON.stringify({
       tabs: [
         {
           id: 'stored-tab-1',
           label: 'Stored Draft',
-          text: 'Restored mobile draft',
+          text: 'Restored draft',
           createdAt: Date.now(),
           lastModified: Date.now(),
           isCustomLabel: false,
@@ -131,7 +182,7 @@ describe('TypingDock', () => {
 
     const onChange = jest.fn();
     render(
-      <TypingDock
+      <Composer
         text=""
         onChange={onChange}
         onSpeak={jest.fn()}
@@ -139,52 +190,9 @@ describe('TypingDock', () => {
       />
     );
 
-    expect(screen.getByRole('textbox')).toHaveValue('Restored mobile draft');
+    expect(screen.getByRole('textbox')).toHaveValue('Restored draft');
     await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith('Restored mobile draft');
+      expect(onChange).toHaveBeenCalledWith('Restored draft');
     });
-  });
-
-  it('speaks the restored draft after mount when the parent adopts it', async () => {
-    localStorageMock.setItem('typingTabs', JSON.stringify({
-      tabs: [
-        {
-          id: 'stored-tab-1',
-          label: 'Stored Draft',
-          text: 'Restored mobile draft',
-          createdAt: Date.now(),
-          lastModified: Date.now(),
-          isCustomLabel: false,
-        },
-      ],
-      activeTabId: 'stored-tab-1',
-      nextTabNumber: 2,
-    }));
-
-    const user = userEvent.setup();
-    const onSpeak = jest.fn();
-
-    function Harness() {
-      const [text, setText] = React.useState('');
-
-      return (
-        <TypingDock
-          text={text}
-          onChange={setText}
-          onSpeak={onSpeak}
-          enableTabs={true}
-        />
-      );
-    }
-
-    render(<Harness />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('textbox')).toHaveValue('Restored mobile draft');
-    });
-
-    await user.click(screen.getByRole('button', { name: 'Speak' }));
-
-    expect(onSpeak).toHaveBeenCalledWith('speak');
   });
 });

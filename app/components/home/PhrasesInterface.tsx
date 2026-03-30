@@ -5,8 +5,7 @@ import { Id } from '@/convex/_generated/dataModel';
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
 import BoardGridPopup from '../phrases/BoardGridPopup';
-import TypingArea from '../TypingArea';
-import TypingDock from '../TypingDock';
+import Composer from '../Composer';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect, useMemo } from 'react';
 import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
@@ -306,50 +305,101 @@ export default function PhrasesInterface() {
     && settings.ttsProvider === 'elevenlabs'
     && settings.ttsModelPreference === 'high_quality';
 
-  // Desktop: Unified workspace layout
+  const composer = (
+    <Composer
+      text={typingText}
+      onChange={setTypingText}
+      onSpeak={handleSpeakFromDock}
+      onSpeakWithTone={(taggedText) => {
+        tts.speak(taggedText);
+        void handleCaptureCompletedMessage({
+          text: typingText,
+          source: 'speak',
+          tabId: activeTabId,
+        });
+      }}
+      onMessageCompleted={(payload) => {
+        void handleCaptureCompletedMessage(payload);
+      }}
+      onStop={tts.stop}
+      isSpeaking={tts.isSpeaking}
+      isAvailable={tts.isAvailable}
+      enableTabs={true}
+      enableLiveTyping={!!user}
+      enableFixText={true}
+      enableToneControl={enableToneControl}
+      replySuggestions={{
+        history: suggestionContext.history,
+        enabled: settings.aiReplySuggestionsEnabled,
+        onSelect: handleInsertSuggestion,
+      }}
+    />
+  );
+
+  // Phrase grid shared between desktop and mobile
+  const phraseGrid = (
+    <>
+      {phrases.map((phrase) => (
+        <PhraseTile
+          key={phrase.id}
+          phrase={phrase}
+          onPress={() => handlePhrasePress(phrase)}
+          onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+          onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
+        />
+      ))}
+      {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
+        <ActionTile
+          text="+ Add"
+          onClick={handleAddTypingAsPhrase}
+        />
+      )}
+      {isOnline && isEditMode && canEditCurrentBoard && (
+        <ActionTile
+          text="+ Phrase"
+          onClick={handleAddPhrase}
+        />
+      )}
+    </>
+  );
+
+  // Conditional content states
+  const contentState = showAuthPrompt ? (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
+        <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
+      </div>
+    </div>
+  ) : showOfflineBoardsState ? (
+    <div className="flex-1 flex items-center justify-center">
+      <p className="text-text-secondary">Boards are unavailable offline.</p>
+    </div>
+  ) : loading ? (
+    <div className="flex-1 flex items-center justify-center">
+      <AnimatedLoading />
+    </div>
+  ) : transformedBoards.length === 0 ? (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
+        <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
+      </div>
+    </div>
+  ) : null;
+
+  // Desktop layout
   if (!isMobile) {
     return (
       <>
         <div className="w-full max-w-6xl mx-auto px-4 py-4 flex flex-col flex-1 gap-4">
           <ConnectionRequestsBanner />
 
-          {showAuthPrompt ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
-                <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
-              </div>
-            </div>
-          ) : showOfflineBoardsState ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-text-secondary">Boards are unavailable offline.</p>
-            </div>
-          ) : loading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <AnimatedLoading />
-            </div>
-          ) : transformedBoards.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
-                <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
-              </div>
-            </div>
-          ) : (
+          {contentState || (
             <div className="bg-surface rounded-2xl border border-border shadow-lg overflow-hidden flex flex-col flex-1">
-              {/* Typing section */}
+              {/* Composer */}
               <div className="flex-none border-b border-border">
-                <TypingArea
-                  initialText={typingText}
-                  text={typingText}
-                  tts={tts}
-                  onChange={(text) => setTypingText(text)}
-                  onMessageCompleted={(payload) => {
-                    void handleCaptureCompletedMessage(payload);
-                  }}
-                  enableToneControl={enableToneControl}
-                  embedded={true}
-                />
+                {composer}
               </div>
 
               {/* Reply suggestions */}
@@ -384,40 +434,16 @@ export default function PhrasesInterface() {
                 />
               </div>
 
-              {/* Phrase grid */}
+              {/* Phrase grid — compact tiles, more columns */}
               <div className="flex-1 overflow-auto p-3">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {phrases.map((phrase) => (
-                    <PhraseTile
-                      key={phrase.id}
-                      phrase={phrase}
-                      onPress={() => handlePhrasePress(phrase)}
-                      onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                      onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                      className="aspect-square"
-                    />
-                  ))}
-                  {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
-                    <ActionTile
-                      text="+ Add as Phrase"
-                      onClick={handleAddTypingAsPhrase}
-                      className="aspect-square"
-                    />
-                  )}
-                  {isOnline && isEditMode && canEditCurrentBoard && (
-                    <ActionTile
-                      text="+ Add Phrase"
-                      onClick={handleAddPhrase}
-                      className="aspect-square"
-                    />
-                  )}
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+                  {phraseGrid}
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Desktop: Board picker popup */}
         <BoardGridPopup
           boards={transformedBoards}
           selectedBoard={selectedBoard}
@@ -438,29 +464,7 @@ export default function PhrasesInterface() {
   return (
     <>
       <ConnectionRequestsBanner />
-      {showAuthPrompt ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
-            <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
-          </div>
-        </div>
-      ) : showOfflineBoardsState ? (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-text-secondary">Boards are unavailable offline.</p>
-        </div>
-      ) : loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <AnimatedLoading />
-        </div>
-      ) : transformedBoards.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
-            <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
-          </div>
-        </div>
-      ) : (
+      {contentState || (
         <div className="flex-1 flex flex-col">
           <SwipeableBoardNavigator
             boards={transformedBoards}
@@ -474,37 +478,13 @@ export default function PhrasesInterface() {
             canEditBoard={canEditCurrentBoard}
           >
             <div className="p-2 pb-bottom-stack overflow-auto">
-              <div className="grid grid-cols-2 gap-2">
-                {phrases.map((phrase) => (
-                  <PhraseTile
-                    key={phrase.id}
-                    phrase={phrase}
-                    onPress={() => handlePhrasePress(phrase)}
-                    onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                    onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
-                    className="aspect-square"
-                  />
-                ))}
-                {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
-                  <ActionTile
-                    text="+ Add as Phrase"
-                    onClick={handleAddTypingAsPhrase}
-                    className="aspect-square"
-                  />
-                )}
-                {isOnline && isEditMode && canEditCurrentBoard && (
-                  <ActionTile
-                    text="+ Add Phrase"
-                    onClick={handleAddPhrase}
-                    className="aspect-square"
-                  />
-                )}
+              <div className="grid grid-cols-3 gap-2">
+                {phraseGrid}
               </div>
             </div>
           </SwipeableBoardNavigator>
         </div>
       )}
-      {/* Mobile: Board picker popup */}
       <BoardGridPopup
         boards={transformedBoards}
         selectedBoard={selectedBoard}
@@ -517,42 +497,12 @@ export default function PhrasesInterface() {
           router.push(`/phrases/boards/edit/${boardId}`);
         }}
       />
-      {/* Mobile: TypingDock portaled into bottom stack */}
-      {isMobile && (
-        <MobileDockPortal>
-          <TypingDock
-            text={typingText}
-            onChange={setTypingText}
-            onSpeak={handleSpeakFromDock}
-            onMessageCompleted={(payload) => {
-              void handleCaptureCompletedMessage(payload);
-            }}
-            onStop={tts.stop}
-            isSpeaking={tts.isSpeaking}
-            isAvailable={tts.isAvailable}
-            enableTabs={true}
-            enableLiveTyping={!!user}
-            enableFixText={true}
-            enableToneControl={enableToneControl}
-            onSpeakWithTone={(taggedText) => {
-              tts.speak(taggedText);
-              void handleCaptureCompletedMessage({
-                text: typingText,
-                source: 'speak',
-                tabId: activeTabId,
-              });
-            }}
-            replySuggestions={{
-              history: suggestionContext.history,
-              enabled: settings.aiReplySuggestionsEnabled,
-              onSelect: handleInsertSuggestion,
-            }}
-          />
-          {captureError && settings.aiReplySuggestionsEnabled && (
-            <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
-          )}
-        </MobileDockPortal>
-      )}
+      <MobileDockPortal>
+        {composer}
+        {captureError && settings.aiReplySuggestionsEnabled && (
+          <p className="px-3 pb-2 text-xs text-amber-500">Message history capture is temporarily unavailable.</p>
+        )}
+      </MobileDockPortal>
     </>
   );
 }
