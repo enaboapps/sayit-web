@@ -314,6 +314,83 @@ export default function Composer({
     onChange(value);
   };
 
+  // Shared action buttons JSX (used in both desktop inline and mobile expanded)
+  const actionButtons = (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {/* Clear */}
+      <button
+        onClick={handleClear}
+        disabled={!currentText.trim()}
+        className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover hover:bg-status-error text-text-secondary hover:text-red-500 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label="Clear"
+      >
+        <XMarkIcon className="w-3.5 h-3.5" />
+        <span>Clear</span>
+      </button>
+
+      {/* Fix Text */}
+      {enableFixText && (
+        !isOnline ? (
+          <button
+            type="button"
+            disabled
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover text-text-tertiary opacity-60 cursor-not-allowed text-xs font-medium"
+          >
+            <SparklesIcon className="w-3.5 h-3.5" />
+            <span>Fix Text</span>
+          </button>
+        ) : (
+          <SubscriptionWrapper
+            fallback={
+              <button
+                onClick={() => window.location.href = '/pricing'}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all text-xs font-medium"
+              >
+                <SparklesIcon className="w-3.5 h-3.5" />
+                <span>Fix Text</span>
+              </button>
+            }
+          >
+            <button
+              onClick={handleFixText}
+              disabled={!currentText.trim() || isFixingText}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
+                isFixingText
+                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+                  : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
+              }`}
+            >
+              {isFixingText ? (
+                <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <SparklesIcon className="w-3.5 h-3.5" />
+              )}
+              <span>{isFixingText ? 'Fixing...' : 'Fix Text'}</span>
+            </button>
+          </SubscriptionWrapper>
+        )
+      )}
+
+      {/* Live Typing */}
+      {enableLiveTyping && user && (
+        <button
+          onClick={handleShare}
+          disabled={!isOnline}
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-xs font-medium ${
+            !isOnline
+              ? 'bg-surface-hover text-text-tertiary'
+              : isSharing
+                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
+          }`}
+        >
+          <ShareIcon className="w-3.5 h-3.5" />
+          <span>{isSharing ? 'Live' : 'Live Typing'}</span>
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <>
       <div className={`border-t border-border bg-surface ${className}`}>
@@ -328,7 +405,7 @@ export default function Composer({
           </div>
         )}
 
-        {/* Desktop only: Tab bar + reply suggestions + action row */}
+        {/* Desktop: Tab bar + reply suggestions */}
         <div className="hidden md:block">
           {enableTabs && (
             <TabBar
@@ -354,22 +431,28 @@ export default function Composer({
           )}
         </div>
 
-        {/* Input row — clean on mobile, richer on desktop */}
+        {/* Input row */}
         <div className="flex items-end gap-2 px-3 py-2">
-          <div className="flex-1 min-w-0">
+          {/* Mobile: tap to expand. Desktop: normal editable input */}
+          <div
+            className="flex-1 min-w-0"
+            {...(isMobile ? { onClick: () => setShowExpanded(true) } : {})}
+          >
             <textarea
               ref={inputRef}
               value={currentText}
               onChange={(e) => handleTextChange(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={isMobile ? (e) => { e.target.blur(); setShowExpanded(true); } : undefined}
               placeholder="Type your message..."
               rows={1}
-              className="w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-xl px-4 py-2.5 resize-none"
+              className={`w-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-xl px-4 py-2.5 resize-none ${isMobile ? 'cursor-pointer' : ''}`}
               style={{ fontSize: `${Math.min(textSizePx, 20)}px` }}
+              readOnly={isMobile}
             />
           </div>
 
-          {/* Clear — icon only on mobile when text exists */}
+          {/* Clear — icon only, always visible when text exists */}
           {currentText.trim() && (
             <button
               onClick={handleClear}
@@ -393,67 +476,10 @@ export default function Composer({
           </div>
         </div>
 
-        {/* Desktop only: secondary actions when text exists */}
+        {/* Desktop: secondary actions */}
         {currentText.trim() && (
           <div className="hidden md:flex items-center gap-1.5 px-3 pb-2">
-            {enableFixText && (
-              !isOnline ? (
-                <button
-                  type="button"
-                  disabled
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover text-text-tertiary opacity-60 cursor-not-allowed text-xs font-medium"
-                >
-                  <SparklesIcon className="w-3.5 h-3.5" />
-                  <span>Fix Text</span>
-                </button>
-              ) : (
-                <SubscriptionWrapper
-                  fallback={
-                    <button
-                      onClick={() => window.location.href = '/pricing'}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-hover hover:bg-status-warning text-text-secondary hover:text-amber-500 transition-all text-xs font-medium"
-                    >
-                      <SparklesIcon className="w-3.5 h-3.5" />
-                      <span>Fix Text</span>
-                    </button>
-                  }
-                >
-                  <button
-                    onClick={handleFixText}
-                    disabled={!currentText.trim() || isFixingText}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isFixingText
-                        ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-                        : 'bg-surface-hover hover:bg-status-purple text-text-secondary hover:text-purple-500'
-                    }`}
-                  >
-                    {isFixingText ? (
-                      <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <SparklesIcon className="w-3.5 h-3.5" />
-                    )}
-                    <span>{isFixingText ? 'Fixing...' : 'Fix Text'}</span>
-                  </button>
-                </SubscriptionWrapper>
-              )
-            )}
-
-            {enableLiveTyping && user && (
-              <button
-                onClick={handleShare}
-                disabled={!isOnline}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full transition-all text-xs font-medium ${
-                  !isOnline
-                    ? 'bg-surface-hover text-text-tertiary'
-                    : isSharing
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                      : 'bg-surface-hover hover:bg-status-success text-text-secondary hover:text-green-500'
-                }`}
-              >
-                <ShareIcon className="w-3.5 h-3.5" />
-                <span>{isSharing ? 'Live' : 'Live Typing'}</span>
-              </button>
-            )}
+            {actionButtons}
 
             <button
               type="button"
@@ -465,14 +491,11 @@ export default function Composer({
             </button>
 
             <div className="flex-1" />
-
-            {error && (
-              <span className="text-xs text-red-500 truncate">{error}</span>
-            )}
+            {error && <span className="text-xs text-red-500 truncate">{error}</span>}
           </div>
         )}
 
-        {/* Mobile error display */}
+        {/* Mobile error display (compact mode) */}
         {error && (
           <div className="px-3 pb-1.5 md:hidden">
             <span className="text-xs text-red-500">{error}</span>
@@ -480,51 +503,101 @@ export default function Composer({
         )}
       </div>
 
-      {/* Expanded editing bottom sheet (mobile) / inline expansion (desktop) */}
-      {isMobile ? (
+      {/* Mobile expanded: full-featured bottom sheet */}
+      {isMobile && (
         <BottomSheet
           isOpen={showExpanded}
           onClose={handleExpandedClose}
-          title="Edit message"
-          snapPoints={[60, 90]}
-          initialSnap={1}
+          title="Compose"
+          snapPoints={[90]}
+          showHandle={true}
+          showCloseButton={true}
         >
-          <div className="p-4 flex flex-col flex-1">
-            <textarea
-              ref={expandedRef}
-              value={currentText}
-              onChange={(e) => handleTextChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="w-full flex-1 min-h-[200px] bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 resize-none"
-              style={{ fontSize: `${textSizePx}px` }}
-              autoFocus
-            />
-          </div>
-        </BottomSheet>
-      ) : (
-        showExpanded && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={handleExpandedClose}>
-            <div className="w-full max-w-2xl mx-4 bg-surface rounded-2xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Edit message</h3>
-                <button onClick={handleExpandedClose} className="p-2 rounded-full hover:bg-surface-hover transition-colors">
-                  <XMarkIcon className="w-5 h-5 text-text-secondary" />
-                </button>
-              </div>
+          <div className="flex flex-col flex-1 overflow-hidden">
+            {/* Tabs */}
+            {enableTabs && (
+              <TabBar
+                tabs={tabs}
+                activeTabId={activeTabId}
+                onTabSelect={switchTab}
+                onTabClose={closeTab}
+                onTabCreate={createTab}
+                onTabRename={renameTab}
+                onManage={() => setShowTabManagement(true)}
+              />
+            )}
+
+            {/* Full textarea */}
+            <div className="flex-1 p-4 min-h-0">
               <textarea
                 ref={expandedRef}
                 value={currentText}
                 onChange={(e) => handleTextChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                className="w-full min-h-[300px] bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 resize-none"
+                className="w-full h-full bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 resize-none"
                 style={{ fontSize: `${textSizePx}px` }}
                 autoFocus
               />
             </div>
+
+            {/* Reply suggestions */}
+            {replySuggestions && (
+              <div className="px-4 py-2 border-t border-border">
+                <ReplySuggestions
+                  history={replySuggestions.history}
+                  enabled={replySuggestions.enabled}
+                  onSelectSuggestion={replySuggestions.onSelect}
+                  variant="inline"
+                />
+              </div>
+            )}
+
+            {/* Action buttons + speak */}
+            <div className="flex items-center gap-2 px-4 py-3 border-t border-border">
+              {actionButtons}
+              <div className="flex-1" />
+              <SpeakButton
+                onSpeak={() => onSpeak('speak')}
+                onStop={onStop}
+                onSelectTone={handleToneSelected}
+                isSpeaking={isSpeaking}
+                disabled={!isAvailable || !currentText.trim()}
+                enableToneControl={enableToneControl}
+              />
+            </div>
+
+            {error && (
+              <div className="px-4 pb-2">
+                <span className="text-xs text-red-500">{error}</span>
+              </div>
+            )}
           </div>
-        )
+        </BottomSheet>
+      )}
+
+      {/* Desktop expanded: modal overlay */}
+      {!isMobile && showExpanded && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={handleExpandedClose}>
+          <div className="w-full max-w-2xl mx-4 bg-surface rounded-2xl shadow-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">Edit message</h3>
+              <button onClick={handleExpandedClose} className="p-2 rounded-full hover:bg-surface-hover transition-colors">
+                <XMarkIcon className="w-5 h-5 text-text-secondary" />
+              </button>
+            </div>
+            <textarea
+              ref={expandedRef}
+              value={currentText}
+              onChange={(e) => handleTextChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type your message..."
+              className="w-full min-h-[300px] bg-surface-hover text-foreground placeholder:text-text-tertiary rounded-2xl px-4 py-3 resize-none"
+              style={{ fontSize: `${textSizePx}px` }}
+              autoFocus
+            />
+          </div>
+        </div>
       )}
 
       {/* Mobile tab list sheet */}
