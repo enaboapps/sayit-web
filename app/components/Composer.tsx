@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   SparklesIcon,
   XMarkIcon,
@@ -27,7 +28,6 @@ import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
-import BottomSheet from './ui/BottomSheet';
 
 interface ReplySuggestionsConfig {
   history: string[];
@@ -503,28 +503,42 @@ export default function Composer({
         )}
       </div>
 
-      {/* Mobile expanded: full-featured bottom sheet */}
-      {isMobile && (
-        <BottomSheet
-          isOpen={showExpanded}
-          onClose={handleExpandedClose}
-          title="Compose"
-          snapPoints={[80]}
-          showHandle={true}
-          showCloseButton={true}
-        >
-          <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Mobile expanded: full-screen editor panel */}
+      <AnimatePresence>
+        {isMobile && showExpanded && (
+          <motion.div
+            className="fixed inset-0 z-[70] flex flex-col bg-surface"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          >
+            {/* Header with Done button */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+              <h2 className="text-lg font-semibold text-foreground">Compose</h2>
+              <button
+                type="button"
+                onClick={handleExpandedClose}
+                className="px-4 py-1.5 rounded-full bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+
             {/* Tabs */}
             {enableTabs && (
-              <TabBar
-                tabs={tabs}
-                activeTabId={activeTabId}
-                onTabSelect={switchTab}
-                onTabClose={closeTab}
-                onTabCreate={createTab}
-                onTabRename={renameTab}
-                onManage={() => setShowTabManagement(true)}
-              />
+              <div className="shrink-0">
+                <TabBar
+                  tabs={tabs}
+                  activeTabId={activeTabId}
+                  onTabSelect={switchTab}
+                  onTabClose={closeTab}
+                  onTabCreate={createTab}
+                  onTabRename={renameTab}
+                  onManage={() => setShowTabManagement(true)}
+                />
+              </div>
             )}
 
             {/* Full textarea */}
@@ -543,7 +557,7 @@ export default function Composer({
 
             {/* Reply suggestions */}
             {replySuggestions && (
-              <div className="px-4 py-2 border-t border-border">
+              <div className="px-4 py-2 border-t border-border shrink-0">
                 <ReplySuggestions
                   history={replySuggestions.history}
                   enabled={replySuggestions.enabled}
@@ -553,8 +567,8 @@ export default function Composer({
               </div>
             )}
 
-            {/* Action buttons + speak + done */}
-            <div className="flex items-center gap-2 px-4 py-3 border-t border-border">
+            {/* Action buttons + speak */}
+            <div className="flex items-center gap-2 px-4 py-3 border-t border-border shrink-0">
               {actionButtons}
               <div className="flex-1" />
               <SpeakButton
@@ -565,23 +579,16 @@ export default function Composer({
                 disabled={!isAvailable || !currentText.trim()}
                 enableToneControl={enableToneControl}
               />
-              <button
-                type="button"
-                onClick={handleExpandedClose}
-                className="px-4 py-2 rounded-full bg-surface-hover text-foreground text-sm font-semibold hover:bg-surface transition-colors"
-              >
-                Done
-              </button>
             </div>
 
             {error && (
-              <div className="px-4 pb-2">
+              <div className="px-4 pb-2 shrink-0">
                 <span className="text-xs text-red-500">{error}</span>
               </div>
             )}
-          </div>
-        </BottomSheet>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop expanded: modal overlay */}
       {!isMobile && showExpanded && (

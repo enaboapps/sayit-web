@@ -90,6 +90,7 @@ jest.mock('framer-motion', () => ({
       return <button {...buttonProps}>{children}</button>;
     },
   },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 const localStorageMock = (() => {
