@@ -36,6 +36,7 @@ export const initializeSettings = mutation({
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),
+    ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
     aiReplySuggestionsEnabled: v.boolean(),
     messageCaptureMode: v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny')),
     typingAreaVisible: v.boolean(),
@@ -104,6 +105,7 @@ export const initializeSettings = mutation({
       ttsVoiceId: args.ttsVoiceId,
       ttsStability: args.ttsStability,
       ttsSimilarityBoost: args.ttsSimilarityBoost,
+      ttsModelPreference: args.ttsModelPreference,
       aiReplySuggestionsEnabled: args.aiReplySuggestionsEnabled,
       messageCaptureMode: args.messageCaptureMode,
       typingAreaVisible: args.typingAreaVisible,
@@ -135,6 +137,7 @@ export const updateSettings = mutation({
     ttsVoiceId: v.optional(v.string()),
     ttsStability: v.optional(v.number()),
     ttsSimilarityBoost: v.optional(v.number()),
+    ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
     aiReplySuggestionsEnabled: v.optional(v.boolean()),
     messageCaptureMode: v.optional(v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny'))),
     typingAreaVisible: v.optional(v.boolean()),
@@ -230,6 +233,7 @@ export const updateSettings = mutation({
     if (updates.ttsVoiceId !== undefined) updateData.ttsVoiceId = updates.ttsVoiceId;
     if (updates.ttsStability !== undefined) updateData.ttsStability = updates.ttsStability;
     if (updates.ttsSimilarityBoost !== undefined) updateData.ttsSimilarityBoost = updates.ttsSimilarityBoost;
+    if (updates.ttsModelPreference !== undefined) updateData.ttsModelPreference = updates.ttsModelPreference;
     if (updates.aiReplySuggestionsEnabled !== undefined) updateData.aiReplySuggestionsEnabled = updates.aiReplySuggestionsEnabled;
     if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
     if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;

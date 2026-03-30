@@ -19,7 +19,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { text, voiceId, stability, similarityBoost, streaming } = body;
+    const { text, voiceId, stability, similarityBoost, streaming, modelId: requestedModelId } = body;
+
+    const ALLOWED_MODELS = ['eleven_flash_v2_5', 'eleven_v3'];
+    const modelId = ALLOWED_MODELS.includes(requestedModelId) ? requestedModelId : 'eleven_flash_v2_5';
 
     if (!text) {
       return NextResponse.json(
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
     if (streaming) {
       const audioStream = await client.textToSpeech.stream(voiceId, {
         text: text,
-        modelId: 'eleven_flash_v2_5',
+        modelId,
         voiceSettings: {
           stability: stability ?? 0.5,
           similarityBoost: similarityBoost ?? 0.5,

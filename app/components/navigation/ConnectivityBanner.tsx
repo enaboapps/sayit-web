@@ -48,7 +48,7 @@ export default function ConnectivityBanner() {
         )}
         <p>
           {isOfflineBanner
-            ? "You're offline. Text communication and browser speech still work."
+            ? 'You\'re offline. Text communication and browser speech still work.'
             : 'Connection restored. Online features are available again.'}
         </p>
       </div>

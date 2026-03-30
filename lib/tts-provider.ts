@@ -165,6 +165,7 @@ export class TTSProvider {
     volume?: number;
     stability?: number;
     similarityBoost?: number;
+    modelId?: string;
   }) {
     // Determine which provider to use based on the selected voice
     let provider = this.activeProvider;
@@ -200,7 +201,8 @@ export class TTSProvider {
       this.elevenlabsTTS.speak(text, {
         voiceId: voiceToUse,
         stability: options?.stability,
-        similarityBoost: options?.similarityBoost
+        similarityBoost: options?.similarityBoost,
+        modelId: options?.modelId,
       });
     } else {
       this.webSpeechTTS.speak(text, {

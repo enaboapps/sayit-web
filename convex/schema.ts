@@ -86,6 +86,7 @@ export default defineSchema({
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),
+    ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
     aiReplySuggestionsEnabled: v.optional(v.boolean()),
     messageCaptureMode: v.optional(
       v.union(

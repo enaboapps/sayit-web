@@ -256,6 +256,75 @@ export default function TTSSettings() {
         )}
       </div>
 
+      {/* Voice Quality Card (ElevenLabs only) */}
+      {settings.ttsProvider === 'elevenlabs' && hasSubscription && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-foreground">Voice Quality</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => updateSetting('ttsModelPreference', 'fast')}
+              className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+                settings.ttsModelPreference === 'fast'
+                  ? 'border-primary-500 bg-primary-900'
+                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
+                  settings.ttsModelPreference === 'fast'
+                    ? 'border-primary-500 bg-primary-500'
+                    : 'border-text-tertiary'
+                }`}>
+                  {settings.ttsModelPreference === 'fast' && (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="block font-medium text-foreground text-sm">Fast</span>
+                  <span className="block text-xs text-text-secondary mt-0.5">Low latency</span>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateSetting('ttsModelPreference', 'high_quality')}
+              className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+                settings.ttsModelPreference === 'high_quality'
+                  ? 'border-primary-500 bg-primary-900'
+                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
+                  settings.ttsModelPreference === 'high_quality'
+                    ? 'border-primary-500 bg-primary-500'
+                    : 'border-text-tertiary'
+                }`}>
+                  {settings.ttsModelPreference === 'high_quality' && (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <span className="block font-medium text-foreground text-sm">High Quality</span>
+                  <span className="block text-xs text-text-secondary mt-0.5">More expressive</span>
+                </div>
+              </div>
+            </button>
+          </div>
+          <p className="text-xs text-text-tertiary px-1">
+            {settings.ttsModelPreference === 'high_quality'
+              ? 'Using ElevenLabs v3 for richer, more expressive speech. Latency will be higher.'
+              : 'Using ElevenLabs Flash for fastest response time.'}
+          </p>
+        </div>
+      )}
+
       {/* Voice Settings Card */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice Settings</h3>
