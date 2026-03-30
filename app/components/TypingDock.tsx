@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-  SpeakerWaveIcon,
   SparklesIcon,
   XMarkIcon,
   ArrowPathIcon,
@@ -11,7 +10,6 @@ import {
   ArrowsPointingOutIcon,
   ArrowsPointingInIcon,
   MinusIcon,
-  StopIcon,
 } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,10 +18,10 @@ import { useDoubleEnter } from '@/lib/hooks/useDoubleEnter';
 import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import { useLongPress } from '@/lib/hooks/useLongPress';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import ReplySuggestions from './typing/ReplySuggestions';
-import ToneSheet, { applyToneTag } from './typing/ToneSheet';
+import SpeakButton from './typing/SpeakButton';
+import { applyToneTag } from './typing/ToneSheet';
 import type { TonePreset } from './typing/ToneSheet';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
@@ -77,7 +75,6 @@ export default function TypingDock({
   const [error, setError] = useState<string | null>(null);
   const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
   const [showTabList, setShowTabList] = useState(false);
-  const [showToneSheet, setShowToneSheet] = useState(false);
   const { top: viewportTop, height: viewportHeight } = useVisualViewport();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -261,17 +258,6 @@ export default function TypingDock({
     if (!currentText.trim()) return;
     onSpeakWithTone?.(applyToneTag(tone, currentText));
   }, [currentText, onSpeakWithTone]);
-
-  const speakLongPress = useLongPress({
-    delay: 500,
-    onPress: isSpeaking ? onStop : () => onSpeak('speak'),
-    onLongPress: () => {
-      if (currentText.trim() && !isSpeaking) {
-        setShowToneSheet(true);
-      }
-    },
-    enabled: enableToneControl && !isSpeaking,
-  });
 
   const showDoubleEnterHint = settings.doubleEnterEnabled && isPending;
   const doubleEnterActionLabel: Record<EnterKeyBehavior, string> = {
@@ -646,29 +632,15 @@ export default function TypingDock({
               <div className="flex-1" />
 
               {/* Speak/Stop button - primary CTA */}
-              <motion.button
-                {...(enableToneControl ? speakLongPress : { onClick: isSpeaking ? onStop : () => onSpeak('speak') })}
-                disabled={!isAvailable || (!isSpeaking && !currentText.trim())}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
-                  isSpeaking
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-                    : 'bg-primary-500 hover:bg-primary-600 text-white'
-                }`}
-                whileTap={{ scale: 0.95 }}
-                aria-label={isSpeaking ? 'Stop' : enableToneControl ? 'Speak (hold for tone)' : 'Speak'}
-              >
-                {isSpeaking ? (
-                  <>
-                    <StopIcon className="w-5 h-5" />
-                    <span>Stop</span>
-                  </>
-                ) : (
-                  <>
-                    <SpeakerWaveIcon className="w-5 h-5" />
-                    <span>Speak</span>
-                  </>
-                )}
-              </motion.button>
+              <SpeakButton
+                variant="dock"
+                onSpeak={() => onSpeak('speak')}
+                onStop={onStop}
+                onSelectTone={handleToneSelected}
+                isSpeaking={isSpeaking}
+                disabled={!isAvailable || !currentText.trim()}
+                enableToneControl={enableToneControl}
+              />
             </div>
           </motion.div>
         </div>
@@ -728,15 +700,6 @@ export default function TypingDock({
         />
       )}
 
-      {/* Tone Control Sheet */}
-      {enableToneControl && (
-        <ToneSheet
-          isOpen={showToneSheet}
-          onClose={() => setShowToneSheet(false)}
-          onSelectTone={handleToneSelected}
-          onSpeakWithoutTone={() => onSpeak('speak')}
-        />
-      )}
     </>
   );
 }
