@@ -12,7 +12,7 @@ import { useUndoClear } from '@/lib/hooks/useUndoClear';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { useLongPress } from '@/lib/hooks/useLongPress';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
-import ToneSheet from './typing/ToneSheet';
+import ToneSheet, { applyToneTag } from './typing/ToneSheet';
 import type { TonePreset } from './typing/ToneSheet';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import TabBar from './typing-tabs/TabBar';
@@ -269,7 +269,7 @@ export default function TypingArea({
 
   const handleSpeakWithTone = useCallback((tone: TonePreset) => {
     if (!text.trim()) return;
-    const taggedText = `${tone.tag} ${text}`;
+    const taggedText = applyToneTag(tone, text);
     speak(taggedText);
     onMessageCompleted?.({
       text,

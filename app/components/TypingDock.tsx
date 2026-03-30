@@ -23,7 +23,7 @@ import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { useLongPress } from '@/lib/hooks/useLongPress';
 import { useTypingTabs } from './typing-tabs/useTypingTabs';
 import ReplySuggestions from './typing/ReplySuggestions';
-import ToneSheet from './typing/ToneSheet';
+import ToneSheet, { applyToneTag } from './typing/ToneSheet';
 import type { TonePreset } from './typing/ToneSheet';
 import SubscriptionWrapper from './SubscriptionWrapper';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
@@ -259,7 +259,7 @@ export default function TypingDock({
 
   const handleToneSelected = useCallback((tone: TonePreset) => {
     if (!currentText.trim()) return;
-    onSpeakWithTone?.(`${tone.tag} ${currentText}`);
+    onSpeakWithTone?.(applyToneTag(tone, currentText));
   }, [currentText, onSpeakWithTone]);
 
   const speakLongPress = useLongPress({

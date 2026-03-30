@@ -10,7 +10,17 @@ export interface TonePreset {
   id: string;
   label: string;
   tag: string;
+  /** Where to place the tag relative to the text (default 'before') */
+  position?: 'before' | 'after';
   description: string;
+}
+
+/** Apply a tone preset tag to text, respecting the tag position. */
+export function applyToneTag(tone: TonePreset, text: string): string {
+  if (tone.position === 'after') {
+    return `${text} ${tone.tag}`;
+  }
+  return `${tone.tag} ${text}`;
 }
 
 export const TONE_PRESETS: TonePreset[] = [
@@ -20,6 +30,8 @@ export const TONE_PRESETS: TonePreset[] = [
   { id: 'sad', label: 'Sad', tag: '[sadly]', description: 'Somber and low' },
   { id: 'angry', label: 'Angry', tag: '[angrily]', description: 'Forceful and intense' },
   { id: 'cheerful', label: 'Cheerful', tag: '[cheerfully]', description: 'Bright and happy' },
+  { id: 'sigh-before', label: 'Sigh (before)', tag: '[sighs]', position: 'before', description: 'Sigh, then speak' },
+  { id: 'sigh-after', label: 'Sigh (after)', tag: '[sighs]', position: 'after', description: 'Speak, then sigh' },
 ];
 
 interface ToneSheetProps {
@@ -76,7 +88,7 @@ export default function ToneSheet({ isOpen, onClose, onSelectTone, onSpeakWithou
         isOpen={isOpen}
         onClose={onClose}
         title="How should this sound?"
-        snapPoints={[45]}
+        snapPoints={[55]}
         showHandle={true}
         showCloseButton={true}
       >
