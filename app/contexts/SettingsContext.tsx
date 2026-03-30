@@ -10,6 +10,7 @@ type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 type TypingDockMode = 'expanded' | 'fullscreen' | 'minimized';
 type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly' | 'speakAny';
+type TTSModelPreference = 'fast' | 'high_quality';
 
 const DOUBLE_ENTER_TIMEOUT_MIN_MS = 1000;
 const DOUBLE_ENTER_TIMEOUT_MAX_MS = 10000;
@@ -28,6 +29,7 @@ interface Settings {
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
+  ttsModelPreference: TTSModelPreference;
   aiReplySuggestionsEnabled: boolean;
   messageCaptureMode: MessageCaptureMode;
 }
@@ -66,6 +68,7 @@ const defaultSettings: Settings = {
   ttsVoiceId: '',
   ttsStability: 0.5,
   ttsSimilarityBoost: 0.5,
+  ttsModelPreference: 'fast',
   aiReplySuggestionsEnabled: true,
   messageCaptureMode: 'speakOnly',
 };
@@ -189,6 +192,7 @@ function saveToLocalStorage(allSettings: AllSettings) {
     ttsVoiceId: allSettings.ttsVoiceId,
     ttsStability: allSettings.ttsStability,
     ttsSimilarityBoost: allSettings.ttsSimilarityBoost,
+    ttsModelPreference: allSettings.ttsModelPreference,
     aiReplySuggestionsEnabled: allSettings.aiReplySuggestionsEnabled,
     messageCaptureMode: allSettings.messageCaptureMode,
   };
@@ -264,6 +268,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         ttsVoiceId: localSettings.ttsVoiceId,
         ttsStability: localSettings.ttsStability,
         ttsSimilarityBoost: localSettings.ttsSimilarityBoost,
+        ttsModelPreference: localSettings.ttsModelPreference,
         aiReplySuggestionsEnabled: localSettings.aiReplySuggestionsEnabled,
         messageCaptureMode: localSettings.messageCaptureMode,
         typingAreaVisible: localSettings.typingAreaVisible,
@@ -299,6 +304,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         ttsVoiceId: convexSettings.ttsVoiceId,
         ttsStability: convexSettings.ttsStability,
         ttsSimilarityBoost: convexSettings.ttsSimilarityBoost,
+        ttsModelPreference: (convexSettings.ttsModelPreference as TTSModelPreference) ?? defaultSettings.ttsModelPreference,
         aiReplySuggestionsEnabled: convexSettings.aiReplySuggestionsEnabled ?? defaultSettings.aiReplySuggestionsEnabled,
         messageCaptureMode: convexSettings.messageCaptureMode ?? defaultSettings.messageCaptureMode,
         typingAreaVisible: convexSettings.typingAreaVisible,
@@ -396,6 +402,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     ttsVoiceId: allSettings.ttsVoiceId,
     ttsStability: allSettings.ttsStability,
     ttsSimilarityBoost: allSettings.ttsSimilarityBoost,
+    ttsModelPreference: allSettings.ttsModelPreference,
     aiReplySuggestionsEnabled: allSettings.aiReplySuggestionsEnabled,
     messageCaptureMode: allSettings.messageCaptureMode,
   };

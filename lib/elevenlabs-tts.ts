@@ -184,6 +184,7 @@ export class ElevenLabsTTS {
     stability?: number;
     similarityBoost?: number;
     streaming?: boolean;
+    modelId?: string;
   }) {
     if (!this.isAvailableFlag) {
       if (!this.voicesLoaded) {
@@ -241,7 +242,7 @@ export class ElevenLabsTTS {
         return;
       }
 
-      // Call our Next.js API route with Flash v2.5 model
+      // Call our Next.js API route
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: {
@@ -253,6 +254,7 @@ export class ElevenLabsTTS {
           stability: stability,
           similarityBoost: similarityBoost,
           streaming: useStreaming,
+          modelId: options?.modelId,
         }),
         signal: this.abortController.signal,
       });

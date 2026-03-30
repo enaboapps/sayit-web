@@ -85,6 +85,7 @@ export function useTTS() {
     volume?: number;
     stability?: number;
     similarityBoost?: number;
+    modelId?: string;
   }) => {
     if (!ttsRef.current || !isAvailable) {
       console.warn('TTS is not available');
@@ -93,13 +94,18 @@ export function useTTS() {
 
     // Merge settings with custom options, with custom options taking precedence
     const currentSettings = settingsRef.current;
+    const modelId = currentSettings.ttsModelPreference === 'high_quality'
+      ? 'eleven_v3'
+      : 'eleven_flash_v2_5';
+
     const options = {
       voiceId: customOptions?.voiceId || currentSettings.ttsVoiceId,
       rate: customOptions?.rate || currentSettings.speechRate,
       pitch: customOptions?.pitch || currentSettings.speechPitch,
       volume: customOptions?.volume || currentSettings.speechVolume,
       stability: customOptions?.stability || currentSettings.ttsStability,
-      similarityBoost: customOptions?.similarityBoost || currentSettings.ttsSimilarityBoost
+      similarityBoost: customOptions?.similarityBoost || currentSettings.ttsSimilarityBoost,
+      modelId: customOptions?.modelId || modelId,
     };
 
     // Check if current provider is ElevenLabs or the voice is an ElevenLabs voice
