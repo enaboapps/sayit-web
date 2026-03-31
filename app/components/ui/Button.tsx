@@ -12,9 +12,9 @@ const buttonVariants = cva(
         default:
           'bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700',
         destructive:
-          'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700',
+          'bg-error text-white hover:bg-error-hover',
         outline:
-          'border border-border bg-surface text-foreground hover:bg-surface-hover hover:border-primary-700',
+          'border border-primary-800 bg-surface text-foreground hover:bg-surface-hover hover:border-primary-600',
         secondary:
           'bg-surface-hover text-foreground hover:bg-primary-950 hover:text-primary-500',
         ghost: 'hover:bg-surface-hover text-foreground hover:text-primary-500',
