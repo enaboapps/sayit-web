@@ -59,7 +59,7 @@ export default function Tab({ tab, isActive, onSelect, onClose, onRename }: TabP
         whitespace-nowrap transition-all duration-200 group
         ${
     isActive
-      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+      ? 'bg-primary-500 text-white shadow-lg'
       : 'bg-surface hover:bg-surface-hover text-text-secondary hover:text-foreground opacity-50 hover:opacity-100'
     }
       `}

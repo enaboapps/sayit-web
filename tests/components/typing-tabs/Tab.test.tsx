@@ -52,8 +52,7 @@ describe('Tab', () => {
       );
 
       const tabElement = container.firstChild as HTMLElement;
-      expect(tabElement.className).toContain('from-primary-500');
-      expect(tabElement.className).toContain('to-primary-600');
+      expect(tabElement.className).toContain('bg-primary-500');
       expect(tabElement.className).toContain('text-white');
       expect(tabElement.className).toContain('shadow-lg');
     });

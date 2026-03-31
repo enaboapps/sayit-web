@@ -147,7 +147,7 @@ function SidebarItem({ href, icon, title, isActive, isExpanded }: SidebarItemPro
         isExpanded ? 'justify-start gap-3 px-3' : 'justify-center hover:scale-110'
       } ${
         isActive
-          ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg'
+          ? 'bg-primary-500 text-white shadow-lg'
           : 'bg-surface-hover text-text-secondary hover:bg-primary-950 hover:text-primary-500'
       }`}
       data-tooltip-id={!isExpanded ? `sidebar-tooltip-${title}` : undefined}
