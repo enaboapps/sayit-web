@@ -75,6 +75,7 @@ export default function Composer({
   const prevActiveTabIdRef = useRef<string | null>(null);
   const hasProcessedInitialTextRef = useRef(false);
   const hasInitializedActiveTabRef = useRef(false);
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { settings } = useSettings();
   const { user } = useAuth();
@@ -231,6 +232,16 @@ export default function Composer({
     onSpeakWithTone?.(applyToneTag(tone, currentText));
   }, [currentText, onSpeakWithTone]);
 
+  // Auto-dismiss errors after 4 s; also dismiss when user starts typing
+  useEffect(() => {
+    if (!error) return;
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = setTimeout(() => setError(null), 4000);
+    return () => {
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, [error]);
+
   // Update shared session content when text changes
   useEffect(() => {
     if (enableLiveTyping && isSharing) updateContent(currentText);
@@ -295,6 +306,7 @@ export default function Composer({
 
   const handleTextChange = (value: string) => {
     if (canUndo && value.trim().length > 0) resetUndo();
+    if (error) setError(null);
     if (enableTabs) updateActiveTabText(value);
     onChange(value);
   };
