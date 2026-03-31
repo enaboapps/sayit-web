@@ -126,7 +126,7 @@ export function Dropdown<T = string>({
                           className={cn(
                             'w-full cursor-default select-none relative py-3 pl-6 pr-10 rounded-2xl transition-all duration-200 text-left',
                             isSelected
-                              ? 'text-white bg-gradient-to-r from-primary-500 to-primary-600'
+                              ? 'text-white bg-primary-500'
                               : 'text-foreground hover:bg-surface-hover',
                             option.disabled && 'opacity-50 cursor-not-allowed text-text-tertiary'
                           )}

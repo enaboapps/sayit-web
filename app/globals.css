@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  /* Accessible dark theme colors */
-  --background: #1a1a1a;
-  --foreground: #f5f5f5;
-  --surface: #242424;
-  --surface-hover: #2e2e2e;
-  --border: #3a3a3a;
+  /* Accessible dark theme colors — v3: calm + warm */
+  --background: #1a1917;
+  --foreground: #f5f4f2;
+  --surface: #232220;
+  --surface-hover: #2d2b29;
+  --border: #3a3835;
 
   /* Mobile bottom stack height (nav + dock + safe area) */
   --bottom-stack-height: calc(108px + env(safe-area-inset-bottom, 0px));
 
   /* Text colors with WCAG AAA compliance */
-  --text-primary: #f5f5f5;
-  --text-secondary: #b8b8b8;
-  --text-tertiary: #8a8a8a;
+  --text-primary: #f5f4f2;
+  --text-secondary: #b8b5b0;
+  --text-tertiary: #8a8782;
 
   /* Background gradients */
-  --background-gradient-1: #1a1a1a;
-  --background-gradient-2: #242424;
-  --background-gradient-3: #2e2e2e;
-  --background-gradient-4: #1a1a1a;
+  --background-gradient-1: #1a1917;
+  --background-gradient-2: #232220;
+  --background-gradient-3: #2d2b29;
+  --background-gradient-4: #1a1917;
 }
 
 @theme inline {
@@ -165,7 +165,7 @@ body {
 
 /* Focus visible styles for better keyboard navigation */
 :focus-visible {
-  outline: 2px solid var(--color-primary-500, #3b82f6);
+  outline: 2px solid var(--color-primary-500, #14b8a6);
   outline-offset: 2px;
 }
 
