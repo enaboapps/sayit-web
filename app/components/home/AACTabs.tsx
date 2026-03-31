@@ -17,7 +17,7 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
     <div className="flex flex-col flex-1 min-h-0">
       {/* Segmented control */}
       <div className="flex justify-center px-4 py-2.5 shrink-0">
-        <div className="relative flex bg-surface-hover rounded-2xl p-1 w-full max-w-xs">
+        <div role="tablist" aria-label="AAC interface" className="relative flex bg-surface-hover rounded-2xl p-1 w-full max-w-xs">
           {/* Animated background pill */}
           <motion.div
             className="absolute top-1 bottom-1 rounded-xl bg-primary-500 shadow-md"
@@ -31,6 +31,9 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'phrases'}
+            aria-controls="aac-tab-phrases"
             onClick={() => setActiveTab('phrases')}
             className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200"
           >
@@ -42,6 +45,9 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'type'}
+            aria-controls="aac-tab-type"
             onClick={() => setActiveTab('type')}
             className="relative z-10 flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors duration-200"
           >
@@ -58,6 +64,8 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeTab}
+            id={`aac-tab-${activeTab}`}
+            role="tabpanel"
             className="absolute inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
