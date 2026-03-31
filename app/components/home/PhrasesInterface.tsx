@@ -403,7 +403,6 @@ export default function PhrasesInterface() {
         onBoardChange={handleBoardIndexChange}
         onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
         onAddBoard={isOnline ? handleAddBoard : undefined}
-        onAddPhrase={isOnline ? handleAddPhrase : undefined}
         onEdit={handleEdit}
         isEditMode={isEditMode}
         canEditBoard={canEditCurrentBoard}
@@ -426,7 +425,6 @@ export default function PhrasesInterface() {
             router.push(`/phrases/boards/edit/${boardId}`);
           }}
           onAddBoard={isOnline ? handleAddBoard : undefined}
-          onAddPhrase={isOnline ? handleAddPhrase : undefined}
           onEdit={handleEdit}
           embedded={true}
         />
