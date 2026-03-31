@@ -186,19 +186,7 @@ export class ElevenLabsTTS {
     streaming?: boolean;
     modelId?: string;
   }) {
-    if (!this.isAvailableFlag) {
-      if (!this.voicesLoaded) {
-        await this.loadVoices();
-      }
-
-      if (!this.isAvailableFlag) {
-        console.warn('ElevenLabs is not available, falling back to browser TTS');
-        this.fallbackTTS.speak(text);
-        return;
-      }
-    }
-
-    // Stop any ongoing speech and API requests
+    // Stop any ongoing speech and API requests first
     this.stop();
 
     // Increment session ID - all async operations will check against this
@@ -215,6 +203,61 @@ export class ElevenLabsTTS {
     // Create a new abort controller for this request
     this.abortController = new AbortController();
 
+    const useStreaming = options?.streaming ?? true;
+    const canStream = typeof window !== 'undefined' &&
+      'MediaSource' in window &&
+      MediaSource.isTypeSupported('audio/mpeg');
+
+    // Create audio infrastructure synchronously BEFORE any await, while the
+    // user gesture is still active. Chrome's autoplay policy expires the
+    // transient activation after ~1s. By calling play() here (before any fetch
+    // or voice-loading await), we register audio activation even if voices
+    // haven't been loaded yet on the first call.
+    let pendingMediaSource: MediaSource | null = null;
+    let pendingUrl: string | null = null;
+    if (useStreaming && canStream) {
+      pendingMediaSource = new MediaSource();
+      pendingUrl = URL.createObjectURL(pendingMediaSource);
+      this.audio = new Audio(pendingUrl);
+      this.audio.play().catch(() => {
+        // Expected — no source buffer yet. The important thing is play() was
+        // called in gesture context to register audio activation.
+      });
+    }
+
+    const discardPendingAudio = () => {
+      if (this.audio && pendingMediaSource) {
+        this.audio.pause();
+        this.audio.src = '';
+        this.audio = null;
+      }
+      if (pendingUrl) {
+        URL.revokeObjectURL(pendingUrl);
+        pendingUrl = null;
+      }
+    };
+
+    // Load voices if needed — safe to await here because play() was already called
+    if (!this.isAvailableFlag) {
+      if (!this.voicesLoaded) {
+        await this.loadVoices();
+      }
+
+      // Session may have been cancelled while loading voices
+      if (!isSessionActive()) {
+        discardPendingAudio();
+        this.isSpeaking = false;
+        return;
+      }
+
+      if (!this.isAvailableFlag) {
+        discardPendingAudio();
+        console.warn('ElevenLabs is not available, falling back to browser TTS');
+        this.fallbackTTS.speak(text);
+        return;
+      }
+    }
+
     // Voice ID handling
     let voiceId = options?.voiceId;
 
@@ -230,7 +273,6 @@ export class ElevenLabsTTS {
 
     const stability = options?.stability ?? 0.5;
     const similarityBoost = options?.similarityBoost ?? 0.5;
-    const useStreaming = options?.streaming ?? true;
 
     try {
       this.callbacks.onStart?.();
@@ -269,11 +311,13 @@ export class ElevenLabsTTS {
         throw new Error(`API request failed: ${response.statusText}`);
       }
 
-      if (useStreaming && response.body) {
-        // Streaming playback using MediaSource API
-        await this.playStreamingAudio(response.body, isSessionActive);
+      if (useStreaming && response.body && pendingMediaSource) {
+        // Streaming playback — pass the pre-created MediaSource (audio element
+        // and play() were already set up synchronously above)
+        await this.playStreamingAudio(response.body, isSessionActive, pendingMediaSource);
       } else {
-        // Non-streaming fallback
+        // Non-streaming fallback — discard the pre-created audio if any
+        discardPendingAudio();
         await this.playBufferedAudio(response, isSessionActive);
       }
     } catch (error) {
@@ -316,7 +360,7 @@ export class ElevenLabsTTS {
    * @param body - ReadableStream from fetch response
    * @param isSessionActive - Callback that returns false if session was cancelled
    */
-  private async playStreamingAudio(body: ReadableStream<Uint8Array>, isSessionActive: () => boolean) {
+  private async playStreamingAudio(body: ReadableStream<Uint8Array>, isSessionActive: () => boolean, preCreatedMediaSource?: MediaSource) {
     // Fallback for browsers without MediaSource support
     if (!('MediaSource' in window) || !MediaSource.isTypeSupported('audio/mpeg')) {
       // Collect all chunks and play as blob
@@ -350,11 +394,15 @@ export class ElevenLabsTTS {
         URL.revokeObjectURL(audioUrl);
       };
 
-      this.audio.onerror = (event) => {
+      this.audio.onerror = () => {
         if (!isSessionActive()) return;
         this.isSpeaking = false;
         this.activeReader = null;
-        this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+        const mediaError = this.audio?.error;
+        const message = mediaError
+          ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
+          : 'Audio playback error';
+        this.callbacks.onError?.(new Error(message));
         URL.revokeObjectURL(audioUrl);
       };
 
@@ -362,16 +410,22 @@ export class ElevenLabsTTS {
       return;
     }
 
-    // Use MediaSource for streaming playback
-    const mediaSource = new MediaSource();
-    const audioUrl = URL.createObjectURL(mediaSource);
-    this.audio = new Audio(audioUrl);
+    // Use pre-created MediaSource (play() already called in speak() under user gesture),
+    // or create a new one if none was provided.
+    const mediaSource = preCreatedMediaSource ?? new MediaSource();
+    if (!preCreatedMediaSource) {
+      const audioUrl = URL.createObjectURL(mediaSource);
+      this.audio = new Audio(audioUrl);
+    }
+    const audio = this.audio!;
+    const audioUrl = audio.src;
 
     const reader = body.getReader();
     this.activeReader = reader;
     let sourceBuffer: SourceBuffer | null = null;
     const pendingChunks: Uint8Array[] = [];
     let isAppending = false;
+    let totalBytesAppended = 0;
 
     const appendNextChunk = () => {
       // Don't append if session is no longer active
@@ -392,13 +446,14 @@ export class ElevenLabsTTS {
       try {
         const buffer = chunk.slice().buffer;
         sourceBuffer.appendBuffer(buffer);
+        totalBytesAppended += chunk.byteLength;
       } catch {
         // Silently ignore errors - expected when session ends
         isAppending = false;
       }
     };
 
-    mediaSource.addEventListener('sourceopen', async () => {
+    const onSourceOpen = async () => {
       if (!isSessionActive()) return;
 
       try {
@@ -419,11 +474,16 @@ export class ElevenLabsTTS {
               const { done, value } = await reader.read();
 
               if (done) {
-                // Wait for all pending chunks to be appended
+                // Wait for all pending chunks to be appended, then signal end
                 const waitForBuffers = () => {
                   if (!isSessionActive()) return;
                   if (pendingChunks.length === 0 && !isAppending && sourceBuffer && !sourceBuffer.updating) {
-                    if (mediaSource.readyState === 'open') {
+                    if (mediaSource.readyState === 'open' && totalBytesAppended > 0) {
+                      // Wait until HAVE_METADATA so endOfStream doesn't cause a demuxer error
+                      if (this.audio && this.audio.readyState < 1) {
+                        setTimeout(waitForBuffers, 50);
+                        return;
+                      }
                       try {
                         mediaSource.endOfStream();
                       } catch {
@@ -451,23 +511,21 @@ export class ElevenLabsTTS {
 
         readStream();
 
-        // Start playback
-        if (isSessionActive() && this.audio) {
-          this.audio.play().catch(e => {
-            if (isSessionActive()) {
-              console.error('Error starting playback:', e);
-            }
-          });
-        }
-
       } catch (e) {
         if (!isSessionActive()) return;
         console.error('Error setting up MediaSource:', e);
         this.callbacks.onError?.(e instanceof Error ? e : new Error(String(e)));
       }
-    });
+    };
 
-    this.audio.onended = () => {
+    // sourceopen may have already fired if play() was called before this method
+    if (mediaSource.readyState === 'open') {
+      onSourceOpen();
+    } else {
+      mediaSource.addEventListener('sourceopen', onSourceOpen, { once: true });
+    }
+
+    audio.onended = () => {
       if (!isSessionActive()) return;
       this.isSpeaking = false;
       this.activeReader = null;
@@ -475,10 +533,15 @@ export class ElevenLabsTTS {
       URL.revokeObjectURL(audioUrl);
     };
 
-    this.audio.onerror = (event) => {
+    audio.onerror = () => {
+      if (!isSessionActive()) return;
       this.isSpeaking = false;
       this.activeReader = null;
-      this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+      const mediaError = audio.error;
+      const message = mediaError
+        ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
+        : 'Audio playback error';
+      this.callbacks.onError?.(new Error(message));
       URL.revokeObjectURL(audioUrl);
     };
   }
@@ -507,10 +570,14 @@ export class ElevenLabsTTS {
       }
     };
 
-    this.audio.onerror = (event) => {
+    this.audio.onerror = () => {
       if (!isSessionActive()) return;
       this.isSpeaking = false;
-      this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+      const mediaError = this.audio?.error;
+      const message = mediaError
+        ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
+        : 'Audio playback error';
+      this.callbacks.onError?.(new Error(message));
       if (this.audio) {
         URL.revokeObjectURL(this.audio.src);
       }

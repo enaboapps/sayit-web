@@ -39,6 +39,13 @@ export default function PhrasesInterface() {
   const shouldLoadBoards = !authLoading && !!user;
   const showAuthPrompt = !authLoading && !user;
 
+  // Pre-load ElevenLabs voices on mount so isAvailableFlag is true before first tap
+  useEffect(() => {
+    if (tts.hasSubscription && settings.ttsProvider === 'elevenlabs') {
+      tts.loadElevenLabsVoices();
+    }
+  }, [tts.hasSubscription, settings.ttsProvider, tts.loadElevenLabsVoices]);
+
   // Fetch all boards from Convex
   const boards = useQuery(
     api.phraseBoards.getPhraseBoards,
