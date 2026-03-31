@@ -18,13 +18,13 @@ export default function HomeFeatures() {
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
         {/* App Icon */}
-        <div className="mb-6">
+        <div className="mb-6 rounded-2xl ring-1 ring-white/10 shadow-xl">
           <Image
             src="/icons/app-icon.png"
             alt="SayIt! App Icon"
             width={96}
             height={96}
-            className="rounded-2xl shadow-lg"
+            className="rounded-2xl"
             priority
           />
         </div>
