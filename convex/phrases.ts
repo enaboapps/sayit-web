@@ -39,7 +39,6 @@ export const getPhrase = query({
 export const addPhrase = mutation({
   args: {
     text: v.string(),
-    frequency: v.number(),
     position: v.number(),
   },
   handler: async (ctx, args) => {
@@ -51,7 +50,6 @@ export const addPhrase = mutation({
     const phraseId = await ctx.db.insert('phrases', {
       userId: identity.subject,
       text: args.text,
-      frequency: args.frequency,
       position: args.position,
     });
 
@@ -64,7 +62,6 @@ export const updatePhrase = mutation({
   args: {
     id: v.id('phrases'),
     text: v.optional(v.string()),
-    frequency: v.optional(v.number()),
     position: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
