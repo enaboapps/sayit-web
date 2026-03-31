@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sayit-shell-v1';
+const CACHE_NAME = 'sayit-shell-v__SW_CACHE_VERSION__';
 const OFFLINE_URL = '/offline';
 const APP_SHELL = [
   '/',
