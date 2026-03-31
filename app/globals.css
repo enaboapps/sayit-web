@@ -23,9 +23,49 @@
   --background-gradient-4: #1a1917;
 }
 
+/* Fixed color tokens */
+@theme {
+  /* v3 primary: deep teal */
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
+  --color-primary-950: #042f2e;
+
+  /* Status */
+  --color-success: #10b981;
+  --color-success-hover: #059669;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-error: #ef4444;
+  --color-error-hover: #dc2626;
+
+  /* Solid status backgrounds */
+  --color-status-error: #2a1215;
+  --color-status-warning: #2a1f0a;
+  --color-status-success: #0a2a1a;
+  --color-status-info: #0a1a2a;
+  --color-status-purple: #1a0a2a;
+
+  --color-overlay: #0a0a0a;
+}
+
+/* Semantic tokens — reference CSS variables so they update with theme changes */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
