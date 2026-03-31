@@ -7,7 +7,6 @@ interface PhraseTileProps {
   phrase: {
     id?: string;
     text: string;
-    frequency?: number;
   };
   onPress: () => void;
   onEdit?: () => void;

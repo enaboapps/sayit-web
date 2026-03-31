@@ -137,7 +137,6 @@ export default function PhrasesInterface() {
       // Create the phrase
       const phraseId = await addPhrase({
         text: typingText,
-        frequency: 0,
         position,
       });
 
@@ -179,7 +178,6 @@ export default function PhrasesInterface() {
       .map((phrase: any) => ({
         id: String(phrase._id),
         text: phrase.text,
-        frequency: phrase.frequency,
       })) || [];
 
   // Transform boards to match the expected format (PhraseBoard type)

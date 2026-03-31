@@ -55,7 +55,6 @@ function AddPhraseForm() {
       // Create the phrase
       const phraseId = await addPhrase({
         text,
-        frequency: 0,
         position: 0, // Will be adjusted by backend based on board
       });
 
