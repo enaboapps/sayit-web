@@ -40,11 +40,12 @@ export default function PhrasesInterface() {
   const showAuthPrompt = !authLoading && !user;
 
   // Pre-load ElevenLabs voices on mount so isAvailableFlag is true before first tap
+  const { hasSubscription, loadElevenLabsVoices } = tts;
   useEffect(() => {
-    if (tts.hasSubscription && settings.ttsProvider === 'elevenlabs') {
-      tts.loadElevenLabsVoices();
+    if (hasSubscription && settings.ttsProvider === 'elevenlabs') {
+      loadElevenLabsVoices();
     }
-  }, [tts.hasSubscription, settings.ttsProvider, tts.loadElevenLabsVoices]);
+  }, [hasSubscription, settings.ttsProvider, loadElevenLabsVoices]);
 
   // Fetch all boards from Convex
   const boards = useQuery(

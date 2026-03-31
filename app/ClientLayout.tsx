@@ -42,7 +42,7 @@ export default function ClientLayout({
         router.replace(lastPath);
       }
     }
-  }, [pathname]);
+  }, [pathname, router]);
 
   return (
     <ClerkProvider>
