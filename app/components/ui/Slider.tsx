@@ -33,8 +33,8 @@ export function Slider({
   disabled = false,
   error,
   showTicks = false,
-  trackColor = 'bg-black',
-  thumbColor = 'bg-black'
+  trackColor = 'bg-primary-500',
+  thumbColor = 'bg-primary-500'
 }: SliderProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
