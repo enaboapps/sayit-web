@@ -8,7 +8,7 @@ import BoardGridPopup from '../phrases/BoardGridPopup';
 import Composer from '../Composer';
 import AACTabs from './AACTabs';
 import { useTTS } from '@/lib/hooks/useTTS';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
@@ -28,8 +28,8 @@ export default function PhrasesInterface() {
   const { isOnline } = useOnlineStatus();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_captureError, setCaptureError] = useState(false);
+  const [captureError, setCaptureError] = useState(false);
+  const captureErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
   const { messages: localRecentMessages, recordMessage: recordLocalMessage } = useLocalMessageHistory();
   const selectedBoardId = uiPreferences.selectedBoardId;
@@ -62,6 +62,16 @@ export default function PhrasesInterface() {
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
   const showOfflineBoardsState = !isOnline && shouldLoadBoards && boards === undefined;
+
+  // Auto-dismiss capture error after 4 s
+  useEffect(() => {
+    if (!captureError) return;
+    if (captureErrorTimerRef.current) clearTimeout(captureErrorTimerRef.current);
+    captureErrorTimerRef.current = setTimeout(() => setCaptureError(false), 4000);
+    return () => {
+      if (captureErrorTimerRef.current) clearTimeout(captureErrorTimerRef.current);
+    };
+  }, [captureError]);
 
   // Auto-select first board on load or use saved board
   useEffect(() => {
@@ -432,6 +442,15 @@ export default function PhrasesInterface() {
   return (
     <>
       <ConnectionRequestsBanner />
+      {captureError && (
+        <div
+          className="sticky top-0 z-40 border-b border-red-900 bg-surface px-4 py-3 text-sm text-red-300"
+          role="status"
+          aria-live="polite"
+        >
+          Couldn&apos;t save message to history. It will be retried next time.
+        </div>
+      )}
       <AACTabs
         phrasesContent={phrasesContent}
         typeContent={composer}
