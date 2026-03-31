@@ -45,7 +45,7 @@ export default function SpeakButton({
   if (enableToneControl) {
     return (
       <>
-        <div className={`flex items-center rounded-2xl shadow-lg overflow-hidden ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <div className={`flex rounded-2xl shadow-lg overflow-hidden ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <motion.button
             onClick={onSpeak}
             disabled={disabled}
@@ -56,7 +56,7 @@ export default function SpeakButton({
             <SpeakerWaveIcon className="w-5 h-5" />
             <span>Speak</span>
           </motion.button>
-          <div className="w-px h-6 bg-white/20 shrink-0" />
+          <div className="w-px self-stretch bg-white/20 shrink-0" />
           <motion.button
             onClick={() => setShowToneSheet(true)}
             disabled={disabled}
