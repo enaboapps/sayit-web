@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
@@ -19,6 +19,7 @@ export default function ClientLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Initialize Convex client - memoize to avoid recreating on each render
   const convex = useMemo(
@@ -38,7 +39,7 @@ export default function ClientLayout({
     if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
       const lastPath = localStorage.getItem('pwa_last_path');
       if (lastPath && lastPath !== pathname && lastPath !== '/') {
-        window.location.href = lastPath;
+        router.replace(lastPath);
       }
     }
   }, [pathname]);
