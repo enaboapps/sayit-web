@@ -312,7 +312,7 @@ export default function Composer({
               onTabClose={closeTab}
               onTabCreate={createTab}
               onTabRename={renameTab}
-              onManage={() => setShowTabManagement(true)}
+              onManage={() => isMobile ? setShowTabList(true) : setShowTabManagement(true)}
             />
           </div>
         )}
