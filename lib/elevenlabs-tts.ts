@@ -186,19 +186,7 @@ export class ElevenLabsTTS {
     streaming?: boolean;
     modelId?: string;
   }) {
-    if (!this.isAvailableFlag) {
-      if (!this.voicesLoaded) {
-        await this.loadVoices();
-      }
-
-      if (!this.isAvailableFlag) {
-        console.warn('ElevenLabs is not available, falling back to browser TTS');
-        this.fallbackTTS.speak(text);
-        return;
-      }
-    }
-
-    // Stop any ongoing speech and API requests
+    // Stop any ongoing speech and API requests first
     this.stop();
 
     // Increment session ID - all async operations will check against this
@@ -215,6 +203,52 @@ export class ElevenLabsTTS {
     // Create a new abort controller for this request
     this.abortController = new AbortController();
 
+    const useStreaming = options?.streaming ?? true;
+    const canStream = typeof window !== 'undefined' &&
+      'MediaSource' in window &&
+      MediaSource.isTypeSupported('audio/mpeg');
+
+    // Create audio infrastructure synchronously BEFORE any await, while the
+    // user gesture is still active. Chrome's autoplay policy expires the
+    // transient activation after ~1s. By calling play() here (before any fetch
+    // or voice-loading await), we register audio activation even if voices
+    // haven't been loaded yet on the first call.
+    let pendingMediaSource: MediaSource | null = null;
+    if (useStreaming && canStream) {
+      pendingMediaSource = new MediaSource();
+      const pendingUrl = URL.createObjectURL(pendingMediaSource);
+      this.audio = new Audio(pendingUrl);
+      this.audio.play().catch(() => {
+        // Expected — no source buffer yet. The important thing is play() was
+        // called in gesture context to register audio activation.
+      });
+    }
+
+    // Load voices if needed — safe to await here because play() was already called
+    if (!this.isAvailableFlag) {
+      if (!this.voicesLoaded) {
+        await this.loadVoices();
+      }
+
+      // Session may have been cancelled while loading voices
+      if (!isSessionActive()) {
+        this.isSpeaking = false;
+        return;
+      }
+
+      if (!this.isAvailableFlag) {
+        // ElevenLabs not available — clean up pre-created audio and use browser TTS
+        if (this.audio && pendingMediaSource) {
+          this.audio.pause();
+          this.audio.src = '';
+          this.audio = null;
+        }
+        console.warn('ElevenLabs is not available, falling back to browser TTS');
+        this.fallbackTTS.speak(text);
+        return;
+      }
+    }
+
     // Voice ID handling
     let voiceId = options?.voiceId;
 
@@ -230,26 +264,6 @@ export class ElevenLabsTTS {
 
     const stability = options?.stability ?? 0.5;
     const similarityBoost = options?.similarityBoost ?? 0.5;
-    const useStreaming = options?.streaming ?? true;
-    const canStream = typeof window !== 'undefined' &&
-      'MediaSource' in window &&
-      MediaSource.isTypeSupported('audio/mpeg');
-
-    // Create audio infrastructure synchronously BEFORE the fetch, while the
-    // user gesture is still active. Chrome's autoplay policy expires the
-    // transient activation after ~1s — by the time fetch + sourceopen resolve,
-    // the gesture is gone. Calling play() here registers audio activation so
-    // subsequent play() calls (and the pending play promise) succeed.
-    let pendingMediaSource: MediaSource | null = null;
-    if (useStreaming && canStream) {
-      pendingMediaSource = new MediaSource();
-      const pendingUrl = URL.createObjectURL(pendingMediaSource);
-      this.audio = new Audio(pendingUrl);
-      this.audio.play().catch(() => {
-        // Expected — no source buffer yet. The promise stays pending until
-        // data arrives. The important thing is play() was called in gesture context.
-      });
-    }
 
     try {
       this.callbacks.onStart?.();
