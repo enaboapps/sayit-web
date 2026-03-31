@@ -31,7 +31,7 @@ export default function SpeakButton({
     return (
       <motion.button
         onClick={onStop}
-        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-200 shadow-lg bg-gradient-to-r from-red-500 to-red-600 text-white text-base"
+        className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-200 shadow-lg bg-error hover:bg-error-hover text-white text-base"
         whileTap={{ scale: 0.95 }}
         aria-label="Stop"
       >
