@@ -45,7 +45,7 @@ export default function SpeakButton({
   if (enableToneControl) {
     return (
       <>
-        <div className={`flex items-center rounded-2xl shadow-lg overflow-hidden ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}>
+        <div className={`flex items-center rounded-2xl shadow-lg overflow-hidden ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
           <motion.button
             onClick={onSpeak}
             disabled={disabled}
@@ -86,7 +86,7 @@ export default function SpeakButton({
     <motion.button
       onClick={onSpeak}
       disabled={disabled}
-      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg bg-primary-500 hover:bg-primary-600 text-white text-base"
+      className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg bg-primary-500 hover:bg-primary-600 text-white text-base"
       whileTap={{ scale: 0.95 }}
       aria-label="Speak"
     >
