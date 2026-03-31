@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/outline';
 import { Squares2X2Icon } from '@heroicons/react/24/solid';
 
@@ -54,8 +54,19 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
       </div>
 
       {/* Tab content */}
-      <div className="flex-1 min-h-0">
-        {activeTab === 'phrases' ? phrasesContent : typeContent}
+      <div className="flex-1 min-h-0 relative">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+          >
+            {activeTab === 'phrases' ? phrasesContent : typeContent}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
