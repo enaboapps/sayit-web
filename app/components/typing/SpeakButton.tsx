@@ -63,6 +63,7 @@ export default function SpeakButton({
             className="flex items-center px-3.5 py-3 transition-colors duration-200 bg-primary-500 hover:bg-primary-600 text-white disabled:cursor-not-allowed"
             whileTap={disabled ? undefined : { scale: 0.97 }}
             aria-label="Choose tone"
+            title="Choose tone"
           >
             <AudioWaveform className="w-4 h-4" />
           </motion.button>
