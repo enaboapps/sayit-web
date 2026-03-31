@@ -285,8 +285,8 @@ export default function Composer({
       else setShowLiveTypingModal(true);
       return;
     }
-    await createSession();
-    if (isSharing) {
+    const created = await createSession();
+    if (created) {
       updateContent(currentText);
       if (isMobile) setShowLiveTypingSheet(true);
       else setShowLiveTypingModal(true);
@@ -468,7 +468,7 @@ export default function Composer({
           isSharing={isSharing}
           isCreating={isCreating}
           shareableLink={shareableLink}
-          onStartSharing={async () => { await createSession(); if (isSharing) updateContent(currentText); }}
+          onStartSharing={async () => { const created = await createSession(); if (created) updateContent(currentText); }}
           onEndSession={async () => { await endSession(); }}
         />
       )}

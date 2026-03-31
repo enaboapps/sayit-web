@@ -74,7 +74,7 @@ export function useLiveTyping() {
     }
   }, [sessionFromConvex, sessionKey]);
 
-  const createSession = useCallback(async () => {
+  const createSession = useCallback(async (): Promise<boolean> => {
     setIsCreating(true);
     setError(null);
 
@@ -99,9 +99,11 @@ export function useLiveTyping() {
         expiresAt: created.expiresAt,
         _creationTime: created._creationTime,
       });
+      return true;
     } catch (err) {
       console.error('Error creating live typing session:', err);
       setError(err instanceof Error ? err.message : 'Failed to create session');
+      return false;
     } finally {
       setIsCreating(false);
     }
