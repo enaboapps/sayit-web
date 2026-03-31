@@ -377,6 +377,14 @@ export default function PhrasesInterface() {
       <div className="text-center">
         <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
         <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
+        {isOnline && (
+          <button
+            onClick={handleAddBoard}
+            className="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors"
+          >
+            Create board
+          </button>
+        )}
       </div>
     </div>
   ) : isMobile ? (
