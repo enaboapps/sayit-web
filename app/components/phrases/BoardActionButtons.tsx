@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  PlusIcon,
   PencilIcon,
   CheckIcon,
   Squares2X2Icon,
