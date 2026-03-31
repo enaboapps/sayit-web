@@ -80,6 +80,9 @@ export class ElevenLabsTTS {
   /** Timestamp of last request, used for rapid-request detection */
   private lastRequestTime: number = 0;
 
+  /** Whether audio has been unlocked via a user gesture (required by autoplay policy) */
+  private audioUnlocked: boolean = false;
+
   private callbacks: {
     onStart?: () => void;
     onEnd?: () => void;
@@ -186,6 +189,19 @@ export class ElevenLabsTTS {
     streaming?: boolean;
     modelId?: string;
   }) {
+    // Unlock audio synchronously before any awaits — must happen in the same
+    // user gesture call stack. Chrome's autoplay policy blocks play() called
+    // from async callbacks (fetch, sourceopen) unless audio was unlocked first.
+    if (!this.audioUnlocked) {
+      try {
+        const ctx = new AudioContext();
+        ctx.close();
+        this.audioUnlocked = true;
+      } catch {
+        // Ignore — environment may not support AudioContext (e.g. SSR)
+      }
+    }
+
     if (!this.isAvailableFlag) {
       if (!this.voicesLoaded) {
         await this.loadVoices();
@@ -350,11 +366,15 @@ export class ElevenLabsTTS {
         URL.revokeObjectURL(audioUrl);
       };
 
-      this.audio.onerror = (event) => {
+      this.audio.onerror = () => {
         if (!isSessionActive()) return;
         this.isSpeaking = false;
         this.activeReader = null;
-        this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+        const mediaError = this.audio?.error;
+        const message = mediaError
+          ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
+          : 'Audio playback error';
+        this.callbacks.onError?.(new Error(message));
         URL.revokeObjectURL(audioUrl);
       };
 
@@ -372,6 +392,7 @@ export class ElevenLabsTTS {
     let sourceBuffer: SourceBuffer | null = null;
     const pendingChunks: Uint8Array[] = [];
     let isAppending = false;
+    let totalBytesAppended = 0;
 
     const appendNextChunk = () => {
       // Don't append if session is no longer active
@@ -392,6 +413,7 @@ export class ElevenLabsTTS {
       try {
         const buffer = chunk.slice().buffer;
         sourceBuffer.appendBuffer(buffer);
+        totalBytesAppended += chunk.byteLength;
       } catch {
         // Silently ignore errors - expected when session ends
         isAppending = false;
@@ -423,7 +445,12 @@ export class ElevenLabsTTS {
                 const waitForBuffers = () => {
                   if (!isSessionActive()) return;
                   if (pendingChunks.length === 0 && !isAppending && sourceBuffer && !sourceBuffer.updating) {
-                    if (mediaSource.readyState === 'open') {
+                    if (mediaSource.readyState === 'open' && totalBytesAppended > 0) {
+                      // Wait until HAVE_METADATA so endOfStream doesn't cause a demuxer error
+                      if (this.audio && this.audio.readyState < 1) {
+                        setTimeout(waitForBuffers, 50);
+                        return;
+                      }
                       try {
                         mediaSource.endOfStream();
                       } catch {
@@ -449,9 +476,8 @@ export class ElevenLabsTTS {
           }
         };
 
-        readStream();
-
-        // Start playback
+        // Start playback before reading stream so the audio element
+        // is already pulling data when chunks arrive (avoids HAVE_METADATA race)
         if (isSessionActive() && this.audio) {
           this.audio.play().catch(e => {
             if (isSessionActive()) {
@@ -459,6 +485,8 @@ export class ElevenLabsTTS {
             }
           });
         }
+
+        readStream();
 
       } catch (e) {
         if (!isSessionActive()) return;
@@ -475,10 +503,15 @@ export class ElevenLabsTTS {
       URL.revokeObjectURL(audioUrl);
     };
 
-    this.audio.onerror = (event) => {
+    this.audio.onerror = () => {
+      if (!isSessionActive()) return;
       this.isSpeaking = false;
       this.activeReader = null;
-      this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+      const mediaError = this.audio?.error;
+      const message = mediaError
+        ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
+        : 'Audio playback error';
+      this.callbacks.onError?.(new Error(message));
       URL.revokeObjectURL(audioUrl);
     };
   }
@@ -507,10 +540,14 @@ export class ElevenLabsTTS {
       }
     };
 
-    this.audio.onerror = (event) => {
+    this.audio.onerror = () => {
       if (!isSessionActive()) return;
       this.isSpeaking = false;
-      this.callbacks.onError?.(new Error(`Audio playback error: ${event}`));
+      const mediaError = this.audio?.error;
+      const message = mediaError
+        ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
+        : 'Audio playback error';
+      this.callbacks.onError?.(new Error(message));
       if (this.audio) {
         URL.revokeObjectURL(this.audio.src);
       }
