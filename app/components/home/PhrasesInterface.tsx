@@ -44,7 +44,7 @@ export default function PhrasesInterface() {
     if (tts.hasSubscription && settings.ttsProvider === 'elevenlabs') {
       tts.loadElevenLabsVoices();
     }
-  }, [tts.hasSubscription, settings.ttsProvider]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tts.hasSubscription, settings.ttsProvider, tts.loadElevenLabsVoices]);
 
   // Fetch all boards from Convex
   const boards = useQuery(

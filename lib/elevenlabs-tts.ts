@@ -214,15 +214,28 @@ export class ElevenLabsTTS {
     // or voice-loading await), we register audio activation even if voices
     // haven't been loaded yet on the first call.
     let pendingMediaSource: MediaSource | null = null;
+    let pendingUrl: string | null = null;
     if (useStreaming && canStream) {
       pendingMediaSource = new MediaSource();
-      const pendingUrl = URL.createObjectURL(pendingMediaSource);
+      pendingUrl = URL.createObjectURL(pendingMediaSource);
       this.audio = new Audio(pendingUrl);
       this.audio.play().catch(() => {
         // Expected — no source buffer yet. The important thing is play() was
         // called in gesture context to register audio activation.
       });
     }
+
+    const discardPendingAudio = () => {
+      if (this.audio && pendingMediaSource) {
+        this.audio.pause();
+        this.audio.src = '';
+        this.audio = null;
+      }
+      if (pendingUrl) {
+        URL.revokeObjectURL(pendingUrl);
+        pendingUrl = null;
+      }
+    };
 
     // Load voices if needed — safe to await here because play() was already called
     if (!this.isAvailableFlag) {
@@ -232,17 +245,13 @@ export class ElevenLabsTTS {
 
       // Session may have been cancelled while loading voices
       if (!isSessionActive()) {
+        discardPendingAudio();
         this.isSpeaking = false;
         return;
       }
 
       if (!this.isAvailableFlag) {
-        // ElevenLabs not available — clean up pre-created audio and use browser TTS
-        if (this.audio && pendingMediaSource) {
-          this.audio.pause();
-          this.audio.src = '';
-          this.audio = null;
-        }
+        discardPendingAudio();
         console.warn('ElevenLabs is not available, falling back to browser TTS');
         this.fallbackTTS.speak(text);
         return;
@@ -308,11 +317,7 @@ export class ElevenLabsTTS {
         await this.playStreamingAudio(response.body, isSessionActive, pendingMediaSource);
       } else {
         // Non-streaming fallback — discard the pre-created audio if any
-        if (this.audio && pendingMediaSource) {
-          this.audio.pause();
-          this.audio.src = '';
-          this.audio = null;
-        }
+        discardPendingAudio();
         await this.playBufferedAudio(response, isSessionActive);
       }
     } catch (error) {
