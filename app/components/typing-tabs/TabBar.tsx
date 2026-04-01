@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { PlusIcon, QueueListIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, QueueListIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { TypingTab } from '@/app/types/typing-tabs';
 import Tab from './Tab';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 interface TabBarProps {
   tabs: TypingTab[];
@@ -26,18 +27,72 @@ export default function TabBar({
 }: TabBarProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const prevTabCountRef = useRef(tabs.length);
+  const isMobile = useIsMobile();
 
-  // Auto-scroll to end when new tab is added
+  // Auto-scroll to end when new tab is added (desktop only)
   useEffect(() => {
-    if (tabs.length > prevTabCountRef.current && scrollContainerRef.current) {
-      // Smoothly scroll to the far right to show the new tab
+    if (!isMobile && tabs.length > prevTabCountRef.current && scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         left: scrollContainerRef.current.scrollWidth,
         behavior: 'smooth'
       });
     }
     prevTabCountRef.current = tabs.length;
-  }, [tabs.length]);
+  }, [isMobile, tabs.length]);
+
+  const activeTab = tabs.find(t => t.id === activeTabId);
+
+  const actionButtons = (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={onManage}
+        className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500"
+        aria-label="Manage tabs"
+        title="Manage all tabs"
+      >
+        <QueueListIcon className="w-4 h-4 md:w-5 md:h-5" />
+      </button>
+
+      <button
+        onClick={onTabCreate}
+        className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500 cursor-pointer"
+        aria-label="Create new tab"
+        title="Create new tab (Cmd/Ctrl+T)"
+      >
+        <PlusIcon className="w-4 h-4 md:w-5 md:h-5" />
+      </button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
+        {/* Active tab — full width, tapping label opens list */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-primary-500 text-white min-w-0">
+          <button
+            onClick={onManage}
+            className="flex-1 text-left min-w-0"
+            aria-label={`Active tab: ${activeTab?.label ?? 'Tab'}. Tap to manage tabs.`}
+          >
+            <span className="text-sm font-medium truncate block">
+              {activeTab?.label ?? 'Tab'}
+            </span>
+          </button>
+          {activeTab && (
+            <button
+              onClick={() => onTabClose(activeTab.id)}
+              className="p-0.5 rounded-full shrink-0 hover:bg-white/20 transition-colors"
+              aria-label={`Close ${activeTab.label}`}
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {actionButtons}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
@@ -57,26 +112,7 @@ export default function TabBar({
         </div>
       </div>
 
-      {/* Fixed button column */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onManage}
-          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500"
-          aria-label="Manage tabs"
-          title="Manage all tabs"
-        >
-          <QueueListIcon className="w-4 h-4 md:w-5 md:h-5" />
-        </button>
-
-        <button
-          onClick={onTabCreate}
-          className="flex items-center justify-center p-1.5 md:p-2 rounded-2xl transition-all duration-200 bg-surface-hover hover:bg-surface-hover text-text-secondary hover:text-primary-500 cursor-pointer"
-          aria-label="Create new tab"
-          title="Create new tab (Cmd/Ctrl+T)"
-        >
-          <PlusIcon className="w-4 h-4 md:w-5 md:h-5" />
-        </button>
-      </div>
+      {actionButtons}
     </div>
   );
 }
