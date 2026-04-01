@@ -20,6 +20,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Deploy Convex functions
+        run: npx convex deploy --cmd 'echo skip-build'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
       - name: Pull Vercel project settings
         run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
         env:
