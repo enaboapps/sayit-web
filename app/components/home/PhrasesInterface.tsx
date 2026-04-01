@@ -139,6 +139,11 @@ export default function PhrasesInterface() {
     router.push(`/phrases/add?boardId=${selectedBoardId}`);
   };
 
+  const handleAddAsPhrase = (text: string) => {
+    if (!isOnline || !selectedBoardId || !canEditCurrentBoard) return;
+    router.push(`/phrases/add?boardId=${selectedBoardId}&text=${encodeURIComponent(text)}`);
+  };
+
   const handleEditPhrase = (phrase: PhraseSummary) => {
     if (!isOnline) return;
     if (!selectedBoardId) return;
@@ -323,6 +328,7 @@ export default function PhrasesInterface() {
       enableLiveTyping={!!user}
       enableFixText={true}
       enableToneControl={enableToneControl}
+      onAddAsPhrase={isOnline && !!user && canEditCurrentBoard ? handleAddAsPhrase : undefined}
       replySuggestions={{
         history: suggestionContext.history,
         enabled: settings.aiReplySuggestionsEnabled,
