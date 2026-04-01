@@ -9,13 +9,14 @@ interface PhraseTileProps {
     text: string;
   };
   onPress: () => void;
+  onStop?: () => void;
   onEdit?: () => void;
   onLongPress?: () => void;
+  isSpeaking?: boolean;
   className?: string;
 }
 
-export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, className = '' }: PhraseTileProps) {
-  const [isSpeaking, setIsSpeaking] = useState(false);
+export default function PhraseTile({ phrase, onPress, onStop, onEdit, onLongPress, isSpeaking = false, className = '' }: PhraseTileProps) {
   const [isPressed, setIsPressed] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
@@ -63,10 +64,10 @@ export default function PhraseTile({ phrase, onPress, onEdit, onLongPress, class
 
     if (onEdit) {
       onEdit();
+    } else if (isSpeaking && onStop) {
+      onStop();
     } else {
-      setIsSpeaking(true);
       onPress();
-      setTimeout(() => setIsSpeaking(false), 800);
     }
   };
 

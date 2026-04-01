@@ -28,6 +28,7 @@ export default function PhrasesInterface() {
   const { isOnline } = useOnlineStatus();
   const [typingText, setTypingText] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [activePhraseId, setActivePhraseId] = useState<string | null>(null);
   const [captureError, setCaptureError] = useState(false);
   const captureErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
@@ -104,9 +105,22 @@ export default function PhrasesInterface() {
     updateUIPreference('selectedBoardId', boards[0]._id);
   }, [boards, shouldLoadBoards, selectedBoardId, updateUIPreference]);
 
+  // Clear active phrase when TTS finishes naturally
+  useEffect(() => {
+    if (!tts.isSpeaking) {
+      setActivePhraseId(null);
+    }
+  }, [tts.isSpeaking]);
+
   const handlePhrasePress = (phrase: PhraseSummary) => {
+    setActivePhraseId(phrase.id ?? null);
     setTypingText(phrase.text);
     tts.speak(phrase.text);
+  };
+
+  const handlePhraseStop = () => {
+    tts.stop();
+    setActivePhraseId(null);
   };
 
   const handleEdit = () => {
@@ -324,6 +338,8 @@ export default function PhrasesInterface() {
           key={phrase.id}
           phrase={phrase}
           onPress={() => handlePhrasePress(phrase)}
+          onStop={handlePhraseStop}
+          isSpeaking={activePhraseId === phrase.id && tts.isSpeaking}
           onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
           onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
         />
