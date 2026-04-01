@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { StopIcon } from '@heroicons/react/24/solid';
 
 interface PhraseTileProps {
   phrase: {
@@ -80,8 +81,7 @@ export default function PhraseTile({ phrase, onPress, onStop, onEdit, onLongPres
       className={`relative bg-surface rounded-xl shadow-md cursor-pointer
         flex flex-col items-center justify-center min-h-[52px]
         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
-        ${onEdit ? 'border-l-4 border-blue-400' : ''}
-        ${isSpeaking ? 'border-l-4 border-orange' : ''}
+        ${onEdit ? 'border-l-4 border-blue-400' : isSpeaking ? 'border-2 border-warning' : ''}
         ${className}`}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
@@ -104,9 +104,14 @@ export default function PhraseTile({ phrase, onPress, onStop, onEdit, onLongPres
       transition={{ duration: 0.15 }}
       role="button"
       tabIndex={0}
-      aria-label={onEdit ? `Edit phrase: ${phrase.text}` : `Speak phrase: ${phrase.text}`}
+      aria-label={onEdit ? `Edit phrase: ${phrase.text}` : isSpeaking ? `Stop: ${phrase.text}` : `Speak phrase: ${phrase.text}`}
       aria-pressed={isSpeaking}
     >
+      {isSpeaking && (
+        <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-warning flex items-center justify-center animate-pulse">
+          <StopIcon className="w-2.5 h-2.5 text-white" />
+        </div>
+      )}
       <div className="flex items-center justify-center w-full h-full p-2">
         <p className="text-foreground text-sm sm:text-base font-semibold line-clamp-2 leading-tight text-center w-full">
           {phrase.text}
