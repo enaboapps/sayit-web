@@ -279,14 +279,12 @@ describe('BoardSelector', () => {
         />
       );
 
-      // Click edit button (pencil icon button)
-      const editButtons = screen.getAllByRole('button');
-      // Find the one that's the edit button (not the dropdown)
-      const editButton = editButtons.find(btn => btn.querySelector('svg'));
-      if (editButton) {
-        await userEvent.click(editButton);
-        expect(mockOnEditBoard).toHaveBeenCalledWith('board-1');
-      }
+      // Open the more options menu, then click "Edit Board"
+      const moreOptionsButton = screen.getByRole('button', { name: /more options/i });
+      await userEvent.click(moreOptionsButton);
+      const editBoardItem = screen.getByRole('button', { name: /edit board/i });
+      await userEvent.click(editBoardItem);
+      expect(mockOnEditBoard).toHaveBeenCalledWith('board-1');
     });
   });
 
