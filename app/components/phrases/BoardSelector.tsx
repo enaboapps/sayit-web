@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PencilIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 import BoardGridPopup from './BoardGridPopup';
 import BoardActionButtons from './BoardActionButtons';
 import { Button } from '@/app/components/ui/Button';
@@ -12,6 +12,7 @@ interface BoardSelectorProps {
   onSelectBoard: (board: BoardSummary) => void;
   onEditBoard: (boardId: string) => void;
   // Action button props
+  onAddPhrase?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
   embedded?: boolean;
@@ -23,6 +24,7 @@ export default function BoardSelector({
   isEditMode,
   onSelectBoard,
   onEditBoard,
+  onAddPhrase,
   onAddBoard,
   onEdit,
   embedded = false,
@@ -74,26 +76,18 @@ export default function BoardSelector({
     return (
       <div className={wrapperClass}>
         <div className={`flex items-center ${cardClass}`}>
-          <div
-            className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
-            onClick={() => {
-              if (isEditMode && selectedBoard && canEditSelected) {
-                onEditBoard(selectedBoard.id);
-              }
-            }}
-          >
+          <div className="flex-1 flex items-center justify-between px-6 py-4">
             <div className="flex flex-col">
               <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
               {renderBoardSubtitle(selectedBoard)}
             </div>
-            {isEditMode && canEditSelected && (
-              <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
-            )}
           </div>
         </div>
         <BoardActionButtons
+          onAddPhrase={onAddPhrase}
           onAddBoard={onAddBoard}
           onEdit={onEdit}
+          onEditBoard={selectedBoard && canEditSelected ? () => onEditBoard(selectedBoard.id) : undefined}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
         />
@@ -114,37 +108,23 @@ export default function BoardSelector({
               <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
               {renderBoardSubtitle(selectedBoard)}
             </div>
-            <div className="flex items-center space-x-1">
-              {isEditMode && canEditSelected && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    if (selectedBoard) {
-                      onEditBoard(selectedBoard.id);
-                    }
-                  }}
-                >
-                  <PencilIcon className="h-5 w-5 text-text-secondary hover:text-foreground transition-colors duration-200" />
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  setIsPopupOpen(true);
-                }}
-              >
-                <span className="text-text-secondary hover:text-foreground transition-colors duration-200 text-lg">▼</span>
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                setIsPopupOpen(true);
+              }}
+            >
+              <span className="text-text-secondary hover:text-foreground transition-colors duration-200 text-lg">▼</span>
+            </Button>
           </div>
         </div>
         <BoardActionButtons
+          onAddPhrase={onAddPhrase}
           onAddBoard={onAddBoard}
           onEdit={onEdit}
+          onEditBoard={selectedBoard && canEditSelected ? () => onEditBoard(selectedBoard.id) : undefined}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
         />

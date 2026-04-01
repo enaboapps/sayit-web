@@ -10,7 +10,6 @@ import AACTabs from './AACTabs';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import PhraseTile from '../phrases/PhraseTile';
-import ActionTile from '../phrases/ActionTile';
 import SortablePhraseGrid from '../phrases/SortablePhraseGrid';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -347,10 +346,6 @@ export default function PhrasesInterface() {
     />
   );
 
-  const addPhraseTile = isOnline && isEditMode && canEditCurrentBoard
-    ? <ActionTile text="+ Phrase" onClick={handleAddPhrase} />
-    : null;
-
   const phraseGrid = isEditMode && canEditCurrentBoard ? (
     <SortablePhraseGrid
       phrases={phrases}
@@ -360,7 +355,6 @@ export default function PhrasesInterface() {
       onPhraseStop={handlePhraseStop}
       onPhraseEdit={handleEditPhrase}
       onReorder={handleReorderPhrases}
-      extraTile={addPhraseTile}
     />
   ) : (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
@@ -415,8 +409,10 @@ export default function PhrasesInterface() {
         currentBoardIndex={validBoardIndex}
         onBoardChange={handleBoardIndexChange}
         onOpenBoardPicker={() => setIsBoardPickerOpen(true)}
+        onAddPhrase={isOnline && canEditCurrentBoard ? handleAddPhrase : undefined}
         onAddBoard={isOnline ? handleAddBoard : undefined}
         onEdit={handleEdit}
+        onEditBoard={isOnline && selectedBoard && canEditCurrentBoard ? () => router.push(`/phrases/boards/edit/${selectedBoard.id}`) : undefined}
         isEditMode={isEditMode}
         canEditBoard={canEditCurrentBoard}
       >
@@ -437,6 +433,7 @@ export default function PhrasesInterface() {
             if (!isOnline) return;
             router.push(`/phrases/boards/edit/${boardId}`);
           }}
+          onAddPhrase={isOnline && canEditCurrentBoard ? handleAddPhrase : undefined}
           onAddBoard={isOnline ? handleAddBoard : undefined}
           onEdit={handleEdit}
           embedded={true}
