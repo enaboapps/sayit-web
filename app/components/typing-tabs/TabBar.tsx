@@ -68,24 +68,26 @@ export default function TabBar({
     return (
       <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
         {/* Active tab — full width, tapping label opens list */}
-        <button
-          onClick={onManage}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-primary-500 text-white min-w-0"
-          aria-label={`Active tab: ${activeTab?.label ?? 'Tab'}. Tap to manage tabs.`}
-        >
-          <span className="text-sm font-medium truncate flex-1 text-left">
-            {activeTab?.label ?? 'Tab'}
-          </span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-primary-500 text-white min-w-0">
+          <button
+            onClick={onManage}
+            className="flex-1 text-left min-w-0"
+            aria-label={`Active tab: ${activeTab?.label ?? 'Tab'}. Tap to manage tabs.`}
+          >
+            <span className="text-sm font-medium truncate block">
+              {activeTab?.label ?? 'Tab'}
+            </span>
+          </button>
           {activeTab && (
             <button
-              onClick={(e) => { e.stopPropagation(); onTabClose(activeTab.id); }}
+              onClick={() => onTabClose(activeTab.id)}
               className="p-0.5 rounded-full shrink-0 hover:bg-white/20 transition-colors"
               aria-label={`Close ${activeTab.label}`}
             >
               <XMarkIcon className="w-4 h-4" />
             </button>
           )}
-        </button>
+        </div>
 
         {actionButtons}
       </div>
