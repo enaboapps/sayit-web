@@ -66,11 +66,16 @@ Before starting the release process, create a dedicated release branch from the 
    git pull
    ```
 
-2. Create a new release branch named according to your intended release version (e.g., `v1.2.0`):
+2. Check the current open milestone on GitHub — its title is the intended release version:
+   ```bash
+   gh api repos/{owner}/{repo}/milestones --jq '.[] | select(.state=="open") | .title'
+   ```
+
+3. Create a new release branch named after that milestone version:
    ```bash
    git checkout -b release/vX.Y.Z
    ```
-   For example:
+   For example, if the open milestone is `v1.2.0`:
    ```bash
    git checkout -b release/v1.2.0
    ```
