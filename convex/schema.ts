@@ -49,6 +49,7 @@ export default defineSchema({
   phraseBoardPhrases: defineTable({
     phraseId: v.id('phrases'),
     boardId: v.id('phraseBoards'),
+    position: v.optional(v.number()),
   })
     .index('by_phrase', ['phraseId'])
     .index('by_board', ['boardId']),

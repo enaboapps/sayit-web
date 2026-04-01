@@ -11,6 +11,7 @@ import { useTTS } from '@/lib/hooks/useTTS';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import PhraseTile from '../phrases/PhraseTile';
 import ActionTile from '../phrases/ActionTile';
+import SortablePhraseGrid from '../phrases/SortablePhraseGrid';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
@@ -62,6 +63,7 @@ export default function PhrasesInterface() {
 
   // Mutations
   const recordMessage = useMutation(api.conversationHistory.recordMessage);
+  const reorderPhrasesOnBoard = useMutation(api.phraseBoards.reorderPhrasesOnBoard);
   const recentMessages = useQuery(
     api.conversationHistory.getRecentMessages,
     shouldLoadBoards ? { limit: 20 } : 'skip'
@@ -137,6 +139,14 @@ export default function PhrasesInterface() {
       return;
     }
     router.push(`/phrases/add?boardId=${selectedBoardId}`);
+  };
+
+  const handleReorderPhrases = (orderedIds: string[]) => {
+    if (!selectedBoardId) return;
+    void reorderPhrasesOnBoard({
+      boardId: selectedBoardId as Id<'phraseBoards'>,
+      orderedPhraseIds: orderedIds as Id<'phrases'>[],
+    });
   };
 
   const handleAddAsPhrase = (text: string) => {
@@ -337,7 +347,22 @@ export default function PhrasesInterface() {
     />
   );
 
-  const phraseGrid = (
+  const addPhraseTile = isOnline && isEditMode && canEditCurrentBoard
+    ? <ActionTile text="+ Phrase" onClick={handleAddPhrase} />
+    : null;
+
+  const phraseGrid = isEditMode && canEditCurrentBoard ? (
+    <SortablePhraseGrid
+      phrases={phrases}
+      activePhraseId={activePhraseId}
+      isSpeaking={tts.isSpeaking}
+      onPhrasePress={handlePhrasePress}
+      onPhraseStop={handlePhraseStop}
+      onPhraseEdit={handleEditPhrase}
+      onReorder={handleReorderPhrases}
+      extraTile={addPhraseTile}
+    />
+  ) : (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
       {phrases.map((phrase) => (
         <PhraseTile
@@ -346,13 +371,9 @@ export default function PhrasesInterface() {
           onPress={() => handlePhrasePress(phrase)}
           onStop={handlePhraseStop}
           isSpeaking={activePhraseId === phrase.id && tts.isSpeaking}
-          onEdit={isEditMode && canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
           onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
         />
       ))}
-      {isOnline && isEditMode && canEditCurrentBoard && (
-        <ActionTile text="+ Phrase" onClick={handleAddPhrase} />
-      )}
     </div>
   );
 
