@@ -1,5 +1,10 @@
 # SayIt! Web - AI Agent Development Guide
 
+> **Main branch protection:**  
+> Never commit or push directly to `main`.  
+> Always use a feature or fix branch created from `main`—see "Branch Strategy" below for workflow.  
+> Direct changes to `main` are prohibited to preserve codebase integrity, CI reliability, and production stability.
+
 ## Project Overview
 
 SayIt! is an AI-powered augmentative and alternative communication (AAC) web application that helps users express their thoughts, feelings, needs, and wants more effectively. Built with Next.js, React, and TypeScript, the app provides AI-assisted phrase generation, smart suggestions, and text-to-speech capabilities to support users who need communication assistance.
@@ -50,6 +55,33 @@ When work is complete:
 ### 5. Release Process
 
 Releases are created when a milestone is complete:
+
+**Step 0: Create a Release Branch**
+
+Before starting the release process, create a dedicated release branch from the current `main` branch.
+
+1. Make sure you are on `main` and it is up-to-date:
+   ```bash
+   git checkout main
+   git pull
+   ```
+
+2. Check the current open milestone on GitHub — its title is the intended release version:
+   ```bash
+   gh api repos/{owner}/{repo}/milestones --jq '.[] | select(.state=="open") | .title'
+   ```
+
+3. Create a new release branch named after that milestone version:
+   ```bash
+   git checkout -b release/vX.Y.Z
+   ```
+   For example, if the open milestone is `v1.2.0`:
+   ```bash
+   git checkout -b release/v1.2.0
+   ```
+
+Perform all subsequent release steps in this branch before merging it back into `main` and tagging the release.
+
 
 **Step 1: Run Tests**
 ```bash
