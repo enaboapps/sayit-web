@@ -115,11 +115,31 @@ npm version patch  # Bug fixes (1.0.0 -> 1.0.1)
 This command will:
 - Update version in package.json
 - Create a git commit with the version bump
-- Create a git tag (e.g., v1.15.0)
 
-**Step 5: Push Commits and Tags**
+**Step 5: Open and Merge a Pull Request**
+
+Push the release branch and open a PR against `main`:
 ```bash
-git push && git push --tags
+git push origin HEAD
+gh pr create --base main --head release/vX.Y.Z --title "release: vX.Y.Z"
+```
+
+Wait for the PR to pass all checks, then merge it:
+```bash
+gh pr merge <number> --merge
+```
+
+After merging, pull the updated `main`:
+```bash
+git checkout main && git pull
+```
+
+**Step 6: Tag the Release on main**
+
+With `main` up-to-date after the merge, create and push the tag:
+```bash
+git tag vX.Y.Z origin/main
+git push origin vX.Y.Z
 ```
 
 Pushing the tag triggers the **Release GitHub Action** (`.github/workflows/release.yml`) which will:
@@ -128,7 +148,7 @@ Pushing the tag triggers the **Release GitHub Action** (`.github/workflows/relea
 
 Vercel automatically deploys to production when the release is created.
 
-**Step 6: Close Milestone**
+**Step 7: Close Milestone**
 ```bash
 # Close the milestone (use milestone number from GitHub)
 gh api repos/enaboapps/sayit-web/milestones/<number> -X PATCH -f state=closed
