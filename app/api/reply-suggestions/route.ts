@@ -8,19 +8,12 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const { userId, has } = await auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 },
-      );
-    }
-
-    if (!has?.({ plan: 'sayit_pro_monthly' })) {
-      return NextResponse.json(
-        { error: 'Pro subscription required' },
-        { status: 403 },
       );
     }
 
