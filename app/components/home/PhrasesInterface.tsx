@@ -60,8 +60,6 @@ export default function PhrasesInterface() {
   );
 
   // Mutations
-  const addPhrase = useMutation(api.phrases.addPhrase);
-  const addPhraseToBoard = useMutation(api.phraseBoards.addPhraseToBoard);
   const recordMessage = useMutation(api.conversationHistory.recordMessage);
   const recentMessages = useQuery(
     api.conversationHistory.getRecentMessages,
@@ -125,39 +123,6 @@ export default function PhrasesInterface() {
       return;
     }
     router.push(`/phrases/add?boardId=${selectedBoardId}`);
-  };
-
-  const handleAddTypingAsPhrase = async () => {
-    if (!isOnline) {
-      return;
-    }
-
-    if (!selectedBoardId || !typingText.trim()) {
-      console.error('Cannot add phrase: no board selected or empty text');
-      return;
-    }
-
-    try {
-      // Get the current number of phrases to set position
-      const currentPhrases = selectedBoardData?.phrase_board_phrases || [];
-      const position = currentPhrases.length;
-
-      // Create the phrase
-      const phraseId = await addPhrase({
-        text: typingText,
-        position,
-      });
-
-      // Add it to the board
-      await addPhraseToBoard({
-        phraseId: phraseId as Id<'phrases'>,
-        boardId: selectedBoardId as Id<'phraseBoards'>,
-      });
-
-      setTypingText(''); // Clear the typing area after adding
-    } catch (error) {
-      console.error('Error adding phrase:', error);
-    }
   };
 
   const handleEditPhrase = (phrase: PhraseSummary) => {
@@ -363,9 +328,6 @@ export default function PhrasesInterface() {
           onLongPress={canEditCurrentBoard ? () => handleEditPhrase(phrase) : undefined}
         />
       ))}
-      {isOnline && typingText.trim() && canEditCurrentBoard && !phrases.some(p => p.text === typingText.trim()) && (
-        <ActionTile text="+ Add" onClick={handleAddTypingAsPhrase} />
-      )}
       {isOnline && isEditMode && canEditCurrentBoard && (
         <ActionTile text="+ Phrase" onClick={handleAddPhrase} />
       )}
