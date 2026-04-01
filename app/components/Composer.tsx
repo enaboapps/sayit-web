@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { SparklesIcon, XMarkIcon, ArrowPathIcon, ShareIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, XMarkIcon, ArrowPathIcon, ShareIcon, BookmarkIcon } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
@@ -42,6 +42,7 @@ interface ComposerProps {
   enableLiveTyping?: boolean;
   enableFixText?: boolean;
   enableToneControl?: boolean;
+  onAddAsPhrase?: (text: string) => void;
   replySuggestions?: ReplySuggestionsConfig;
 }
 
@@ -61,6 +62,7 @@ export default function Composer({
   enableLiveTyping = false,
   enableFixText = false,
   enableToneControl = false,
+  onAddAsPhrase,
   replySuggestions,
 }: ComposerProps) {
   const [isFixingText, setIsFixingText] = useState(false);
@@ -425,6 +427,17 @@ export default function Composer({
                   aria-label={isSharing ? 'Live Typing Active' : 'Live Typing'}
                 >
                   <ShareIcon className="w-5 h-5" />
+                </button>
+              )}
+
+              {onAddAsPhrase && (
+                <button
+                  onClick={() => onAddAsPhrase(currentText)}
+                  disabled={!currentText.trim()}
+                  className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-primary-500 hover:bg-surface-hover transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Save as phrase"
+                >
+                  <BookmarkIcon className="w-5 h-5" />
                 </button>
               )}
             </div>

@@ -16,7 +16,7 @@ function AddPhraseForm() {
   const searchParams = useSearchParams();
   const boardIdFromUrl = searchParams.get('boardId');
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(boardIdFromUrl);
-  const [text, setText] = useState('');
+  const [text, setText] = useState(searchParams.get('text') ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
