@@ -44,12 +44,12 @@ export const getPhraseBoards = query({
         .withIndex('by_board', (q) => q.eq('boardId', boardId))
         .collect();
 
-      return await Promise.all(
+      return (await Promise.all(
         phraseBoardPhrases.map(async (pbp) => {
           const phrase = await getCachedPhrase(pbp.phraseId);
           return { ...pbp, phrase };
         })
-      );
+      )).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     };
 
     // Get boards owned by the user (caregiver's boards)
@@ -167,12 +167,12 @@ export const getPhraseBoard = query({
       .withIndex('by_board', (q) => q.eq('boardId', args.id))
       .collect();
 
-    const phrases = await Promise.all(
+    const phrases = (await Promise.all(
       phraseBoardPhrases.map(async (pbp) => {
         const phrase = await getCachedPhrase(pbp.phraseId);
         return { ...pbp, phrase };
       })
-    );
+    )).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
     // Get caregiver name for assigned clients
     let sharedBy = null;
@@ -330,10 +330,52 @@ export const addPhraseToBoard = mutation({
       }
     }
 
+    const position = boardPhraseLinks.length;
     await ctx.db.insert('phraseBoardPhrases', {
       phraseId: args.phraseId,
       boardId: args.boardId,
+      position,
     });
+  },
+});
+
+// Mutation: Reorder phrases on a board
+export const reorderPhrasesOnBoard = mutation({
+  args: {
+    boardId: v.id('phraseBoards'),
+    orderedPhraseIds: v.array(v.id('phrases')),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+
+    // Verify board access
+    const board = await ctx.db.get(args.boardId);
+    if (!board) throw new Error('Board not found');
+
+    const isOwner = board.userId === identity.subject;
+    const isAssignedClientWithEdit =
+      board.forClientId === identity.subject && board.clientAccessLevel === 'edit';
+
+    if (!isOwner && !isAssignedClientWithEdit) {
+      throw new Error('Unauthorized');
+    }
+
+    const links = await ctx.db
+      .query('phraseBoardPhrases')
+      .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
+      .collect();
+
+    const linkByPhraseId = new Map(links.map((l) => [l.phraseId.toString(), l]));
+
+    await Promise.all(
+      args.orderedPhraseIds.map((phraseId, index) => {
+        const link = linkByPhraseId.get(phraseId.toString());
+        if (link) return ctx.db.patch(link._id, { position: index });
+      })
+    );
   },
 });
 
