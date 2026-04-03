@@ -22,7 +22,9 @@ export async function POST(request: Request) {
     const { text, voiceId, stability, similarityBoost, streaming, modelId: requestedModelId } = body;
 
     const ALLOWED_MODELS = ['eleven_flash_v2_5', 'eleven_v3'];
-    const modelId = ALLOWED_MODELS.includes(requestedModelId) ? requestedModelId : 'eleven_flash_v2_5';
+    const V3_CHAR_LIMIT = 5000;
+    const baseModel = ALLOWED_MODELS.includes(requestedModelId) ? requestedModelId : 'eleven_flash_v2_5';
+    const modelId = baseModel === 'eleven_v3' && text?.length > V3_CHAR_LIMIT ? 'eleven_flash_v2_5' : baseModel;
 
     if (!text) {
       return NextResponse.json(
