@@ -319,8 +319,8 @@ export default function PhrasesInterface() {
       text={typingText}
       onChange={setTypingText}
       onSpeak={handleSpeakFromDock}
-      onSpeakWithTone={(taggedText) => {
-        tts.speak(taggedText);
+      onSpeakWithTone={(taggedText, options) => {
+        tts.speak(taggedText, options);
         void handleCaptureCompletedMessage({
           text: typingText,
           source: 'speak',
