@@ -32,7 +32,7 @@ interface ComposerProps {
   text: string;
   onChange: (text: string) => void;
   onSpeak: (source?: 'speak' | 'speakAndClear') => void;
-  onSpeakWithTone?: (toneTag: string) => void;
+  onSpeakWithTone?: (toneTag: string, options?: { modelId?: string }) => void;
   onMessageCompleted?: (payload: { text: string; source: 'clear'; tabId?: string | null }) => void;
   onStop?: () => void;
   isSpeaking?: boolean;
@@ -231,7 +231,8 @@ export default function Composer({
 
   const handleToneSelected = useCallback((tone: TonePreset) => {
     if (!currentText.trim()) return;
-    onSpeakWithTone?.(applyToneTag(tone, currentText));
+    const options = tone.v3Only ? { modelId: 'eleven_v3' } : undefined;
+    onSpeakWithTone?.(applyToneTag(tone, currentText), options);
   }, [currentText, onSpeakWithTone]);
 
   // Auto-dismiss errors after 4 s; also dismiss when user starts typing
