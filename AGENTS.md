@@ -105,16 +105,9 @@ git push
 ```
 
 **Step 4: Version Bump**
-```bash
-# Choose based on milestone type:
-npm version major  # Breaking changes (1.0.0 -> 2.0.0)
-npm version minor  # New features (1.0.0 -> 1.1.0)
-npm version patch  # Bug fixes (1.0.0 -> 1.0.1)
-```
-
-This command will:
-- Update version in package.json
+- Update version in package.json and run npm install
 - Create a git commit with the version bump
+
 
 **Step 5: Open and Merge a Pull Request**
 
