@@ -14,7 +14,7 @@ interface BoardGridPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectBoard: (board: BoardSummary) => void;
-  onEditBoard: (boardId: string) => void;
+  onEditBoard?: (boardId: string) => void;
 }
 
 function BoardList({
@@ -62,7 +62,7 @@ function BoardList({
                   </div>
                 )}
               </div>
-              {isEditMode && canEdit && (
+              {isEditMode && canEdit && onEditBoard && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

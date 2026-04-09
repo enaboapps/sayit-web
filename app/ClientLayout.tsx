@@ -1,17 +1,27 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
+import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
-import { ConvexReactClient } from 'convex/react';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, StaticAuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { MobileBottomProvider } from './contexts/MobileBottomContext';
 import ConnectivityBanner from './components/navigation/ConnectivityBanner';
 import InstallBanner from './components/navigation/InstallBanner';
 import Sidebar from './components/Sidebar';
 import MobileBottomStack from './components/navigation/MobileBottomStack';
+import OfflineAppShell from './components/offline/OfflineAppShell';
+import OfflineDataSync from './components/offline/OfflineDataSync';
+import OnlineStartupWatch from './components/startup/OnlineStartupWatch';
+import {
+  deriveOfflineBootMode,
+  readOfflineBootstrap,
+  type OfflineBootMode,
+} from '@/lib/offline/storage';
+
+const STARTUP_FALLBACK_DELAY_MS = 4000;
 
 export default function ClientLayout({
   children,
@@ -20,22 +30,29 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-
-  // Initialize Convex client - memoize to avoid recreating on each render
   const convex = useMemo(
     () => new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!),
     []
   );
+  const [bootMode, setBootMode] = useState<OfflineBootMode>(() => {
+    if (typeof window === 'undefined') {
+      return 'online';
+    }
+
+    return deriveOfflineBootMode({
+      isOnline: window.navigator.onLine,
+      bootstrap: readOfflineBootstrap(),
+    });
+  });
+  const [startupReady, setStartupReady] = useState<boolean>(() => bootMode !== 'online');
 
   useEffect(() => {
-    // Store the current path in localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('pwa_last_path', pathname);
     }
   }, [pathname]);
 
   useEffect(() => {
-    // Check if we're launched from PWA
     if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
       const lastPath = localStorage.getItem('pwa_last_path');
       if (lastPath && lastPath !== pathname && lastPath !== '/') {
@@ -44,28 +61,86 @@ export default function ClientLayout({
     }
   }, [pathname, router]);
 
+  useEffect(() => {
+    if (bootMode !== 'online' || startupReady) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setBootMode(deriveOfflineBootMode({
+        isOnline: false,
+        bootstrap: readOfflineBootstrap(),
+      }));
+    }, STARTUP_FALLBACK_DELAY_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [bootMode, startupReady]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setBootMode('online');
+      setStartupReady(false);
+    };
+
+    const handleOffline = () => {
+      if (!startupReady) {
+        setBootMode(deriveOfflineBootMode({
+          isOnline: false,
+          bootstrap: readOfflineBootstrap(),
+        }));
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [startupReady]);
+
+  const handleStartupReady = useCallback(() => {
+    setStartupReady(true);
+  }, []);
+  if (bootMode !== 'online') {
+    const offlineMode: 'offline-text-only' | 'offline-ready' = bootMode === 'offline-ready'
+      ? 'offline-ready'
+      : 'offline-text-only';
+
+    return (
+      <ConvexProvider client={convex}>
+        <StaticAuthProvider>
+          <SettingsProvider>
+            <MobileBottomProvider>
+              <OfflineAppShell mode={offlineMode} />
+            </MobileBottomProvider>
+          </SettingsProvider>
+        </StaticAuthProvider>
+      </ConvexProvider>
+    );
+  }
+
   return (
     <ClerkProvider>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
             <MobileBottomProvider>
-              <div className="min-h-dvh flex flex-col md:flex-row">
-                {/* Sidebar - hidden on mobile, shown on tablet+ */}
-                <Sidebar />
-
-                {/* Main content area */}
-                <div className="flex-1 md:pl-16 lg:pl-16">
-                  <ConnectivityBanner />
-                  <InstallBanner />
-                  <main className="min-h-dvh pb-bottom-stack">
-                    {children}
-                  </main>
+              <OnlineStartupWatch onReady={handleStartupReady}>
+                <OfflineDataSync />
+                <div className="min-h-dvh flex flex-col md:flex-row">
+                  <Sidebar />
+                  <div className="flex-1 md:pl-16 lg:pl-16">
+                    <ConnectivityBanner />
+                    <InstallBanner />
+                    <main className="min-h-dvh pb-bottom-stack">
+                      {children}
+                    </main>
+                  </div>
+                  <MobileBottomStack />
                 </div>
-
-                {/* Mobile bottom stack - dock + tab bar */}
-                <MobileBottomStack />
-              </div>
+              </OnlineStartupWatch>
             </MobileBottomProvider>
           </SettingsProvider>
         </AuthProvider>

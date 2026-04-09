@@ -13,14 +13,18 @@
 - Confirm `/sw.js` is served in production
 - Confirm the production home route loads successfully under `next start`
 - Confirm the manifest is served correctly in production
+- Confirm icon assets return `200`
 - Run Lighthouse against the production build and save the results in `docs/pwa-validation.md`
-- Record supported Lighthouse category scores and any installability-related notes
+- Record supported Lighthouse category scores and installability notes
 - Verify install on Android Chrome
 - Verify Add to Home Screen on iOS Safari
-- Verify offline reopen behavior
+- Verify cold offline launch with no cached boards
+- Verify cold offline launch with cached boards
 - Verify text entry, tab restore, and browser TTS while offline
+- Verify cached boards render read-only offline after prior sync
 - Verify cloud-only features show explicit offline states
-- Verify reconnect behavior after coming back online
+- Verify sign-out clears or isolates offline board cache
+- Verify reconnect behavior refreshes live data and offline cache
 
 ## Release
 
