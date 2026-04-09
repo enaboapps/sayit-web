@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowPathIcon, WifiIcon } from '@heroicons/react/24/outline';
 import AACTabs from '@/app/components/home/AACTabs';
 import Composer from '@/app/components/Composer';
 import BoardSelector from '@/app/components/phrases/BoardSelector';
@@ -132,10 +131,6 @@ export default function OfflineAppShell({
     }
   }, [tts.isSpeaking]);
 
-  const handleRetry = useCallback(() => {
-    window.location.reload();
-  }, []);
-
   const phrasesContent = isLoadingBoards ? (
     <div className="flex h-full items-center justify-center px-6 text-center text-text-secondary">
       Loading your offline boards...
@@ -152,8 +147,13 @@ export default function OfflineAppShell({
   ) : (
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 p-3 pb-0">
-        <div className="mb-3 inline-flex rounded-full bg-surface-hover px-3 py-1.5 text-xs text-text-secondary">
-          {formatSyncStatus(syncStatus)}
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+          <span className="inline-flex rounded-full bg-surface-hover px-3 py-1.5">
+            {formatSyncStatus(syncStatus)}
+          </span>
+          <span className="inline-flex rounded-full bg-surface-hover px-3 py-1.5">
+            Read-only offline
+          </span>
         </div>
         <BoardSelector
           boards={boards}
@@ -210,47 +210,12 @@ export default function OfflineAppShell({
 
   return (
     <div className="min-h-dvh bg-background">
-      <div className="sticky top-0 z-40 border-b border-amber-900 bg-surface px-4 py-3 text-sm text-amber-200">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <WifiIcon className="h-4 w-4 shrink-0" />
-            <span>
-              {mode === 'offline-ready'
-                ? 'You\'re offline. Cached boards, text communication, and browser speech still work.'
-                : 'You\'re offline. Text communication and browser speech still work.'}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleRetry}
-            className="flex shrink-0 items-center gap-1.5 text-amber-300 transition-colors hover:text-amber-100"
-            aria-label="Retry connection"
-          >
-            <ArrowPathIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Retry</span>
-          </button>
-        </div>
-      </div>
-
-      <section className="mx-auto flex min-h-[calc(100dvh-57px)] w-full max-w-6xl flex-col px-4 py-6">
-        <div className="rounded-3xl border border-border bg-surface shadow-2xl">
-          <div className="border-b border-border bg-surface-hover px-6 py-5">
-            <h1 className="text-xl font-semibold text-foreground">
-              {mode === 'offline-ready' ? 'Offline AAC Workspace' : 'Text Communication Works Offline'}
-            </h1>
-            <p className="mt-1 text-sm text-text-secondary">
-              {mode === 'offline-ready'
-                ? 'Cached boards open read-only offline. Editing, AI tools, and cloud voice features reconnect when you are back online.'
-                : 'Type and speak messages without signing in. Saved boards, AI tools, and cloud voice features still need internet.'}
-            </p>
-          </div>
-
-          <div className="flex min-h-[65dvh] flex-1 flex-col">
-            <AACTabs
-              phrasesContent={phrasesContent}
-              typeContent={typeContent}
-            />
-          </div>
+      <section className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 py-6">
+        <div className="flex min-h-[65dvh] flex-1 flex-col rounded-3xl border border-border bg-surface shadow-2xl">
+          <AACTabs
+            phrasesContent={phrasesContent}
+            typeContent={typeContent}
+          />
         </div>
 
         {messages.length > 0 && (
