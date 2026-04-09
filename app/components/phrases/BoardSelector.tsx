@@ -10,8 +10,7 @@ interface BoardSelectorProps {
   selectedBoard: BoardSummary | null;
   isEditMode: boolean;
   onSelectBoard: (board: BoardSummary) => void;
-  onEditBoard: (boardId: string) => void;
-  // Action button props
+  onEditBoard?: (boardId: string) => void;
   onAddPhrase?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
@@ -31,18 +30,23 @@ export default function BoardSelector({
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  if (boards.length === 0) return null;
+  if (boards.length === 0) {
+    return null;
+  }
 
   const canEditSelected = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
+  const editSelectedBoard = selectedBoard && canEditSelected && onEditBoard
+    ? () => onEditBoard(selectedBoard.id)
+    : undefined;
 
-  // Helper to render board subtitle (client name or shared by)
   const renderBoardSubtitle = (board: BoardSummary | null) => {
-    if (!board) return null;
+    if (!board) {
+      return null;
+    }
 
-    // For shared boards (communicator viewing caregiver's board)
     if (board.isShared && board.sharedBy) {
       return (
-        <div className="flex items-center gap-1 mt-0.5">
+        <div className="mt-0.5 flex items-center gap-1">
           <UserGroupIcon className="h-3 w-3 text-primary-400" />
           <span className="text-xs text-primary-400">
             Shared by {board.sharedBy}
@@ -51,10 +55,9 @@ export default function BoardSelector({
       );
     }
 
-    // For owned boards assigned to a client (caregiver viewing)
     if (board.isOwner && board.forClientName) {
       return (
-        <div className="flex items-center gap-1 mt-0.5">
+        <div className="mt-0.5 flex items-center gap-1">
           <UserGroupIcon className="h-3 w-3 text-blue-400" />
           <span className="text-xs text-blue-400">
             For {board.forClientName}
@@ -71,14 +74,13 @@ export default function BoardSelector({
     : 'bg-surface rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300';
   const wrapperClass = embedded ? '' : 'mb-4';
 
-  // If there's only one board, show it directly
   if (boards.length === 1) {
     return (
       <div className={wrapperClass}>
         <div className={`flex items-center ${cardClass}`}>
-          <div className="flex-1 flex items-center justify-between px-6 py-4">
+          <div className="flex flex-1 items-center justify-between px-6 py-4">
             <div className="flex flex-col">
-              <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
+              <h2 className="text-base font-semibold text-foreground">{selectedBoard?.name}</h2>
               {renderBoardSubtitle(selectedBoard)}
             </div>
           </div>
@@ -87,7 +89,7 @@ export default function BoardSelector({
           onAddPhrase={onAddPhrase}
           onAddBoard={onAddBoard}
           onEdit={onEdit}
-          onEditBoard={selectedBoard && canEditSelected ? () => onEditBoard(selectedBoard.id) : undefined}
+          onEditBoard={editSelectedBoard}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
         />
@@ -95,28 +97,27 @@ export default function BoardSelector({
     );
   }
 
-  // If there are multiple boards, show a button to open the popup
   return (
     <>
       <div className={wrapperClass}>
         <div className={`flex items-center ${cardClass}`}>
           <div
-            className="flex-1 flex items-center justify-between px-6 py-4 cursor-pointer"
+            className="flex flex-1 cursor-pointer items-center justify-between px-6 py-4"
             onClick={() => setIsPopupOpen(true)}
           >
             <div className="flex flex-col">
-              <h2 className="font-semibold text-foreground text-base">{selectedBoard?.name}</h2>
+              <h2 className="text-base font-semibold text-foreground">{selectedBoard?.name}</h2>
               {renderBoardSubtitle(selectedBoard)}
             </div>
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation();
+              onClick={(event: React.MouseEvent) => {
+                event.stopPropagation();
                 setIsPopupOpen(true);
               }}
             >
-              <span className="text-text-secondary hover:text-foreground transition-colors duration-200 text-lg">▼</span>
+              <span className="text-lg text-text-secondary transition-colors duration-200 hover:text-foreground">▼</span>
             </Button>
           </div>
         </div>
@@ -124,7 +125,7 @@ export default function BoardSelector({
           onAddPhrase={onAddPhrase}
           onAddBoard={onAddBoard}
           onEdit={onEdit}
-          onEditBoard={selectedBoard && canEditSelected ? () => onEditBoard(selectedBoard.id) : undefined}
+          onEditBoard={editSelectedBoard}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
         />
@@ -141,4 +142,4 @@ export default function BoardSelector({
       />
     </>
   );
-} 
+}

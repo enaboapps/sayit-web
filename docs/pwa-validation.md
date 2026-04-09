@@ -1,111 +1,86 @@
 # PWA Validation
 
-Last updated: 2026-03-29
+Last updated: 2026-04-09
 
 ## Scope
 
-This release validates the narrowed `v2.7.0` goal: reliable offline text communication, not offline board sync.
+This validation covers the current offline architecture:
+
+- installed app boot reliability
+- offline boot fallback above auth and Convex startup
+- text communication and browser TTS offline
+- cached read-only board browsing offline after prior sync
 
 ## Automated Checks
 
-Verified locally on 2026-03-29:
+Run before release:
 
-- `npm.cmd test -- --runInBand`: passed
-- `npm.cmd run lint`: passed
-- `npm.cmd run build`: passed
+- `npm test`
+- `npm run lint`
+- `npm run build`
 
-Covered by automated tests:
+Core automated coverage should include:
 
-- local draft restore
-- typing tab restore
-- mobile typing restore
+- offline bootstrap parsing and mode derivation
+- local draft and tab restore
 - local message history persistence
-- offline typing UI behavior
+- home startup rendering
+- explicit offline UI behavior for cloud-only features
 
 ## Production Runtime Check
 
-Verified locally against `next start` after scoping Clerk proxy execution to API routes in `proxy.ts`.
+Validate against `next start`, not only dev mode.
 
-Initial failing state:
-
-- `/sw.js`: `200`
-- `/`: failed
-- `/offline`: failed
-- `/manifest.json`: failed
-
-Resolved state on 2026-03-29:
+Required routes and assets:
 
 - `/sw.js`: `200`
 - `/`: `200`
 - `/offline`: `200`
 - `/manifest.json`: `200`
+- `/icons/icon-192x192.png`: `200`
+- `/icons/icon-512x512.png`: `200`
 
-Interpretation:
+Expected behavior:
 
-- The service worker asset is served correctly in production mode.
-- App routes and manifest routing were being impacted by Clerk proxy execution on page/static requests.
-- Limiting proxy execution to `/(api|trpc)(.*)` removed the runtime failure in local production validation.
-
-## Lighthouse
-
-Ran locally with:
-
-```bash
-npx lighthouse http://127.0.0.1:3500/ --chrome-path "C:\Program Files\Google\Chrome\Application\chrome.exe"
-```
-
-Headline scores:
-
-- Performance: `76`
-- Accessibility: `100`
-- Best Practices: `54`
-- SEO: `100`
-
-Notable findings surfaced by Lighthouse:
-
-- browser console errors
-- deprecated APIs
-- third-party cookies
-- Chrome DevTools issues
-- back/forward cache prevention
-
-Tooling note:
-
-- Lighthouse 13 no longer exposes the legacy `pwa` category.
-- Installability-specific checks should be supplemented with manual install/offline verification on Android and iOS.
-
-Required follow-up:
-
-1. Review the Lighthouse JSON in a stable reporting workflow and turn the Best Practices failures into concrete issues if they matter for release.
-2. Complete manual installability/offline checks on real devices.
+- installed app launches without browser chrome when installability is correct
+- cold offline launch resolves to the offline shell instead of hanging behind auth startup
+- `/?source=pwa` reopens through the same cached shell path as `/`
 
 ## Manual Validation Matrix
 
 Still required before release:
 
-- Android Chrome install
+- Android Chrome install from home screen
 - iOS Safari Add to Home Screen
-- airplane mode reopen flow
-- offline type, speak, reload, and reopen flow
-- reconnect flow for cloud-only features
+- cold offline launch with no cached boards
+- cold offline launch with cached boards
+- same-session online to offline transition
+- force-close and reopen offline
+- sign-out cache clearing
+- reconnect and cache refresh
 
-Recommended test script:
+Recommended script:
 
-1. Open the production build.
-2. Install the app.
-3. Type text and speak it with browser TTS.
-4. Reload and confirm draft and tabs persist.
-5. Put the device in airplane mode.
-6. Reopen the installed app.
-7. Confirm text communication still works.
-8. Confirm cloud-only features show explicit offline states.
-9. Reconnect and confirm online features recover cleanly.
+1. Open the production build online.
+2. Sign in with a user who has boards.
+3. Wait for offline sync to complete.
+4. Install the app.
+5. Open a board and type/speak text.
+6. Force-close the installed app.
+7. Enable airplane mode.
+8. Launch from the home-screen icon.
+9. Confirm the offline shell opens immediately.
+10. Confirm cached boards render read-only when previously synced.
+11. Confirm browser TTS still works for typed text and cached phrases.
+12. Reconnect and confirm live data resumes and the offline cache refreshes.
 
 ## Release Status
 
-Current status: partially validated.
+Current status: pending revalidation after the offline boot and cached-board changes.
 
 Blocking items:
 
-- completed real-device install/offline notes
-- explicit Android/iOS install confirmation
+- updated Android installed-app notes
+- updated iOS Add to Home Screen notes
+- explicit confirmation of cold offline launch behavior
+- explicit confirmation of sign-out cache clearing

@@ -18,6 +18,25 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
+export function StaticAuthProvider({
+  children,
+  value,
+}: {
+  children: React.ReactNode;
+  value?: AuthContextType;
+}) {
+  return (
+    <AuthContext.Provider
+      value={value ?? {
+        user: null,
+        loading: false,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user: clerkUser, isLoaded } = useUser();
   const profile = useQuery(api.profiles.getProfile);

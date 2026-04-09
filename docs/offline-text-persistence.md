@@ -1,21 +1,51 @@
-# Offline Text Persistence
+# Offline Persistence
 
-The offline text communication milestone uses `localStorage` for device-local persistence of typing drafts, typing tabs, the active tab id, and a short recent-message history.
+SayIt now uses two local persistence layers for offline communication:
 
-## Why `localStorage`
+- `localStorage` for fast startup bootstrap and small device-local typing state
+- IndexedDB for cached read-only board and phrase documents
 
-- The current offline scope is small: one active typing experience plus a short history.
-- Draft restore has to work immediately on app startup without waiting for network or a larger client-side sync layer.
-- The app already stores typing tabs in `localStorage`, so extending that path keeps the release small and consistent.
+## What lives in `localStorage`
 
-## Tradeoffs
+These values must be available immediately on startup, including cold offline launch:
 
-- Pros: simple, synchronous startup restore, no schema migration layer, no new dependency surface.
-- Cons: storage is smaller than IndexedDB, writes are synchronous, and the data remains device-local with no background sync.
+- typing drafts
+- typing tabs
+- active typing tab id
+- short recent-message history
+- offline bootstrap metadata
+
+The offline bootstrap record tracks:
+
+- schema version
+- whether offline mode is text-only or board-ready
+- cached board count
+- last sync timestamp
+- last known user id
+- last selected board id
+- sync status
+
+## What lives in IndexedDB
+
+The `sayit-offline` IndexedDB database stores cached board documents per authenticated user.
+
+Each cached board document includes:
+
+- board id and ownership metadata
+- board name and sort position
+- phrase text for offline browsing and speaking
+- cache timestamp
+
+## Why the split
+
+`localStorage` is still the right place for small synchronous startup state. IndexedDB is the better fit for larger AAC payloads such as cached boards and phrases.
+
+This keeps cold launch fast while allowing richer offline rendering after a prior online sync.
 
 ## Boundaries
 
-- This is intentionally not a Convex replacement.
+- Offline board content is read-only in this milestone.
 - App shell assets still belong in the service worker cache.
-- Cloud data such as boards, phrases, and account state remain server-backed.
-- If offline board editing or queued sync becomes a requirement later, IndexedDB becomes the more appropriate store for that larger workload.
+- Convex remains the source of truth for cloud data.
+- On sign-out or account switch, cached board data must be cleared or isolated per user.
+- If offline editing or queued sync is added later, the IndexedDB schema should expand rather than pushing that workload into `localStorage`.
