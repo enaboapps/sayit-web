@@ -167,13 +167,11 @@ export class TTSProvider {
 
     const azureVoices = this.azureTTS.getVoices().map(voice => ({
       id: voice.voice_id,
-      name: `${voice.name} (Azure)`,
+      name: voice.name,
       provider: 'azure' as TTSProviderType,
     }));
 
-    const allVoices = [...browserVoices, ...elevenLabsVoices, ...azureVoices];
-    console.log('All available voices:', allVoices);
-    return allVoices;
+    return [...browserVoices, ...elevenLabsVoices, ...azureVoices];
   }
 
   public getVoicesByProvider(provider: TTSProviderType): TTSVoice[] {
@@ -218,14 +216,10 @@ export class TTSProvider {
       }
     }
 
-    console.log(`Speaking with provider: ${provider}, requested voiceId: ${options?.voiceId}`);
-
     if (provider === 'elevenlabs') {
       const allVoices = this.getAllVoices();
       const selectedVoice = allVoices.find(v => v.id === options?.voiceId && v.provider === 'elevenlabs');
       const voiceToUse = selectedVoice?.id || allVoices.find(v => v.provider === 'elevenlabs')?.id;
-
-      console.log('Using ElevenLabs voice ID:', voiceToUse);
 
       this.elevenlabsTTS.speak(text, {
         voiceId: voiceToUse,
@@ -237,8 +231,6 @@ export class TTSProvider {
       const allVoices = this.getAllVoices();
       const selectedVoice = allVoices.find(v => v.id === options?.voiceId && v.provider === 'azure');
       const voiceToUse = selectedVoice?.id || allVoices.find(v => v.provider === 'azure')?.id;
-
-      console.log('Using Azure voice ID:', voiceToUse);
 
       this.azureTTS.speak(text, { voiceId: voiceToUse });
     } else {

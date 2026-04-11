@@ -22,6 +22,7 @@ interface DropdownProps<T = string> {
   placeholder?: string;
   error?: string;
   searchable?: boolean;
+  searchPlaceholder?: string;
   renderOption?: (option: DropdownOption<T>) => ReactNode;
 }
 
@@ -36,6 +37,7 @@ export function Dropdown<T = string>({
   placeholder = 'Select an option',
   error,
   searchable = false,
+  searchPlaceholder = 'Search...',
   renderOption
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
@@ -136,7 +138,7 @@ export function Dropdown<T = string>({
                           type="text"
                           value={searchQuery}
                           onChange={e => setSearchQuery(e.target.value)}
-                          placeholder="Search voices..."
+                          placeholder={searchPlaceholder}
                           className="w-full pl-9 pr-4 py-2 text-sm bg-surface-hover border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-foreground placeholder:text-text-tertiary"
                           autoFocus
                         />

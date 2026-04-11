@@ -110,6 +110,7 @@ export default function TTSSettings() {
                 placeholder={providerVoices.length === 0 ? 'Loading voices...' : 'Select a voice'}
                 disabled={providerVoices.length === 0}
                 searchable
+                searchPlaceholder="Search voices..."
               />
             </div>
 

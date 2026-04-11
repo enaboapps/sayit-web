@@ -22,7 +22,6 @@ export class AzureTTS {
   private loadingVoices: Promise<void> | null = null;
   private currentSessionId: number = 0;
   private abortController: AbortController | null = null;
-  private lastRequestTime: number = 0;
   private fallbackTTS: WebSpeechTTS;
 
   private callbacks: {
@@ -107,9 +106,6 @@ export class AzureTTS {
     this.currentSessionId++;
     const sessionId = this.currentSessionId;
     const isSessionActive = () => sessionId === this.currentSessionId;
-
-    const currentTime = Date.now();
-    this.lastRequestTime = currentTime;
 
     this.abortController = new AbortController();
 
@@ -200,15 +196,9 @@ export class AzureTTS {
       const err = error as Error & { name?: string };
       if (err?.name === 'AbortError') return;
 
-      const timeSinceLastRequest = Date.now() - this.lastRequestTime;
-      const isRapidRequest = timeSinceLastRequest < 2000;
-
       console.error('Azure TTS error:', error);
-
-      if (!isRapidRequest) {
-        this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
-        this.fallbackTTS.speak(text);
-      }
+      this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+      this.fallbackTTS.speak(text);
     }
   }
 
