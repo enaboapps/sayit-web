@@ -3,20 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import { TTSVoice, TTSProviderType } from '@/lib/tts-provider';
+import { TTSProviderType } from '@/lib/tts-provider';
 import { useSettings } from '../contexts/SettingsContext';
 import { Dropdown } from '@/app/components/ui/Dropdown';
 import { Slider } from '@/app/components/ui/Slider';
 import { useRouter } from 'next/navigation';
 import { PlayCircleIcon, StopCircleIcon } from '@heroicons/react/24/solid';
-
-// Extended TTSVoice type to include metadata
-interface ExtendedTTSVoice extends TTSVoice {
-  metadata?: {
-    preview_url?: string;
-    description?: string;
-  };
-}
 
 export default function TTSSettings() {
   const { settings, updateSetting } = useSettings();
@@ -35,11 +27,9 @@ export default function TTSSettings() {
   const router = useRouter();
   const { isOnline } = useOnlineStatus();
 
-  const [providerVoices, setProviderVoices] = useState<ExtendedTTSVoice[]>([]);
-  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const [providerVoices, setProviderVoices] = useState<typeof voices>([]);
 
-  // Sample text for previews
-  const SAMPLE_TEXT = 'Hello, this is a preview of how this voice sounds.';
+  const SAMPLE_TEXT = 'This is how I sound.';
 
   // Load provider voices only when voices or provider changes
   useEffect(() => {
@@ -87,28 +77,10 @@ export default function TTSSettings() {
   const previewVoice = useCallback(() => {
     if (isSpeaking) {
       stop();
-      setIsPlayingPreview(false);
       return;
     }
-
-    setIsPlayingPreview(true);
-
-    if (settings.ttsProvider === 'elevenlabs' && isOnline) {
-      const voice = providerVoices.find(v => v.id === settings.ttsVoiceId) as ExtendedTTSVoice;
-
-      if (voice?.metadata?.preview_url) {
-        const audio = new Audio(voice.metadata.preview_url);
-        audio.onended = () => setIsPlayingPreview(false);
-        audio.play().catch(() => setIsPlayingPreview(false));
-      } else {
-        speak(SAMPLE_TEXT);
-        setTimeout(() => setIsPlayingPreview(false), 5000);
-      }
-    } else {
-      speak(SAMPLE_TEXT);
-      setTimeout(() => setIsPlayingPreview(false), 5000);
-    }
-  }, [isOnline, speak, stop, isSpeaking, settings.ttsProvider, settings.ttsVoiceId, providerVoices]);
+    speak(SAMPLE_TEXT);
+  }, [speak, stop, isSpeaking]);
 
   // Get selected voice name for display
   const selectedVoiceName = providerVoices.find(v => v.id === settings.ttsVoiceId)?.name;
@@ -138,9 +110,9 @@ export default function TTSSettings() {
               onClick={previewVoice}
               disabled={providerVoices.length === 0}
               className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-surface border border-border text-text-secondary hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={isPlayingPreview ? 'Stop preview' : 'Preview voice'}
+              title={isSpeaking ? 'Stop preview' : 'Preview voice'}
             >
-              {isPlayingPreview ? (
+              {isSpeaking ? (
                 <StopCircleIcon className="w-6 h-6 text-primary-500" />
               ) : (
                 <PlayCircleIcon className="w-6 h-6" />

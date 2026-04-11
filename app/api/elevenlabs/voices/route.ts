@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
+import { ElevenLabsTTSClient } from 'js-tts-wrapper';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-type ElevenLabsVoice = {
-  voice_id: string;
-  name: string;
-  preview_url?: string;
-  description?: string;
-};
 
 export async function GET() {
   try {
@@ -18,25 +12,15 @@ export async function GET() {
       return NextResponse.json({ voices: [], available: false });
     }
 
-    const response = await fetch('https://api.elevenlabs.io/v1/voices', {
-      headers: {
-        'xi-api-key': apiKey,
-      },
-    });
+    const client = new ElevenLabsTTSClient({ apiKey });
+    const voices = await client.getVoices();
 
-    if (!response.ok) {
-      return NextResponse.json({ voices: [], available: false });
-    }
-
-    const data = await response.json();
-    const voices: ElevenLabsVoice[] = (data?.voices ?? []).map((voice: ElevenLabsVoice) => ({
-      voice_id: voice.voice_id,
-      name: voice.name || 'Unnamed Voice',
-      preview_url: voice.preview_url,
-      description: voice.description || '',
+    const mapped = voices.map(v => ({
+      voice_id: v.id,
+      name: v.name,
     }));
 
-    return NextResponse.json({ voices, available: voices.length > 0 });
+    return NextResponse.json({ voices: mapped, available: mapped.length > 0 });
   } catch (error) {
     console.error('Error loading ElevenLabs voices:', error);
     return NextResponse.json({ voices: [], available: false });
