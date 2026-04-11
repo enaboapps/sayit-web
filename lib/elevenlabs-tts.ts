@@ -5,10 +5,6 @@ export interface Voice {
   name: string;
 }
 
-export interface VoiceSettings {
-  stability: number;
-  similarity_boost: number;
-}
 
 /**
  * ElevenLabs Text-to-Speech Provider
@@ -176,6 +172,11 @@ export class ElevenLabsTTS {
       const audioUrl = URL.createObjectURL(blob);
       this.audio = new Audio(audioUrl);
 
+      // play() must be called synchronously after Audio() while still in the
+      // microtask chain of the user gesture — Chrome's autoplay policy will
+      // block it if we set up event handlers first and play() fires too late.
+      const playPromise = this.audio.play();
+
       this.audio.onended = () => {
         if (!isSessionActive()) return;
         this.isSpeaking = false;
@@ -193,7 +194,7 @@ export class ElevenLabsTTS {
         );
       };
 
-      await this.audio.play();
+      await playPromise;
     } catch (error) {
       this.isSpeaking = false;
       if (!isSessionActive()) return;
