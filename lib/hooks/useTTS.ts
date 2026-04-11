@@ -10,6 +10,7 @@ export function useTTS() {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [voices, setVoices] = useState<TTSVoice[]>([]);
   const [provider, setProvider] = useState<TTSProviderType>('browser');
+  const [wordBoundary, setWordBoundary] = useState<{ word: string; charIndex: number } | null>(null);
   const [status, setStatus] = useState<{
     isSpeaking: boolean;
     activeProvider: TTSProviderType;
@@ -73,7 +74,10 @@ export function useTTS() {
         onVoicesChanged: (newVoices) => {
           setVoices(newVoices);
           setStatus(tts.getStatus());
-        }
+        },
+        onWordBoundary: (word, charIndex) => {
+          setWordBoundary({ word, charIndex });
+        },
       });
     }
   }, []);
@@ -220,6 +224,7 @@ export function useTTS() {
     loadElevenLabsVoices,
     status,
     hasSubscription,
-    isProviderAvailable
+    isProviderAvailable,
+    wordBoundary,
   };
 }

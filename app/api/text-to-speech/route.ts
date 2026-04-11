@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
+import { ElevenLabsTTSClient } from 'js-tts-wrapper';
 
 // Next.js App Router route segment config
 export const runtime = 'nodejs';
@@ -40,22 +40,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const client = new ElevenLabsClient({
-      apiKey,
+    const client = new ElevenLabsTTSClient({ apiKey });
+
+    const { audioStream } = await client.synthToBytestream(text, {
+      voice: voiceId,
+      modelId,
+      voiceSettings: {
+        stability: stability ?? 0.5,
+        similarity_boost: similarityBoost ?? 0.5,
+      },
     });
 
     // Use streaming if requested
     if (streaming) {
-      const audioStream = await client.textToSpeech.stream(voiceId, {
-        text: text,
-        modelId,
-        voiceSettings: {
-          stability: stability ?? 0.5,
-          similarityBoost: similarityBoost ?? 0.5,
-        },
-      });
-
-      // Return streaming response
       return new Response(audioStream as unknown as ReadableStream, {
         status: 200,
         headers: {
@@ -66,17 +63,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Non-streaming fallback (original behavior)
-    const audioStream = await client.textToSpeech.convert(voiceId, {
-      text: text,
-      modelId: 'eleven_flash_v2_5',
-      voiceSettings: {
-        stability: stability ?? 0.5,
-        similarityBoost: similarityBoost ?? 0.5,
-      },
-    });
-
-    // Convert ReadableStream to Buffer
+    // Non-streaming: buffer the stream before responding
     const reader = audioStream.getReader();
     const chunks: Uint8Array[] = [];
 
@@ -88,7 +75,6 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.concat(chunks);
 
-    // Return the audio data with appropriate headers
     return new NextResponse(buffer, {
       status: 200,
       headers: {

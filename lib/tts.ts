@@ -8,6 +8,7 @@ export class TextToSpeech {
     onEnd?: () => void;
     onError?: (error: Error) => void;
     onVoicesChanged?: (voices: SpeechSynthesisVoice[]) => void;
+    onWordBoundary?: (word: string, charIndex: number) => void;
   } = {};
 
   private constructor() {
@@ -53,6 +54,7 @@ export class TextToSpeech {
     onEnd?: () => void;
     onError?: (error: Error) => void;
     onVoicesChanged?: (voices: SpeechSynthesisVoice[]) => void;
+    onWordBoundary?: (word: string, charIndex: number) => void;
   }) {
     this.callbacks = callbacks;
   }
@@ -114,6 +116,13 @@ export class TextToSpeech {
     this.utterance.onerror = (event) => {
       this.isSpeaking = false;
       this.callbacks.onError?.(new Error(`Speech synthesis error: ${event.error}`));
+    };
+
+    this.utterance.onboundary = (event) => {
+      if (event.name === 'word' && this.callbacks.onWordBoundary) {
+        const word = text.substring(event.charIndex, event.charIndex + event.charLength);
+        this.callbacks.onWordBoundary(word, event.charIndex);
+      }
     };
 
     // Speak

@@ -21,6 +21,7 @@ export class TTSProvider {
     onEnd?: () => void;
     onError?: (error: Error) => void;
     onVoicesChanged?: (voices: TTSVoice[]) => void;
+    onWordBoundary?: (word: string, charIndex: number) => void;
   } = {};
 
   private constructor() {
@@ -59,7 +60,10 @@ export class TTSProvider {
       onVoicesChanged: () => {
         // Notify that voices have changed
         this.callbacks.onVoicesChanged?.(this.getAllVoices());
-      }
+      },
+      onWordBoundary: (word, charIndex) => {
+        this.callbacks.onWordBoundary?.(word, charIndex);
+      },
     });
 
     this.elevenlabsTTS.setCallbacks({
@@ -87,6 +91,7 @@ export class TTSProvider {
     onEnd?: () => void;
     onError?: (error: Error) => void;
     onVoicesChanged?: (voices: TTSVoice[]) => void;
+    onWordBoundary?: (word: string, charIndex: number) => void;
   }) {
     this.callbacks = callbacks;
     
@@ -129,10 +134,6 @@ export class TTSProvider {
       id: voice.voice_id,
       name: `${voice.name} (ElevenLabs)`,
       provider: 'elevenlabs' as TTSProviderType,
-      metadata: {
-        preview_url: voice.preview_url,
-        description: voice.description || 'ElevenLabs voice'
-      }
     }));
 
     const allVoices = [...browserVoices, ...elevenLabsVoices];
