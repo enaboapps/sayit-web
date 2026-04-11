@@ -217,22 +217,14 @@ export class TTSProvider {
     }
 
     if (provider === 'elevenlabs') {
-      const allVoices = this.getAllVoices();
-      const selectedVoice = allVoices.find(v => v.id === options?.voiceId && v.provider === 'elevenlabs');
-      const voiceToUse = selectedVoice?.id || allVoices.find(v => v.provider === 'elevenlabs')?.id;
-
       this.elevenlabsTTS.speak(text, {
-        voiceId: voiceToUse,
+        voiceId: options?.voiceId,
         stability: options?.stability,
         similarityBoost: options?.similarityBoost,
         modelId: options?.modelId,
       });
     } else if (provider === 'azure') {
-      const allVoices = this.getAllVoices();
-      const selectedVoice = allVoices.find(v => v.id === options?.voiceId && v.provider === 'azure');
-      const voiceToUse = selectedVoice?.id || allVoices.find(v => v.provider === 'azure')?.id;
-
-      this.azureTTS.speak(text, { voiceId: voiceToUse });
+      this.azureTTS.speak(text, { voiceId: options?.voiceId });
     } else {
       this.webSpeechTTS.speak(text, {
         voiceURI: options?.voiceId,
