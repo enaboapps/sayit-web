@@ -32,7 +32,7 @@ export const initializeSettings = mutation({
     doubleEnterEnabled: v.boolean(),
     doubleEnterAction: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
     doubleEnterTimeoutMs: v.number(),
-    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs')),
+    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure')),
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),

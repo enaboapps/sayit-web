@@ -2,7 +2,7 @@
 
 import { Fragment, ReactNode, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { CheckIcon, ChevronDownIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, ChevronDownIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { cn } from '@/lib/utils';
 
 export interface DropdownOption<T = string> {
@@ -21,6 +21,7 @@ interface DropdownProps<T = string> {
   disabled?: boolean;
   placeholder?: string;
   error?: string;
+  searchable?: boolean;
   renderOption?: (option: DropdownOption<T>) => ReactNode;
 }
 
@@ -34,14 +35,26 @@ export function Dropdown<T = string>({
   disabled = false,
   placeholder = 'Select an option',
   error,
+  searchable = false,
   renderOption
 }: DropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const selectedOption = options.find(option => option.value === value);
+
+  const filteredOptions = searchable && searchQuery.trim()
+    ? options.filter(o => o.label.toLowerCase().includes(searchQuery.toLowerCase()))
+    : options;
 
   const handleSelect = (optionValue: T) => {
     onChange(optionValue);
     setIsOpen(false);
+    setSearchQuery('');
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setSearchQuery('');
   };
 
   return (
@@ -77,7 +90,7 @@ export function Dropdown<T = string>({
       </button>
 
       <Transition appear show={isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-[65]" onClose={() => setIsOpen(false)}>
+        <Dialog as="div" className="relative z-[65]" onClose={handleClose}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -108,15 +121,31 @@ export function Dropdown<T = string>({
                     </Dialog.Title>
                     <button
                       type="button"
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleClose}
                       className="p-2 rounded-full hover:bg-surface-hover transition-colors"
                     >
                       <XMarkIcon className="w-5 h-5 text-text-tertiary" />
                     </button>
                   </div>
 
+                  {searchable && (
+                    <div className="p-3 border-b border-border">
+                      <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          placeholder="Search voices..."
+                          className="w-full pl-9 pr-4 py-2 text-sm bg-surface-hover border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-foreground placeholder:text-text-tertiary"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div className="max-h-80 overflow-y-auto p-2">
-                    {options.map((option, optionIdx) => {
+                    {filteredOptions.map((option, optionIdx) => {
                       const isSelected = option.value === value;
                       return (
                         <button

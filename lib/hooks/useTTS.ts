@@ -15,11 +15,13 @@ export function useTTS() {
     isSpeaking: boolean;
     activeProvider: TTSProviderType;
     elevenLabsAvailable: boolean;
+    azureAvailable: boolean;
     browserTTSAvailable: boolean;
   }>({
     isSpeaking: false,
     activeProvider: 'browser',
     elevenLabsAvailable: false,
+    azureAvailable: false,
     browserTTSAvailable: false
   });
   
@@ -112,26 +114,26 @@ export function useTTS() {
       modelId: customOptions?.modelId || modelId,
     };
 
-    // Check if current provider is ElevenLabs or the voice is an ElevenLabs voice
-    const voice = options.voiceId 
-      ? voices.find(v => v.id === options.voiceId) 
+    // Check if current provider is a premium provider or the voice is a premium voice
+    const voice = options.voiceId
+      ? voices.find(v => v.id === options.voiceId)
       : null;
-    
-    const isElevenLabsVoice = voice?.provider === 'elevenlabs';
+
+    const isPremiumVoice = voice?.provider === 'elevenlabs' || voice?.provider === 'azure';
     const currentProvider = ttsRef.current.getCurrentProvider();
-    const usingElevenLabs = isElevenLabsVoice || currentProvider === 'elevenlabs';
-    
-    // If trying to use ElevenLabs without a subscription, force browser TTS
-    if (usingElevenLabs && !hasSubscription) {
+    const usingPremium = isPremiumVoice || currentProvider === 'elevenlabs' || currentProvider === 'azure';
+
+    // If trying to use a premium provider without a subscription, force browser TTS
+    if (usingPremium && !hasSubscription) {
       console.log('Forcing browser TTS for non-subscribers');
-      
+
       // Find a browser voice to use instead
       const browserVoices = voices.filter(v => v.provider === 'browser');
       const fallbackVoice = browserVoices.length > 0 ? browserVoices[0].id : undefined;
-      
+
       // Temporarily switch to browser provider if needed
       const originalProvider = ttsRef.current.getCurrentProvider();
-      if (originalProvider === 'elevenlabs') {
+      if (originalProvider === 'elevenlabs' || originalProvider === 'azure') {
         ttsRef.current.setProvider('browser');
       }
       
@@ -144,7 +146,7 @@ export function useTTS() {
       });
       
       // Update local state to reflect the temporary provider change
-      if (originalProvider === 'elevenlabs') {
+      if (originalProvider === 'elevenlabs' || originalProvider === 'azure') {
         setStatus({
           ...status,
           activeProvider: 'browser'
@@ -202,10 +204,18 @@ export function useTTS() {
     setStatus(ttsRef.current.getStatus());
   }, []);
 
+  const loadAzureVoices = useCallback(async () => {
+    if (!ttsRef.current) return;
+    await ttsRef.current.loadAzureVoices();
+    setVoices(ttsRef.current.getAllVoices());
+    setStatus(ttsRef.current.getStatus());
+  }, []);
+
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
     if (providerType === 'browser') return true;
     if (providerType === 'elevenlabs') return hasSubscription && status.elevenLabsAvailable;
+    if (providerType === 'azure') return hasSubscription && status.azureAvailable;
     return false;
   }, [hasSubscription, status]);
 
@@ -222,6 +232,7 @@ export function useTTS() {
     getVoicesByProvider,
     refreshVoices,
     loadElevenLabsVoices,
+    loadAzureVoices,
     status,
     hasSubscription,
     isProviderAvailable,
