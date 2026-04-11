@@ -28,11 +28,15 @@ export default function OfflineDataSync() {
     const nextUserId = user?.id ?? null;
 
     if (previousUserId && previousUserId !== nextUserId) {
-      void clearOfflineCacheForUser(previousUserId);
+      void clearOfflineCacheForUser(previousUserId).catch((error) => {
+        console.error('Failed to clear offline cache on user change:', error);
+      });
     }
 
     if (!nextUserId) {
-      void clearOfflineCacheForUser(previousUserId);
+      void clearOfflineCacheForUser(previousUserId).catch((error) => {
+        console.error('Failed to clear offline cache on sign-out:', error);
+      });
     }
 
     previousUserIdRef.current = nextUserId;
