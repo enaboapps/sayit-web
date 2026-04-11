@@ -10,6 +10,9 @@ import { Slider } from '@/app/components/ui/Slider';
 import { useRouter } from 'next/navigation';
 import { PlayCircleIcon, StopCircleIcon } from '@heroicons/react/24/solid';
 
+// Sample text used for voice preview
+const SAMPLE_TEXT = 'This is how I sound.';
+
 export default function TTSSettings() {
   const { settings, updateSetting } = useSettings();
   const {
@@ -21,59 +24,58 @@ export default function TTSSettings() {
     getVoicesByProvider,
     refreshVoices,
     loadElevenLabsVoices,
+    loadAzureVoices,
     hasSubscription
   } = useTTS();
 
   const router = useRouter();
   const { isOnline } = useOnlineStatus();
 
-  const [providerVoices, setProviderVoices] = useState<typeof voices>([]);
+  const [providerVoices, setProviderVoices] = useState(voices);
 
-  const SAMPLE_TEXT = 'This is how I sound.';
-
-  // Load provider voices only when voices or provider changes
+  // Refresh browser voices when switching to browser provider
   useEffect(() => {
     if (settings.ttsProvider === 'browser') {
       refreshVoices();
     }
   }, [refreshVoices, settings.ttsProvider]);
 
+  // Load ElevenLabs voices when online
   useEffect(() => {
-    if (!isOnline) {
-      return;
-    }
-
+    if (!isOnline) return;
     void loadElevenLabsVoices();
   }, [isOnline, loadElevenLabsVoices]);
 
+  // Load Azure voices when online
   useEffect(() => {
-    const voicesForProvider = getVoicesByProvider(settings.ttsProvider);
-    setProviderVoices(voicesForProvider);
+    if (!isOnline) return;
+    void loadAzureVoices();
+  }, [isOnline, loadAzureVoices]);
+
+  // Update visible voices when provider or voice list changes
+  useEffect(() => {
+    setProviderVoices(getVoicesByProvider(settings.ttsProvider));
   }, [voices, settings.ttsProvider, getVoicesByProvider]);
 
-  // Handle default voice selection if needed
+  // Auto-select first voice if current voice doesn't exist in this provider
   useEffect(() => {
     if (providerVoices.length > 0) {
       const currentVoiceExists = providerVoices.some(v => v.id === settings.ttsVoiceId);
-
       if (!currentVoiceExists) {
         updateSetting('ttsVoiceId', providerVoices[0].id);
       }
     }
   }, [providerVoices, settings.ttsVoiceId, updateSetting]);
 
-  // Safe provider change
   const handleProviderChange = useCallback((newProvider: TTSProviderType) => {
-    if (newProvider === 'elevenlabs' && (!status.elevenLabsAvailable || !isOnline)) {
-      return;
-    }
+    if (newProvider === 'elevenlabs' && (!status.elevenLabsAvailable || !isOnline)) return;
+    if (newProvider === 'azure' && (!status.azureAvailable || !isOnline)) return;
 
     if (settings.ttsProvider !== newProvider) {
       updateSetting('ttsProvider', newProvider);
     }
-  }, [isOnline, settings.ttsProvider, status.elevenLabsAvailable, updateSetting]);
+  }, [isOnline, settings.ttsProvider, status.elevenLabsAvailable, status.azureAvailable, updateSetting]);
 
-  // Preview voice function
   const previewVoice = useCallback(() => {
     if (isSpeaking) {
       stop();
@@ -82,8 +84,13 @@ export default function TTSSettings() {
     speak(SAMPLE_TEXT);
   }, [speak, stop, isSpeaking]);
 
-  // Get selected voice name for display
   const selectedVoiceName = providerVoices.find(v => v.id === settings.ttsVoiceId)?.name;
+
+  const providerLabel = settings.ttsProvider === 'elevenlabs'
+    ? 'ElevenLabs'
+    : settings.ttsProvider === 'azure'
+      ? 'Azure'
+      : 'Browser TTS';
 
   return (
     <div className="space-y-6">
@@ -102,6 +109,8 @@ export default function TTSSettings() {
                 onChange={(value) => updateSetting('ttsVoiceId', value)}
                 placeholder={providerVoices.length === 0 ? 'Loading voices...' : 'Select a voice'}
                 disabled={providerVoices.length === 0}
+                searchable
+                searchPlaceholder="Search voices..."
               />
             </div>
 
@@ -122,7 +131,7 @@ export default function TTSSettings() {
 
           {selectedVoiceName && (
             <p className="mt-2 text-xs text-text-tertiary">
-              Provider: {settings.ttsProvider === 'browser' ? 'Browser TTS' : 'ElevenLabs'}
+              Provider: {providerLabel}
             </p>
           )}
         </div>
@@ -131,8 +140,8 @@ export default function TTSSettings() {
       {/* Provider Selection Card */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Provider</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {/* Browser TTS Option */}
+        <div className="grid grid-cols-3 gap-3">
+          {/* Browser TTS */}
           <button
             type="button"
             onClick={() => handleProviderChange('browser')}
@@ -155,13 +164,13 @@ export default function TTSSettings() {
                 )}
               </div>
               <div className="min-w-0">
-                <span className="block font-medium text-foreground text-sm">Browser TTS</span>
+                <span className="block font-medium text-foreground text-sm">Browser</span>
                 <span className="block text-xs text-text-secondary mt-0.5">System voices</span>
               </div>
             </div>
           </button>
 
-          {/* ElevenLabs Option */}
+          {/* ElevenLabs */}
           <button
             type="button"
             onClick={() => handleProviderChange('elevenlabs')}
@@ -187,7 +196,7 @@ export default function TTSSettings() {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className="font-medium text-foreground text-sm">ElevenLabs</span>
                   {!hasSubscription && status.elevenLabsAvailable && (
                     <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-primary-900 text-primary-400 rounded">
@@ -199,12 +208,51 @@ export default function TTSSettings() {
               </div>
             </div>
           </button>
+
+          {/* Azure */}
+          <button
+            type="button"
+            onClick={() => handleProviderChange('azure')}
+            disabled={!status.azureAvailable || !isOnline}
+            className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+              !status.azureAvailable || !isOnline
+                ? 'opacity-50 cursor-not-allowed border-border bg-surface'
+                : settings.ttsProvider === 'azure'
+                  ? 'border-primary-500 bg-primary-900'
+                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
+                settings.ttsProvider === 'azure'
+                  ? 'border-primary-500 bg-primary-500'
+                  : 'border-text-tertiary'
+              }`}>
+                {settings.ttsProvider === 'azure' && (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-medium text-foreground text-sm">Azure</span>
+                  {!hasSubscription && status.azureAvailable && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-primary-900 text-primary-400 rounded">
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <span className="block text-xs text-text-secondary mt-0.5">Neural voices</span>
+              </div>
+            </div>
+          </button>
         </div>
 
-        {/* Subtle subscription note */}
-        {settings.ttsProvider === 'elevenlabs' && !hasSubscription && status.elevenLabsAvailable && (
+        {/* Subscription note */}
+        {(settings.ttsProvider === 'elevenlabs' || settings.ttsProvider === 'azure') && !hasSubscription && (
           <p className="text-xs text-text-secondary px-1">
-            Pro subscription required for ElevenLabs voices.{' '}
+            Pro subscription required for {providerLabel} voices.{' '}
             <button
               type="button"
               onClick={() => router.push('/pricing')}
@@ -217,13 +265,19 @@ export default function TTSSettings() {
 
         {!isOnline && (
           <p className="text-xs text-amber-500 px-1">
-            Offline. Browser TTS still works, but ElevenLabs voices need internet.
+            Offline. Browser TTS still works, but ElevenLabs and Azure voices need internet.
           </p>
         )}
 
         {!status.elevenLabsAvailable && isOnline && (
           <p className="text-xs text-text-tertiary px-1">
             ElevenLabs unavailable. API key not configured.
+          </p>
+        )}
+
+        {!status.azureAvailable && isOnline && (
+          <p className="text-xs text-text-tertiary px-1">
+            Azure unavailable. Subscription key not configured.
           </p>
         )}
       </div>
@@ -354,6 +408,12 @@ export default function TTSSettings() {
           {settings.ttsProvider === 'elevenlabs' && !hasSubscription && (
             <p className="text-xs text-text-tertiary text-center py-2">
               Advanced voice controls available with Pro subscription
+            </p>
+          )}
+
+          {settings.ttsProvider === 'azure' && (
+            <p className="text-xs text-text-tertiary text-center py-2">
+              Voice speed and pitch are set by the selected Azure voice.
             </p>
           )}
         </div>
