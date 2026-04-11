@@ -120,16 +120,23 @@ function getStorage(): Storage | null {
 }
 
 async function getDb() {
-  return openDB<OfflineBoardCacheDb>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(BOARD_STORE)) {
-        const boards = db.createObjectStore(BOARD_STORE, {
-          keyPath: 'cacheKey',
-        });
-        boards.createIndex('byUserId', 'userId');
-      }
-    },
-  });
+  try {
+    return await openDB<OfflineBoardCacheDb>(DB_NAME, DB_VERSION, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains(BOARD_STORE)) {
+          const boards = db.createObjectStore(BOARD_STORE, {
+            keyPath: 'cacheKey',
+          });
+          boards.createIndex('byUserId', 'userId');
+        }
+      },
+    });
+  } catch (error) {
+    // IndexedDB can fail in private browsing, when storage is full, or if the
+    // backing store is corrupted. Throw a typed error so callers can decide
+    // whether to surface it or degrade silently.
+    throw new Error(`IndexedDB unavailable: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 function normalizeBoardDocuments(
