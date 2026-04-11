@@ -101,9 +101,6 @@ export class AzureTTS {
 
   public async speak(text: string, options?: {
     voiceId?: string;
-    rate?: number;
-    pitch?: number;
-    volume?: number;
   }) {
     this.stop();
 
@@ -150,13 +147,7 @@ export class AzureTTS {
       const response = await fetch('/api/azure/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          voiceId,
-          rate: options?.rate,
-          pitch: options?.pitch,
-          volume: options?.volume,
-        }),
+        body: JSON.stringify({ text, voiceId }),
         signal: this.abortController.signal,
       });
 

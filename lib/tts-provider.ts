@@ -240,12 +240,7 @@ export class TTSProvider {
 
       console.log('Using Azure voice ID:', voiceToUse);
 
-      this.azureTTS.speak(text, {
-        voiceId: voiceToUse,
-        rate: options?.rate,
-        pitch: options?.pitch,
-        volume: options?.volume,
-      });
+      this.azureTTS.speak(text, { voiceId: voiceToUse });
     } else {
       this.webSpeechTTS.speak(text, {
         voiceURI: options?.voiceId,

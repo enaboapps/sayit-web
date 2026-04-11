@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { text, voiceId, rate, pitch, volume } = body;
+    const { text, voiceId } = body;
 
     if (!text) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
@@ -29,9 +29,6 @@ export async function POST(request: Request) {
 
     const { audioStream } = await client.synthToBytestream(text, {
       voice: voiceId,
-      rate,
-      pitch,
-      volume,
       format: 'mp3',
       useWordBoundary: false,
     });
