@@ -379,31 +379,6 @@ export default function TTSSettings() {
             </>
           )}
 
-          {/* Azure settings */}
-          {settings.ttsProvider === 'azure' && hasSubscription && (
-            <>
-              <Slider
-                value={settings.speechRate}
-                onChange={(value) => updateSetting('speechRate', value)}
-                min={0.5}
-                max={2}
-                step={0.1}
-                label="Speed"
-                valueLabel={(v) => `${v.toFixed(1)}x`}
-              />
-
-              <Slider
-                value={settings.speechPitch}
-                onChange={(value) => updateSetting('speechPitch', value)}
-                min={0.5}
-                max={2}
-                step={0.1}
-                label="Pitch"
-                valueLabel={(v) => v.toFixed(1)}
-              />
-            </>
-          )}
-
           {/* ElevenLabs-specific settings */}
           {settings.ttsProvider === 'elevenlabs' && hasSubscription && (
             <>
@@ -429,9 +404,15 @@ export default function TTSSettings() {
             </>
           )}
 
-          {(settings.ttsProvider === 'elevenlabs' || settings.ttsProvider === 'azure') && !hasSubscription && (
+          {settings.ttsProvider === 'elevenlabs' && !hasSubscription && (
             <p className="text-xs text-text-tertiary text-center py-2">
               Advanced voice controls available with Pro subscription
+            </p>
+          )}
+
+          {settings.ttsProvider === 'azure' && (
+            <p className="text-xs text-text-tertiary text-center py-2">
+              Voice speed and pitch are set by the selected Azure voice.
             </p>
           )}
         </div>
