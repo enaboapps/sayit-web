@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { TTSProviderType } from '@/lib/tts-provider';
@@ -32,6 +32,8 @@ export default function TTSSettings() {
   const { isOnline } = useOnlineStatus();
 
   const [providerVoices, setProviderVoices] = useState(voices);
+  const [genderFilter, setGenderFilter] = useState<'All' | 'Male' | 'Female' | 'Unknown'>('All');
+  const [langFilter, setLangFilter] = useState<string>('All');
 
   // Refresh browser voices when switching to browser provider
   useEffect(() => {
@@ -57,15 +59,42 @@ export default function TTSSettings() {
     setProviderVoices(getVoicesByProvider(settings.ttsProvider));
   }, [voices, settings.ttsProvider, getVoicesByProvider]);
 
-  // Auto-select first voice if current voice doesn't exist in this provider
+  // Reset filters when provider changes
   useEffect(() => {
-    if (providerVoices.length > 0) {
-      const currentVoiceExists = providerVoices.some(v => v.id === settings.ttsVoiceId);
-      if (!currentVoiceExists) {
-        updateSetting('ttsVoiceId', providerVoices[0].id);
+    setGenderFilter('All');
+    setLangFilter('All');
+  }, [settings.ttsProvider]);
+
+  const filteredVoices = useMemo(() => {
+    let result = providerVoices;
+    if (genderFilter !== 'All') result = result.filter(v => v.gender === genderFilter);
+    if (langFilter !== 'All') result = result.filter(v => v.languageCodes?.some(lc => lc.bcp47 === langFilter));
+    return result;
+  }, [providerVoices, genderFilter, langFilter]);
+
+  const languageOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const opts: { code: string; display: string }[] = [];
+    for (const voice of providerVoices) {
+      for (const lc of voice.languageCodes ?? []) {
+        if (!seen.has(lc.bcp47)) {
+          seen.add(lc.bcp47);
+          opts.push({ code: lc.bcp47, display: lc.display });
+        }
       }
     }
-  }, [providerVoices, settings.ttsVoiceId, updateSetting]);
+    return opts.sort((a, b) => a.display.localeCompare(b.display));
+  }, [providerVoices]);
+
+  // Auto-select first voice if current voice doesn't exist in filtered list
+  useEffect(() => {
+    if (filteredVoices.length > 0) {
+      const currentVoiceExists = filteredVoices.some(v => v.id === settings.ttsVoiceId);
+      if (!currentVoiceExists) {
+        updateSetting('ttsVoiceId', filteredVoices[0].id);
+      }
+    }
+  }, [filteredVoices, settings.ttsVoiceId, updateSetting]);
 
   const handleProviderChange = useCallback((newProvider: TTSProviderType) => {
     if (newProvider === 'elevenlabs' && (!status.elevenLabsAvailable || !isOnline)) return;
@@ -84,7 +113,7 @@ export default function TTSSettings() {
     speak(SAMPLE_TEXT);
   }, [speak, stop, isSpeaking]);
 
-  const selectedVoiceName = providerVoices.find(v => v.id === settings.ttsVoiceId)?.name;
+  const selectedVoiceName = filteredVoices.find(v => v.id === settings.ttsVoiceId)?.name;
 
   const providerLabel = settings.ttsProvider === 'elevenlabs'
     ? 'ElevenLabs'
@@ -98,10 +127,34 @@ export default function TTSSettings() {
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice</h3>
         <div className="bg-surface-hover rounded-2xl p-4">
+          {settings.ttsProvider !== 'browser' && providerVoices.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <select
+                value={genderFilter}
+                onChange={e => setGenderFilter(e.target.value as 'All' | 'Male' | 'Female' | 'Unknown')}
+                className="rounded-xl border border-border bg-surface text-sm px-3 py-2 text-foreground"
+              >
+                <option value="All">All genders</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+              <select
+                value={langFilter}
+                onChange={e => setLangFilter(e.target.value)}
+                className="rounded-xl border border-border bg-surface text-sm px-3 py-2 text-foreground"
+              >
+                <option value="All">All languages</option>
+                {languageOptions.map(l => (
+                  <option key={l.code} value={l.code}>{l.display}</option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <Dropdown
-                options={providerVoices.map(voice => ({
+                options={filteredVoices.map(voice => ({
                   value: voice.id,
                   label: voice.name
                 }))}
@@ -132,6 +185,9 @@ export default function TTSSettings() {
           {selectedVoiceName && (
             <p className="mt-2 text-xs text-text-tertiary">
               Provider: {providerLabel}
+              {settings.ttsProvider !== 'browser' && providerVoices.length > 0 && (
+                <span className="ml-2">· {filteredVoices.length} of {providerVoices.length} voices</span>
+              )}
             </p>
           )}
         </div>

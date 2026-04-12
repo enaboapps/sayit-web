@@ -18,6 +18,8 @@ export async function GET() {
     const mapped = voices.map(v => ({
       voice_id: v.id,
       name: v.name,
+      gender: v.gender,
+      languageCodes: v.languageCodes ?? [],
     }));
 
     return NextResponse.json({ voices: mapped, available: mapped.length > 0 });
