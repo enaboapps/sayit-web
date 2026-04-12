@@ -3,6 +3,8 @@ import { TextToSpeech as WebSpeechTTS } from './tts';
 export interface Voice {
   voice_id: string;
   name: string;
+  gender?: 'Male' | 'Female' | 'Unknown';
+  languageCodes?: { bcp47: string; iso639_3: string; display: string }[];
 }
 
 
@@ -62,6 +64,8 @@ export class ElevenLabsTTS {
         this.voices = (data?.voices ?? []).map((v: Voice) => ({
           voice_id: v.voice_id,
           name: v.name || 'Unnamed Voice',
+          gender: v.gender,
+          languageCodes: v.languageCodes,
         }));
         this.isAvailableFlag = data?.available ?? this.voices.length > 0;
         this.callbacks.onVoicesChanged?.(this.voices);

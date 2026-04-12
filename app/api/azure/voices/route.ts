@@ -19,6 +19,8 @@ export async function GET() {
     const voices = unifiedVoices.map(v => ({
       voice_id: v.id,
       name: v.name,
+      gender: v.gender,
+      languageCodes: v.languageCodes ?? [],
     }));
 
     return NextResponse.json({ voices, available: voices.length > 0 });

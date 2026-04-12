@@ -8,6 +8,8 @@ export interface TTSVoice {
   id: string;
   name: string;
   provider: TTSProviderType;
+  gender?: 'Male' | 'Female' | 'Unknown';
+  languageCodes?: { bcp47: string; iso639_3: string; display: string }[];
 }
 
 // Unified class that can use either provider
@@ -163,12 +165,16 @@ export class TTSProvider {
       id: voice.voice_id,
       name: `${voice.name} (ElevenLabs)`,
       provider: 'elevenlabs' as TTSProviderType,
+      gender: voice.gender,
+      languageCodes: voice.languageCodes,
     }));
 
     const azureVoices = this.azureTTS.getVoices().map(voice => ({
       id: voice.voice_id,
       name: voice.name,
       provider: 'azure' as TTSProviderType,
+      gender: voice.gender,
+      languageCodes: voice.languageCodes,
     }));
 
     return [...browserVoices, ...elevenLabsVoices, ...azureVoices];
