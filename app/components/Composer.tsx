@@ -83,6 +83,14 @@ export default function Composer({
   const { user } = useAuth();
   const { isOnline } = useOnlineStatus();
   const isMobile = useIsMobile();
+  const {
+    isSharing: isLiveTypingSharing,
+    isCreating: isLiveTypingCreating,
+    updateContent: updateLiveTypingContent,
+    createSession: createLiveTypingSession,
+    endSession: endLiveTypingSession,
+    getShareableLink,
+  } = useLiveTyping();
 
   const {
     tabs,
@@ -148,6 +156,8 @@ export default function Composer({
 
   const textSizePx = settings.textSize;
   const currentText = enableTabs ? activeTab.text : text;
+  const shareableLink = getShareableLink();
+  const isLiveTypingButtonActive = isLiveTypingSharing || showLiveTypingModal || showLiveTypingSheet;
 
   const showUndoHint = canUndo
     && entry?.tabId === (activeTabId || 'default')
@@ -235,7 +245,19 @@ export default function Composer({
     };
   }, [error]);
 
-  // Update shared session content when text changes
+  useEffect(() => {
+    if (enableLiveTyping && user && isLiveTypingSharing) {
+      updateLiveTypingContent(currentText);
+    }
+  }, [currentText, enableLiveTyping, isLiveTypingSharing, updateLiveTypingContent, user]);
+
+  const handleStartLiveTyping = useCallback(async () => {
+    const created = await createLiveTypingSession();
+    if (created) {
+      updateLiveTypingContent(currentText);
+    }
+  }, [createLiveTypingSession, currentText, updateLiveTypingContent]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return;
@@ -404,10 +426,10 @@ export default function Composer({
                   disabled={!isOnline}
                   className={`p-2.5 rounded-xl transition-all ${
                     !isOnline ? 'bg-surface-hover text-text-tertiary opacity-40'
-                      : (showLiveTypingModal || showLiveTypingSheet) ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                      : isLiveTypingButtonActive ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
                         : 'bg-surface-hover text-text-secondary hover:text-green-500 hover:bg-status-success'
                   }`}
-                  aria-label={showLiveTypingModal || showLiveTypingSheet ? 'Live Typing Active' : 'Live Typing'}
+                  aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
                 >
                   <ShareIcon className="w-5 h-5" />
                 </button>
@@ -469,77 +491,27 @@ export default function Composer({
       )}
 
       {enableLiveTyping && user && (
-        <ComposerLiveTyping
-          currentText={currentText}
-          isMobile={isMobile}
-          isSheetOpen={showLiveTypingSheet}
-          isModalOpen={showLiveTypingModal}
-          onCloseSheet={() => setShowLiveTypingSheet(false)}
-          onCloseModal={() => setShowLiveTypingModal(false)}
-        />
-      )}
-    </>
-  );
-}
-
-function ComposerLiveTyping({
-  currentText,
-  isMobile,
-  isSheetOpen,
-  isModalOpen,
-  onCloseSheet,
-  onCloseModal,
-}: {
-  currentText: string;
-  isMobile: boolean;
-  isSheetOpen: boolean;
-  isModalOpen: boolean;
-  onCloseSheet: () => void;
-  onCloseModal: () => void;
-}) {
-  const {
-    isSharing,
-    isCreating,
-    updateContent,
-    createSession,
-    endSession,
-    getShareableLink,
-  } = useLiveTyping();
-  const shareableLink = getShareableLink();
-
-  useEffect(() => {
-    if (isSharing) {
-      updateContent(currentText);
-    }
-  }, [currentText, isSharing, updateContent]);
-
-  const handleStartSharing = useCallback(async () => {
-    const created = await createSession();
-    if (created) {
-      updateContent(currentText);
-    }
-  }, [createSession, currentText, updateContent]);
-
-  return (
-    <>
-      <LiveTypingBottomSheet
-        isOpen={isSheetOpen}
-        onClose={onCloseSheet}
-        isSharing={isSharing}
-        isCreating={isCreating}
-        shareableLink={shareableLink}
-        onStartSharing={handleStartSharing}
-        onEndSession={async () => { await endSession(); }}
-      />
-      {isModalOpen && !isMobile && shareableLink && (
-        <LiveTypingLinkModal
-          shareableLink={shareableLink}
-          onClose={onCloseModal}
-          onEndSession={async () => {
-            await endSession();
-            onCloseModal();
-          }}
-        />
+        <>
+          <LiveTypingBottomSheet
+            isOpen={showLiveTypingSheet}
+            onClose={() => setShowLiveTypingSheet(false)}
+            isSharing={isLiveTypingSharing}
+            isCreating={isLiveTypingCreating}
+            shareableLink={shareableLink}
+            onStartSharing={handleStartLiveTyping}
+            onEndSession={async () => { await endLiveTypingSession(); }}
+          />
+          {showLiveTypingModal && !isMobile && shareableLink && (
+            <LiveTypingLinkModal
+              shareableLink={shareableLink}
+              onClose={() => setShowLiveTypingModal(false)}
+              onEndSession={async () => {
+                await endLiveTypingSession();
+                setShowLiveTypingModal(false);
+              }}
+            />
+          )}
+        </>
       )}
     </>
   );
