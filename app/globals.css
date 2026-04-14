@@ -10,6 +10,7 @@
 
   /* Mobile bottom stack height (nav + dock + safe area) */
   --bottom-stack-height: calc(108px + env(safe-area-inset-bottom, 0px));
+  --active-bottom-stack-height: var(--bottom-stack-height);
 
   /* Text colors with WCAG AAA compliance */
   --text-primary: #f5f4f2;
@@ -132,7 +133,7 @@ body {
 
   /* Padding to clear the mobile bottom stack (dock + nav) */
   .pb-bottom-stack {
-    padding-bottom: var(--bottom-stack-height);
+    padding-bottom: var(--active-bottom-stack-height);
   }
   @media (min-width: 768px) {
     .pb-bottom-stack {
@@ -169,6 +170,9 @@ body {
   }
   html[data-keyboard-open="true"] .mobile-keyboard-hide {
     display: none;
+  }
+  html[data-keyboard-open="true"] {
+    --active-bottom-stack-height: 0px;
   }
 
   /* Touch-friendly tap targets (minimum 44x44px) */

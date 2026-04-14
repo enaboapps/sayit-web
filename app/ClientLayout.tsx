@@ -132,12 +132,14 @@ export default function ClientLayout({
               <ViewportCssVars />
               <OnlineStartupWatch onReady={handleStartupReady}>
                 <OfflineDataSync />
-                <div className="min-h-dvh flex flex-col md:flex-row">
+                <div className="flex h-visual-viewport min-h-0 flex-col overflow-hidden md:h-auto md:min-h-dvh md:flex-row md:overflow-visible">
                   <Sidebar />
-                  <div className="flex-1 md:pl-16 lg:pl-16">
-                    <ConnectivityBanner />
-                    <InstallBanner />
-                    <main className="min-h-dvh pb-bottom-stack">
+                  <div className="flex min-h-0 flex-1 flex-col md:pl-16 lg:pl-16">
+                    <div className="shrink-0">
+                      <ConnectivityBanner />
+                      <InstallBanner />
+                    </div>
+                    <main className="min-h-0 flex-1 overflow-y-auto pb-bottom-stack md:min-h-dvh md:overflow-visible">
                       {children}
                     </main>
                   </div>

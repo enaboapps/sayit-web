@@ -84,8 +84,9 @@ describe('Home', () => {
     });
     mockUseQuery.mockReturnValue({ role: 'communicator' });
 
-    render(<Home />);
+    const { container } = render(<Home />);
 
     expect(screen.getByText('Phrases Interface')).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass('h-full', 'min-h-0', 'overflow-hidden');
   });
 });
