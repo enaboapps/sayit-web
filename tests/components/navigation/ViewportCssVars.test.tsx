@@ -4,6 +4,7 @@ import ViewportCssVars from '@/app/components/navigation/ViewportCssVars';
 describe('ViewportCssVars', () => {
   const originalVisualViewport = window.visualViewport;
   const originalInnerHeight = window.innerHeight;
+  let focusedTextarea: HTMLTextAreaElement | null = null;
 
   const setViewport = ({ height, offsetTop }: { height: number; offsetTop: number }) => {
     Object.defineProperty(window, 'innerHeight', {
@@ -22,6 +23,8 @@ describe('ViewportCssVars', () => {
   };
 
   afterEach(() => {
+    focusedTextarea?.remove();
+    focusedTextarea = null;
     document.documentElement.style.removeProperty('--visual-viewport-height');
     document.documentElement.style.removeProperty('--keyboard-inset');
     delete document.documentElement.dataset.keyboardOpen;
@@ -37,6 +40,9 @@ describe('ViewportCssVars', () => {
 
   it('sets visual viewport and keyboard CSS variables', async () => {
     setViewport({ height: 500, offsetTop: 20 });
+    focusedTextarea = document.createElement('textarea');
+    document.body.appendChild(focusedTextarea);
+    focusedTextarea.focus();
 
     render(<ViewportCssVars />);
 
@@ -47,6 +53,18 @@ describe('ViewportCssVars', () => {
     });
   });
 
+  it('does not mark the keyboard open without a focused editable field', async () => {
+    setViewport({ height: 500, offsetTop: 20 });
+
+    render(<ViewportCssVars />);
+
+    await waitFor(() => {
+      expect(document.documentElement.style.getPropertyValue('--visual-viewport-height')).toBe('500px');
+      expect(document.documentElement.style.getPropertyValue('--keyboard-inset')).toBe('0px');
+      expect(document.documentElement.dataset.keyboardOpen).toBe('false');
+    });
+  });
+
   it('cleans up CSS variables and keyboard data on unmount', async () => {
     setViewport({ height: 760, offsetTop: 0 });
 
@@ -54,7 +72,7 @@ describe('ViewportCssVars', () => {
 
     await waitFor(() => {
       expect(document.documentElement.style.getPropertyValue('--visual-viewport-height')).toBe('760px');
-      expect(document.documentElement.style.getPropertyValue('--keyboard-inset')).toBe('40px');
+      expect(document.documentElement.style.getPropertyValue('--keyboard-inset')).toBe('0px');
       expect(document.documentElement.dataset.keyboardOpen).toBe('false');
     });
 
