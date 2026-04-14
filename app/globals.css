@@ -69,6 +69,9 @@
   --color-text-tertiary: var(--text-tertiary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --height-visual-viewport: var(--visual-viewport-height, 100dvh);
+  --min-height-visual-viewport: var(--visual-viewport-height, 100dvh);
+  --max-height-visual-viewport: var(--visual-viewport-height, 100dvh);
 }
 
 @keyframes gradient {

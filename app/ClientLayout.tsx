@@ -139,7 +139,7 @@ export default function ClientLayout({
                       <ConnectivityBanner />
                       <InstallBanner />
                     </div>
-                    <main className="min-h-0 flex-1 overflow-y-auto pb-bottom-stack md:min-h-dvh md:overflow-visible">
+                    <main className="min-h-0 flex-1 overflow-y-auto pb-bottom-stack md:overflow-visible">
                       {children}
                     </main>
                   </div>
