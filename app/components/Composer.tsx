@@ -501,9 +501,11 @@ export default function Composer({
             onStartSharing={handleStartLiveTyping}
             onEndSession={async () => { await endLiveTypingSession(); }}
           />
-          {showLiveTypingModal && !isMobile && shareableLink && (
+          {showLiveTypingModal && !isMobile && (
             <LiveTypingLinkModal
               shareableLink={shareableLink}
+              isCreating={isLiveTypingCreating}
+              onStartSharing={handleStartLiveTyping}
               onClose={() => setShowLiveTypingModal(false)}
               onEndSession={async () => {
                 await endLiveTypingSession();
