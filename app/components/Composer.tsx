@@ -320,7 +320,7 @@ export default function Composer({
 
   return (
     <>
-      <div className={`flex flex-col flex-1 min-h-0 ${className}`}>
+      <div className={`flex flex-col flex-1 min-h-0 h-full ${className}`}>
         {/* Tab bar */}
         {enableTabs && (
           <div className="shrink-0">
