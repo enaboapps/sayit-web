@@ -5,6 +5,7 @@ describe('ViewportCssVars', () => {
   const originalVisualViewport = window.visualViewport;
   const originalInnerHeight = window.innerHeight;
   let focusedTextarea: HTMLTextAreaElement | null = null;
+  let focusedInput: HTMLInputElement | null = null;
 
   const setViewport = ({ height, offsetTop }: { height: number; offsetTop: number }) => {
     Object.defineProperty(window, 'innerHeight', {
@@ -25,6 +26,8 @@ describe('ViewportCssVars', () => {
   afterEach(() => {
     focusedTextarea?.remove();
     focusedTextarea = null;
+    focusedInput?.remove();
+    focusedInput = null;
     document.documentElement.style.removeProperty('--visual-viewport-height');
     document.documentElement.style.removeProperty('--keyboard-inset');
     delete document.documentElement.dataset.keyboardOpen;
@@ -55,6 +58,22 @@ describe('ViewportCssVars', () => {
 
   it('does not mark the keyboard open without a focused editable field', async () => {
     setViewport({ height: 500, offsetTop: 20 });
+
+    render(<ViewportCssVars />);
+
+    await waitFor(() => {
+      expect(document.documentElement.style.getPropertyValue('--visual-viewport-height')).toBe('500px');
+      expect(document.documentElement.style.getPropertyValue('--keyboard-inset')).toBe('0px');
+      expect(document.documentElement.dataset.keyboardOpen).toBe('false');
+    });
+  });
+
+  it('does not mark the keyboard open for non-text inputs', async () => {
+    setViewport({ height: 500, offsetTop: 20 });
+    focusedInput = document.createElement('input');
+    focusedInput.type = 'checkbox';
+    document.body.appendChild(focusedInput);
+    focusedInput.focus();
 
     render(<ViewportCssVars />);
 
