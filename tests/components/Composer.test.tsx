@@ -2,6 +2,9 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Composer from '@/app/components/Composer';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
+import { useIsMobile } from '@/lib/hooks/useIsMobile';
 
 jest.mock('nanoid', () => {
   let idCounter = 0;
@@ -105,6 +108,10 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
+const mockUseAuth = jest.mocked(useAuth);
+const mockUseLiveTyping = jest.mocked(useLiveTyping);
+const mockUseIsMobile = jest.mocked(useIsMobile);
+
 describe('Composer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -184,5 +191,38 @@ describe('Composer', () => {
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith('Restored draft');
     });
+  });
+
+  it('shows live typing as active on mobile while sharing after the sheet is closed', () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'user@example.com',
+      },
+      loading: false,
+    });
+    mockUseIsMobile.mockReturnValue(true);
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: true,
+      isCreating: false,
+      error: null,
+      createSession: jest.fn(),
+      endSession: jest.fn(),
+      updateContent: jest.fn(),
+      getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
+    });
+
+    render(
+      <Composer
+        text="Sharing now"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Live Typing Active' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Live Typing' })).not.toBeInTheDocument();
   });
 });
