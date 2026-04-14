@@ -161,6 +161,22 @@ describe('Composer', () => {
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
   });
 
+  it('lets the textarea shrink first while keeping composer controls rendered', () => {
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    const textarea = screen.getByRole('textbox');
+    expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-[120px]', 'overflow-hidden');
+    expect(textarea).toHaveClass('h-full', 'overflow-y-auto', 'resize-none');
+    expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
+  });
+
   it('restores the active tab draft on mount when tabs enabled', async () => {
     localStorageMock.setItem('typingTabs', JSON.stringify({
       tabs: [

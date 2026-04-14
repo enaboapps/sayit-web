@@ -14,11 +14,13 @@ export default function MobileBottomStack() {
   }, [registerDockContainer]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col">
+    <div className="fixed bottom-keyboard-aware left-0 right-0 z-50 md:hidden flex flex-col">
       {/* Dock content slot - portal target */}
       <div ref={dockRef} className="bg-surface" />
       {/* Tab bar */}
-      <BottomTabBar />
+      <div className="mobile-keyboard-hide">
+        <BottomTabBar />
+      </div>
     </div>
   );
 }

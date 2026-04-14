@@ -446,21 +446,25 @@ export default function PhrasesInterface() {
   );
 
   return (
-    <>
-      <ConnectionRequestsBanner />
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="shrink-0">
+        <ConnectionRequestsBanner />
+      </div>
       {captureError && (
         <div
-          className="sticky top-0 z-40 border-b border-red-900 bg-surface px-4 py-3 text-sm text-red-300"
+          className="sticky top-0 z-40 shrink-0 border-b border-red-900 bg-surface px-4 py-3 text-sm text-red-300"
           role="status"
           aria-live="polite"
         >
           Couldn&apos;t save message to history. It will be retried next time.
         </div>
       )}
-      <AACTabs
-        phrasesContent={phrasesContent}
-        typeContent={composer}
-      />
+      <div className="flex min-h-0 flex-1 flex-col">
+        <AACTabs
+          phrasesContent={phrasesContent}
+          typeContent={composer}
+        />
+      </div>
       <BoardGridPopup
         boards={transformedBoards}
         selectedBoard={selectedBoard}
@@ -473,6 +477,6 @@ export default function PhrasesInterface() {
           router.push(`/phrases/boards/edit/${boardId}`);
         }}
       />
-    </>
+    </div>
   );
 }

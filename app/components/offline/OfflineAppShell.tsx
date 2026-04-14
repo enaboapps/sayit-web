@@ -209,9 +209,9 @@ export default function OfflineAppShell({
   );
 
   return (
-    <div className="min-h-dvh bg-background">
-      <section className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 py-6">
-        <div className="flex min-h-[65dvh] flex-1 flex-col rounded-3xl border border-border bg-surface shadow-2xl">
+    <div className="h-visual-viewport min-h-0 overflow-hidden bg-background">
+      <section className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col px-4 py-6">
+        <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-border bg-surface shadow-2xl">
           <AACTabs
             phrasesContent={phrasesContent}
             typeContent={typeContent}
@@ -219,7 +219,7 @@ export default function OfflineAppShell({
         </div>
 
         {messages.length > 0 && (
-          <div className="mt-4 rounded-3xl border border-border bg-surface px-5 py-4 shadow-lg">
+          <div className="mt-4 max-h-[30%] shrink-0 overflow-y-auto rounded-3xl border border-border bg-surface px-5 py-4 shadow-lg">
             <h2 className="text-sm font-semibold text-foreground">Recent on this device</h2>
             <p className="mt-1 text-xs text-text-secondary">
               Tap a recent message to bring it back into the typing area.
