@@ -19,7 +19,11 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`flex flex-col bg-background ${
+      user
+        ? 'h-visual-viewport min-h-0 overflow-hidden'
+        : 'min-h-screen'
+    }`}>
       {!user ? (
         <>
           <GuestCommunication />

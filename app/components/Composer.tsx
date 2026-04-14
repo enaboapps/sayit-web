@@ -337,14 +337,14 @@ export default function Composer({
         )}
 
         {/* Textarea — full bleed, fills the screen */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-[120px] overflow-hidden">
           <textarea
             ref={inputRef}
             value={currentText}
             onChange={(e) => handleTextChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="What do you want to say?"
-            className="w-full h-full bg-transparent text-foreground placeholder:text-text-tertiary px-6 py-5 resize-none focus:outline-none"
+            className="w-full h-full overflow-y-auto bg-transparent text-foreground placeholder:text-text-tertiary px-6 py-5 resize-none focus:outline-none"
             style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
           />
         </div>
