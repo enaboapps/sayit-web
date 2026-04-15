@@ -322,7 +322,7 @@ export default function Composer({
   };
 
   const toolbarContent = (
-    <div className={`flex items-center gap-3 px-4 pt-2 ${shouldPortalToolbar ? 'pb-safe' : 'pb-4'}`}>
+    <div className={`flex items-center gap-3 px-4 pt-2 ${shouldPortalToolbar ? 'pb-2' : 'pb-4'}`}>
       {/* Secondary tools */}
       <div className="flex items-center gap-1">
         <button
