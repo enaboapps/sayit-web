@@ -1,4 +1,5 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
+import { BaseTTSCallbacks } from './tts-types';
 
 export interface AzureVoice {
   voice_id: string;
@@ -26,12 +27,7 @@ export class AzureTTS {
   private abortController: AbortController | null = null;
   private fallbackTTS: WebSpeechTTS;
 
-  private callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: AzureVoice[]) => void;
-  } = {};
+  private callbacks: BaseTTSCallbacks & { onVoicesChanged?: (voices: AzureVoice[]) => void } = {};
 
   private constructor() {
     this.fallbackTTS = WebSpeechTTS.getInstance();
@@ -83,12 +79,7 @@ export class AzureTTS {
     return this.voicesLoaded;
   }
 
-  public setCallbacks(callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: AzureVoice[]) => void;
-  }) {
+  public setCallbacks(callbacks: BaseTTSCallbacks & { onVoicesChanged?: (voices: AzureVoice[]) => void }) {
     this.callbacks = callbacks;
 
     this.fallbackTTS.setCallbacks({
