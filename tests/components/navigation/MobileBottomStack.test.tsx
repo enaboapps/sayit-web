@@ -8,7 +8,7 @@ jest.mock('@/app/components/navigation/BottomTabBar', () => ({
 }));
 
 describe('MobileBottomStack', () => {
-  it('positions the mobile stack above the keyboard and hides navigation while typing', () => {
+  it('positions the mobile stack above the keyboard using native CSS keyboard inset', () => {
     const { container } = render(
       <MobileBottomProvider>
         <MobileBottomStack />
@@ -19,6 +19,6 @@ describe('MobileBottomStack', () => {
     expect(stack).toHaveClass('bottom-keyboard-aware');
 
     const nav = screen.getByRole('navigation', { name: 'Bottom navigation' });
-    expect(nav.parentElement).toHaveClass('mobile-keyboard-hide');
+    expect(nav).toBeInTheDocument();
   });
 });

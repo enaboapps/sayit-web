@@ -209,7 +209,7 @@ export default function OfflineAppShell({
   );
 
   return (
-    <div className="h-visual-viewport min-h-0 overflow-hidden bg-background">
+    <div className="h-dvh min-h-0 overflow-hidden bg-background">
       <section className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col px-4 py-6">
         <div className="flex min-h-0 flex-1 flex-col rounded-3xl border border-border bg-surface shadow-2xl">
           <AACTabs

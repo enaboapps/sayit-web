@@ -71,18 +71,33 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
       {/* Tab content */}
       <div className="flex-1 min-h-0 relative">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={activeTab}
-            id={`aac-tab-${activeTab}`}
-            role="tabpanel"
-            className="absolute inset-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.12 }}
-          >
-            {activeTab === 'phrases' ? phrasesContent : typeContent}
-          </motion.div>
+          {activeTab === 'phrases' ? (
+            <motion.div
+              key="phrases"
+              id="aac-tab-phrases"
+              role="tabpanel"
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+            >
+              {phrasesContent}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="type"
+              id="aac-tab-type"
+              role="tabpanel"
+              className="absolute inset-0 flex flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+            >
+              {typeContent}
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>

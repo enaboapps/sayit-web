@@ -18,9 +18,7 @@ export default function MobileBottomStack() {
       {/* Dock content slot - portal target */}
       <div ref={dockRef} className="bg-surface" />
       {/* Tab bar */}
-      <div className="mobile-keyboard-hide">
-        <BottomTabBar />
-      </div>
+      <BottomTabBar />
     </div>
   );
 }

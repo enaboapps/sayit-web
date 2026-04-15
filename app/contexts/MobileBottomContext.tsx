@@ -32,6 +32,11 @@ export function useMobileBottom() {
   return context;
 }
 
+/** Safe variant — returns null when used outside MobileBottomProvider. */
+export function useOptionalMobileBottom() {
+  return useContext(MobileBottomContext);
+}
+
 // Component to portal dock content into the mobile bottom stack
 export function MobileDockPortal({ children }: { children: ReactNode }) {
   const { dockContainer } = useMobileBottom();

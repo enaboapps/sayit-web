@@ -21,6 +21,7 @@ import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
+import { MobileDockPortal, useOptionalMobileBottom } from '../contexts/MobileBottomContext';
 
 interface ReplySuggestionsConfig {
   history: string[];
@@ -83,6 +84,8 @@ export default function Composer({
   const { user } = useAuth();
   const { isOnline } = useOnlineStatus();
   const isMobile = useIsMobile();
+  const mobileBottom = useOptionalMobileBottom();
+  const shouldPortalToolbar = isMobile && !!mobileBottom?.dockContainer;
   const {
     isSharing: isLiveTypingSharing,
     isCreating: isLiveTypingCreating,
@@ -318,6 +321,88 @@ export default function Composer({
     onChange(value);
   };
 
+  const toolbarContent = (
+    <div className={`flex items-center gap-3 px-4 pt-2 ${shouldPortalToolbar ? 'pb-2' : 'pb-4'}`}>
+      {/* Secondary tools */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={handleClear}
+          disabled={!currentText.trim()}
+          className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-red-500 hover:bg-status-error transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Clear"
+        >
+          <XMarkIcon className="w-5 h-5" />
+        </button>
+
+        {enableFixText && (
+          !isOnline ? (
+            <button type="button" disabled className="p-2.5 rounded-xl bg-surface-hover text-text-tertiary opacity-40 cursor-not-allowed">
+              <SparklesIcon className="w-5 h-5" />
+            </button>
+          ) : (
+            <SubscriptionWrapper
+              fallback={
+                <button onClick={() => window.location.href = '/pricing'} className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-amber-500 hover:bg-status-warning transition-all">
+                  <SparklesIcon className="w-5 h-5" />
+                </button>
+              }
+            >
+              <button
+                onClick={handleFixText}
+                disabled={!currentText.trim() || isFixingText}
+                className={`p-2.5 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                  isFixingText ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' : 'bg-surface-hover text-text-secondary hover:text-purple-500 hover:bg-status-purple'
+                }`}
+                aria-label="Fix Text"
+              >
+                {isFixingText ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+              </button>
+            </SubscriptionWrapper>
+          )
+        )}
+
+        {enableLiveTyping && user && (
+          <button
+            onClick={handleShare}
+            disabled={!isOnline}
+            className={`p-2.5 rounded-xl transition-all ${
+              !isOnline ? 'bg-surface-hover text-text-tertiary opacity-40'
+                : isLiveTypingButtonActive ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
+                  : 'bg-surface-hover text-text-secondary hover:text-green-500 hover:bg-status-success'
+            }`}
+            aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
+          >
+            <ShareIcon className="w-5 h-5" />
+          </button>
+        )}
+
+        {onAddAsPhrase && (
+          <button
+            onClick={() => onAddAsPhrase(currentText)}
+            disabled={!currentText.trim()}
+            className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-primary-500 hover:bg-surface-hover transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Save as phrase"
+          >
+            <BookmarkIcon className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Speak — the big action */}
+      <SpeakButton
+        onSpeak={() => onSpeak('speak')}
+        onStop={onStop}
+        onSelectTone={handleToneSelected}
+        isSpeaking={isSpeaking}
+        disabled={!isAvailable || !currentText.trim()}
+        enableToneControl={enableToneControl}
+      />
+    </div>
+  );
+
   return (
     <>
       <div className={`flex flex-col flex-1 min-h-0 h-full ${className}`}>
@@ -349,8 +434,8 @@ export default function Composer({
           />
         </div>
 
-        {/* Reply suggestions */}
-        {replySuggestions && (
+        {/* Reply suggestions — inline on desktop/offline, portaled on mobile */}
+        {replySuggestions && !shouldPortalToolbar && (
           <div className="shrink-0 px-4 pb-2">
             <ReplySuggestions
               history={replySuggestions.history}
@@ -379,89 +464,32 @@ export default function Composer({
           </div>
         )}
 
-        {/* Toolbar */}
-        <div className="shrink-0 px-4 pb-4 pt-2">
-          <div className="flex items-center gap-3">
-            {/* Secondary tools */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleClear}
-                disabled={!currentText.trim()}
-                className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-red-500 hover:bg-status-error transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Clear"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-
-              {enableFixText && (
-                !isOnline ? (
-                  <button type="button" disabled className="p-2.5 rounded-xl bg-surface-hover text-text-tertiary opacity-40 cursor-not-allowed">
-                    <SparklesIcon className="w-5 h-5" />
-                  </button>
-                ) : (
-                  <SubscriptionWrapper
-                    fallback={
-                      <button onClick={() => window.location.href = '/pricing'} className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-amber-500 hover:bg-status-warning transition-all">
-                        <SparklesIcon className="w-5 h-5" />
-                      </button>
-                    }
-                  >
-                    <button
-                      onClick={handleFixText}
-                      disabled={!currentText.trim() || isFixingText}
-                      className={`p-2.5 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                        isFixingText ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' : 'bg-surface-hover text-text-secondary hover:text-purple-500 hover:bg-status-purple'
-                      }`}
-                      aria-label="Fix Text"
-                    >
-                      {isFixingText ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
-                    </button>
-                  </SubscriptionWrapper>
-                )
-              )}
-
-              {enableLiveTyping && user && (
-                <button
-                  onClick={handleShare}
-                  disabled={!isOnline}
-                  className={`p-2.5 rounded-xl transition-all ${
-                    !isOnline ? 'bg-surface-hover text-text-tertiary opacity-40'
-                      : isLiveTypingButtonActive ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                        : 'bg-surface-hover text-text-secondary hover:text-green-500 hover:bg-status-success'
-                  }`}
-                  aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
-                >
-                  <ShareIcon className="w-5 h-5" />
-                </button>
-              )}
-
-              {onAddAsPhrase && (
-                <button
-                  onClick={() => onAddAsPhrase(currentText)}
-                  disabled={!currentText.trim()}
-                  className="p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-primary-500 hover:bg-surface-hover transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Save as phrase"
-                >
-                  <BookmarkIcon className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Speak — the big action */}
-            <SpeakButton
-              onSpeak={() => onSpeak('speak')}
-              onStop={onStop}
-              onSelectTone={handleToneSelected}
-              isSpeaking={isSpeaking}
-              disabled={!isAvailable || !currentText.trim()}
-              enableToneControl={enableToneControl}
-            />
+        {/* Toolbar — inline on desktop/offline, portaled on mobile */}
+        {!shouldPortalToolbar && (
+          <div className="shrink-0">
+            {toolbarContent}
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Portal toolbar + suggestions into the mobile dock so it sits above the keyboard */}
+      {shouldPortalToolbar && (
+        <MobileDockPortal>
+          <div className="border-t border-border bg-surface">
+            {replySuggestions && (
+              <div className="px-4 pt-2">
+                <ReplySuggestions
+                  history={replySuggestions.history}
+                  enabled={replySuggestions.enabled}
+                  onSelectSuggestion={replySuggestions.onSelect}
+                  variant="inline"
+                />
+              </div>
+            )}
+            {toolbarContent}
+          </div>
+        </MobileDockPortal>
+      )}
 
       {/* Tab management sheets/dialogs */}
       {enableTabs && (
