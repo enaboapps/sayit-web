@@ -1,15 +1,16 @@
+import { BaseTTSCallbacks } from './tts-types';
+
+interface WebSpeechCallbacks extends BaseTTSCallbacks {
+  onVoicesChanged?: (voices: SpeechSynthesisVoice[]) => void;
+  onWordBoundary?: (word: string, charIndex: number) => void;
+}
+
 export class TextToSpeech {
   private static instance: TextToSpeech;
   private utterance: SpeechSynthesisUtterance | null = null;
   private isSpeaking: boolean = false;
   private voices: SpeechSynthesisVoice[] = [];
-  private callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: SpeechSynthesisVoice[]) => void;
-    onWordBoundary?: (word: string, charIndex: number) => void;
-  } = {};
+  private callbacks: WebSpeechCallbacks = {};
 
   private constructor() {
     // Private constructor to enforce singleton pattern
@@ -49,13 +50,7 @@ export class TextToSpeech {
     }
   }
 
-  public setCallbacks(callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: SpeechSynthesisVoice[]) => void;
-    onWordBoundary?: (word: string, charIndex: number) => void;
-  }) {
+  public setCallbacks(callbacks: WebSpeechCallbacks) {
     this.callbacks = callbacks;
   }
 

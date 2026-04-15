@@ -47,65 +47,24 @@ export class TTSProvider {
     return TTSProvider.instance;
   }
 
+  private makeProviderCallbacks(onVoicesChanged?: () => void) {
+    return {
+      onStart: () => { this.isSpeaking = true; this.callbacks.onStart?.(); },
+      onEnd: () => { this.isSpeaking = false; this.callbacks.onEnd?.(); },
+      onError: (error: Error) => { this.isSpeaking = false; this.callbacks.onError?.(error); },
+      ...(onVoicesChanged ? { onVoicesChanged } : {}),
+    };
+  }
+
   private setupCallbacks() {
-    // Setup callbacks for both TTS providers
+    const onVoicesChanged = () => this.callbacks.onVoicesChanged?.(this.getAllVoices());
+
     this.webSpeechTTS.setCallbacks({
-      onStart: () => {
-        this.isSpeaking = true;
-        this.callbacks.onStart?.();
-      },
-      onEnd: () => {
-        this.isSpeaking = false;
-        this.callbacks.onEnd?.();
-      },
-      onError: (error) => {
-        this.isSpeaking = false;
-        this.callbacks.onError?.(error);
-      },
-      onVoicesChanged: () => {
-        // Notify that voices have changed
-        this.callbacks.onVoicesChanged?.(this.getAllVoices());
-      },
-      onWordBoundary: (word, charIndex) => {
-        this.callbacks.onWordBoundary?.(word, charIndex);
-      },
+      ...this.makeProviderCallbacks(onVoicesChanged),
+      onWordBoundary: (word, charIndex) => this.callbacks.onWordBoundary?.(word, charIndex),
     });
-
-    this.elevenlabsTTS.setCallbacks({
-      onStart: () => {
-        this.isSpeaking = true;
-        this.callbacks.onStart?.();
-      },
-      onEnd: () => {
-        this.isSpeaking = false;
-        this.callbacks.onEnd?.();
-      },
-      onError: (error) => {
-        this.isSpeaking = false;
-        this.callbacks.onError?.(error);
-      },
-      onVoicesChanged: () => {
-        this.callbacks.onVoicesChanged?.(this.getAllVoices());
-      }
-    });
-
-    this.azureTTS.setCallbacks({
-      onStart: () => {
-        this.isSpeaking = true;
-        this.callbacks.onStart?.();
-      },
-      onEnd: () => {
-        this.isSpeaking = false;
-        this.callbacks.onEnd?.();
-      },
-      onError: (error) => {
-        this.isSpeaking = false;
-        this.callbacks.onError?.(error);
-      },
-      onVoicesChanged: () => {
-        this.callbacks.onVoicesChanged?.(this.getAllVoices());
-      }
-    });
+    this.elevenlabsTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
+    this.azureTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
   }
 
   public setCallbacks(callbacks: {

@@ -1,4 +1,5 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
+import { BaseTTSCallbacks } from './tts-types';
 
 export interface Voice {
   voice_id: string;
@@ -35,12 +36,7 @@ export class ElevenLabsTTS {
   private abortController: AbortController | null = null;
   private lastRequestTime = 0;
 
-  private callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: Voice[]) => void;
-  } = {};
+  private callbacks: BaseTTSCallbacks & { onVoicesChanged?: (voices: Voice[]) => void } = {};
 
   private constructor() {
     this.fallbackTTS = WebSpeechTTS.getInstance();
@@ -88,12 +84,7 @@ export class ElevenLabsTTS {
     return this.voicesLoaded;
   }
 
-  public setCallbacks(callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: Voice[]) => void;
-  }) {
+  public setCallbacks(callbacks: BaseTTSCallbacks & { onVoicesChanged?: (voices: Voice[]) => void }) {
     this.callbacks = callbacks;
     this.fallbackTTS.setCallbacks({
       onStart: callbacks.onStart,
