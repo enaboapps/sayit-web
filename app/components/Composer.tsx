@@ -446,8 +446,8 @@ export default function Composer({
           </div>
         )}
 
-        {/* Undo / double-enter banners */}
-        {(showUndoHint || showDoubleEnterHint) && (
+        {/* Undo / double-enter banners — inline only when not portaled */}
+        {(showUndoHint || showDoubleEnterHint) && !shouldPortalToolbar && (
           <div className="shrink-0 px-4 pb-2">
             {showUndoHint ? (
               <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
@@ -457,8 +457,8 @@ export default function Composer({
           </div>
         )}
 
-        {/* Error */}
-        {error && (
+        {/* Error — inline only when not portaled */}
+        {error && !shouldPortalToolbar && (
           <div className="shrink-0 px-6 pb-2">
             <span className="text-sm text-red-400">{error}</span>
           </div>
@@ -486,7 +486,19 @@ export default function Composer({
                 />
               </div>
             )}
-            {toolbarContent}
+            {(showUndoHint || showDoubleEnterHint || error) ? (
+              <div className="px-4 pt-2 pb-2">
+                {error ? (
+                  <span className="text-sm text-red-400">{error}</span>
+                ) : showUndoHint ? (
+                  <ActionPromptBanner variant="undo" remainingMs={undoRemainingMs} onUndo={undo} />
+                ) : (
+                  <ActionPromptBanner variant="doubleEnter" actionLabel={doubleEnterActionLabel[settings.doubleEnterAction]} remainingMs={remainingMs} />
+                )}
+              </div>
+            ) : (
+              toolbarContent
+            )}
           </div>
         </MobileDockPortal>
       )}
