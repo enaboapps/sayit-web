@@ -53,7 +53,7 @@ export function usePhraseBoardData() {
     updateUIPreference('selectedBoardId', boards[0]._id);
   }, [boards, shouldLoadBoards, selectedBoardId, updateUIPreference]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const phrases: PhraseSummary[] = selectedBoardData?.phrase_board_phrases
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ?.map((pbp: any) => pbp.phrase)
