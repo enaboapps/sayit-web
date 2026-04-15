@@ -21,7 +21,7 @@ import TabBar from './typing-tabs/TabBar';
 import TabManagementDialog from './typing-tabs/TabManagementDialog';
 import LiveTypingBottomSheet from './live-typing/LiveTypingBottomSheet';
 import LiveTypingLinkModal from './live-typing/LiveTypingLinkModal';
-import { MobileDockPortal, useMobileBottom } from '../contexts/MobileBottomContext';
+import { MobileDockPortal, useOptionalMobileBottom } from '../contexts/MobileBottomContext';
 
 interface ReplySuggestionsConfig {
   history: string[];
@@ -84,8 +84,8 @@ export default function Composer({
   const { user } = useAuth();
   const { isOnline } = useOnlineStatus();
   const isMobile = useIsMobile();
-  const { dockContainer } = useMobileBottom();
-  const shouldPortalToolbar = isMobile && !!dockContainer;
+  const mobileBottom = useOptionalMobileBottom();
+  const shouldPortalToolbar = isMobile && !!mobileBottom?.dockContainer;
   const {
     isSharing: isLiveTypingSharing,
     isCreating: isLiveTypingCreating,

@@ -65,7 +65,7 @@ jest.mock('@/lib/hooks/useIsMobile', () => ({
 }));
 
 jest.mock('@/app/contexts/MobileBottomContext', () => ({
-  useMobileBottom: jest.fn(() => ({ dockContainer: null, registerDockContainer: jest.fn() })),
+  useOptionalMobileBottom: jest.fn(() => null),
   MobileDockPortal: jest.fn(() => null),
 }));
 
