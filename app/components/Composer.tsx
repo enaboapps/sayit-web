@@ -434,8 +434,8 @@ export default function Composer({
           />
         </div>
 
-        {/* Reply suggestions */}
-        {replySuggestions && (
+        {/* Reply suggestions — inline on desktop/offline, portaled on mobile */}
+        {replySuggestions && !shouldPortalToolbar && (
           <div className="shrink-0 px-4 pb-2">
             <ReplySuggestions
               history={replySuggestions.history}
@@ -472,10 +472,20 @@ export default function Composer({
         )}
       </div>
 
-      {/* Portal toolbar into the mobile dock so it sits above the keyboard */}
+      {/* Portal toolbar + suggestions into the mobile dock so it sits above the keyboard */}
       {shouldPortalToolbar && (
         <MobileDockPortal>
           <div className="border-t border-border bg-surface">
+            {replySuggestions && (
+              <div className="px-4 pt-2">
+                <ReplySuggestions
+                  history={replySuggestions.history}
+                  enabled={replySuggestions.enabled}
+                  onSelectSuggestion={replySuggestions.onSelect}
+                  variant="inline"
+                />
+              </div>
+            )}
             {toolbarContent}
           </div>
         </MobileDockPortal>
