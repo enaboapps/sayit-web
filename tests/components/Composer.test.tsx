@@ -64,6 +64,11 @@ jest.mock('@/lib/hooks/useIsMobile', () => ({
   useIsMobile: jest.fn(() => false),
 }));
 
+jest.mock('@/app/contexts/MobileBottomContext', () => ({
+  useMobileBottom: jest.fn(() => ({ dockContainer: null, registerDockContainer: jest.fn() })),
+  MobileDockPortal: jest.fn(() => null),
+}));
+
 jest.mock('@/app/components/live-typing/LiveTypingBottomSheet', () => ({
   __esModule: true,
   default: () => null,
