@@ -12,6 +12,7 @@ import ConnectivityBanner from './components/navigation/ConnectivityBanner';
 import InstallBanner from './components/navigation/InstallBanner';
 import Sidebar from './components/Sidebar';
 import MobileBottomStack from './components/navigation/MobileBottomStack';
+import KeyboardInsetCssVar from './components/navigation/KeyboardInsetCssVar';
 import OfflineAppShell from './components/offline/OfflineAppShell';
 import OfflineDataSync from './components/offline/OfflineDataSync';
 import OnlineStartupWatch from './components/startup/OnlineStartupWatch';
@@ -113,6 +114,7 @@ export default function ClientLayout({
         <StaticAuthProvider>
           <SettingsProvider>
             <MobileBottomProvider>
+              <KeyboardInsetCssVar />
               <OfflineAppShell mode={offlineMode} />
             </MobileBottomProvider>
           </SettingsProvider>
@@ -127,6 +129,7 @@ export default function ClientLayout({
         <AuthProvider>
           <SettingsProvider>
             <MobileBottomProvider>
+              <KeyboardInsetCssVar />
               <OnlineStartupWatch onReady={handleStartupReady}>
                 <OfflineDataSync />
                 <div className="flex h-dvh min-h-0 flex-col overflow-hidden md:h-auto md:min-h-dvh md:flex-row md:overflow-visible">
