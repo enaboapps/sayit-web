@@ -69,9 +69,6 @@
   --color-text-tertiary: var(--text-tertiary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --height-visual-viewport: var(--visual-viewport-height, 100dvh);
-  --min-height-visual-viewport: var(--visual-viewport-height, 100dvh);
-  --max-height-visual-viewport: var(--visual-viewport-height, 100dvh);
 }
 
 @keyframes gradient {
@@ -160,13 +157,7 @@ body {
     max-height: 100dvh;
   }
   .bottom-keyboard-aware {
-    bottom: var(--keyboard-inset, 0px);
-  }
-  html[data-keyboard-open="true"] .mobile-keyboard-hide {
-    display: none;
-  }
-  html[data-keyboard-open="true"] {
-    --active-bottom-stack-height: 0px;
+    bottom: env(keyboard-inset-height, 0px);
   }
 
   /* Touch-friendly tap targets (minimum 44x44px) */

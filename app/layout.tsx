@@ -1,10 +1,16 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import ClientLayout from './ClientLayout';
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import RegisterPWA from './register-pwa';
 
 const inter = Inter({ subsets: ['latin'] });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  interactiveWidget: 'resizes-visual',
+};
 
 export const metadata: Metadata = {
   title: 'SayIt!',

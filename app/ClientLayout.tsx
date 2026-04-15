@@ -12,7 +12,6 @@ import ConnectivityBanner from './components/navigation/ConnectivityBanner';
 import InstallBanner from './components/navigation/InstallBanner';
 import Sidebar from './components/Sidebar';
 import MobileBottomStack from './components/navigation/MobileBottomStack';
-import ViewportCssVars from './components/navigation/ViewportCssVars';
 import OfflineAppShell from './components/offline/OfflineAppShell';
 import OfflineDataSync from './components/offline/OfflineDataSync';
 import OnlineStartupWatch from './components/startup/OnlineStartupWatch';
@@ -114,7 +113,6 @@ export default function ClientLayout({
         <StaticAuthProvider>
           <SettingsProvider>
             <MobileBottomProvider>
-              <ViewportCssVars />
               <OfflineAppShell mode={offlineMode} />
             </MobileBottomProvider>
           </SettingsProvider>
@@ -129,10 +127,9 @@ export default function ClientLayout({
         <AuthProvider>
           <SettingsProvider>
             <MobileBottomProvider>
-              <ViewportCssVars />
               <OnlineStartupWatch onReady={handleStartupReady}>
                 <OfflineDataSync />
-                <div className="flex h-visual-viewport min-h-0 flex-col overflow-hidden md:h-auto md:min-h-dvh md:flex-row md:overflow-visible">
+                <div className="flex h-dvh min-h-0 flex-col overflow-hidden md:h-auto md:min-h-dvh md:flex-row md:overflow-visible">
                   <Sidebar />
                   <div className="flex min-h-0 flex-1 flex-col md:pl-16 lg:pl-16">
                     <div className="shrink-0">
