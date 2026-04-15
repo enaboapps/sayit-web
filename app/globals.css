@@ -159,15 +159,6 @@ body {
   .max-h-dvh {
     max-height: 100dvh;
   }
-  .h-visual-viewport {
-    height: var(--visual-viewport-height, 100dvh);
-  }
-  .min-h-visual-viewport {
-    min-height: var(--visual-viewport-height, 100dvh);
-  }
-  .max-h-visual-viewport {
-    max-height: var(--visual-viewport-height, 100dvh);
-  }
   .bottom-keyboard-aware {
     bottom: var(--keyboard-inset, 0px);
   }
