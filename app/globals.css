@@ -157,7 +157,7 @@ body {
     max-height: 100dvh;
   }
   .bottom-keyboard-aware {
-    bottom: env(keyboard-inset-height, 0px);
+    bottom: var(--keyboard-inset, 0px);
   }
 
   /* Touch-friendly tap targets (minimum 44x44px) */
