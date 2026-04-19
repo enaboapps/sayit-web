@@ -9,12 +9,16 @@ import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import BackButton from '@/app/components/ui/BackButton';
+import { SymbolSelector } from '@/app/components/symbols';
 import { useAuth } from '@/app/contexts/AuthContext';
 import type { Id } from '@/convex/_generated/dataModel';
 
 export default function EditPhrasePage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [text, setText] = useState('');
+  const [symbolStorageId, setSymbolStorageId] = useState<Id<'_storage'> | null>(null);
+  const [symbolPreviewUrl, setSymbolPreviewUrl] = useState<string | null>(null);
+  const [symbolChanged, setSymbolChanged] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -45,6 +49,8 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (phrase) {
       setText(phrase.text);
+      setSymbolPreviewUrl(phrase.symbolUrl ?? null);
+      setSymbolStorageId(phrase.symbolStorageId ?? null);
     }
   }, [phrase]);
 
@@ -59,6 +65,8 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
       await updatePhrase({
         id: phraseId,
         text,
+        ...(symbolChanged && symbolStorageId ? { symbolStorageId } : {}),
+        ...(symbolChanged && !symbolStorageId ? { removeSymbol: true } : {}),
       });
       router.back();
     } catch (error) {
@@ -123,6 +131,27 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
             placeholder="Enter your phrase"
             required
           />
+
+          <div className="mb-4">
+            <label className="block text-foreground text-sm font-semibold mb-2">
+              Symbol
+            </label>
+            <SymbolSelector
+              symbolUrl={symbolPreviewUrl}
+              symbolStorageId={symbolStorageId}
+              onSymbolChange={(symbol) => {
+                setSymbolChanged(true);
+                if (symbol) {
+                  setSymbolStorageId(symbol.storageId);
+                  setSymbolPreviewUrl(symbol.url);
+                } else {
+                  setSymbolStorageId(null);
+                  setSymbolPreviewUrl(null);
+                }
+              }}
+              phraseText={text}
+            />
+          </div>
 
           {error && (
             <div className="mt-4 text-red-500 text-sm bg-status-error px-4 py-3 rounded-3xl">

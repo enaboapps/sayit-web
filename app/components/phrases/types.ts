@@ -1,6 +1,8 @@
 export interface PhraseSummary {
   id: string;
   text: string;
+  symbolUrl?: string;
+  symbolStorageId?: string;
 }
 
 export interface BoardSummary {

@@ -9,6 +9,7 @@ import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import BackButton from '@/app/components/ui/BackButton';
 import BottomSheet from '@/app/components/ui/BottomSheet';
+import { SymbolSelector } from '@/app/components/symbols';
 import { ChevronDownIcon, UserGroupIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 function AddPhraseForm() {
@@ -17,6 +18,8 @@ function AddPhraseForm() {
   const boardIdFromUrl = searchParams.get('boardId');
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(boardIdFromUrl);
   const [text, setText] = useState(searchParams.get('text') ?? '');
+  const [symbolStorageId, setSymbolStorageId] = useState<Id<'_storage'> | null>(null);
+  const [symbolPreviewUrl, setSymbolPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBoardPickerOpen, setIsBoardPickerOpen] = useState(false);
@@ -56,6 +59,7 @@ function AddPhraseForm() {
       const phraseId = await addPhrase({
         text,
         position: 0, // Will be adjusted by backend based on board
+        ...(symbolStorageId ? { symbolStorageId } : {}),
       });
 
       // Add it to the board
@@ -130,6 +134,26 @@ function AddPhraseForm() {
             placeholder="Enter your phrase"
             required
           />
+
+          <div className="mb-4">
+            <label className="block text-foreground text-sm font-semibold mb-2">
+              Symbol
+            </label>
+            <SymbolSelector
+              symbolUrl={symbolPreviewUrl}
+              symbolStorageId={symbolStorageId}
+              onSymbolChange={(symbol) => {
+                if (symbol) {
+                  setSymbolStorageId(symbol.storageId);
+                  setSymbolPreviewUrl(symbol.url);
+                } else {
+                  setSymbolStorageId(null);
+                  setSymbolPreviewUrl(null);
+                }
+              }}
+              phraseText={text}
+            />
+          </div>
 
           {error && (
             <div className="mb-4 text-red-500 text-sm bg-status-error px-4 py-3 rounded-3xl">
