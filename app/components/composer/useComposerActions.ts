@@ -20,7 +20,6 @@ interface UseComposerActionsConfig {
   onSpeakWithTone?: ComposerProps['onSpeakWithTone'];
   onMessageCompleted?: ComposerProps['onMessageCompleted'];
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  enableFixText: boolean;
   enableLiveTyping: boolean;
 }
 
@@ -42,7 +41,6 @@ export function useComposerActions({
   onSpeakWithTone,
   onMessageCompleted,
   inputRef,
-  enableFixText,
   enableLiveTyping,
 }: UseComposerActionsConfig) {
   const [isFixingText, setIsFixingText] = useState(false);
