@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { TextareaScrollIntent, TextareaScrollSnapshot } from './types';
 
 export function useTextareaScroll(
@@ -8,6 +8,7 @@ export function useTextareaScroll(
   const pendingRef = useRef<TextareaScrollIntent | null>(null);
   const previousTextRef = useRef('');
   const snapshotRef = useRef<TextareaScrollSnapshot | null>(null);
+  const needsScrollRef = useRef(false);
 
   const captureSnapshot = useCallback((value?: string) => {
     const textarea = textareaRef.current;
@@ -74,6 +75,8 @@ export function useTextareaScroll(
       && !!snapshot
       && (snapshot.wasAtEnd || snapshot.wasNearBottom);
 
+    let didScroll = false;
+
     if (pending && document.activeElement === textarea) {
       const selectionStart = Math.min(pending.selectionStart, currentText.length);
       const selectionEnd = Math.min(pending.selectionEnd, currentText.length);
@@ -81,16 +84,32 @@ export function useTextareaScroll(
 
       if (pending.shouldScrollToEnd) {
         textarea.scrollTop = textarea.scrollHeight;
+        didScroll = true;
       }
     } else if (wasExternalAppend) {
       textarea.setSelectionRange(currentText.length, currentText.length);
       textarea.scrollTop = textarea.scrollHeight;
+      didScroll = true;
     }
 
+    needsScrollRef.current = didScroll;
     previousTextRef.current = currentText;
     pendingRef.current = null;
     captureSnapshot(currentText);
   }, [captureSnapshot, currentText, textareaRef]);
+
+  // Re-apply scroll after paint for mobile browsers where scrollHeight
+  // isn't fully resolved during useLayoutEffect
+  useEffect(() => {
+    if (!needsScrollRef.current) return;
+    needsScrollRef.current = false;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const id = requestAnimationFrame(() => {
+      textarea.scrollTop = textarea.scrollHeight;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [currentText, textareaRef]);
 
   const scrollToEnd = useCallback(() => {
     pendingRef.current = {

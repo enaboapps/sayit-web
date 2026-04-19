@@ -224,7 +224,7 @@ describe('Composer', () => {
     const textarea = screen.getByRole('textbox');
     expect(textarea.parentElement?.parentElement).toHaveClass('overflow-hidden');
     expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-0', 'overflow-hidden', 'md:min-h-[120px]');
-    expect(textarea).toHaveClass('h-full', 'overflow-y-auto', 'resize-none');
+    expect(textarea).toHaveClass('absolute', 'inset-0', 'overflow-y-auto', 'resize-none');
     expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
   });
