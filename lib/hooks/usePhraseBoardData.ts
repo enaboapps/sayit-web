@@ -59,7 +59,12 @@ export function usePhraseBoardData() {
     ?.map((pbp: any) => pbp.phrase)
     .filter(Boolean)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((phrase: any) => ({ id: String(phrase._id), text: phrase.text })) || [];
+    .map((phrase: any) => ({
+      id: String(phrase._id),
+      text: phrase.text,
+      symbolUrl: phrase.symbolUrl,
+      symbolStorageId: phrase.symbolStorageId ? String(phrase.symbolStorageId) : undefined,
+    })) || [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformedBoards: BoardSummary[] = boards?.map((board: any) => ({

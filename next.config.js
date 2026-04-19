@@ -12,6 +12,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'globalsymbols.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.convex.cloud',
+      },
     ],
   },
   outputFileTracingRoot: __dirname,

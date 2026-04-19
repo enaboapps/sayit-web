@@ -34,6 +34,8 @@ export default defineSchema({
     text: v.string(),
     frequency: v.optional(v.number()),
     position: v.number(),
+    symbolStorageId: v.optional(v.id('_storage')),
+    symbolUrl: v.optional(v.string()),
   }).index('by_user_id', ['userId']),
 
   phraseBoards: defineTable({

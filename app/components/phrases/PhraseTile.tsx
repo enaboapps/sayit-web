@@ -3,11 +3,13 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { StopIcon } from '@heroicons/react/24/solid';
+import { SymbolImage } from '../symbols';
 
 interface PhraseTileProps {
   phrase: {
     id?: string;
     text: string;
+    symbolUrl?: string;
   };
   onPress: () => void;
   onStop?: () => void;
@@ -112,7 +114,10 @@ export default function PhraseTile({ phrase, onPress, onStop, onEdit, onLongPres
           <StopIcon className="w-2.5 h-2.5 text-white" />
         </div>
       )}
-      <div className="flex items-center justify-center w-full h-full p-2">
+      <div className="flex flex-col items-center justify-center w-full h-full p-2 gap-1">
+        {phrase.symbolUrl && (
+          <SymbolImage src={phrase.symbolUrl} alt={phrase.text} size="md" />
+        )}
         <p className="text-foreground text-sm sm:text-base font-semibold line-clamp-2 leading-tight text-center w-full">
           {phrase.text}
         </p>

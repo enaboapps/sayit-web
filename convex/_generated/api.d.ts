@@ -15,6 +15,7 @@ import type * as migrations from "../migrations.js";
 import type * as phraseBoards from "../phraseBoards.js";
 import type * as phrases from "../phrases.js";
 import type * as profiles from "../profiles.js";
+import type * as symbols from "../symbols.js";
 import type * as typingSessions from "../typingSessions.js";
 import type * as userSettings from "../userSettings.js";
 import type * as users from "../users.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   phraseBoards: typeof phraseBoards;
   phrases: typeof phrases;
   profiles: typeof profiles;
+  symbols: typeof symbols;
   typingSessions: typeof typingSessions;
   userSettings: typeof userSettings;
   users: typeof users;

@@ -40,6 +40,7 @@ export const addPhrase = mutation({
   args: {
     text: v.string(),
     position: v.number(),
+    symbolStorageId: v.optional(v.id('_storage')),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -47,10 +48,17 @@ export const addPhrase = mutation({
       throw new Error('Unauthenticated');
     }
 
+    let symbolUrl: string | undefined;
+    if (args.symbolStorageId) {
+      symbolUrl = await ctx.storage.getUrl(args.symbolStorageId) ?? undefined;
+    }
+
     const phraseId = await ctx.db.insert('phrases', {
       userId: identity.subject,
       text: args.text,
       position: args.position,
+      symbolStorageId: args.symbolStorageId,
+      symbolUrl,
     });
 
     return phraseId;
@@ -63,6 +71,8 @@ export const updatePhrase = mutation({
     id: v.id('phrases'),
     text: v.optional(v.string()),
     position: v.optional(v.number()),
+    symbolStorageId: v.optional(v.id('_storage')),
+    removeSymbol: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -70,7 +80,7 @@ export const updatePhrase = mutation({
       throw new Error('Unauthenticated');
     }
 
-    const { id, ...updates } = args;
+    const { id, removeSymbol, symbolStorageId, ...updates } = args;
 
     // Verify ownership
     const phrase = await ctx.db.get(id);
@@ -78,7 +88,25 @@ export const updatePhrase = mutation({
       throw new Error('Unauthorized');
     }
 
-    await ctx.db.patch(id, updates);
+    const patch: Record<string, unknown> = { ...updates };
+
+    if (removeSymbol) {
+      // Delete old symbol from storage
+      if (phrase.symbolStorageId) {
+        await ctx.storage.delete(phrase.symbolStorageId);
+      }
+      patch.symbolStorageId = undefined;
+      patch.symbolUrl = undefined;
+    } else if (symbolStorageId) {
+      // Delete old symbol if replacing
+      if (phrase.symbolStorageId) {
+        await ctx.storage.delete(phrase.symbolStorageId);
+      }
+      patch.symbolStorageId = symbolStorageId;
+      patch.symbolUrl = await ctx.storage.getUrl(symbolStorageId) ?? undefined;
+    }
+
+    await ctx.db.patch(id, patch);
   },
 });
 
@@ -97,6 +125,11 @@ export const deletePhrase = mutation({
     const phrase = await ctx.db.get(args.id);
     if (!phrase || phrase.userId !== identity.subject) {
       throw new Error('Unauthorized');
+    }
+
+    // Clean up symbol from storage
+    if (phrase.symbolStorageId) {
+      await ctx.storage.delete(phrase.symbolStorageId);
     }
 
     await ctx.db.delete(args.id);
