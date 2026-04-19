@@ -18,11 +18,13 @@ interface SymbolSelectorProps {
 export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText = '' }: SymbolSelectorProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const generateUploadUrl = useMutation(api.symbols.generateUploadUrl);
 
   const handleSelect = useCallback(async (symbol: SymbolResult) => {
     setIsSearchOpen(false);
     setIsUploading(true);
+    setUploadError(null);
 
     try {
       // Download image via proxy
@@ -43,6 +45,7 @@ export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText =
       onSymbolChange({ storageId, url: symbol.imageUrl });
     } catch (err) {
       console.error('Error uploading symbol:', err);
+      setUploadError('Failed to upload symbol. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -80,8 +83,10 @@ export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText =
             )}
           </button>
         )}
-        <div className="text-sm text-text-secondary">
-          {symbolUrl ? (
+        <div className="text-sm">
+          {uploadError ? (
+            <span className="text-red-400">{uploadError}</span>
+          ) : symbolUrl ? (
             <button
               onClick={() => setIsSearchOpen(true)}
               className="text-primary-500 hover:underline"
@@ -89,7 +94,7 @@ export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText =
               Change symbol
             </button>
           ) : (
-            <span>{isUploading ? 'Uploading...' : 'Add a symbol (optional)'}</span>
+            <span className="text-text-secondary">{isUploading ? 'Uploading...' : 'Add a symbol (optional)'}</span>
           )}
         </div>
       </div>

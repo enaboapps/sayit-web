@@ -15,8 +15,14 @@ export async function GET(request: Request) {
       );
     }
 
-    // Only allow proxying from Global Symbols domains
+    // Only allow proxying from Global Symbols domains over HTTPS
     const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== 'https:') {
+      return NextResponse.json(
+        { error: 'URL not allowed' },
+        { status: 403 },
+      );
+    }
     const allowedHosts = ['globalsymbols.com', 'www.globalsymbols.com', 'mulberrysymbols.org', 'www.mulberrysymbols.org'];
     if (!allowedHosts.some((host) => parsedUrl.hostname === host || parsedUrl.hostname.endsWith(`.${host}`))) {
       return NextResponse.json(
