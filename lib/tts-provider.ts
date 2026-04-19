@@ -1,8 +1,9 @@
 import { ElevenLabsTTS } from './elevenlabs-tts';
 import { AzureTTS } from './azure-tts';
+import { GeminiTTS } from './gemini-tts';
 import { TextToSpeech as WebSpeechTTS } from './tts';
 
-export type TTSProviderType = 'browser' | 'elevenlabs' | 'azure';
+export type TTSProviderType = 'browser' | 'elevenlabs' | 'azure' | 'gemini';
 
 export interface TTSVoice {
   id: string;
@@ -17,6 +18,7 @@ export class TTSProvider {
   private static instance: TTSProvider;
   private elevenlabsTTS: ElevenLabsTTS;
   private azureTTS: AzureTTS;
+  private geminiTTS: GeminiTTS;
   private webSpeechTTS: WebSpeechTTS;
   private activeProvider: TTSProviderType = 'browser';
   private isSpeaking: boolean = false;
@@ -32,6 +34,7 @@ export class TTSProvider {
     this.webSpeechTTS = WebSpeechTTS.getInstance();
     this.elevenlabsTTS = ElevenLabsTTS.getInstance();
     this.azureTTS = AzureTTS.getInstance();
+    this.geminiTTS = GeminiTTS.getInstance();
     this.setupCallbacks();
 
     // Default to ElevenLabs if available
@@ -65,6 +68,7 @@ export class TTSProvider {
     });
     this.elevenlabsTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
     this.azureTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
+    this.geminiTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
   }
 
   public setCallbacks(callbacks: {
@@ -105,6 +109,15 @@ export class TTSProvider {
       console.warn('Azure TTS is not available, staying with browser TTS');
       return;
     }
+
+    if (
+      provider === 'gemini'
+      && this.geminiTTS.hasLoadedVoices()
+      && !this.geminiTTS.isAvailable()
+    ) {
+      console.warn('Gemini TTS is not available, staying with browser TTS');
+      return;
+    }
     
     this.activeProvider = provider;
   }
@@ -136,7 +149,15 @@ export class TTSProvider {
       languageCodes: voice.languageCodes,
     }));
 
-    return [...browserVoices, ...elevenLabsVoices, ...azureVoices];
+    const geminiVoices = this.geminiTTS.getVoices().map(voice => ({
+      id: voice.voice_id,
+      name: `${voice.name} (Gemini)`,
+      provider: 'gemini' as TTSProviderType,
+      gender: voice.gender,
+      languageCodes: voice.languageCodes,
+    }));
+
+    return [...browserVoices, ...elevenLabsVoices, ...azureVoices, ...geminiVoices];
   }
 
   public getVoicesByProvider(provider: TTSProviderType): TTSVoice[] {
@@ -159,6 +180,11 @@ export class TTSProvider {
 
   public async loadAzureVoices() {
     await this.azureTTS.loadVoices();
+    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+  }
+
+  public async loadGeminiVoices() {
+    await this.geminiTTS.loadVoices();
     this.callbacks.onVoicesChanged?.(this.getAllVoices());
   }
 
@@ -190,6 +216,8 @@ export class TTSProvider {
       });
     } else if (provider === 'azure') {
       this.azureTTS.speak(text, { voiceId: options?.voiceId });
+    } else if (provider === 'gemini') {
+      this.geminiTTS.speak(text, { voiceId: options?.voiceId });
     } else {
       this.webSpeechTTS.speak(text, {
         voiceURI: options?.voiceId,
@@ -204,6 +232,7 @@ export class TTSProvider {
     this.webSpeechTTS.stop();
     this.elevenlabsTTS.stop();
     this.azureTTS.stop();
+    this.geminiTTS.stop();
   }
 
   public pause() {
@@ -211,6 +240,8 @@ export class TTSProvider {
       this.elevenlabsTTS.pause();
     } else if (this.activeProvider === 'azure') {
       this.azureTTS.pause();
+    } else if (this.activeProvider === 'gemini') {
+      this.geminiTTS.pause();
     } else {
       this.webSpeechTTS.pause();
     }
@@ -221,13 +252,18 @@ export class TTSProvider {
       this.elevenlabsTTS.resume();
     } else if (this.activeProvider === 'azure') {
       this.azureTTS.resume();
+    } else if (this.activeProvider === 'gemini') {
+      this.geminiTTS.resume();
     } else {
       this.webSpeechTTS.resume();
     }
   }
 
   public isAvailable(): boolean {
-    return this.webSpeechTTS.isAvailable() || this.elevenlabsTTS.isAvailable() || this.azureTTS.isAvailable();
+    return this.webSpeechTTS.isAvailable()
+      || this.elevenlabsTTS.isAvailable()
+      || this.azureTTS.isAvailable()
+      || this.geminiTTS.isAvailable();
   }
 
   public getStatus() {
@@ -236,6 +272,7 @@ export class TTSProvider {
       activeProvider: this.activeProvider,
       elevenLabsAvailable: this.elevenlabsTTS.isAvailable(),
       azureAvailable: this.azureTTS.isAvailable(),
+      geminiAvailable: this.geminiTTS.isAvailable(),
       browserTTSAvailable: this.webSpeechTTS.isAvailable()
     };
   }

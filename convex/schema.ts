@@ -83,7 +83,7 @@ export default defineSchema({
     doubleEnterEnabled: v.optional(v.boolean()),
     doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
     doubleEnterTimeoutMs: v.optional(v.number()),
-    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure')),
+    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini')),
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),

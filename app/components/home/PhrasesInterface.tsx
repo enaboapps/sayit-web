@@ -29,13 +29,24 @@ export default function PhrasesInterface() {
   const [activePhraseId, setActivePhraseId] = useState<string | null>(null);
 
   const activeTabId = uiPreferences.activeTypingTabId;
+  const {
+    hasSubscription,
+    loadElevenLabsVoices,
+    loadGeminiVoices,
+  } = tts;
 
-  // Pre-load ElevenLabs voices on mount so they're ready before first tap
+  // Pre-load premium voices so they're ready before first tap
   useEffect(() => {
-    if (tts.hasSubscription && settings.ttsProvider === 'elevenlabs') {
-      tts.loadElevenLabsVoices();
+    if (!hasSubscription) return;
+
+    if (settings.ttsProvider === 'elevenlabs') {
+      loadElevenLabsVoices();
     }
-  }, [tts.hasSubscription, settings.ttsProvider, tts.loadElevenLabsVoices]);
+
+    if (settings.ttsProvider === 'gemini') {
+      loadGeminiVoices();
+    }
+  }, [hasSubscription, settings.ttsProvider, loadElevenLabsVoices, loadGeminiVoices]);
 
   // Clear active phrase highlight when TTS finishes
   useEffect(() => {
