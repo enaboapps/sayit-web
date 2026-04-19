@@ -121,6 +121,7 @@ export default function SymbolSearchModal({ isOpen, onClose, onSelect, initialQu
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                 <h2 className="text-lg font-semibold text-foreground">Search Symbols</h2>
                 <button
+                  type="button"
                   onClick={onClose}
                   className="p-2 min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-hover transition-colors flex items-center justify-center"
                   aria-label="Close"
@@ -170,6 +171,7 @@ export default function SymbolSearchModal({ isOpen, onClose, onSelect, initialQu
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
                     {results.map((symbol) => (
                       <button
+                        type="button"
                         key={symbol.id}
                         onClick={() => onSelect(symbol)}
                         className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-surface-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"

@@ -62,6 +62,7 @@ export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText =
           <div className="relative">
             <SymbolImage src={symbolUrl} alt="Selected symbol" size="lg" />
             <button
+              type="button"
               onClick={handleClear}
               className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors"
               aria-label="Remove symbol"
@@ -71,6 +72,7 @@ export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText =
           </div>
         ) : (
           <button
+            type="button"
             onClick={() => setIsSearchOpen(true)}
             disabled={isUploading}
             className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center hover:bg-surface-hover transition-colors disabled:opacity-50"
@@ -88,6 +90,7 @@ export default function SymbolSelector({ symbolUrl, onSymbolChange, phraseText =
             <span className="text-red-400">{uploadError}</span>
           ) : symbolUrl ? (
             <button
+              type="button"
               onClick={() => setIsSearchOpen(true)}
               className="text-primary-500 hover:underline"
             >
