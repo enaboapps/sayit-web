@@ -16,12 +16,14 @@ export function useTTS() {
     activeProvider: TTSProviderType;
     elevenLabsAvailable: boolean;
     azureAvailable: boolean;
+    geminiAvailable: boolean;
     browserTTSAvailable: boolean;
   }>({
     isSpeaking: false,
     activeProvider: 'browser',
     elevenLabsAvailable: false,
     azureAvailable: false,
+    geminiAvailable: false,
     browserTTSAvailable: false
   });
   
@@ -119,9 +121,12 @@ export function useTTS() {
       ? voices.find(v => v.id === options.voiceId)
       : null;
 
-    const isPremiumVoice = voice?.provider === 'elevenlabs' || voice?.provider === 'azure';
+    const isPremiumVoice = voice?.provider === 'elevenlabs' || voice?.provider === 'azure' || voice?.provider === 'gemini';
     const currentProvider = ttsRef.current.getCurrentProvider();
-    const usingPremium = isPremiumVoice || currentProvider === 'elevenlabs' || currentProvider === 'azure';
+    const usingPremium = isPremiumVoice
+      || currentProvider === 'elevenlabs'
+      || currentProvider === 'azure'
+      || currentProvider === 'gemini';
 
     // If trying to use a premium provider without a subscription, force browser TTS
     if (usingPremium && !hasSubscription) {
@@ -133,7 +138,7 @@ export function useTTS() {
 
       // Temporarily switch to browser provider if needed
       const originalProvider = ttsRef.current.getCurrentProvider();
-      if (originalProvider === 'elevenlabs' || originalProvider === 'azure') {
+      if (originalProvider === 'elevenlabs' || originalProvider === 'azure' || originalProvider === 'gemini') {
         ttsRef.current.setProvider('browser');
       }
       
@@ -146,7 +151,7 @@ export function useTTS() {
       });
       
       // Update local state to reflect the temporary provider change
-      if (originalProvider === 'elevenlabs' || originalProvider === 'azure') {
+      if (originalProvider === 'elevenlabs' || originalProvider === 'azure' || originalProvider === 'gemini') {
         setStatus({
           ...status,
           activeProvider: 'browser'
@@ -156,7 +161,7 @@ export function useTTS() {
       return;
     }
 
-    // Normal operation (either browser TTS or ElevenLabs for subscribers)
+    // Normal operation (either browser TTS or a premium provider for subscribers)
     ttsRef.current.speak(text, options);
   }, [isAvailable, voices, hasSubscription, status]);
 
@@ -211,11 +216,19 @@ export function useTTS() {
     setStatus(ttsRef.current.getStatus());
   }, []);
 
+  const loadGeminiVoices = useCallback(async () => {
+    if (!ttsRef.current) return;
+    await ttsRef.current.loadGeminiVoices();
+    setVoices(ttsRef.current.getAllVoices());
+    setStatus(ttsRef.current.getStatus());
+  }, []);
+
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
     if (providerType === 'browser') return true;
     if (providerType === 'elevenlabs') return hasSubscription && status.elevenLabsAvailable;
     if (providerType === 'azure') return hasSubscription && status.azureAvailable;
+    if (providerType === 'gemini') return hasSubscription && status.geminiAvailable;
     return false;
   }, [hasSubscription, status]);
 
@@ -233,6 +246,7 @@ export function useTTS() {
     refreshVoices,
     loadElevenLabsVoices,
     loadAzureVoices,
+    loadGeminiVoices,
     status,
     hasSubscription,
     isProviderAvailable,

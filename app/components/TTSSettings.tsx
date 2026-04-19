@@ -17,6 +17,7 @@ const providerDetails: Record<TTSProviderType, { name: string; description: stri
   browser: { name: 'Browser TTS', description: 'System voices' },
   elevenlabs: { name: 'ElevenLabs', description: 'AI voices' },
   azure: { name: 'Azure', description: 'Neural voices' },
+  gemini: { name: 'Gemini', description: 'Expressive AI voices' },
 };
 
 type ProviderDropdownOption = DropdownOption<TTSProviderType> & {
@@ -37,6 +38,7 @@ export default function TTSSettings() {
     refreshVoices,
     loadElevenLabsVoices,
     loadAzureVoices,
+    loadGeminiVoices,
     hasSubscription
   } = useTTS();
 
@@ -65,6 +67,12 @@ export default function TTSSettings() {
     if (!isOnline) return;
     void loadAzureVoices();
   }, [isOnline, loadAzureVoices]);
+
+  // Load Gemini voices when online
+  useEffect(() => {
+    if (!isOnline) return;
+    void loadGeminiVoices();
+  }, [isOnline, loadGeminiVoices]);
 
   // Update visible voices when provider or voice list changes
   useEffect(() => {
@@ -111,11 +119,19 @@ export default function TTSSettings() {
   const handleProviderChange = useCallback((newProvider: TTSProviderType) => {
     if (newProvider === 'elevenlabs' && (!status.elevenLabsAvailable || !isOnline)) return;
     if (newProvider === 'azure' && (!status.azureAvailable || !isOnline)) return;
+    if (newProvider === 'gemini' && (!status.geminiAvailable || !isOnline)) return;
 
     if (settings.ttsProvider !== newProvider) {
       updateSetting('ttsProvider', newProvider);
     }
-  }, [isOnline, settings.ttsProvider, status.elevenLabsAvailable, status.azureAvailable, updateSetting]);
+  }, [
+    isOnline,
+    settings.ttsProvider,
+    status.elevenLabsAvailable,
+    status.azureAvailable,
+    status.geminiAvailable,
+    updateSetting,
+  ]);
 
   const previewVoice = useCallback(() => {
     if (isSpeaking) {
@@ -131,11 +147,14 @@ export default function TTSSettings() {
     ? 'ElevenLabs'
     : settings.ttsProvider === 'azure'
       ? 'Azure'
-      : 'Browser TTS';
+      : settings.ttsProvider === 'gemini'
+        ? 'Gemini'
+        : 'Browser TTS';
 
   const providerOptions = useMemo<ProviderDropdownOption[]>(() => {
     const elevenLabsDisabled = !isOnline || !status.elevenLabsAvailable;
     const azureDisabled = !isOnline || !status.azureAvailable;
+    const geminiDisabled = !isOnline || !status.geminiAvailable;
 
     return [
       {
@@ -182,8 +201,26 @@ export default function TTSSettings() {
         disabled: azureDisabled,
         showProBadge: !hasSubscription && !azureDisabled,
       },
+      {
+        value: 'gemini',
+        label: !isOnline
+          ? 'Gemini (offline)'
+          : !status.geminiAvailable
+            ? 'Gemini (unavailable)'
+            : providerDetails.gemini.name,
+        name: providerDetails.gemini.name,
+        description: !isOnline
+          ? 'Needs internet'
+          : !status.geminiAvailable
+            ? 'API key not configured'
+            : !hasSubscription
+              ? 'Expressive AI voices - Pro'
+              : providerDetails.gemini.description,
+        disabled: geminiDisabled,
+        showProBadge: !hasSubscription && !geminiDisabled,
+      },
     ];
-  }, [hasSubscription, isOnline, status.azureAvailable, status.elevenLabsAvailable]);
+  }, [hasSubscription, isOnline, status.azureAvailable, status.elevenLabsAvailable, status.geminiAvailable]);
 
   const selectedProviderOption = providerOptions.find(option => option.value === settings.ttsProvider);
 
@@ -298,7 +335,7 @@ export default function TTSSettings() {
         </div>
 
         {/* Subscription note */}
-        {(settings.ttsProvider === 'elevenlabs' || settings.ttsProvider === 'azure') && !hasSubscription && (
+        {(settings.ttsProvider === 'elevenlabs' || settings.ttsProvider === 'azure' || settings.ttsProvider === 'gemini') && !hasSubscription && (
           <p className="text-xs text-text-secondary px-1">
             Pro subscription required for {providerLabel} voices.{' '}
             <button
@@ -313,7 +350,7 @@ export default function TTSSettings() {
 
         {!isOnline && (
           <p className="text-xs text-amber-500 px-1">
-            Offline. Browser TTS still works, but ElevenLabs and Azure voices need internet.
+            Offline. Browser TTS still works, but ElevenLabs, Azure, and Gemini voices need internet.
           </p>
         )}
 
@@ -326,6 +363,12 @@ export default function TTSSettings() {
         {!status.azureAvailable && isOnline && (
           <p className="text-xs text-text-tertiary px-1">
             Azure unavailable. Subscription key not configured.
+          </p>
+        )}
+
+        {!status.geminiAvailable && isOnline && (
+          <p className="text-xs text-text-tertiary px-1">
+            Gemini unavailable. API key not configured.
           </p>
         )}
       </div>
@@ -462,6 +505,12 @@ export default function TTSSettings() {
           {settings.ttsProvider === 'azure' && (
             <p className="text-xs text-text-tertiary text-center py-2">
               Voice speed and pitch are set by the selected Azure voice.
+            </p>
+          )}
+
+          {settings.ttsProvider === 'gemini' && (
+            <p className="text-xs text-text-tertiary text-center py-2">
+              Gemini 3.1 Flash uses the selected voice and style instructions in your text.
             </p>
           )}
         </div>

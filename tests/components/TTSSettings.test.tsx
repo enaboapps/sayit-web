@@ -23,11 +23,15 @@ const mockUseTTS = jest.mocked(useTTS);
 const mockUseOnlineStatus = jest.mocked(useOnlineStatus);
 
 const mockUpdateSetting = jest.fn();
+const mockLoadElevenLabsVoices = jest.fn();
+const mockLoadAzureVoices = jest.fn();
+const mockLoadGeminiVoices = jest.fn();
 
 const voices: TTSVoice[] = [
   { id: 'browser-voice-1', name: 'Browser Voice', provider: 'browser' },
   { id: 'eleven-voice-1', name: 'Eleven Voice', provider: 'elevenlabs' },
   { id: 'azure-voice-1', name: 'Azure Voice', provider: 'azure' },
+  { id: 'gemini-voice-1', name: 'Gemini Voice', provider: 'gemini' },
 ];
 
 const defaultSettings = {
@@ -46,6 +50,7 @@ const defaultStatus = {
   activeProvider: 'browser' as TTSProviderType,
   elevenLabsAvailable: true,
   azureAvailable: true,
+  geminiAvailable: true,
   browserTTSAvailable: true,
 };
 
@@ -80,8 +85,9 @@ function renderTTSSettings({
     status: mergedStatus,
     getVoicesByProvider: jest.fn((provider: TTSProviderType) => voices.filter(voice => voice.provider === provider)),
     refreshVoices: jest.fn(),
-    loadElevenLabsVoices: jest.fn(),
-    loadAzureVoices: jest.fn(),
+    loadElevenLabsVoices: mockLoadElevenLabsVoices,
+    loadAzureVoices: mockLoadAzureVoices,
+    loadGeminiVoices: mockLoadGeminiVoices,
     hasSubscription,
   } as never);
 
@@ -113,6 +119,7 @@ describe('TTSSettings provider dropdown', () => {
     expect(within(dialog).getByText('Browser TTS')).toBeInTheDocument();
     expect(within(dialog).getByText('ElevenLabs')).toBeInTheDocument();
     expect(within(dialog).getByText('Azure')).toBeInTheDocument();
+    expect(within(dialog).getByText('Gemini')).toBeInTheDocument();
   });
 
   it('changes provider when an available provider is selected', async () => {
@@ -123,6 +130,16 @@ describe('TTSSettings provider dropdown', () => {
     await user.click(screen.getByText('ElevenLabs'));
 
     expect(mockUpdateSetting).toHaveBeenCalledWith('ttsProvider', 'elevenlabs');
+  });
+
+  it('selects available Gemini', async () => {
+    const user = userEvent.setup();
+    renderTTSSettings();
+
+    await openProviderDropdown(user);
+    await user.click(screen.getByText('Gemini'));
+
+    expect(mockUpdateSetting).toHaveBeenCalledWith('ttsProvider', 'gemini');
   });
 
   it('disables ElevenLabs while offline', async () => {
@@ -151,16 +168,64 @@ describe('TTSSettings provider dropdown', () => {
     expect(mockUpdateSetting).not.toHaveBeenCalledWith('ttsProvider', 'azure');
   });
 
+  it('disables Gemini while offline', async () => {
+    const user = userEvent.setup();
+    renderTTSSettings({ isOnline: false });
+
+    await openProviderDropdown(user);
+
+    const geminiOption = screen.getByRole('button', { name: /Gemini \(offline\)/i });
+    expect(geminiOption).toBeDisabled();
+
+    await user.click(geminiOption);
+    expect(mockUpdateSetting).not.toHaveBeenCalledWith('ttsProvider', 'gemini');
+  });
+
+  it('disables Gemini when unavailable', async () => {
+    const user = userEvent.setup();
+    renderTTSSettings({ status: { geminiAvailable: false } });
+
+    await openProviderDropdown(user);
+
+    const geminiOption = screen.getByRole('button', { name: /Gemini \(unavailable\)/i });
+    expect(geminiOption).toBeDisabled();
+
+    await user.click(geminiOption);
+    expect(mockUpdateSetting).not.toHaveBeenCalledWith('ttsProvider', 'gemini');
+  });
+
   it('keeps premium providers selectable for non-subscribers when available', async () => {
     const user = userEvent.setup();
     renderTTSSettings({ hasSubscription: false });
 
     await openProviderDropdown(user);
 
-    expect(screen.getAllByText('PRO')).toHaveLength(2);
+    expect(screen.getAllByText('PRO')).toHaveLength(3);
 
     await user.click(screen.getByText('Azure'));
     expect(mockUpdateSetting).toHaveBeenCalledWith('ttsProvider', 'azure');
+  });
+
+  it('loads Gemini voices while online', () => {
+    renderTTSSettings();
+
+    expect(mockLoadGeminiVoices).toHaveBeenCalled();
+  });
+
+  it('renders Gemini voice settings copy', () => {
+    renderTTSSettings({
+      settings: { ttsProvider: 'gemini', ttsVoiceId: 'gemini-voice-1' },
+    });
+
+    expect(screen.getByText(/Gemini 3\.1 Flash uses the selected voice and style instructions in your text\./i)).toBeInTheDocument();
+  });
+
+  it('does not render ElevenLabs Voice Quality for Gemini', () => {
+    renderTTSSettings({
+      settings: { ttsProvider: 'gemini', ttsVoiceId: 'gemini-voice-1' },
+    });
+
+    expect(screen.queryByText('Voice Quality')).not.toBeInTheDocument();
   });
 
   it('preserves existing subscription, offline, and unavailable provider warning copy', () => {
@@ -182,13 +247,14 @@ describe('TTSSettings provider dropdown', () => {
       status: defaultStatus,
       getVoicesByProvider: jest.fn((provider: TTSProviderType) => voices.filter(voice => voice.provider === provider)),
       refreshVoices: jest.fn(),
-      loadElevenLabsVoices: jest.fn(),
-      loadAzureVoices: jest.fn(),
+      loadElevenLabsVoices: mockLoadElevenLabsVoices,
+      loadAzureVoices: mockLoadAzureVoices,
+      loadGeminiVoices: mockLoadGeminiVoices,
       hasSubscription: true,
     } as never);
     rerender(<TTSSettings />);
 
-    expect(screen.getByText(/Offline\. Browser TTS still works, but ElevenLabs and Azure voices need internet\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Offline\. Browser TTS still works, but ElevenLabs, Azure, and Gemini voices need internet\./i)).toBeInTheDocument();
 
     mockUseOnlineStatus.mockReturnValue({
       isOnline: true,
@@ -202,16 +268,19 @@ describe('TTSSettings provider dropdown', () => {
         ...defaultStatus,
         elevenLabsAvailable: false,
         azureAvailable: false,
+        geminiAvailable: false,
       },
       getVoicesByProvider: jest.fn((provider: TTSProviderType) => voices.filter(voice => voice.provider === provider)),
       refreshVoices: jest.fn(),
-      loadElevenLabsVoices: jest.fn(),
-      loadAzureVoices: jest.fn(),
+      loadElevenLabsVoices: mockLoadElevenLabsVoices,
+      loadAzureVoices: mockLoadAzureVoices,
+      loadGeminiVoices: mockLoadGeminiVoices,
       hasSubscription: true,
     } as never);
     rerender(<TTSSettings />);
 
     expect(screen.getByText(/ElevenLabs unavailable\. API key not configured\./i)).toBeInTheDocument();
     expect(screen.getByText(/Azure unavailable\. Subscription key not configured\./i)).toBeInTheDocument();
+    expect(screen.getByText(/Gemini unavailable\. API key not configured\./i)).toBeInTheDocument();
   });
 });

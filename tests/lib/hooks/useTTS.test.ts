@@ -1,7 +1,9 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { useTTS } from '@/lib/hooks/useTTS';
 
-const mockSettings = {
+type MockProvider = 'browser' | 'elevenlabs' | 'azure' | 'gemini';
+
+let mockSettings = {
   ttsProvider: 'elevenlabs',
   ttsVoiceId: 'voice-1',
   speechRate: 1,
@@ -11,7 +13,7 @@ const mockSettings = {
   ttsSimilarityBoost: 0.5,
 };
 
-let mockCurrentProvider: 'browser' | 'elevenlabs' = 'browser';
+let mockCurrentProvider: MockProvider = 'browser';
 
 const mockTTSProvider = {
   isAvailable: jest.fn(() => true),
@@ -20,11 +22,13 @@ const mockTTSProvider = {
     isSpeaking: false,
     activeProvider: mockCurrentProvider,
     elevenLabsAvailable: mockCurrentProvider === 'elevenlabs',
+    azureAvailable: mockCurrentProvider === 'azure',
+    geminiAvailable: mockCurrentProvider === 'gemini',
     browserTTSAvailable: true,
   })),
   getAllVoices: jest.fn(() => []),
   setCallbacks: jest.fn(),
-  setProvider: jest.fn((provider: 'browser' | 'elevenlabs') => {
+  setProvider: jest.fn((provider: MockProvider) => {
     mockCurrentProvider = provider;
   }),
   speak: jest.fn(),
@@ -34,6 +38,8 @@ const mockTTSProvider = {
   getVoicesByProvider: jest.fn(() => []),
   refreshVoices: jest.fn(),
   loadElevenLabsVoices: jest.fn(),
+  loadAzureVoices: jest.fn(),
+  loadGeminiVoices: jest.fn(),
 };
 
 jest.mock('@/app/hooks/useSubscription', () => ({
@@ -58,6 +64,15 @@ describe('useTTS', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCurrentProvider = 'browser';
+    mockSettings = {
+      ttsProvider: 'elevenlabs',
+      ttsVoiceId: 'voice-1',
+      speechRate: 1,
+      speechPitch: 1,
+      speechVolume: 1,
+      ttsStability: 0.5,
+      ttsSimilarityBoost: 0.5,
+    };
   });
 
   it('applies the saved provider during initialization', async () => {
@@ -67,6 +82,21 @@ describe('useTTS', () => {
       expect(mockTTSProvider.setProvider).toHaveBeenCalledWith('elevenlabs');
       expect(result.current.provider).toBe('elevenlabs');
       expect(result.current.status.activeProvider).toBe('elevenlabs');
+    });
+  });
+
+  it('applies Gemini as saved provider during initialization', async () => {
+    mockSettings = {
+      ...mockSettings,
+      ttsProvider: 'gemini',
+    };
+
+    const { result } = renderHook(() => useTTS());
+
+    await waitFor(() => {
+      expect(mockTTSProvider.setProvider).toHaveBeenCalledWith('gemini');
+      expect(result.current.provider).toBe('gemini');
+      expect(result.current.status.activeProvider).toBe('gemini');
     });
   });
 });
