@@ -1,5 +1,3 @@
-import type { TonePreset } from '../typing/ToneSheet';
-
 export type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
 export interface ReplySuggestionsConfig {

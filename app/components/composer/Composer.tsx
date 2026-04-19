@@ -53,7 +53,6 @@ export default function Composer({
     currentText,
     handleTextChange: tabHandleTextChange,
     tabs,
-    activeTab,
     activeTabId,
     createTab,
     switchTab,
@@ -78,7 +77,6 @@ export default function Composer({
     onSpeakWithTone,
     onMessageCompleted,
     inputRef,
-    enableFixText,
     enableLiveTyping,
   });
 
