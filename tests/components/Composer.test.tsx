@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Composer from '@/app/components/Composer';
 import { useAuth } from '@/app/contexts/AuthContext';
@@ -119,6 +119,50 @@ const mockUseLiveTyping = jest.mocked(useLiveTyping);
 const mockUseIsMobile = jest.mocked(useIsMobile);
 const mockUseOptionalMobileBottom = jest.mocked(useOptionalMobileBottom);
 
+function setTextareaLayout(textarea: HTMLTextAreaElement, {
+  scrollHeight = 1000,
+  clientHeight = 200,
+}: {
+  scrollHeight?: number;
+  clientHeight?: number;
+} = {}) {
+  Object.defineProperty(textarea, 'scrollHeight', { value: scrollHeight, configurable: true });
+  Object.defineProperty(textarea, 'clientHeight', { value: clientHeight, configurable: true });
+}
+
+function ControlledComposer({
+  initialValue = 'Line 1',
+}: {
+  initialValue?: string;
+}) {
+  const [value, setValue] = React.useState(initialValue);
+
+  return (
+    <Composer
+      text={value}
+      onChange={setValue}
+      onSpeak={jest.fn()}
+    />
+  );
+}
+
+function ControlledComposerWithAppend() {
+  const [value, setValue] = React.useState('Hello');
+
+  return (
+    <>
+      <button onClick={() => setValue(current => `${current} world`)}>
+        Append
+      </button>
+      <Composer
+        text={value}
+        onChange={setValue}
+        onSpeak={jest.fn()}
+      />
+    </>
+  );
+}
+
 describe('Composer', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -178,10 +222,77 @@ describe('Composer', () => {
     );
 
     const textarea = screen.getByRole('textbox');
-    expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-[120px]', 'overflow-hidden');
+    expect(textarea.parentElement?.parentElement).toHaveClass('overflow-hidden');
+    expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-0', 'overflow-hidden', 'md:min-h-[120px]');
     expect(textarea).toHaveClass('h-full', 'overflow-y-auto', 'resize-none');
     expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
+  });
+
+  it('keeps typing tabs pinned while the textarea can shrink', () => {
+    mockUseIsMobile.mockReturnValue(true);
+
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableTabs={true}
+      />
+    );
+
+    const tabButton = screen.getByRole('button', { name: /Active tab:/i });
+    expect(tabButton.closest('.sticky')).toHaveClass('sticky', 'top-0', 'z-10', 'shrink-0');
+
+    const textarea = screen.getByRole('textbox');
+    expect(textarea.parentElement).toHaveClass('min-h-0');
+  });
+
+  it('scrolls the textarea to the bottom when typing at the end', async () => {
+    const user = userEvent.setup();
+    render(<ControlledComposer />);
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    setTextareaLayout(textarea);
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    fireEvent.select(textarea);
+
+    await user.type(textarea, ' extra text');
+
+    expect(textarea.scrollTop).toBe(1000);
+  });
+
+  it('does not force the textarea to the bottom when editing earlier text', () => {
+    render(<ControlledComposer initialValue={'Line 1\nLine 2\nLine 3'} />);
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    setTextareaLayout(textarea);
+    textarea.scrollTop = 100;
+    textarea.focus();
+    textarea.setSelectionRange(2, 2);
+    fireEvent.select(textarea);
+
+    fireEvent.change(textarea, { target: { value: 'LiXne 1\nLine 2\nLine 3' } });
+
+    expect(textarea.scrollTop).not.toBe(1000);
+  });
+
+  it('scrolls external appended text into view when focused at the end', async () => {
+    const user = userEvent.setup();
+    render(<ControlledComposerWithAppend />);
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    setTextareaLayout(textarea);
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    fireEvent.select(textarea);
+
+    await user.click(screen.getByRole('button', { name: 'Append' }));
+
+    expect(textarea).toHaveValue('Hello world');
+    expect(textarea.selectionStart).toBe('Hello world'.length);
+    expect(textarea.scrollTop).toBe(1000);
   });
 
   it('restores the active tab draft on mount when tabs enabled', async () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { SparklesIcon, XMarkIcon, ArrowPathIcon, ShareIcon, BookmarkIcon } from '@heroicons/react/24/outline';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,6 +49,19 @@ interface ComposerProps {
 
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 
+type TextareaScrollIntent = {
+  selectionStart: number;
+  selectionEnd: number;
+  shouldScrollToEnd: boolean;
+};
+
+type TextareaScrollSnapshot = {
+  selectionStart: number;
+  selectionEnd: number;
+  wasAtEnd: boolean;
+  wasNearBottom: boolean;
+};
+
 export default function Composer({
   text,
   onChange,
@@ -74,6 +87,9 @@ export default function Composer({
   const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pendingTextareaScrollRef = useRef<TextareaScrollIntent | null>(null);
+  const previousRenderedTextRef = useRef('');
+  const lastTextareaSnapshotRef = useRef<TextareaScrollSnapshot | null>(null);
   const prevTextRef = useRef(text);
   const prevActiveTabIdRef = useRef<string | null>(null);
   const hasProcessedInitialTextRef = useRef(false);
@@ -161,6 +177,56 @@ export default function Composer({
   const currentText = enableTabs ? activeTab.text : text;
   const shareableLink = getShareableLink();
   const isLiveTypingButtonActive = isLiveTypingSharing || showLiveTypingModal || showLiveTypingSheet;
+
+  const captureTextareaSnapshot = useCallback((value?: string) => {
+    const textarea = inputRef.current;
+    if (!textarea) return;
+
+    const currentValue = value ?? textarea.value;
+    const selectionStart = textarea.selectionStart ?? currentValue.length;
+    const selectionEnd = textarea.selectionEnd ?? selectionStart;
+    const distanceFromBottom = textarea.scrollHeight - textarea.scrollTop - textarea.clientHeight;
+    const wasNearBottom = distanceFromBottom <= 24;
+
+    lastTextareaSnapshotRef.current = {
+      selectionStart,
+      selectionEnd,
+      wasAtEnd: selectionStart >= currentValue.length,
+      wasNearBottom,
+    };
+  }, []);
+
+  const captureTextareaScrollIntent = useCallback((nextValue: string) => {
+    const textarea = inputRef.current;
+    if (!textarea || document.activeElement !== textarea) {
+      pendingTextareaScrollRef.current = null;
+      return;
+    }
+
+    const selectionStart = textarea.selectionStart ?? nextValue.length;
+    const selectionEnd = textarea.selectionEnd ?? selectionStart;
+    const distanceFromBottom = textarea.scrollHeight - textarea.scrollTop - textarea.clientHeight;
+    const isNearBottom = distanceFromBottom <= 24;
+    const isCaretAtEnd = selectionStart >= nextValue.length;
+    const previousSnapshot = lastTextareaSnapshotRef.current;
+    const wasEditingEarlier = !!previousSnapshot
+      && !previousSnapshot.wasAtEnd
+      && !previousSnapshot.wasNearBottom;
+    const shouldScrollToEnd = !wasEditingEarlier
+      && (isCaretAtEnd || isNearBottom || !!previousSnapshot?.wasAtEnd || !!previousSnapshot?.wasNearBottom);
+
+    pendingTextareaScrollRef.current = {
+      selectionStart,
+      selectionEnd,
+      shouldScrollToEnd,
+    };
+    lastTextareaSnapshotRef.current = {
+      selectionStart,
+      selectionEnd,
+      wasAtEnd: isCaretAtEnd,
+      wasNearBottom: isNearBottom,
+    };
+  }, []);
 
   const showUndoHint = canUndo
     && entry?.tabId === (activeTabId || 'default')
@@ -315,11 +381,54 @@ export default function Composer({
   };
 
   const handleTextChange = (value: string) => {
+    captureTextareaScrollIntent(value);
     if (canUndo && value.trim().length > 0) resetUndo();
     if (error) setError(null);
     if (enableTabs) updateActiveTabText(value);
     onChange(value);
   };
+
+  useLayoutEffect(() => {
+    const textarea = inputRef.current;
+    if (!textarea) {
+      previousRenderedTextRef.current = currentText;
+      pendingTextareaScrollRef.current = null;
+      return;
+    }
+
+    const pending = pendingTextareaScrollRef.current;
+    const previousText = previousRenderedTextRef.current;
+    const snapshot = lastTextareaSnapshotRef.current;
+    const wasExternalAppend = currentText.length > previousText.length
+      && !!snapshot
+      && (snapshot.wasAtEnd || snapshot.wasNearBottom);
+
+    if (pending && document.activeElement === textarea) {
+      const selectionStart = Math.min(pending.selectionStart, currentText.length);
+      const selectionEnd = Math.min(pending.selectionEnd, currentText.length);
+      textarea.setSelectionRange(selectionStart, selectionEnd);
+
+      if (pending.shouldScrollToEnd) {
+        textarea.scrollTop = textarea.scrollHeight;
+      }
+    } else if (wasExternalAppend) {
+      textarea.setSelectionRange(currentText.length, currentText.length);
+      textarea.scrollTop = textarea.scrollHeight;
+    }
+
+    previousRenderedTextRef.current = currentText;
+    pendingTextareaScrollRef.current = null;
+    captureTextareaSnapshot(currentText);
+  }, [captureTextareaSnapshot, currentText]);
+
+  const handleTabSelect = useCallback((tabId: string) => {
+    switchTab(tabId);
+    pendingTextareaScrollRef.current = {
+      selectionStart: Number.MAX_SAFE_INTEGER,
+      selectionEnd: Number.MAX_SAFE_INTEGER,
+      shouldScrollToEnd: true,
+    };
+  }, [switchTab]);
 
   const toolbarContent = (
     <div className={`flex items-center gap-3 px-4 pt-2 ${shouldPortalToolbar ? 'pb-2' : 'pb-4'}`}>
@@ -405,14 +514,14 @@ export default function Composer({
 
   return (
     <>
-      <div className={`flex flex-col flex-1 min-h-0 h-full ${className}`}>
+      <div className={`flex flex-col flex-1 min-h-0 h-full overflow-hidden ${className}`}>
         {/* Tab bar */}
         {enableTabs && (
-          <div className="shrink-0">
+          <div className="sticky top-0 z-10 shrink-0">
             <TabBar
               tabs={tabs}
               activeTabId={activeTabId}
-              onTabSelect={switchTab}
+              onTabSelect={handleTabSelect}
               onTabClose={closeTab}
               onTabCreate={createTab}
               onTabRename={renameTab}
@@ -422,11 +531,15 @@ export default function Composer({
         )}
 
         {/* Textarea — full bleed, fills the screen */}
-        <div className="flex-1 min-h-[120px] overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden md:min-h-[120px]">
           <textarea
             ref={inputRef}
             value={currentText}
             onChange={(e) => handleTextChange(e.target.value)}
+            onSelect={() => captureTextareaSnapshot()}
+            onClick={() => captureTextareaSnapshot()}
+            onKeyUp={() => captureTextareaSnapshot()}
+            onBlur={() => captureTextareaSnapshot()}
             onKeyDown={handleKeyDown}
             placeholder="What do you want to say?"
             className="w-full h-full overflow-y-auto bg-transparent text-foreground placeholder:text-text-tertiary px-6 py-5 resize-none focus:outline-none"
@@ -510,7 +623,7 @@ export default function Composer({
           onClose={() => setShowTabList(false)}
           tabs={tabs}
           activeTabId={activeTabId}
-          onSwitchTab={(tabId) => { switchTab(tabId); const tab = tabs.find(t => t.id === tabId); if (tab) onChange(tab.text); }}
+          onSwitchTab={(tabId) => { handleTabSelect(tabId); const tab = tabs.find(t => t.id === tabId); if (tab) onChange(tab.text); }}
           onCloseTab={(tabId) => { closeTab(tabId); const remaining = tabs.filter(t => t.id !== tabId); if (remaining.length > 0) onChange(remaining[0].text); }}
           onCloseAllTabs={() => { closeAllTabs(); onChange(''); }}
           onCreateTab={() => { createTab(); onChange(''); }}
