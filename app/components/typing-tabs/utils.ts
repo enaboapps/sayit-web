@@ -18,12 +18,14 @@ export function generateLabelFromText(text: string, tabNumber: number): string {
 }
 
 export function createDefaultTab(tabNumber: number, text: string = ''): TypingTab {
+  const now = Date.now();
+
   return {
     id: nanoid(),
     label: generateLabelFromText(text, tabNumber),
     text,
-    createdAt: Date.now(),
-    lastModified: Date.now(),
+    createdAt: now,
+    lastModified: now,
     isCustomLabel: false,
   };
 }

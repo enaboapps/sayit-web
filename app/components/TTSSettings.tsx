@@ -5,13 +5,25 @@ import { useTTS } from '@/lib/hooks/useTTS';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { TTSProviderType } from '@/lib/tts-provider';
 import { useSettings } from '../contexts/SettingsContext';
-import { Dropdown } from '@/app/components/ui/Dropdown';
+import { Dropdown, DropdownOption } from '@/app/components/ui/Dropdown';
 import { Slider } from '@/app/components/ui/Slider';
 import { useRouter } from 'next/navigation';
 import { PlayCircleIcon, StopCircleIcon } from '@heroicons/react/24/solid';
 
 // Sample text used for voice preview
 const SAMPLE_TEXT = 'This is how I sound.';
+
+const providerDetails: Record<TTSProviderType, { name: string; description: string }> = {
+  browser: { name: 'Browser TTS', description: 'System voices' },
+  elevenlabs: { name: 'ElevenLabs', description: 'AI voices' },
+  azure: { name: 'Azure', description: 'Neural voices' },
+};
+
+type ProviderDropdownOption = DropdownOption<TTSProviderType> & {
+  name: string;
+  description: string;
+  showProBadge: boolean;
+};
 
 export default function TTSSettings() {
   const { settings, updateSetting } = useSettings();
@@ -121,6 +133,80 @@ export default function TTSSettings() {
       ? 'Azure'
       : 'Browser TTS';
 
+  const providerOptions = useMemo<ProviderDropdownOption[]>(() => {
+    const elevenLabsDisabled = !isOnline || !status.elevenLabsAvailable;
+    const azureDisabled = !isOnline || !status.azureAvailable;
+
+    return [
+      {
+        value: 'browser',
+        label: providerDetails.browser.name,
+        name: providerDetails.browser.name,
+        description: providerDetails.browser.description,
+        disabled: false,
+        showProBadge: false,
+      },
+      {
+        value: 'elevenlabs',
+        label: !isOnline
+          ? 'ElevenLabs (offline)'
+          : !status.elevenLabsAvailable
+            ? 'ElevenLabs (unavailable)'
+            : providerDetails.elevenlabs.name,
+        name: providerDetails.elevenlabs.name,
+        description: !isOnline
+          ? 'Needs internet'
+          : !status.elevenLabsAvailable
+            ? 'API key not configured'
+            : !hasSubscription
+              ? 'AI voices - Pro'
+              : providerDetails.elevenlabs.description,
+        disabled: elevenLabsDisabled,
+        showProBadge: !hasSubscription && !elevenLabsDisabled,
+      },
+      {
+        value: 'azure',
+        label: !isOnline
+          ? 'Azure (offline)'
+          : !status.azureAvailable
+            ? 'Azure (unavailable)'
+            : providerDetails.azure.name,
+        name: providerDetails.azure.name,
+        description: !isOnline
+          ? 'Needs internet'
+          : !status.azureAvailable
+            ? 'Subscription key not configured'
+            : !hasSubscription
+              ? 'Neural voices - Pro'
+              : providerDetails.azure.description,
+        disabled: azureDisabled,
+        showProBadge: !hasSubscription && !azureDisabled,
+      },
+    ];
+  }, [hasSubscription, isOnline, status.azureAvailable, status.elevenLabsAvailable]);
+
+  const selectedProviderOption = providerOptions.find(option => option.value === settings.ttsProvider);
+
+  const renderProviderOption = useCallback((option: DropdownOption<TTSProviderType>) => {
+    const providerOption = option as ProviderDropdownOption;
+
+    return (
+      <span className="block">
+        <span className="flex items-center gap-2">
+          <span className="font-medium">{providerOption.label}</span>
+          {providerOption.showProBadge && (
+            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-primary-900 text-primary-400 rounded">
+              PRO
+            </span>
+          )}
+        </span>
+        <span className="block text-xs opacity-80 mt-0.5">
+          {providerOption.description}
+        </span>
+      </span>
+    );
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Voice Selection Card */}
@@ -196,113 +282,19 @@ export default function TTSSettings() {
       {/* Provider Selection Card */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Provider</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {/* Browser TTS */}
-          <button
-            type="button"
-            onClick={() => handleProviderChange('browser')}
-            className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
-              settings.ttsProvider === 'browser'
-                ? 'border-primary-500 bg-primary-900'
-                : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
-                settings.ttsProvider === 'browser'
-                  ? 'border-primary-500 bg-primary-500'
-                  : 'border-text-tertiary'
-              }`}>
-                {settings.ttsProvider === 'browser' && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0">
-                <span className="block font-medium text-foreground text-sm">Browser</span>
-                <span className="block text-xs text-text-secondary mt-0.5">System voices</span>
-              </div>
-            </div>
-          </button>
-
-          {/* ElevenLabs */}
-          <button
-            type="button"
-            onClick={() => handleProviderChange('elevenlabs')}
-            disabled={!status.elevenLabsAvailable || !isOnline}
-            className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
-              !status.elevenLabsAvailable || !isOnline
-                ? 'opacity-50 cursor-not-allowed border-border bg-surface'
-                : settings.ttsProvider === 'elevenlabs'
-                  ? 'border-primary-500 bg-primary-900'
-                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
-                settings.ttsProvider === 'elevenlabs'
-                  ? 'border-primary-500 bg-primary-500'
-                  : 'border-text-tertiary'
-              }`}>
-                {settings.ttsProvider === 'elevenlabs' && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-foreground text-sm">ElevenLabs</span>
-                  {!hasSubscription && status.elevenLabsAvailable && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-primary-900 text-primary-400 rounded">
-                      PRO
-                    </span>
-                  )}
-                </div>
-                <span className="block text-xs text-text-secondary mt-0.5">AI voices</span>
-              </div>
-            </div>
-          </button>
-
-          {/* Azure */}
-          <button
-            type="button"
-            onClick={() => handleProviderChange('azure')}
-            disabled={!status.azureAvailable || !isOnline}
-            className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
-              !status.azureAvailable || !isOnline
-                ? 'opacity-50 cursor-not-allowed border-border bg-surface'
-                : settings.ttsProvider === 'azure'
-                  ? 'border-primary-500 bg-primary-900'
-                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0 ${
-                settings.ttsProvider === 'azure'
-                  ? 'border-primary-500 bg-primary-500'
-                  : 'border-text-tertiary'
-              }`}>
-                {settings.ttsProvider === 'azure' && (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-foreground text-sm">Azure</span>
-                  {!hasSubscription && status.azureAvailable && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold bg-primary-900 text-primary-400 rounded">
-                      PRO
-                    </span>
-                  )}
-                </div>
-                <span className="block text-xs text-text-secondary mt-0.5">Neural voices</span>
-              </div>
-            </div>
-          </button>
+        <div className="space-y-2">
+          <Dropdown<TTSProviderType>
+            options={providerOptions}
+            value={settings.ttsProvider}
+            onChange={handleProviderChange}
+            placeholder="Select a provider"
+            renderOption={renderProviderOption}
+          />
+          {selectedProviderOption && (
+            <p className="text-xs text-text-secondary px-1">
+              {selectedProviderOption.description}
+            </p>
+          )}
         </div>
 
         {/* Subscription note */}
