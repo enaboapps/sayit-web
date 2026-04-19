@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Composer from '@/app/components/Composer';
+import Composer from '@/app/components/composer';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useLiveTyping } from '@/lib/hooks/useLiveTyping';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';

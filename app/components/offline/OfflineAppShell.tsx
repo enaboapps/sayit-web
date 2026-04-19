@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AACTabs from '@/app/components/home/AACTabs';
-import Composer from '@/app/components/Composer';
+import Composer from '@/app/components/composer';
 import BoardSelector from '@/app/components/phrases/BoardSelector';
 import PhraseTile from '@/app/components/phrases/PhraseTile';
 import type { BoardSummary, PhraseSummary } from '@/app/components/phrases/types';
@@ -185,7 +185,7 @@ export default function OfflineAppShell({
       <Composer
         text={text}
         onChange={setText}
-        onSpeak={(source = 'speak') => {
+        onSpeak={(source: 'speak' | 'speakAndClear' = 'speak') => {
           if (!text.trim()) {
             return;
           }
