@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import Composer from '../Composer';
+import Composer from '../composer';
 import AACTabs from './AACTabs';
 import PhrasesTabContent from './PhrasesTabContent';
 import BoardGridPopup from '../phrases/BoardGridPopup';
@@ -147,11 +147,11 @@ export default function PhrasesInterface() {
               text={typingText}
               onChange={setTypingText}
               onSpeak={handleSpeakFromDock}
-              onSpeakWithTone={(taggedText, options) => {
+              onSpeakWithTone={(taggedText: string, options?: { modelId?: string }) => {
                 tts.speak(taggedText, options);
                 void handleCaptureCompletedMessage({ text: typingText, source: 'speak', tabId: activeTabId });
               }}
-              onMessageCompleted={(payload) => void handleCaptureCompletedMessage(payload)}
+              onMessageCompleted={(payload: { text: string; source: 'clear'; tabId?: string | null }) => void handleCaptureCompletedMessage(payload)}
               onStop={tts.stop}
               isSpeaking={tts.isSpeaking}
               isAvailable={tts.isAvailable}

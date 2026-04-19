@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChatBubbleBottomCenterTextIcon, WifiIcon } from '@heroicons/react/24/outline';
-import Composer from '@/app/components/Composer';
+import Composer from '@/app/components/composer';
 import { MobileDockPortal } from '@/app/contexts/MobileBottomContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
@@ -44,7 +44,7 @@ export default function GuestCommunication() {
             <Composer
               text={text}
               onChange={setText}
-              onSpeak={(source = 'speak') => {
+              onSpeak={(source: 'speak' | 'speakAndClear' = 'speak') => {
                 if (!text.trim()) return;
                 tts.speak(text);
                 recordMessage({ text, source });
@@ -94,7 +94,7 @@ export default function GuestCommunication() {
           <Composer
             text={text}
             onChange={setText}
-            onSpeak={(source = 'speak') => {
+            onSpeak={(source: 'speak' | 'speakAndClear' = 'speak') => {
               if (!text.trim()) return;
               tts.speak(text);
               recordMessage({ text, source });
