@@ -12,7 +12,7 @@ describe('MobileBottomStack', () => {
     jest.restoreAllMocks();
   });
 
-  it('positions the mobile stack above the keyboard using native CSS keyboard inset', () => {
+  it('renders the bottom stack fixed at bottom-0 with navigation', () => {
     const { container } = render(
       <MobileBottomProvider>
         <MobileBottomStack />
@@ -20,7 +20,7 @@ describe('MobileBottomStack', () => {
     );
 
     const stack = container.firstElementChild;
-    expect(stack).toHaveClass('bottom-keyboard-aware');
+    expect(stack).toHaveClass('fixed', 'bottom-0');
 
     const nav = screen.getByRole('navigation', { name: 'Bottom navigation' });
     expect(nav).toBeInTheDocument();

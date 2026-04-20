@@ -1,18 +1,11 @@
 'use client';
 
-import { useRef } from 'react';
-import { useVisualViewport } from './useVisualViewport';
+import { useEffect, useRef, useState } from 'react';
 
-const KEYBOARD_OPEN_THRESHOLD_PX = 80;
+const KEYBOARD_OPEN_THRESHOLD_PX = 150;
 
 const TEXT_INPUT_TYPES = new Set([
-  'email',
-  'number',
-  'password',
-  'search',
-  'tel',
-  'text',
-  'url',
+  'email', 'number', 'password', 'search', 'tel', 'text', 'url',
 ]);
 
 function isEditableElement(element: Element | null): boolean {
@@ -25,20 +18,45 @@ function isEditableElement(element: Element | null): boolean {
   return false;
 }
 
+/**
+ * Detects whether the mobile keyboard is open.
+ *
+ * With `interactiveWidget: 'resizes-content'`, the layout viewport shrinks
+ * when the keyboard opens. We track the maximum window.innerHeight (full
+ * screen without keyboard) and compare against the current height.
+ */
 export function useKeyboardOpen(): boolean {
-  const layoutHeightRef = useRef<number | null>(null);
-  const viewport = useVisualViewport();
+  const [isOpen, setIsOpen] = useState(false);
+  const maxHeightRef = useRef(typeof window !== 'undefined' ? window.innerHeight : 0);
 
-  if (typeof window === 'undefined') return false;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-  const viewportHeight = viewport.height ?? window.innerHeight;
-  const currentLayoutHeight = viewport.innerHeight ?? window.innerHeight;
-  const previousLayoutHeight = layoutHeightRef.current ?? currentLayoutHeight;
-  const layoutHeight = Math.max(previousLayoutHeight, currentLayoutHeight, viewportHeight);
-  const keyboardInset = Math.max(0, layoutHeight - ((viewport.top ?? 0) + viewportHeight));
-  const isOpen = isEditableElement(document.activeElement) && keyboardInset > KEYBOARD_OPEN_THRESHOLD_PX;
+    const check = () => {
+      const currentHeight = window.innerHeight;
+      // Update max height when no editable element is focused (keyboard definitely closed)
+      if (!isEditableElement(document.activeElement)) {
+        maxHeightRef.current = Math.max(maxHeightRef.current, currentHeight);
+        setIsOpen(false);
+        return;
+      }
+      // Keyboard is open if height dropped significantly while an input is focused
+      const heightDrop = maxHeightRef.current - currentHeight;
+      setIsOpen(heightDrop > KEYBOARD_OPEN_THRESHOLD_PX);
+    };
 
-  layoutHeightRef.current = isOpen ? layoutHeight : currentLayoutHeight;
+    check();
+
+    window.addEventListener('resize', check);
+    document.addEventListener('focusin', check);
+    document.addEventListener('focusout', check);
+
+    return () => {
+      window.removeEventListener('resize', check);
+      document.removeEventListener('focusin', check);
+      document.removeEventListener('focusout', check);
+    };
+  }, []);
 
   return isOpen;
 }
