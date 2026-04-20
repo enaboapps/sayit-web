@@ -2,10 +2,12 @@
 
 import { useRef, useEffect } from 'react';
 import { useMobileBottom } from '@/app/contexts/MobileBottomContext';
+import { useKeyboardOpen } from '@/lib/hooks/useKeyboardOpen';
 import BottomTabBar from './BottomTabBar';
 
 export default function MobileBottomStack() {
   const { registerDockContainer } = useMobileBottom();
+  const keyboardOpen = useKeyboardOpen();
   const stackRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
 
@@ -62,8 +64,8 @@ export default function MobileBottomStack() {
     <div ref={stackRef} className="fixed bottom-keyboard-aware left-0 right-0 z-50 md:hidden flex flex-col">
       {/* Dock content slot - portal target */}
       <div ref={dockRef} className="bg-surface" />
-      {/* Tab bar */}
-      <BottomTabBar />
+      {/* Tab bar — hidden when keyboard is open to maximize content space */}
+      {!keyboardOpen && <BottomTabBar />}
     </div>
   );
 }
