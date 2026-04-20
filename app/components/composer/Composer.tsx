@@ -184,8 +184,8 @@ export default function Composer({
               onAddAsPhrase={onAddAsPhrase}
               enableToneControl={enableToneControl}
               suggestionsCount={suggestionsCount}
-              onSuggestionsToggle={() => setShowSuggestions(!showSuggestions)}
-              suggestionsEnabled={!!replySuggestions}
+              onSuggestionsOpen={() => setShowSuggestions(true)}
+              suggestionsEnabled={!!replySuggestions && !!actions.user && actions.isOnline}
             />
             {replySuggestions && (
               <SuggestionsPopover

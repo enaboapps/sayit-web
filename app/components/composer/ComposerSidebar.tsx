@@ -1,6 +1,6 @@
 'use client';
 
-import { SparklesIcon, XMarkIcon, ShareIcon, BookmarkIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, XMarkIcon, ArrowPathIcon, ShareIcon, BookmarkIcon, LightBulbIcon } from '@heroicons/react/24/outline';
 import SubscriptionWrapper from '../SubscriptionWrapper';
 import SpeakButton from '../typing/SpeakButton';
 import type { TonePreset } from '../typing/ToneSheet';
@@ -25,7 +25,7 @@ interface ComposerSidebarProps {
   enableToneControl: boolean;
   // Suggestions
   suggestionsCount: number;
-  onSuggestionsToggle: () => void;
+  onSuggestionsOpen: () => void;
   suggestionsEnabled: boolean;
 }
 
@@ -48,7 +48,7 @@ export default function ComposerSidebar({
   onAddAsPhrase,
   enableToneControl,
   suggestionsCount,
-  onSuggestionsToggle,
+  onSuggestionsOpen,
   suggestionsEnabled,
 }: ComposerSidebarProps) {
   return (
@@ -84,7 +84,7 @@ export default function ComposerSidebar({
               }`}
               aria-label="Fix Text"
             >
-              <SparklesIcon className={`w-5 h-5 ${isFixingText ? 'animate-spin' : ''}`} />
+              {isFixingText ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
             </button>
           </SubscriptionWrapper>
         )
@@ -119,11 +119,11 @@ export default function ComposerSidebar({
       {/* Suggestions trigger with badge */}
       {suggestionsEnabled && (
         <button
-          onClick={onSuggestionsToggle}
+          onClick={onSuggestionsOpen}
           className="relative p-2.5 rounded-xl bg-surface-hover text-text-secondary hover:text-primary-500 hover:bg-surface-hover transition-all"
           aria-label="Suggestions"
         >
-          <SparklesIcon className="w-5 h-5" />
+          <LightBulbIcon className="w-5 h-5" />
           {suggestionsCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary-500 text-white text-[10px] font-bold px-1">
               {suggestionsCount}
