@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ArrowPathIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { useReplySuggestions } from '@/lib/hooks/useReplySuggestions';
 import { useSubscription } from '@/app/hooks/useSubscription';
@@ -14,6 +15,7 @@ interface ReplySuggestionsProps {
   variant?: 'card' | 'inline';
   contextLabel?: string;
   className?: string;
+  onCountChange?: (count: number) => void;
 }
 
 export default function ReplySuggestions({
@@ -23,6 +25,7 @@ export default function ReplySuggestions({
   variant = 'card',
   contextLabel = 'Based on your recent completed messages',
   className = '',
+  onCountChange,
 }: ReplySuggestionsProps) {
   const { user, loading: authLoading } = useAuth();
   const { isActive: hasSubscription, loading: subscriptionLoading } = useSubscription();
@@ -36,6 +39,11 @@ export default function ReplySuggestions({
     history,
     enabled: enabled && isOnline && !authLoading && !!user && hasSubscription,
   });
+
+  // Report suggestion count changes to parent
+  useEffect(() => {
+    onCountChange?.(suggestions.length);
+  }, [suggestions.length, onCountChange]);
 
   if (authLoading || subscriptionLoading || !enabled || !user || !hasSubscription) {
     return null;

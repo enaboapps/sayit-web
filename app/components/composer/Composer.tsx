@@ -9,9 +9,9 @@ import { useComposerActions } from './useComposerActions';
 import { useTextareaScroll } from './useTextareaScroll';
 import ComposerTextarea from './ComposerTextarea';
 import ComposerFooter from './ComposerFooter';
-import ComposerToolbar from './ComposerToolbar';
+import ComposerSidebar from './ComposerSidebar';
+import SuggestionsPopover from './SuggestionsPopover';
 import ComposerErrorBanner from './ComposerErrorBanner';
-import ReplySuggestions from '../typing/ReplySuggestions';
 import ActionPromptBanner from '../typing/ActionPromptBanner';
 import TabBar from '../typing-tabs/TabBar';
 import MobileTabList from '../typing-tabs/MobileTabList';
@@ -41,12 +41,16 @@ export default function Composer({
   const [showTabManagement, setShowTabManagement] = useState(false);
   const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
   const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
   const isMobile = useIsMobile();
   const mobileBottom = useOptionalMobileBottom();
-  const shouldPortalToolbar = isMobile && !!mobileBottom?.dockContainer;
+  const shouldPortalBanners = isMobile && !!mobileBottom?.dockContainer;
+
+  // Suggestions state — count tracked via callback from ReplySuggestions
+  const [suggestionsCount, setSuggestionsCount] = useState(0);
 
   // Tab management
   const {
@@ -109,89 +113,20 @@ export default function Composer({
     }
   }, [actions, isMobile]);
 
-  // Footer content — same tree regardless of portal mode
-  const footerContent = (
+  // Banner content — portaled on mobile, inline on desktop
+  const bannerContent = (
     <>
-      {replySuggestions && (
-        <div className={shouldPortalToolbar ? 'px-4 pt-2' : 'px-4 pb-2'}>
-          <ReplySuggestions
-            history={replySuggestions.history}
-            enabled={replySuggestions.enabled}
-            onSelectSuggestion={replySuggestions.onSelect}
-            variant="inline"
-          />
+      {(actions.showUndoHint || actions.showDoubleEnterHint) && (
+        <div className="px-4 py-2">
+          {actions.showUndoHint ? (
+            <ActionPromptBanner variant="undo" remainingMs={actions.undoRemainingMs} onUndo={actions.undo} />
+          ) : (
+            <ActionPromptBanner variant="doubleEnter" actionLabel={actions.doubleEnterActionLabel} remainingMs={actions.doubleEnterRemainingMs} />
+          )}
         </div>
       )}
-      {shouldPortalToolbar ? (
-        // Mobile portal: banner OR toolbar, never both — keeps bottom stack stable
-        (actions.showUndoHint || actions.showDoubleEnterHint || actions.error) ? (
-          <div className="px-4 pt-2 pb-2">
-            {actions.error ? (
-              <span className="text-sm text-red-400">{actions.error}</span>
-            ) : actions.showUndoHint ? (
-              <ActionPromptBanner variant="undo" remainingMs={actions.undoRemainingMs} onUndo={actions.undo} />
-            ) : (
-              <ActionPromptBanner variant="doubleEnter" actionLabel={actions.doubleEnterActionLabel} remainingMs={actions.doubleEnterRemainingMs} />
-            )}
-          </div>
-        ) : (
-          <ComposerToolbar
-            currentText={currentText}
-            onClear={actions.handleClear}
-            onSpeak={() => onSpeak('speak')}
-            onStop={onStop}
-            onToneSelected={actions.handleToneSelected}
-            isSpeaking={isSpeaking}
-            isAvailable={isAvailable}
-            enableFixText={enableFixText}
-            isOnline={actions.isOnline}
-            isFixingText={actions.isFixingText}
-            onFixText={actions.handleFixText}
-            enableLiveTyping={enableLiveTyping}
-            isLiveTypingButtonActive={isLiveTypingButtonActive}
-            onShare={handleShare}
-            hasUser={!!actions.user}
-            onAddAsPhrase={onAddAsPhrase}
-            enableToneControl={enableToneControl}
-            isPortaled={true}
-          />
-        )
-      ) : (
-        // Desktop/offline: banners and toolbar can stack
-        <>
-          {(actions.showUndoHint || actions.showDoubleEnterHint) && (
-            <div className="px-4 pb-2">
-              {actions.showUndoHint ? (
-                <ActionPromptBanner variant="undo" remainingMs={actions.undoRemainingMs} onUndo={actions.undo} />
-              ) : (
-                <ActionPromptBanner variant="doubleEnter" actionLabel={actions.doubleEnterActionLabel} remainingMs={actions.doubleEnterRemainingMs} />
-              )}
-            </div>
-          )}
-          {actions.error && (
-            <ComposerErrorBanner error={actions.error} />
-          )}
-          <ComposerToolbar
-            currentText={currentText}
-            onClear={actions.handleClear}
-            onSpeak={() => onSpeak('speak')}
-            onStop={onStop}
-            onToneSelected={actions.handleToneSelected}
-            isSpeaking={isSpeaking}
-            isAvailable={isAvailable}
-            enableFixText={enableFixText}
-            isOnline={actions.isOnline}
-            isFixingText={actions.isFixingText}
-            onFixText={actions.handleFixText}
-            enableLiveTyping={enableLiveTyping}
-            isLiveTypingButtonActive={isLiveTypingButtonActive}
-            onShare={handleShare}
-            hasUser={!!actions.user}
-            onAddAsPhrase={onAddAsPhrase}
-            enableToneControl={enableToneControl}
-            isPortaled={false}
-          />
-        </>
+      {actions.error && (
+        <ComposerErrorBanner error={actions.error} />
       )}
     </>
   );
@@ -214,22 +149,60 @@ export default function Composer({
           </div>
         )}
 
-        {/* Textarea */}
-        <ComposerTextarea
-          currentText={currentText}
-          onTextChange={handleTextChange}
-          onKeyDown={actions.handleKeyDown}
-          textSizePx={settings.textSize}
-          textareaRef={inputRef}
-          onSelect={() => captureSnapshot()}
-          onClick={() => captureSnapshot()}
-          onKeyUp={() => captureSnapshot()}
-          onBlur={() => captureSnapshot()}
-        />
+        {/* Main body: textarea + sidebar */}
+        <div className="flex flex-1 min-h-0">
+          <ComposerTextarea
+            currentText={currentText}
+            onTextChange={handleTextChange}
+            onKeyDown={actions.handleKeyDown}
+            textSizePx={settings.textSize}
+            textareaRef={inputRef}
+            onSelect={() => captureSnapshot()}
+            onClick={() => captureSnapshot()}
+            onKeyUp={() => captureSnapshot()}
+            onBlur={() => captureSnapshot()}
+          />
 
-        {/* Footer: suggestions, banners, toolbar */}
-        <ComposerFooter shouldPortal={shouldPortalToolbar}>
-          {footerContent}
+          {/* Sidebar with suggestions popover anchor */}
+          <div className="relative shrink-0">
+            <ComposerSidebar
+              currentText={currentText}
+              onClear={actions.handleClear}
+              onSpeak={() => onSpeak('speak')}
+              onStop={onStop}
+              onToneSelected={actions.handleToneSelected}
+              isSpeaking={isSpeaking}
+              isAvailable={isAvailable}
+              enableFixText={enableFixText}
+              isOnline={actions.isOnline}
+              isFixingText={actions.isFixingText}
+              onFixText={actions.handleFixText}
+              enableLiveTyping={enableLiveTyping}
+              isLiveTypingButtonActive={isLiveTypingButtonActive}
+              onShare={handleShare}
+              hasUser={!!actions.user}
+              onAddAsPhrase={onAddAsPhrase}
+              enableToneControl={enableToneControl}
+              suggestionsCount={suggestionsCount}
+              onSuggestionsToggle={() => setShowSuggestions(!showSuggestions)}
+              suggestionsEnabled={!!replySuggestions}
+            />
+            {replySuggestions && (
+              <SuggestionsPopover
+                isOpen={showSuggestions}
+                onClose={() => setShowSuggestions(false)}
+                history={replySuggestions.history}
+                enabled={replySuggestions.enabled}
+                onSelectSuggestion={(s) => { replySuggestions.onSelect(s); setShowSuggestions(false); }}
+                onCountChange={setSuggestionsCount}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Banners only */}
+        <ComposerFooter shouldPortal={shouldPortalBanners}>
+          {bannerContent}
         </ComposerFooter>
       </div>
 
