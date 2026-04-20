@@ -121,9 +121,9 @@ body {
     bottom: calc(var(--bottom-stack-height) + 16px);
   }
 
-  /* Dynamic viewport height utilities */
+  /* Dynamic viewport height utilities — subtract keyboard inset so content resizes */
   .h-dvh {
-    height: 100dvh;
+    height: calc(100dvh - var(--keyboard-inset, 0px));
   }
   .min-h-dvh {
     min-height: 100dvh;
