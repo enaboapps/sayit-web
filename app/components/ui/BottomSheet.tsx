@@ -3,7 +3,6 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence, PanInfo, useAnimation } from 'framer-motion';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { useVisualViewport } from '@/lib/hooks/useVisualViewport';
 
 export interface BottomSheetProps {
   isOpen: boolean;
@@ -33,7 +32,6 @@ export default function BottomSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const controls = useAnimation();
   const [currentSnapIndex, setCurrentSnapIndex] = useState(initialSnap);
-  const { height: viewportHeight, innerHeight } = useVisualViewport();
 
   // Use refs for callbacks to avoid re-registering event listeners
   const onCloseRef = useRef(onClose);
@@ -52,8 +50,6 @@ export default function BottomSheet({
 
   // Get the current snap point percentage
   const currentSnapPercent = snapPoints[currentSnapIndex] || snapPoints[0];
-
-  const keyboardHeight = viewportHeight && innerHeight ? Math.max(0, innerHeight - viewportHeight) : 0;
 
   // Handle ESC key to close - uses refs to avoid re-registering listener
   useEffect(() => {
@@ -190,7 +186,7 @@ export default function BottomSheet({
             className={`fixed bottom-0 left-0 right-0 z-[60] rounded-t-3xl shadow-2xl flex flex-col bg-surface ${className}`}
             style={{
               maxHeight: '100vh',
-              paddingBottom: keyboardHeight > 0 ? keyboardHeight : 'env(safe-area-inset-bottom)',
+              paddingBottom: 'env(safe-area-inset-bottom)',
             }}
             initial={{ y: '100%' }}
             animate={{

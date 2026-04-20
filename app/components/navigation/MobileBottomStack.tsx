@@ -61,7 +61,7 @@ export default function MobileBottomStack() {
   }, []);
 
   return (
-    <div ref={stackRef} className="fixed bottom-keyboard-aware left-0 right-0 z-50 md:hidden flex flex-col">
+    <div ref={stackRef} className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col">
       {/* Dock content slot - portal target */}
       <div ref={dockRef} className="bg-surface" />
       {/* Tab bar — hidden when keyboard is open to maximize content space */}
