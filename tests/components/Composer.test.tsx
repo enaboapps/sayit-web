@@ -65,6 +65,22 @@ jest.mock('@/lib/hooks/useIsMobile', () => ({
   useIsMobile: jest.fn(() => false),
 }));
 
+jest.mock('@/app/hooks/useSubscription', () => ({
+  useSubscription: jest.fn(() => ({
+    isActive: false,
+    loading: false,
+  })),
+}));
+
+jest.mock('@/lib/hooks/useReplySuggestions', () => ({
+  useReplySuggestions: jest.fn(() => ({
+    suggestions: [],
+    isLoading: false,
+    error: null,
+    refresh: jest.fn(),
+  })),
+}));
+
 jest.mock('@/app/contexts/MobileBottomContext', () => ({
   useOptionalMobileBottom: jest.fn(() => null),
   MobileDockPortal: jest.fn(({ children }: { children: React.ReactNode }) => <>{children}</>),
@@ -86,6 +102,11 @@ jest.mock('@/app/components/typing-tabs/MobileTabList', () => ({
 }));
 
 jest.mock('@/app/components/typing-tabs/TabManagementDialog', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+jest.mock('@/app/components/ui/BottomSheet', () => ({
   __esModule: true,
   default: () => null,
 }));
@@ -222,7 +243,7 @@ describe('Composer', () => {
     );
 
     const textarea = screen.getByRole('textbox');
-    expect(textarea.parentElement?.parentElement).toHaveClass('overflow-hidden');
+    // textarea is inside ComposerTextarea wrapper → flex row → outer flex-col (overflow-hidden)
     expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-0', 'overflow-hidden', 'md:min-h-[120px]');
     expect(textarea).toHaveClass('absolute', 'inset-0', 'overflow-y-auto', 'resize-none');
     expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
