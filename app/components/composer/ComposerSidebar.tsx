@@ -52,7 +52,7 @@ export default function ComposerSidebar({
   suggestionsEnabled,
 }: ComposerSidebarProps) {
   return (
-    <div className="flex flex-col items-center py-3 px-2 gap-2 border-l border-border shrink-0 h-full">
+    <div className="grid grid-cols-2 justify-items-center content-start py-3 px-2 gap-2 border-l border-border shrink-0 h-full">
       {/* Tool buttons */}
       <button
         onClick={onClear}
@@ -132,19 +132,21 @@ export default function ComposerSidebar({
         </button>
       )}
 
-      {/* Spacer */}
-      <div className="flex-1" />
+      {/* Spacer — pushes Speak to bottom */}
+      <div className="col-span-2 flex-1" />
 
-      {/* Speak — primary action at bottom */}
-      <SpeakButton
-        onSpeak={onSpeak}
-        onStop={onStop}
-        onSelectTone={onToneSelected}
-        isSpeaking={isSpeaking}
-        disabled={!isAvailable || !currentText.trim()}
-        enableToneControl={enableToneControl}
-        variant="icon"
-      />
+      {/* Speak — primary action at bottom, spans both columns */}
+      <div className="col-span-2 flex items-center justify-center gap-2">
+        <SpeakButton
+          onSpeak={onSpeak}
+          onStop={onStop}
+          onSelectTone={onToneSelected}
+          isSpeaking={isSpeaking}
+          disabled={!isAvailable || !currentText.trim()}
+          enableToneControl={enableToneControl}
+          variant="icon"
+        />
+      </div>
     </div>
   );
 }
