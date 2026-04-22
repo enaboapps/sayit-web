@@ -274,6 +274,40 @@ export default function TTSSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Provider Selection Card */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-foreground">Provider</h3>
+        <div className="space-y-2">
+          <Dropdown<TTSProviderType>
+            options={providerOptions}
+            value={displayProvider}
+            onChange={handleProviderChange}
+            placeholder="Select a provider"
+            renderOption={renderProviderOption}
+          />
+          {selectedProviderOption && (
+            <p className="text-xs text-text-secondary px-1">
+              {selectedProviderOption.description}
+            </p>
+          )}
+        </div>
+
+        {/* Subscription note */}
+        {isCloudProvider(displayProvider) && !hasSubscription && (
+          <p className="text-xs text-text-secondary px-1">
+            Pro subscription required for {providerLabel} voices.{' '}
+            <button
+              type="button"
+              onClick={() => router.push('/pricing')}
+              className="text-primary-400 hover:text-primary-300 underline"
+            >
+              Upgrade
+            </button>
+          </p>
+        )}
+
+      </div>
+
       {/* Voice Selection Card */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice</h3>
@@ -342,40 +376,6 @@ export default function TTSSettings() {
             </p>
           )}
         </div>
-      </div>
-
-      {/* Provider Selection Card */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium text-foreground">Provider</h3>
-        <div className="space-y-2">
-          <Dropdown<TTSProviderType>
-            options={providerOptions}
-            value={displayProvider}
-            onChange={handleProviderChange}
-            placeholder="Select a provider"
-            renderOption={renderProviderOption}
-          />
-          {selectedProviderOption && (
-            <p className="text-xs text-text-secondary px-1">
-              {selectedProviderOption.description}
-            </p>
-          )}
-        </div>
-
-        {/* Subscription note */}
-        {isCloudProvider(displayProvider) && !hasSubscription && (
-          <p className="text-xs text-text-secondary px-1">
-            Pro subscription required for {providerLabel} voices.{' '}
-            <button
-              type="button"
-              onClick={() => router.push('/pricing')}
-              className="text-primary-400 hover:text-primary-300 underline"
-            >
-              Upgrade
-            </button>
-          </p>
-        )}
-
       </div>
 
       {/* Voice Quality Card (ElevenLabs only) */}
