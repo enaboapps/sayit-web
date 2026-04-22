@@ -73,6 +73,29 @@ export default function TabManagementSheet({
       initialSnap={0}
     >
       <div className="p-2">
+        {/* Action buttons row */}
+        <div className="flex gap-2 mb-3">
+          {/* Add new tab button */}
+          <button
+            onClick={handleCreateTab}
+            className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary-500 flex items-center justify-center gap-2 text-text-secondary hover:text-primary-500 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span className="font-medium">New</span>
+          </button>
+
+          {/* Close all tabs button - only show if more than 1 tab */}
+          {tabs.length > 1 && (
+            <button
+              onClick={handleCloseAll}
+              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 flex items-center justify-center gap-2 text-white transition-colors"
+            >
+              <TrashIcon className="w-5 h-5" />
+              <span className="font-medium">Close All</span>
+            </button>
+          )}
+        </div>
+
         {/* Tab list */}
         <div className="space-y-1">
           {tabs.map((tab) => (
@@ -152,29 +175,6 @@ export default function TabManagementSheet({
               )}
             </div>
           ))}
-        </div>
-
-        {/* Action buttons row */}
-        <div className="flex gap-2 mt-3">
-          {/* Add new tab button */}
-          <button
-            onClick={handleCreateTab}
-            className="flex-1 min-h-[48px] px-4 py-3 rounded-xl border-2 border-dashed border-border hover:border-primary-500 flex items-center justify-center gap-2 text-text-secondary hover:text-primary-500 transition-colors"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span className="font-medium">New</span>
-          </button>
-
-          {/* Close all tabs button - only show if more than 1 tab */}
-          {tabs.length > 1 && (
-            <button
-              onClick={handleCloseAll}
-              className="flex-1 min-h-[48px] px-4 py-3 rounded-xl bg-red-500 hover:bg-red-600 flex items-center justify-center gap-2 text-white transition-colors"
-            >
-              <TrashIcon className="w-5 h-5" />
-              <span className="font-medium">Close All</span>
-            </button>
-          )}
         </div>
       </div>
     </BottomSheet>
