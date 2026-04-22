@@ -5,6 +5,7 @@ import AACTabs from '@/app/components/home/AACTabs';
 import Composer from '@/app/components/composer';
 import BoardSelector from '@/app/components/phrases/BoardSelector';
 import PhraseTile from '@/app/components/phrases/PhraseTile';
+import { useSettings } from '@/app/contexts/SettingsContext';
 import type { BoardSummary, PhraseSummary } from '@/app/components/phrases/types';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
 import { useOfflineTTS } from '@/lib/hooks/useOfflineTTS';
@@ -61,6 +62,7 @@ export default function OfflineAppShell({
   const [syncStatus, setSyncStatus] = useState<OfflineSyncStatus>(() => readOfflineBootstrap().syncStatus);
   const tts = useOfflineTTS();
   const { messages, recordMessage } = useLocalMessageHistory();
+  const { settings } = useSettings();
 
   useEffect(() => {
     let isMounted = true;
@@ -173,6 +175,7 @@ export default function OfflineAppShell({
               onPress={() => handlePhrasePress(phrase)}
               onStop={tts.stop}
               isSpeaking={activePhraseId === phrase.id && tts.isSpeaking}
+              textSizePx={settings.textSize}
             />
           ))}
         </div>

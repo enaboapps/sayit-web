@@ -30,6 +30,7 @@ interface PhrasesTabContentProps {
   onSelectBoard: (board: BoardSummary | string) => void;
   onOpenBoardPicker: () => void;
   onEditBoard: (boardId: string) => void;
+  textSizePx: number;
 }
 
 // onEditBoard already guards isOnline internally (from usePhraseBoardData)
@@ -58,6 +59,7 @@ export default function PhrasesTabContent({
   onSelectBoard,
   onOpenBoardPicker,
   onEditBoard,
+  textSizePx,
 }: PhrasesTabContentProps) {
   const phraseGrid = isEditMode && canEditCurrentBoard ? (
     <SortablePhraseGrid
@@ -68,6 +70,7 @@ export default function PhrasesTabContent({
       onPhraseStop={onPhraseStop}
       onPhraseEdit={onEditPhrase}
       onReorder={onReorderPhrases}
+      textSizePx={textSizePx}
     />
   ) : (
     <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
@@ -79,6 +82,7 @@ export default function PhrasesTabContent({
           onStop={onPhraseStop}
           isSpeaking={activePhraseId === phrase.id && isSpeaking}
           onLongPress={canEditCurrentBoard ? () => onEditPhrase(phrase) : undefined}
+          textSizePx={textSizePx}
         />
       ))}
     </div>
