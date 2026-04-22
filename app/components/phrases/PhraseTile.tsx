@@ -91,7 +91,7 @@ export default function PhraseTile({
   return (
     <motion.div
       className={`relative bg-surface rounded-xl shadow-md cursor-pointer
-        flex flex-col items-center justify-center min-h-[52px]
+        flex flex-col items-center justify-center min-h-[52px] aspect-square overflow-hidden
         focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
         ${onEdit ? 'border-l-4 border-blue-400' : isSpeaking ? 'border-2 border-warning' : ''}
         ${className}`}
@@ -124,7 +124,7 @@ export default function PhraseTile({
           <StopIcon className="w-2.5 h-2.5 text-white" />
         </div>
       )}
-      <div className="flex flex-col items-center justify-center w-full h-full p-2 gap-1">
+      <div className="flex flex-col items-center justify-center w-full h-full min-h-0 p-2 gap-1">
         {phrase.symbolUrl && (
           <SymbolImage src={phrase.symbolUrl} alt={phrase.text} size="md" />
         )}

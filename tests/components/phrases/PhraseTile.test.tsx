@@ -12,6 +12,8 @@ describe('PhraseTile', () => {
     );
 
     expect(screen.getByText('Hello')).toHaveStyle({ fontSize: '24px' });
-    expect(screen.getByRole('button', { name: 'Speak phrase: Hello' })).toBeInTheDocument();
+    const tile = screen.getByRole('button', { name: 'Speak phrase: Hello' });
+    expect(tile).toBeInTheDocument();
+    expect(tile).toHaveClass('aspect-square', 'overflow-hidden');
   });
 });

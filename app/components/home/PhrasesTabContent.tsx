@@ -1,5 +1,6 @@
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
+import PhraseGrid from '../phrases/PhraseGrid';
 import PhraseTile from '../phrases/PhraseTile';
 import SortablePhraseGrid from '../phrases/SortablePhraseGrid';
 import AnimatedLoading from '../phrases/AnimatedLoading';
@@ -73,7 +74,7 @@ export default function PhrasesTabContent({
       textSizePx={textSizePx}
     />
   ) : (
-    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+    <PhraseGrid textSizePx={textSizePx}>
       {phrases.map((phrase) => (
         <PhraseTile
           key={phrase.id}
@@ -85,7 +86,7 @@ export default function PhrasesTabContent({
           textSizePx={textSizePx}
         />
       ))}
-    </div>
+    </PhraseGrid>
   );
 
   if (showAuthPrompt) {
