@@ -96,7 +96,10 @@ export default function PhrasesInterface() {
   }, [activeTabId, localRecentMessages, recentMessages]);
 
   const enableToneControl =
-    isOnline && settings.ttsProvider === 'elevenlabs' && settings.ttsModelPreference === 'high_quality';
+    isOnline
+    && settings.ttsProvider === 'elevenlabs'
+    && settings.ttsModelPreference === 'high_quality'
+    && tts.status.elevenLabsAvailable;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">

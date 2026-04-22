@@ -13,6 +13,18 @@ export interface TTSVoice {
   languageCodes?: { bcp47: string; iso639_3: string; display: string }[];
 }
 
+export interface TTSStatus {
+  isSpeaking: boolean;
+  activeProvider: TTSProviderType;
+  elevenLabsAvailable: boolean;
+  azureAvailable: boolean;
+  geminiAvailable: boolean;
+  browserTTSAvailable: boolean;
+  elevenLabsVoicesLoaded: boolean;
+  azureVoicesLoaded: boolean;
+  geminiVoicesLoaded: boolean;
+}
+
 // Unified class that can use either provider
 export class TTSProvider {
   private static instance: TTSProvider;
@@ -266,14 +278,17 @@ export class TTSProvider {
       || this.geminiTTS.isAvailable();
   }
 
-  public getStatus() {
+  public getStatus(): TTSStatus {
     return {
       isSpeaking: this.isSpeaking,
       activeProvider: this.activeProvider,
       elevenLabsAvailable: this.elevenlabsTTS.isAvailable(),
       azureAvailable: this.azureTTS.isAvailable(),
       geminiAvailable: this.geminiTTS.isAvailable(),
-      browserTTSAvailable: this.webSpeechTTS.isAvailable()
+      browserTTSAvailable: this.webSpeechTTS.isAvailable(),
+      elevenLabsVoicesLoaded: this.elevenlabsTTS.hasLoadedVoices(),
+      azureVoicesLoaded: this.azureTTS.hasLoadedVoices(),
+      geminiVoicesLoaded: this.geminiTTS.hasLoadedVoices(),
     };
   }
 } 
