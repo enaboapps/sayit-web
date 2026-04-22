@@ -112,6 +112,17 @@ describe('TTSSettings provider dropdown', () => {
     expect(screen.getByRole('button', { name: 'Browser TTS' })).toBeInTheDocument();
   });
 
+  it('renders provider selection before voice selection', () => {
+    renderTTSSettings();
+
+    const providerHeading = screen.getByRole('heading', { name: 'Provider' });
+    const voiceHeading = screen.getByRole('heading', { name: 'Voice' });
+
+    expect(
+      providerHeading.compareDocumentPosition(voiceHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
   it('shows all provider options when opened', async () => {
     const user = userEvent.setup();
     renderTTSSettings();
