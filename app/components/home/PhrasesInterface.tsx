@@ -143,6 +143,7 @@ export default function PhrasesInterface() {
               onSelectBoard={boardData.handleSelectBoard}
               onOpenBoardPicker={() => boardData.setIsBoardPickerOpen(true)}
               onEditBoard={boardData.handleEditBoard}
+              textSizePx={settings.textSize}
             />
           }
           typeContent={

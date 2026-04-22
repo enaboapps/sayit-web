@@ -24,9 +24,10 @@ interface SortablePhraseTileProps {
   onStop?: () => void;
   onEdit?: () => void;
   isSpeaking?: boolean;
+  textSizePx: number;
 }
 
-function SortablePhraseTile({ phrase, onPress, onStop, onEdit, isSpeaking }: SortablePhraseTileProps) {
+function SortablePhraseTile({ phrase, onPress, onStop, onEdit, isSpeaking, textSizePx }: SortablePhraseTileProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: phrase.id ?? phrase.text,
   });
@@ -46,6 +47,7 @@ function SortablePhraseTile({ phrase, onPress, onStop, onEdit, isSpeaking }: Sor
         onStop={onStop}
         onEdit={onEdit}
         isSpeaking={isSpeaking}
+        textSizePx={textSizePx}
       />
     </div>
   );
@@ -60,6 +62,7 @@ interface SortablePhraseGridProps {
   onPhraseEdit: (phrase: PhraseSummary) => void;
   onReorder: (orderedIds: string[]) => void;
   extraTile?: React.ReactNode;
+  textSizePx: number;
 }
 
 export default function SortablePhraseGrid({
@@ -71,6 +74,7 @@ export default function SortablePhraseGrid({
   onPhraseEdit,
   onReorder,
   extraTile,
+  textSizePx,
 }: SortablePhraseGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -105,6 +109,7 @@ export default function SortablePhraseGrid({
               onStop={onPhraseStop}
               onEdit={() => onPhraseEdit(phrase)}
               isSpeaking={activePhraseId === phrase.id && isSpeaking}
+              textSizePx={textSizePx}
             />
           ))}
           {extraTile}

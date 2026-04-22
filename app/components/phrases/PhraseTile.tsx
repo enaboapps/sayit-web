@@ -17,9 +17,19 @@ interface PhraseTileProps {
   onLongPress?: () => void;
   isSpeaking?: boolean;
   className?: string;
+  textSizePx: number;
 }
 
-export default function PhraseTile({ phrase, onPress, onStop, onEdit, onLongPress, isSpeaking = false, className = '' }: PhraseTileProps) {
+export default function PhraseTile({
+  phrase,
+  onPress,
+  onStop,
+  onEdit,
+  onLongPress,
+  isSpeaking = false,
+  className = '',
+  textSizePx,
+}: PhraseTileProps) {
   const [isPressed, setIsPressed] = useState(false);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   const isLongPress = useRef(false);
@@ -118,7 +128,10 @@ export default function PhraseTile({ phrase, onPress, onStop, onEdit, onLongPres
         {phrase.symbolUrl && (
           <SymbolImage src={phrase.symbolUrl} alt={phrase.text} size="md" />
         )}
-        <p className="text-foreground text-sm sm:text-base font-semibold line-clamp-2 leading-tight text-center w-full">
+        <p
+          className="text-foreground font-semibold line-clamp-2 leading-tight text-center w-full"
+          style={{ fontSize: `${textSizePx}px` }}
+        >
           {phrase.text}
         </p>
       </div>
