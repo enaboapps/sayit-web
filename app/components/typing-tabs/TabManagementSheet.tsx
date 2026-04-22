@@ -64,6 +64,10 @@ export default function TabManagementSheet({
     onClose();
   };
 
+  // Display the most recently edited tab first. We sort a copy so the caller's
+  // `tabs` array (which drives the TabBar) stays in its original creation order.
+  const sortedTabs = [...tabs].sort((a, b) => b.lastModified - a.lastModified);
+
   return (
     <BottomSheet
       isOpen={isOpen}
@@ -98,7 +102,7 @@ export default function TabManagementSheet({
 
         {/* Tab list */}
         <div className="space-y-1">
-          {tabs.map((tab) => (
+          {sortedTabs.map((tab) => (
             <div
               key={tab.id}
               className={`flex items-center gap-2 p-3 rounded-xl transition-colors ${
