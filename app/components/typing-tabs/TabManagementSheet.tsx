@@ -5,7 +5,7 @@ import { PlusIcon, XMarkIcon, PencilIcon, CheckIcon, TrashIcon } from '@heroicon
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import type { TypingTab } from '@/app/types/typing-tabs';
 
-interface MobileTabListProps {
+interface TabManagementSheetProps {
   isOpen: boolean;
   onClose: () => void;
   tabs: TypingTab[];
@@ -17,7 +17,7 @@ interface MobileTabListProps {
   onRenameTab: (tabId: string, newLabel: string) => void;
 }
 
-export default function MobileTabList({
+export default function TabManagementSheet({
   isOpen,
   onClose,
   tabs,
@@ -27,7 +27,7 @@ export default function MobileTabList({
   onCloseAllTabs,
   onCreateTab,
   onRenameTab,
-}: MobileTabListProps) {
+}: TabManagementSheetProps) {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
 
