@@ -1,10 +1,19 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { SparklesIcon, XMarkIcon, ArrowPathIcon, ShareIcon, BookmarkIcon, LightBulbIcon } from '@heroicons/react/24/outline';
+import { useState, type ReactNode } from 'react';
+import {
+  SparklesIcon,
+  XMarkIcon,
+  ArrowPathIcon,
+  ShareIcon,
+  BookmarkIcon,
+  LightBulbIcon,
+  SpeakerWaveIcon,
+  StopIcon,
+} from '@heroicons/react/24/outline';
+import { AudioWaveform } from 'lucide-react';
 import SubscriptionWrapper from '../SubscriptionWrapper';
-import SpeakButton from '../typing/SpeakButton';
-import type { TonePreset } from '../typing/ToneSheet';
+import ToneSheet, { type TonePreset } from '../typing/ToneSheet';
 
 interface ComposerSidebarProps {
   currentText: string;
@@ -32,7 +41,7 @@ interface ComposerSidebarProps {
 
 // Shared base classes — every icon tile fills its grid cell as a square.
 const TILE_BASE =
-  'w-full aspect-square flex items-center justify-center rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed';
+  'w-full aspect-square flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed';
 
 export default function ComposerSidebar({
   currentText,
@@ -56,6 +65,8 @@ export default function ComposerSidebar({
   onSuggestionsOpen,
   suggestionsEnabled,
 }: ComposerSidebarProps) {
+  const [showToneSheet, setShowToneSheet] = useState(false);
+  const speakDisabled = !isAvailable || !currentText.trim();
   const iconButtons: ReactNode[] = [];
 
   // Clear — always rendered, red tile
@@ -177,25 +188,59 @@ export default function ComposerSidebar({
   }
 
   return (
-    <div className="flex flex-col py-3 px-2 gap-2 border-l border-border shrink-0 h-full w-24">
+    <div className="flex flex-col border-l border-border shrink-0 h-full w-24">
       {/* Icon tile grid */}
-      <div className="grid grid-cols-2 gap-2 auto-rows-min">{iconButtons}</div>
+      <div className="grid grid-cols-2 auto-rows-min">{iconButtons}</div>
 
       {/* Spacer — pushes Speak to the bottom */}
       <div className="flex-1" />
 
-      {/* Speak — primary action at bottom, spans sidebar width */}
-      <div className="flex items-center justify-center gap-2">
-        <SpeakButton
-          onSpeak={onSpeak}
-          onStop={onStop}
-          onSelectTone={onToneSelected}
-          isSpeaking={isSpeaking}
-          disabled={!isAvailable || !currentText.trim()}
-          enableToneControl={enableToneControl}
-          variant="icon"
-        />
+      {/* Speak — full-width square grid cell(s) at the bottom, fixed size */}
+      <div className="flex flex-col shrink-0">
+        {isSpeaking ? (
+          <button
+            type="button"
+            onClick={onStop}
+            className="w-full aspect-square flex items-center justify-center bg-error hover:bg-error-hover text-white transition-colors"
+            aria-label="Stop"
+          >
+            <StopIcon className="w-8 h-8" />
+          </button>
+        ) : (
+          <>
+            {enableToneControl && (
+              <button
+                type="button"
+                onClick={() => setShowToneSheet(true)}
+                disabled={speakDisabled}
+                className="w-full aspect-square flex items-center justify-center bg-primary-400 hover:bg-primary-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Choose tone"
+              >
+                <AudioWaveform className="w-6 h-6" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onSpeak}
+              disabled={speakDisabled}
+              className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Speak"
+            >
+              <SpeakerWaveIcon className="w-8 h-8" />
+            </button>
+          </>
+        )}
       </div>
+
+      <ToneSheet
+        isOpen={showToneSheet}
+        onClose={() => setShowToneSheet(false)}
+        onSelectTone={onToneSelected}
+        onSpeakWithoutTone={() => {
+          onSpeak();
+          setShowToneSheet(false);
+        }}
+      />
     </div>
   );
 }
