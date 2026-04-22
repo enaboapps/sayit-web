@@ -195,7 +195,7 @@ export default function ComposerSidebar({
       {/* Spacer — pushes Speak to the bottom */}
       <div className="flex-1" />
 
-      {/* Speak — full-width square grid cell(s) at the bottom, fixed size */}
+      {/* Speak — at the bottom. When tone control is enabled, tone sits beside speak. */}
       <div className="flex flex-col shrink-0">
         {isSpeaking ? (
           <button
@@ -206,19 +206,17 @@ export default function ComposerSidebar({
           >
             <StopIcon className="w-8 h-8" />
           </button>
-        ) : (
-          <>
-            {enableToneControl && (
-              <button
-                type="button"
-                onClick={() => setShowToneSheet(true)}
-                disabled={speakDisabled}
-                className="w-full aspect-square flex items-center justify-center bg-primary-400 hover:bg-primary-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Choose tone"
-              >
-                <AudioWaveform className="w-6 h-6" />
-              </button>
-            )}
+        ) : enableToneControl ? (
+          <div className="grid grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setShowToneSheet(true)}
+              disabled={speakDisabled}
+              className="w-full aspect-square flex items-center justify-center bg-primary-400 hover:bg-primary-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Choose tone"
+            >
+              <AudioWaveform className="w-6 h-6" />
+            </button>
             <button
               type="button"
               onClick={onSpeak}
@@ -226,9 +224,19 @@ export default function ComposerSidebar({
               className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Speak"
             >
-              <SpeakerWaveIcon className="w-8 h-8" />
+              <SpeakerWaveIcon className="w-6 h-6" />
             </button>
-          </>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onSpeak}
+            disabled={speakDisabled}
+            className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Speak"
+          >
+            <SpeakerWaveIcon className="w-8 h-8" />
+          </button>
         )}
       </div>
 
