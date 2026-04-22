@@ -29,7 +29,13 @@ const mockLoadGeminiVoices = jest.fn();
 
 const voices: TTSVoice[] = [
   { id: 'browser-voice-1', name: 'Browser Voice', provider: 'browser' },
-  { id: 'eleven-voice-1', name: 'Eleven Voice', provider: 'elevenlabs' },
+  {
+    id: 'eleven-voice-1',
+    name: 'Eleven Voice',
+    provider: 'elevenlabs',
+    gender: 'Female',
+    languageCodes: [{ bcp47: 'en-US', iso639_3: 'eng', display: 'English (US)' }],
+  },
   { id: 'azure-voice-1', name: 'Azure Voice', provider: 'azure' },
   { id: 'gemini-voice-1', name: 'Gemini Voice', provider: 'gemini' },
 ];
@@ -223,6 +229,26 @@ describe('TTSSettings provider dropdown', () => {
     });
 
     expect(screen.getByText(/Gemini 3\.1 Flash uses the selected voice and style instructions in your text\./i)).toBeInTheDocument();
+  });
+
+  it('hides gender and language filters for Gemini voices', () => {
+    renderTTSSettings({
+      settings: { ttsProvider: 'gemini', ttsVoiceId: 'gemini-voice-1' },
+    });
+
+    expect(screen.queryByRole('combobox', { name: /all genders/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: /all languages/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('All genders')).not.toBeInTheDocument();
+    expect(screen.queryByText('All languages')).not.toBeInTheDocument();
+  });
+
+  it('keeps gender and language filters visible for ElevenLabs voices', () => {
+    renderTTSSettings({
+      settings: { ttsProvider: 'elevenlabs', ttsVoiceId: 'eleven-voice-1' },
+    });
+
+    expect(screen.getByText('All genders')).toBeInTheDocument();
+    expect(screen.getByText('All languages')).toBeInTheDocument();
   });
 
   it('does not render ElevenLabs Voice Quality for Gemini', () => {
