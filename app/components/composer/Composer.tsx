@@ -17,7 +17,6 @@ import TabBar from '../typing-tabs/TabBar';
 import MobileTabList from '../typing-tabs/MobileTabList';
 import TabManagementDialog from '../typing-tabs/TabManagementDialog';
 import LiveTypingBottomSheet from '../live-typing/LiveTypingBottomSheet';
-import LiveTypingLinkModal from '../live-typing/LiveTypingLinkModal';
 import type { ComposerProps } from './types';
 
 export default function Composer({
@@ -40,7 +39,6 @@ export default function Composer({
   const [showTabList, setShowTabList] = useState(false);
   const [showTabManagement, setShowTabManagement] = useState(false);
   const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
-  const [showLiveTypingModal, setShowLiveTypingModal] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -98,20 +96,16 @@ export default function Composer({
     scrollToEnd();
   }, [switchTab, scrollToEnd]);
 
-  // Live typing button active state includes dialog visibility
-  const isLiveTypingButtonActive = actions.isLiveTypingSharing || showLiveTypingModal || showLiveTypingSheet;
+  // Live typing button active state includes sheet visibility
+  const isLiveTypingButtonActive = actions.isLiveTypingSharing || showLiveTypingSheet;
 
   const handleShare = useCallback(() => {
     if (!actions.isOnline) {
       actions.setError('Live Typing is unavailable offline.');
       return;
     }
-    if (isMobile) {
-      setShowLiveTypingSheet(true);
-    } else {
-      setShowLiveTypingModal(true);
-    }
-  }, [actions, isMobile]);
+    setShowLiveTypingSheet(true);
+  }, [actions]);
 
   // Banner content — portaled on mobile, inline on desktop
   const bannerContent = (
@@ -233,31 +227,17 @@ export default function Composer({
         />
       )}
 
-      {/* Live typing dialogs */}
+      {/* Live typing share sheet */}
       {enableLiveTyping && actions.user && (
-        <>
-          <LiveTypingBottomSheet
-            isOpen={showLiveTypingSheet}
-            onClose={() => setShowLiveTypingSheet(false)}
-            isSharing={actions.isLiveTypingSharing}
-            isCreating={actions.isLiveTypingCreating}
-            shareableLink={actions.shareableLink}
-            onStartSharing={actions.handleStartLiveTyping}
-            onEndSession={async () => { await actions.endLiveTypingSession(); }}
-          />
-          {showLiveTypingModal && !isMobile && (
-            <LiveTypingLinkModal
-              shareableLink={actions.shareableLink}
-              isCreating={actions.isLiveTypingCreating}
-              onStartSharing={actions.handleStartLiveTyping}
-              onClose={() => setShowLiveTypingModal(false)}
-              onEndSession={async () => {
-                await actions.endLiveTypingSession();
-                setShowLiveTypingModal(false);
-              }}
-            />
-          )}
-        </>
+        <LiveTypingBottomSheet
+          isOpen={showLiveTypingSheet}
+          onClose={() => setShowLiveTypingSheet(false)}
+          isSharing={actions.isLiveTypingSharing}
+          isCreating={actions.isLiveTypingCreating}
+          shareableLink={actions.shareableLink}
+          onStartSharing={actions.handleStartLiveTyping}
+          onEndSession={async () => { await actions.endLiveTypingSession(); }}
+        />
       )}
     </>
   );
