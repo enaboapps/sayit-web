@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AACTabs from '@/app/components/home/AACTabs';
 import Composer from '@/app/components/composer';
 import BoardSelector from '@/app/components/phrases/BoardSelector';
+import PhraseGrid from '@/app/components/phrases/PhraseGrid';
 import PhraseTile from '@/app/components/phrases/PhraseTile';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import type { BoardSummary, PhraseSummary } from '@/app/components/phrases/types';
@@ -167,7 +168,7 @@ export default function OfflineAppShell({
         />
       </div>
       <div className="flex-1 overflow-auto p-3 pt-4">
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+        <PhraseGrid textSizePx={settings.textSize}>
           {phrases.map((phrase) => (
             <PhraseTile
               key={phrase.id}
@@ -178,7 +179,7 @@ export default function OfflineAppShell({
               textSizePx={settings.textSize}
             />
           ))}
-        </div>
+        </PhraseGrid>
       </div>
     </div>
   );

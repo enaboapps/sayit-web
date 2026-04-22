@@ -15,6 +15,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import PhraseGrid from './PhraseGrid';
 import PhraseTile from './PhraseTile';
 import type { PhraseSummary } from './types';
 
@@ -100,7 +101,7 @@ export default function SortablePhraseGrid({
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={ids} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+        <PhraseGrid textSizePx={textSizePx}>
           {phrases.map((phrase) => (
             <SortablePhraseTile
               key={phrase.id}
@@ -113,7 +114,7 @@ export default function SortablePhraseGrid({
             />
           ))}
           {extraTile}
-        </div>
+        </PhraseGrid>
       </SortableContext>
     </DndContext>
   );
