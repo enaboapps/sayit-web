@@ -67,20 +67,8 @@ export default function ComposerSidebar({
 }: ComposerSidebarProps) {
   const [showToneSheet, setShowToneSheet] = useState(false);
   const speakDisabled = !isAvailable || !currentText.trim();
+  const clearDisabled = !currentText.trim();
   const iconButtons: ReactNode[] = [];
-
-  // Clear — always rendered, red tile
-  iconButtons.push(
-    <button
-      key="clear"
-      onClick={onClear}
-      disabled={!currentText.trim()}
-      className={`${TILE_BASE} bg-status-error text-red-400 hover:bg-error hover:text-white`}
-      aria-label="Clear"
-    >
-      <XMarkIcon className="w-5 h-5" />
-    </button>
-  );
 
   // Fix Text — purple tile (offline stub or subscription fallback variants)
   if (enableFixText) {
@@ -195,7 +183,7 @@ export default function ComposerSidebar({
       {/* Spacer — pushes Speak to the bottom */}
       <div className="flex-1" />
 
-      {/* Speak — at the bottom. When tone control is enabled, tone sits beside speak. */}
+      {/* Bottom stack — Clear on top, then Tone + Speak (or just Speak). Stop replaces all while speaking. */}
       <div className="flex flex-col shrink-0">
         {isSpeaking ? (
           <button
@@ -206,37 +194,50 @@ export default function ComposerSidebar({
           >
             <StopIcon className="w-8 h-8" />
           </button>
-        ) : enableToneControl ? (
-          <div className="grid grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setShowToneSheet(true)}
-              disabled={speakDisabled}
-              className="w-full aspect-square flex items-center justify-center bg-primary-400 hover:bg-primary-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Choose tone"
-            >
-              <AudioWaveform className="w-6 h-6" />
-            </button>
-            <button
-              type="button"
-              onClick={onSpeak}
-              disabled={speakDisabled}
-              className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Speak"
-            >
-              <SpeakerWaveIcon className="w-6 h-6" />
-            </button>
-          </div>
         ) : (
-          <button
-            type="button"
-            onClick={onSpeak}
-            disabled={speakDisabled}
-            className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            aria-label="Speak"
-          >
-            <SpeakerWaveIcon className="w-8 h-8" />
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onClear}
+              disabled={clearDisabled}
+              className="w-full aspect-square flex items-center justify-center bg-status-error text-red-400 hover:bg-error hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Clear"
+            >
+              <XMarkIcon className="w-8 h-8" />
+            </button>
+            {enableToneControl ? (
+              <div className="grid grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setShowToneSheet(true)}
+                  disabled={speakDisabled}
+                  className="w-full aspect-square flex items-center justify-center bg-primary-400 hover:bg-primary-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Choose tone"
+                >
+                  <AudioWaveform className="w-6 h-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onSpeak}
+                  disabled={speakDisabled}
+                  className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Speak"
+                >
+                  <SpeakerWaveIcon className="w-6 h-6" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onSpeak}
+                disabled={speakDisabled}
+                className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Speak"
+              >
+                <SpeakerWaveIcon className="w-8 h-8" />
+              </button>
+            )}
+          </>
         )}
       </div>
 
