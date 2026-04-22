@@ -243,7 +243,7 @@ describe('TabBar', () => {
       expect(screen.getByText('Only Tab')).toBeInTheDocument();
     });
 
-    it('renders with many tabs', () => {
+    it('caps visible tabs at 5 on desktop (sliding window anchored at start)', () => {
       const tabs = Array.from({ length: 15 }, (_, i) =>
         createTab({ id: `tab-${i}`, label: `Tab ${i}` })
       );
@@ -260,7 +260,58 @@ describe('TabBar', () => {
         />
       );
 
+      // Active is at the start — window shows tabs 0..4
       expect(screen.getByText('Tab 0')).toBeInTheDocument();
+      expect(screen.getByText('Tab 4')).toBeInTheDocument();
+      expect(screen.queryByText('Tab 5')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tab 14')).not.toBeInTheDocument();
+    });
+
+    it('centers the visible window around the active tab', () => {
+      const tabs = Array.from({ length: 15 }, (_, i) =>
+        createTab({ id: `tab-${i}`, label: `Tab ${i}` })
+      );
+
+      render(
+        <TabBar
+          tabs={tabs}
+          activeTabId="tab-7"
+          onTabSelect={mockOnTabSelect}
+          onTabClose={mockOnTabClose}
+          onTabCreate={mockOnTabCreate}
+          onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
+        />
+      );
+
+      // Active tab-7 with window size 5 and half=2 → visible 5..9
+      expect(screen.queryByText('Tab 4')).not.toBeInTheDocument();
+      expect(screen.getByText('Tab 5')).toBeInTheDocument();
+      expect(screen.getByText('Tab 7')).toBeInTheDocument();
+      expect(screen.getByText('Tab 9')).toBeInTheDocument();
+      expect(screen.queryByText('Tab 10')).not.toBeInTheDocument();
+    });
+
+    it('sticks the visible window to the end when the active tab is last', () => {
+      const tabs = Array.from({ length: 15 }, (_, i) =>
+        createTab({ id: `tab-${i}`, label: `Tab ${i}` })
+      );
+
+      render(
+        <TabBar
+          tabs={tabs}
+          activeTabId="tab-14"
+          onTabSelect={mockOnTabSelect}
+          onTabClose={mockOnTabClose}
+          onTabCreate={mockOnTabCreate}
+          onTabRename={mockOnTabRename}
+          onManage={mockOnManage}
+        />
+      );
+
+      // Active is last — window sticks to the end, tabs 10..14
+      expect(screen.queryByText('Tab 9')).not.toBeInTheDocument();
+      expect(screen.getByText('Tab 10')).toBeInTheDocument();
       expect(screen.getByText('Tab 14')).toBeInTheDocument();
     });
 

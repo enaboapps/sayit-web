@@ -14,8 +14,7 @@ import SuggestionsPopover from './SuggestionsPopover';
 import ComposerErrorBanner from './ComposerErrorBanner';
 import ActionPromptBanner from '../typing/ActionPromptBanner';
 import TabBar from '../typing-tabs/TabBar';
-import MobileTabList from '../typing-tabs/MobileTabList';
-import TabManagementDialog from '../typing-tabs/TabManagementDialog';
+import TabManagementSheet from '../typing-tabs/TabManagementSheet';
 import LiveTypingBottomSheet from '../live-typing/LiveTypingBottomSheet';
 import type { ComposerProps } from './types';
 
@@ -37,7 +36,6 @@ export default function Composer({
   replySuggestions,
 }: ComposerProps) {
   const [showTabList, setShowTabList] = useState(false);
-  const [showTabManagement, setShowTabManagement] = useState(false);
   const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -138,7 +136,7 @@ export default function Composer({
               onTabClose={closeTab}
               onTabCreate={createTab}
               onTabRename={renameTab}
-              onManage={() => isMobile ? setShowTabList(true) : setShowTabManagement(true)}
+              onManage={() => setShowTabList(true)}
             />
           </div>
         )}
@@ -200,9 +198,9 @@ export default function Composer({
         </ComposerFooter>
       </div>
 
-      {/* Tab management dialogs */}
+      {/* Tab management sheet — shared on mobile and desktop */}
       {enableTabs && (
-        <MobileTabList
+        <TabManagementSheet
           isOpen={showTabList}
           onClose={() => setShowTabList(false)}
           tabs={tabs}
@@ -211,18 +209,6 @@ export default function Composer({
           onCloseTab={(tabId) => { closeTab(tabId); const remaining = tabs.filter(t => t.id !== tabId); if (remaining.length > 0) onChange(remaining[0].text); }}
           onCloseAllTabs={() => { closeAllTabs(); onChange(''); }}
           onCreateTab={() => { createTab(); onChange(''); }}
-          onRenameTab={renameTab}
-        />
-      )}
-      {enableTabs && (
-        <TabManagementDialog
-          isOpen={showTabManagement}
-          onClose={() => setShowTabManagement(false)}
-          tabs={tabs}
-          activeTabId={activeTabId}
-          onSwitchTab={switchTab}
-          onCloseTab={closeTab}
-          onCloseAllTabs={() => { closeAllTabs(); onChange(''); }}
           onRenameTab={renameTab}
         />
       )}

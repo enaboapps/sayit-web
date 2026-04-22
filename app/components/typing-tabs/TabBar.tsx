@@ -1,6 +1,5 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
 import { PlusIcon, QueueListIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { TypingTab } from '@/app/types/typing-tabs';
 import Tab from './Tab';
@@ -16,6 +15,18 @@ interface TabBarProps {
   onManage: () => void;
 }
 
+const DESKTOP_MAX_VISIBLE = 5;
+
+/** Compute the sliding window of tabs to show on desktop, keeping the active tab in view. */
+function getVisibleTabs(tabs: TypingTab[], activeTabId: string | null): TypingTab[] {
+  if (tabs.length <= DESKTOP_MAX_VISIBLE) return tabs;
+  const activeIndex = tabs.findIndex((t) => t.id === activeTabId);
+  const anchor = activeIndex >= 0 ? activeIndex : 0;
+  const half = Math.floor(DESKTOP_MAX_VISIBLE / 2);
+  const start = Math.max(0, Math.min(anchor - half, tabs.length - DESKTOP_MAX_VISIBLE));
+  return tabs.slice(start, start + DESKTOP_MAX_VISIBLE);
+}
+
 export default function TabBar({
   tabs,
   activeTabId,
@@ -25,22 +36,8 @@ export default function TabBar({
   onTabRename,
   onManage,
 }: TabBarProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const prevTabCountRef = useRef(tabs.length);
   const isMobile = useIsMobile();
-
-  // Auto-scroll to end when new tab is added (desktop only)
-  useEffect(() => {
-    if (!isMobile && tabs.length > prevTabCountRef.current && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        left: scrollContainerRef.current.scrollWidth,
-        behavior: 'smooth'
-      });
-    }
-    prevTabCountRef.current = tabs.length;
-  }, [isMobile, tabs.length]);
-
-  const activeTab = tabs.find(t => t.id === activeTabId);
+  const activeTab = tabs.find((t) => t.id === activeTabId);
 
   const actionButtons = (
     <div className="flex items-center gap-2">
@@ -94,22 +91,22 @@ export default function TabBar({
     );
   }
 
+  // Desktop: up to DESKTOP_MAX_VISIBLE inline Tab pills, centered sliding window around the active tab.
+  const visibleTabs = getVisibleTabs(tabs, activeTabId);
+
   return (
     <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
-      {/* Scrollable tabs column */}
-      <div ref={scrollContainerRef} className="overflow-x-auto scrollbar-hide min-w-0">
-        <div className="flex gap-1 items-center">
-          {tabs.map((tab) => (
-            <Tab
-              key={tab.id}
-              tab={tab}
-              isActive={tab.id === activeTabId}
-              onSelect={() => onTabSelect(tab.id)}
-              onClose={() => onTabClose(tab.id)}
-              onRename={(newLabel) => onTabRename(tab.id, newLabel)}
-            />
-          ))}
-        </div>
+      <div className="flex gap-1 items-center min-w-0">
+        {visibleTabs.map((tab) => (
+          <Tab
+            key={tab.id}
+            tab={tab}
+            isActive={tab.id === activeTabId}
+            onSelect={() => onTabSelect(tab.id)}
+            onClose={() => onTabClose(tab.id)}
+            onRename={(newLabel) => onTabRename(tab.id, newLabel)}
+          />
+        ))}
       </div>
 
       {actionButtons}

@@ -91,12 +91,7 @@ jest.mock('@/app/components/live-typing/LiveTypingBottomSheet', () => ({
   default: () => null,
 }));
 
-jest.mock('@/app/components/typing-tabs/MobileTabList', () => ({
-  __esModule: true,
-  default: () => null,
-}));
-
-jest.mock('@/app/components/typing-tabs/TabManagementDialog', () => ({
+jest.mock('@/app/components/typing-tabs/TabManagementSheet', () => ({
   __esModule: true,
   default: () => null,
 }));
