@@ -126,12 +126,20 @@ export default function TTSSettings() {
     updateSetting,
   ]);
 
+  const showVoiceFilters = displayProvider !== 'browser'
+    && displayProvider !== 'gemini'
+    && providerVoices.length > 0;
+
   const filteredVoices = useMemo(() => {
+    if (!showVoiceFilters) {
+      return providerVoices;
+    }
+
     let result = providerVoices;
     if (genderFilter !== 'All') result = result.filter(v => v.gender === genderFilter);
     if (langFilter !== 'All') result = result.filter(v => v.languageCodes?.some(lc => lc.bcp47 === langFilter));
     return result;
-  }, [providerVoices, genderFilter, langFilter]);
+  }, [providerVoices, genderFilter, langFilter, showVoiceFilters]);
 
   const languageOptions = useMemo(() => {
     const seen = new Set<string>();
@@ -312,7 +320,7 @@ export default function TTSSettings() {
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice</h3>
         <div className="bg-surface-hover rounded-2xl p-4">
-          {displayProvider !== 'browser' && providerVoices.length > 0 && (
+          {showVoiceFilters && (
             <div className="grid grid-cols-2 gap-2 mb-3">
               <select
                 value={genderFilter}
