@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { TTSProvider, TTSVoice, TTSProviderType } from '../tts-provider';
+import { TTSProvider, TTSVoice, TTSProviderType, TTSStatus } from '../tts-provider';
 import { useSubscription } from '@/app/hooks/useSubscription';
 import { useSettings } from '@/app/contexts/SettingsContext';
 
@@ -11,20 +11,16 @@ export function useTTS() {
   const [voices, setVoices] = useState<TTSVoice[]>([]);
   const [provider, setProvider] = useState<TTSProviderType>('browser');
   const [wordBoundary, setWordBoundary] = useState<{ word: string; charIndex: number } | null>(null);
-  const [status, setStatus] = useState<{
-    isSpeaking: boolean;
-    activeProvider: TTSProviderType;
-    elevenLabsAvailable: boolean;
-    azureAvailable: boolean;
-    geminiAvailable: boolean;
-    browserTTSAvailable: boolean;
-  }>({
+  const [status, setStatus] = useState<TTSStatus>({
     isSpeaking: false,
     activeProvider: 'browser',
     elevenLabsAvailable: false,
     azureAvailable: false,
     geminiAvailable: false,
-    browserTTSAvailable: false
+    browserTTSAvailable: false,
+    elevenLabsVoicesLoaded: false,
+    azureVoicesLoaded: false,
+    geminiVoicesLoaded: false,
   });
   
   // Use ref to avoid dependency issues in callbacks
