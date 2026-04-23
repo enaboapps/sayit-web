@@ -43,7 +43,7 @@ export default function PhraseBar({ className = '' }: PhraseBarProps) {
 
   return (
     <div
-      className={`shrink-0 border-t border-border bg-surface-hover px-3 py-2 ${className}`}
+      className={`shrink-0 border-b border-border bg-surface-hover px-3 py-2 ${className}`}
       data-testid="phrase-bar"
       role="region"
       aria-label="Phrase Bar"

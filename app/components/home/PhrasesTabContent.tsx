@@ -152,10 +152,10 @@ export default function PhrasesTabContent({
           canEditBoard={canEditCurrentBoard}
         >
           <div className="flex flex-col flex-1 min-h-0">
+            <PhraseBar />
             <div className="p-2 overflow-auto flex-1">
               {phraseGrid}
             </div>
-            <PhraseBar />
           </div>
         </SwipeableBoardNavigator>
       </div>
@@ -177,10 +177,10 @@ export default function PhrasesTabContent({
           embedded={true}
         />
       </div>
+      <PhraseBar />
       <div className="flex-1 overflow-auto p-3">
         {phraseGrid}
       </div>
-      <PhraseBar />
     </div>
   );
 }
