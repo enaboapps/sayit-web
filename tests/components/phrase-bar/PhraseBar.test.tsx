@@ -5,11 +5,13 @@ import PhraseBar from '@/app/components/phrase-bar/PhraseBar';
 import { PhraseBarProvider } from '@/app/contexts/PhraseBarContext';
 
 const mockSpeak = jest.fn();
+const mockStop = jest.fn();
 const mockSettings = {
   textSize: 18,
   usePhraseBar: true,
   speakPhrasesOnTap: false,
 };
+const mockTTSState = { isSpeaking: false };
 
 jest.mock('@/app/contexts/SettingsContext', () => ({
   useSettings: jest.fn(() => ({
@@ -20,8 +22,8 @@ jest.mock('@/app/contexts/SettingsContext', () => ({
 jest.mock('@/lib/hooks/useTTS', () => ({
   useTTS: jest.fn(() => ({
     speak: mockSpeak,
-    stop: jest.fn(),
-    isSpeaking: false,
+    stop: mockStop,
+    isSpeaking: mockTTSState.isSpeaking,
     isAvailable: true,
   })),
 }));
@@ -34,7 +36,9 @@ describe('PhraseBar', () => {
   beforeEach(() => {
     window.sessionStorage.clear();
     mockSpeak.mockClear();
+    mockStop.mockClear();
     mockSettings.usePhraseBar = true;
+    mockTTSState.isSpeaking = false;
   });
 
   it('renders nothing when the master toggle is off', () => {
@@ -171,6 +175,33 @@ describe('PhraseBar', () => {
     );
 
     await user.click(screen.getByLabelText(/Speak all phrases/i));
+    expect(mockSpeak).not.toHaveBeenCalled();
+  });
+
+  it('shows a Stop button while TTS is speaking and stops on click', async () => {
+    const user = userEvent.setup();
+    window.sessionStorage.setItem(
+      'phraseBarItems',
+      JSON.stringify([
+        { id: 'a', text: 'I' },
+        { id: 'b', text: 'need' },
+      ])
+    );
+    mockTTSState.isSpeaking = true;
+
+    render(
+      <Wrapper>
+        <PhraseBar />
+      </Wrapper>
+    );
+
+    // While speaking, the primary button is a Stop control.
+    expect(screen.queryByLabelText(/Speak all phrases/i)).toBeNull();
+    const stopButton = screen.getByLabelText(/Stop speaking/i);
+    expect(stopButton).toBeInTheDocument();
+
+    await user.click(stopButton);
+    expect(mockStop).toHaveBeenCalledTimes(1);
     expect(mockSpeak).not.toHaveBeenCalled();
   });
 });

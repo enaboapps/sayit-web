@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import {
   BackspaceIcon,
   SpeakerWaveIcon,
+  StopIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { usePhraseBar } from '@/app/contexts/PhraseBarContext';
@@ -34,12 +35,17 @@ export default function PhraseBar({ className = '' }: PhraseBarProps) {
 
   if (!settings.usePhraseBar) return null;
 
-  const handleSpeakAll = () => {
+  const handleSpeakOrStop = () => {
+    if (tts.isSpeaking) {
+      tts.stop();
+      return;
+    }
     if (!joinedText.trim()) return;
     tts.speak(joinedText);
   };
 
   const hasItems = items.length > 0;
+  const isSpeaking = tts.isSpeaking;
 
   return (
     <div
@@ -71,11 +77,24 @@ export default function PhraseBar({ className = '' }: PhraseBarProps) {
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
-              onClick={handleSpeakAll}
-              aria-label="Speak all phrases in the bar"
-              className="p-3 rounded-full bg-primary-500 text-white hover:bg-primary-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-colors"
+              onClick={handleSpeakOrStop}
+              aria-label={
+                isSpeaking
+                  ? 'Stop speaking'
+                  : 'Speak all phrases in the bar'
+              }
+              aria-pressed={isSpeaking}
+              className={`p-3 rounded-full text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 transition-colors ${
+                isSpeaking
+                  ? 'bg-warning hover:bg-warning/90 animate-pulse'
+                  : 'bg-primary-500 hover:bg-primary-600'
+              }`}
             >
-              <SpeakerWaveIcon className="w-5 h-5" aria-hidden="true" />
+              {isSpeaking ? (
+                <StopIcon className="w-5 h-5" aria-hidden="true" />
+              ) : (
+                <SpeakerWaveIcon className="w-5 h-5" aria-hidden="true" />
+              )}
             </button>
             <button
               type="button"
