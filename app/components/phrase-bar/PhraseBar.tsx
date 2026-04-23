@@ -74,7 +74,7 @@ export default function PhraseBar({ className = '' }: PhraseBarProps) {
           )}
         </div>
         {hasItems && (
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex flex-col gap-1 shrink-0">
             <button
               type="button"
               onClick={handleSpeakOrStop}
