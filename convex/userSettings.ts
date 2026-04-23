@@ -39,6 +39,8 @@ export const initializeSettings = mutation({
     ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
     aiReplySuggestionsEnabled: v.boolean(),
     messageCaptureMode: v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny')),
+    usePhraseBar: v.optional(v.boolean()),
+    speakPhrasesOnTap: v.optional(v.boolean()),
     typingAreaVisible: v.boolean(),
     typingAreaExpanded: v.boolean(),
     selectedBoardId: v.optional(v.string()),
@@ -108,6 +110,8 @@ export const initializeSettings = mutation({
       ttsModelPreference: args.ttsModelPreference,
       aiReplySuggestionsEnabled: args.aiReplySuggestionsEnabled,
       messageCaptureMode: args.messageCaptureMode,
+      usePhraseBar: args.usePhraseBar,
+      speakPhrasesOnTap: args.speakPhrasesOnTap,
       typingAreaVisible: args.typingAreaVisible,
       typingAreaExpanded: args.typingAreaExpanded,
       selectedBoardId: args.selectedBoardId,
@@ -140,6 +144,8 @@ export const updateSettings = mutation({
     ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
     aiReplySuggestionsEnabled: v.optional(v.boolean()),
     messageCaptureMode: v.optional(v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny'))),
+    usePhraseBar: v.optional(v.boolean()),
+    speakPhrasesOnTap: v.optional(v.boolean()),
     typingAreaVisible: v.optional(v.boolean()),
     typingAreaExpanded: v.optional(v.boolean()),
     selectedBoardId: v.optional(v.string()),
@@ -236,6 +242,8 @@ export const updateSettings = mutation({
     if (updates.ttsModelPreference !== undefined) updateData.ttsModelPreference = updates.ttsModelPreference;
     if (updates.aiReplySuggestionsEnabled !== undefined) updateData.aiReplySuggestionsEnabled = updates.aiReplySuggestionsEnabled;
     if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
+    if (updates.usePhraseBar !== undefined) updateData.usePhraseBar = updates.usePhraseBar;
+    if (updates.speakPhrasesOnTap !== undefined) updateData.speakPhrasesOnTap = updates.speakPhrasesOnTap;
     if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;
     if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;
     if (updates.selectedBoardId !== undefined) updateData.selectedBoardId = updates.selectedBoardId;

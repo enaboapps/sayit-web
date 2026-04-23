@@ -4,6 +4,7 @@ import PhraseGrid from '../phrases/PhraseGrid';
 import PhraseTile from '../phrases/PhraseTile';
 import SortablePhraseGrid from '../phrases/SortablePhraseGrid';
 import AnimatedLoading from '../phrases/AnimatedLoading';
+import PhraseBar from '../phrase-bar/PhraseBar';
 import type { BoardSummary, PhraseSummary } from '../phrases/types';
 
 interface PhrasesTabContentProps {
@@ -150,8 +151,11 @@ export default function PhrasesTabContent({
           isEditMode={isEditMode}
           canEditBoard={canEditCurrentBoard}
         >
-          <div className="p-2 overflow-auto flex-1">
-            {phraseGrid}
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="p-2 overflow-auto flex-1">
+              {phraseGrid}
+            </div>
+            <PhraseBar />
           </div>
         </SwipeableBoardNavigator>
       </div>
@@ -176,6 +180,7 @@ export default function PhrasesTabContent({
       <div className="flex-1 overflow-auto p-3">
         {phraseGrid}
       </div>
+      <PhraseBar />
     </div>
   );
 }

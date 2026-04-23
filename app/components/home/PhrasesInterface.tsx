@@ -11,6 +11,7 @@ import { usePhraseBoardData } from '@/lib/hooks/usePhraseBoardData';
 import { useMessageCapture } from '@/lib/hooks/useMessageCapture';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
+import { usePhraseBar } from '../../contexts/PhraseBarContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import type { PhraseSummary } from '../phrases/types';
@@ -23,6 +24,7 @@ export default function PhrasesInterface() {
   const isMobile = useIsMobile();
 
   const boardData = usePhraseBoardData();
+  const phraseBar = usePhraseBar();
   const { captureError, handleCaptureCompletedMessage, localRecentMessages } = useMessageCapture();
 
   const [typingText, setTypingText] = useState('');
@@ -59,6 +61,16 @@ export default function PhrasesInterface() {
   );
 
   const handlePhrasePress = (phrase: PhraseSummary) => {
+    if (settings.usePhraseBar) {
+      // Phrase-bar mode: accumulate chips. Don't clobber Composer text.
+      phraseBar.addItem({ text: phrase.text, symbolUrl: phrase.symbolUrl });
+      if (settings.speakPhrasesOnTap) {
+        setActivePhraseId(phrase.id ?? null);
+        tts.speak(phrase.text);
+      }
+      return;
+    }
+    // Legacy speak-on-tap behavior.
     setActivePhraseId(phrase.id ?? null);
     setTypingText(phrase.text);
     tts.speak(phrase.text);

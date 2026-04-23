@@ -11,6 +11,7 @@ import {
   DocumentTextIcon,
   InformationCircleIcon,
   ChevronRightIcon,
+  RectangleStackIcon,
 } from '@heroicons/react/24/outline';
 import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
 import { useAuth } from '../contexts/AuthContext';
@@ -145,6 +146,15 @@ export default function SettingsPage() {
               onClick={() => setActiveSheet('ai')}
             />
 
+            {/* Phrase Bar */}
+            <SettingsCategory
+              icon={<RectangleStackIcon className="w-6 h-6" />}
+              title="Phrase Bar"
+              description="Build sentences from phrase tiles"
+              onClick={() => setActiveSheet('phraseBar')}
+              value={settings.usePhraseBar ? 'On' : 'Off'}
+            />
+
             {/* Account - only when logged in */}
             {user && (
               <SettingsCategory
@@ -197,6 +207,30 @@ export default function SettingsPage() {
               options={messageCaptureOptions}
               value={settings.messageCaptureMode}
               onChange={(value) => updateSetting('messageCaptureMode', value)}
+            />
+          </div>
+        </BottomSheet>
+
+        {/* Phrase Bar Sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'phraseBar'}
+          onClose={() => setActiveSheet(null)}
+          title="Phrase Bar"
+          snapPoints={[60, 80]}
+        >
+          <div className="p-4 space-y-6">
+            <Switch
+              label="Phrase Bar"
+              description="When enabled, tapping a phrase adds it to the Phrase Bar instead of speaking immediately."
+              checked={settings.usePhraseBar}
+              onChange={(value) => updateSetting('usePhraseBar', value)}
+            />
+            <Switch
+              label="Speak on tap"
+              description="Also speak each phrase as it's added to the bar."
+              checked={settings.speakPhrasesOnTap}
+              onChange={(value) => updateSetting('speakPhrasesOnTap', value)}
+              disabled={!settings.usePhraseBar}
             />
           </div>
         </BottomSheet>
@@ -472,6 +506,45 @@ export default function SettingsPage() {
                     options={messageCaptureOptions}
                     value={settings.messageCaptureMode}
                     onChange={(value) => updateSetting('messageCaptureMode', value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Phrase Bar Settings */}
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Phrase Bar</h2>
+              <p className="text-sm text-text-secondary mt-1">Build sentences from phrase tiles before speaking</p>
+            </div>
+            <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+              <div className="px-8 py-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+                    <RectangleStackIcon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">Phrase Bar</h3>
+                    <p className="text-sm text-text-secondary mt-1">
+                      When enabled, tapping a phrase adds a chip to the bar instead of speaking.
+                      Use Speak all to say the whole sentence.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Switch
+                    label="Phrase Bar"
+                    description="Tap a phrase to add it to the bar instead of speaking immediately"
+                    checked={settings.usePhraseBar}
+                    onChange={(value) => updateSetting('usePhraseBar', value)}
+                  />
+                  <Switch
+                    label="Speak on tap"
+                    description="Also speak each phrase as it's added"
+                    checked={settings.speakPhrasesOnTap}
+                    onChange={(value) => updateSetting('speakPhrasesOnTap', value)}
+                    disabled={!settings.usePhraseBar}
                   />
                 </div>
               </div>
