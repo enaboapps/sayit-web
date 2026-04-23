@@ -100,6 +100,8 @@ export default defineSchema({
         v.literal('speakAny')
       )
     ),
+    usePhraseBar: v.optional(v.boolean()),
+    speakPhrasesOnTap: v.optional(v.boolean()),
 
     // UI Preferences (consolidated from various components)
     typingAreaVisible: v.boolean(),

@@ -32,6 +32,8 @@ interface Settings {
   ttsModelPreference: TTSModelPreference;
   aiReplySuggestionsEnabled: boolean;
   messageCaptureMode: MessageCaptureMode;
+  usePhraseBar: boolean;
+  speakPhrasesOnTap: boolean;
 }
 
 interface UIPreferences {
@@ -71,6 +73,8 @@ const defaultSettings: Settings = {
   ttsModelPreference: 'fast',
   aiReplySuggestionsEnabled: true,
   messageCaptureMode: 'speakOnly',
+  usePhraseBar: false,
+  speakPhrasesOnTap: false,
 };
 
 const defaultUIPreferences: UIPreferences = {
@@ -195,6 +199,8 @@ function saveToLocalStorage(allSettings: AllSettings) {
     ttsModelPreference: allSettings.ttsModelPreference,
     aiReplySuggestionsEnabled: allSettings.aiReplySuggestionsEnabled,
     messageCaptureMode: allSettings.messageCaptureMode,
+    usePhraseBar: allSettings.usePhraseBar,
+    speakPhrasesOnTap: allSettings.speakPhrasesOnTap,
   };
   localStorage.setItem('settings', JSON.stringify(settings));
 
@@ -271,6 +277,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         ttsModelPreference: localSettings.ttsModelPreference,
         aiReplySuggestionsEnabled: localSettings.aiReplySuggestionsEnabled,
         messageCaptureMode: localSettings.messageCaptureMode,
+        usePhraseBar: localSettings.usePhraseBar,
+        speakPhrasesOnTap: localSettings.speakPhrasesOnTap,
         typingAreaVisible: localSettings.typingAreaVisible,
         typingAreaExpanded: localSettings.typingAreaExpanded,
         selectedBoardId: localSettings.selectedBoardId ?? undefined,
@@ -307,6 +315,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         ttsModelPreference: (convexSettings.ttsModelPreference as TTSModelPreference) ?? defaultSettings.ttsModelPreference,
         aiReplySuggestionsEnabled: convexSettings.aiReplySuggestionsEnabled ?? defaultSettings.aiReplySuggestionsEnabled,
         messageCaptureMode: convexSettings.messageCaptureMode ?? defaultSettings.messageCaptureMode,
+        usePhraseBar: convexSettings.usePhraseBar ?? defaultSettings.usePhraseBar,
+        speakPhrasesOnTap: convexSettings.speakPhrasesOnTap ?? defaultSettings.speakPhrasesOnTap,
         typingAreaVisible: convexSettings.typingAreaVisible,
         typingAreaExpanded: convexSettings.typingAreaExpanded,
         selectedBoardId: convexSettings.selectedBoardId ?? null,
@@ -405,6 +415,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     ttsModelPreference: allSettings.ttsModelPreference,
     aiReplySuggestionsEnabled: allSettings.aiReplySuggestionsEnabled,
     messageCaptureMode: allSettings.messageCaptureMode,
+    usePhraseBar: allSettings.usePhraseBar,
+    speakPhrasesOnTap: allSettings.speakPhrasesOnTap,
   };
 
   const uiPreferences: UIPreferences = {
