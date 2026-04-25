@@ -4,6 +4,7 @@ import { boardToOpenBoardFile, createOpenBoardZipBlob } from './export';
 import { normalizeOpenBoardPackage } from './import';
 import {
   MAX_OPEN_BOARD_FILE_BYTES,
+  MAX_OPEN_BOARD_FILE_MB,
   OpenBoardFile,
   OpenBoardImage,
   OpenBoardProcessorAdapter,
@@ -20,7 +21,7 @@ export const aacProcessorsOpenBoardAdapter: OpenBoardProcessorAdapter = {
 
 async function parseUploadWithAACProcessors(file: File): Promise<ParsedOpenBoardPackage> {
   if (file.size > MAX_OPEN_BOARD_FILE_BYTES) {
-    throw new OpenBoardFormatError('Open Board file is larger than the 25 MB import limit.');
+    throw new OpenBoardFormatError(`Open Board file is larger than the ${MAX_OPEN_BOARD_FILE_MB} MB import limit.`);
   }
 
   const lowerName = file.name.toLowerCase();

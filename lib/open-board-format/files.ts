@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
-import { MAX_OPEN_BOARD_FILE_BYTES, ParsedOpenBoardPackage } from './types';
+import { MAX_OPEN_BOARD_FILE_BYTES, MAX_OPEN_BOARD_FILE_MB, ParsedOpenBoardPackage } from './types';
 import { OpenBoardFormatError, validateOpenBoardFile, validateOpenBoardManifest } from './validation';
 
 export async function parseOpenBoardUpload(file: File): Promise<ParsedOpenBoardPackage> {
   if (file.size > MAX_OPEN_BOARD_FILE_BYTES) {
-    throw new OpenBoardFormatError('Open Board file is larger than the 25 MB import limit.');
+    throw new OpenBoardFormatError(`Open Board file is larger than the ${MAX_OPEN_BOARD_FILE_MB} MB import limit.`);
   }
 
   const lowerName = file.name.toLowerCase();

@@ -1,7 +1,8 @@
 import type { BoardSummary } from '@/app/components/phrases/types';
 
 export const OPEN_BOARD_FORMAT = 'open-board-0.1';
-export const MAX_OPEN_BOARD_FILE_BYTES = 25 * 1024 * 1024;
+export const MAX_OPEN_BOARD_FILE_MB = 100;
+export const MAX_OPEN_BOARD_FILE_BYTES = MAX_OPEN_BOARD_FILE_MB * 1024 * 1024;
 export const MAX_IMPORT_BOARDS = 50;
 export const MAX_IMPORT_PHRASES = 2000;
 
