@@ -94,13 +94,19 @@ export const listByBoard = query({
           };
         }
         const target = await ctx.db.get(targetBoardId);
+        // Only expose the name when the viewer can actually read the target.
+        // Otherwise return null (renderer shows broken state) so we don't leak
+        // names of boards the viewer has no access to.
+        const canRead = target
+          ? target.userId === identity.subject || target.forClientId === identity.subject
+          : false;
         return {
           _id: row._id,
           boardId: row.boardId,
           position: row.position,
           kind: 'navigate',
           targetBoardId,
-          targetBoardName: target?.name ?? null,
+          targetBoardName: canRead ? (target?.name ?? null) : null,
         };
       })
     );

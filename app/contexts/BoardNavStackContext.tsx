@@ -4,7 +4,9 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -38,28 +40,36 @@ const BoardNavStackContext = createContext<BoardNavStackContextValue | undefined
 
 export function BoardNavStackProvider({ children }: { children: ReactNode }) {
   const [stack, setStack] = useState<string[]>([]);
-
-  const push = useCallback((sourceBoardId: string) => {
-    setStack((prev) => {
-      // Cap stack depth to guard against runaway A↔B↔A cycles.
-      const MAX_DEPTH = 32;
-      const next = [...prev, sourceBoardId];
-      return next.length > MAX_DEPTH ? next.slice(next.length - MAX_DEPTH) : next;
-    });
-  }, []);
-
-  // Read current `stack` directly so callers reliably get the popped id back
-  // (avoids the strict-mode/concurrent-updater pitfall of mutating an outer
-  // variable from inside a setState updater).
-  const pop = useCallback((): string | null => {
-    if (stack.length === 0) return null;
-    const popped = stack[stack.length - 1];
-    setStack((prev) => prev.slice(0, -1));
-    return popped;
+  // Mirror state in a ref so synchronous calls (e.g. two rapid back-taps in
+  // the same render frame) read up-to-date data instead of a stale closure
+  // capture.
+  const stackRef = useRef<string[]>([]);
+  useEffect(() => {
+    stackRef.current = stack;
   }, [stack]);
 
+  const push = useCallback((sourceBoardId: string) => {
+    // Cap stack depth to guard against runaway A↔B↔A cycles.
+    const MAX_DEPTH = 32;
+    const next = [...stackRef.current, sourceBoardId];
+    const trimmed = next.length > MAX_DEPTH ? next.slice(next.length - MAX_DEPTH) : next;
+    stackRef.current = trimmed;
+    setStack(trimmed);
+  }, []);
+
+  const pop = useCallback((): string | null => {
+    if (stackRef.current.length === 0) return null;
+    const popped = stackRef.current[stackRef.current.length - 1];
+    const next = stackRef.current.slice(0, -1);
+    stackRef.current = next;
+    setStack(next);
+    return popped;
+  }, []);
+
   const clear = useCallback(() => {
-    setStack((prev) => (prev.length === 0 ? prev : []));
+    if (stackRef.current.length === 0) return;
+    stackRef.current = [];
+    setStack([]);
   }, []);
 
   const value = useMemo<BoardNavStackContextValue>(

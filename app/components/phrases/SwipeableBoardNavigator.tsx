@@ -14,6 +14,7 @@ interface SwipeableBoardNavigatorProps {
   children: React.ReactNode;
   // Action button props
   onAddPhrase?: () => void;
+  onAddNavigateTile?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
   onEditBoard?: () => void;
@@ -28,6 +29,7 @@ export default function SwipeableBoardNavigator({
   onOpenBoardPicker,
   children,
   onAddPhrase,
+  onAddNavigateTile,
   onAddBoard,
   onEdit,
   onEditBoard,
@@ -136,6 +138,7 @@ export default function SwipeableBoardNavigator({
       {/* Action Buttons Row */}
       <BoardActionButtons
         onAddPhrase={onAddPhrase}
+        onAddNavigateTile={onAddNavigateTile}
         onAddBoard={onAddBoard}
         onEdit={onEdit}
         onEditBoard={onEditBoard}

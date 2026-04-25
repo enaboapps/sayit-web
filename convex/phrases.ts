@@ -132,6 +132,26 @@ export const deletePhrase = mutation({
       await ctx.storage.delete(phrase.symbolStorageId);
     }
 
+    // Cascade: remove every boardTile of kind='phrase' that references this
+    // phrase across all boards it's placed on. Without this sweep, deleting
+    // a phrase would leave orphaned tile rows whose hydrated `phrase` field
+    // is null, which the UI defensively filters out — but the DB rows would
+    // accumulate. Also clean up any pre-migration phraseBoardPhrases rows.
+    const referencingTiles = await ctx.db
+      .query('boardTiles')
+      .withIndex('by_phrase', (q) => q.eq('phraseId', args.id))
+      .collect();
+    for (const tile of referencingTiles) {
+      await ctx.db.delete(tile._id);
+    }
+    const legacyLinks = await ctx.db
+      .query('phraseBoardPhrases')
+      .withIndex('by_phrase', (q) => q.eq('phraseId', args.id))
+      .collect();
+    for (const link of legacyLinks) {
+      await ctx.db.delete(link._id);
+    }
+
     await ctx.db.delete(args.id);
   },
 });

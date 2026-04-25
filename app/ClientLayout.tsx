@@ -9,6 +9,7 @@ import { AuthProvider, StaticAuthProvider } from './contexts/AuthContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { MobileBottomProvider } from './contexts/MobileBottomContext';
 import { PhraseBarProvider } from './contexts/PhraseBarContext';
+import { BoardNavStackProvider } from './contexts/BoardNavStackContext';
 import ConnectivityBanner from './components/navigation/ConnectivityBanner';
 import InstallBanner from './components/navigation/InstallBanner';
 import Sidebar from './components/Sidebar';
@@ -115,7 +116,9 @@ export default function ClientLayout({
           <SettingsProvider>
             <MobileBottomProvider>
               <PhraseBarProvider>
-                <OfflineAppShell mode={offlineMode} />
+                <BoardNavStackProvider>
+                  <OfflineAppShell mode={offlineMode} />
+                </BoardNavStackProvider>
               </PhraseBarProvider>
             </MobileBottomProvider>
           </SettingsProvider>
@@ -131,22 +134,24 @@ export default function ClientLayout({
           <SettingsProvider>
             <MobileBottomProvider>
               <PhraseBarProvider>
-                <OnlineStartupWatch onReady={handleStartupReady}>
-                  <OfflineDataSync />
-                  <div className="flex h-dvh min-h-0 flex-col overflow-hidden md:h-auto md:min-h-dvh md:flex-row md:overflow-visible">
-                    <Sidebar />
-                    <div className="flex min-h-0 flex-1 flex-col md:pl-16 lg:pl-16">
-                      <div className="shrink-0">
-                        <ConnectivityBanner />
-                        <InstallBanner />
+                <BoardNavStackProvider>
+                  <OnlineStartupWatch onReady={handleStartupReady}>
+                    <OfflineDataSync />
+                    <div className="flex h-dvh min-h-0 flex-col overflow-hidden md:h-auto md:min-h-dvh md:flex-row md:overflow-visible">
+                      <Sidebar />
+                      <div className="flex min-h-0 flex-1 flex-col md:pl-16 lg:pl-16">
+                        <div className="shrink-0">
+                          <ConnectivityBanner />
+                          <InstallBanner />
+                        </div>
+                        <main className="min-h-0 flex-1 overflow-y-auto pb-bottom-stack md:overflow-visible">
+                          {children}
+                        </main>
                       </div>
-                      <main className="min-h-0 flex-1 overflow-y-auto pb-bottom-stack md:overflow-visible">
-                        {children}
-                      </main>
+                      <MobileBottomStack />
                     </div>
-                    <MobileBottomStack />
-                  </div>
-                </OnlineStartupWatch>
+                  </OnlineStartupWatch>
+                </BoardNavStackProvider>
               </PhraseBarProvider>
             </MobileBottomProvider>
           </SettingsProvider>

@@ -24,11 +24,21 @@ export const migrateToBoardTiles = internalMutation({
 
     let inserted = 0;
     let skipped = 0;
+    let skippedOrphan = 0;
 
     for (const link of links) {
       const key = `${link.boardId.toString()}::${link.phraseId.toString()}`;
       if (existingKeys.has(key)) {
         skipped++;
+        continue;
+      }
+      // Skip orphans: a phraseBoardPhrases row whose phraseId or boardId no
+      // longer resolves to a real row would create a permanently broken
+      // boardTile. Drop them on the floor instead of carrying garbage forward.
+      const phrase = await ctx.db.get(link.phraseId);
+      const board = await ctx.db.get(link.boardId);
+      if (!phrase || !board) {
+        skippedOrphan++;
         continue;
       }
 
@@ -42,7 +52,7 @@ export const migrateToBoardTiles = internalMutation({
       inserted++;
     }
 
-    return { inserted, skipped, totalLinks: links.length };
+    return { inserted, skipped, skippedOrphan, totalLinks: links.length };
   },
 });
 

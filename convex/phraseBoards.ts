@@ -37,9 +37,18 @@ type PolymorphicBoardTile =
       targetBoardName: string | null;
     };
 
+function viewerCanReadBoard(
+  board: Doc<'phraseBoards'> | null,
+  viewerSubject: string
+): boolean {
+  if (!board) return false;
+  return board.userId === viewerSubject || board.forClientId === viewerSubject;
+}
+
 async function loadHydratedBoardTiles(
   ctx: QueryCtx,
   boardId: Id<'phraseBoards'>,
+  viewerSubject: string,
   getCachedPhrase: (phraseId: Id<'phrases'>) => Promise<Doc<'phrases'> | null>,
   getCachedBoard: (boardId: Id<'phraseBoards'>) => Promise<Doc<'phraseBoards'> | null>
 ): Promise<{ tiles: PolymorphicBoardTile[]; phraseLinks: LegacyPhraseLink[] }> {
@@ -89,13 +98,18 @@ async function loadHydratedBoardTiles(
       continue;
     }
     const target = await getCachedBoard(row.targetBoardId);
+    // Only expose the target name when the viewer can actually read the
+    // target board. Otherwise fall back to the broken-state shape so we
+    // don't leak names of boards the viewer has no access to (e.g. a
+    // caregiver's private board referenced from a client-shared board).
+    const canRead = viewerCanReadBoard(target, viewerSubject);
     tiles.push({
       _id: row._id,
       boardId: row.boardId,
       position: row.position,
       kind: 'navigate',
       targetBoardId: row.targetBoardId,
-      targetBoardName: target?.name ?? null,
+      targetBoardName: canRead ? (target?.name ?? null) : null,
     });
   }
 
@@ -164,7 +178,7 @@ export const getPhraseBoards = query({
     const ownedBoardsWithInfo = await Promise.all(
       ownedBoards.map(async (board) => {
         const { tiles, phraseLinks } = await loadHydratedBoardTiles(
-          ctx, board._id, getCachedPhrase, getCachedBoard
+          ctx, board._id, identity.subject, getCachedPhrase, getCachedBoard
         );
 
         // Get client name if this board is for a client
@@ -191,7 +205,7 @@ export const getPhraseBoards = query({
     const assignedBoardsWithInfo = await Promise.all(
       assignedBoards.map(async (board) => {
         const { tiles, phraseLinks } = await loadHydratedBoardTiles(
-          ctx, board._id, getCachedPhrase, getCachedBoard
+          ctx, board._id, identity.subject, getCachedPhrase, getCachedBoard
         );
 
         // Get caregiver name
@@ -276,7 +290,7 @@ export const getPhraseBoard = query({
     }
 
     const { tiles, phraseLinks } = await loadHydratedBoardTiles(
-      ctx, args.id, getCachedPhrase, getCachedBoard
+      ctx, args.id, identity.subject, getCachedPhrase, getCachedBoard
     );
 
     // Get caregiver name for assigned clients
@@ -519,6 +533,20 @@ export const removePhraseFromBoard = mutation({
     const identity = await getUserIdentity(ctx);
     if (!identity) {
       throw new Error('Unauthenticated');
+    }
+
+    // Verify edit access on the target board. (Pre-existing bug: this
+    // mutation only authenticated, not authorized — any logged-in user
+    // could remove tiles from any board.)
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error('Board not found');
+    }
+    const isOwner = board.userId === identity.subject;
+    const isAssignedClientWithEdit =
+      board.forClientId === identity.subject && board.clientAccessLevel === 'edit';
+    if (!isOwner && !isAssignedClientWithEdit) {
+      throw new Error('Unauthorized');
     }
 
     const tile = await ctx.db
