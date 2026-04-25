@@ -14,7 +14,7 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import type { PhraseSummary } from '../phrases/types';
+import type { BoardTileSummary, PhraseSummary } from '../phrases/types';
 
 export default function PhrasesInterface() {
   const tts = useTTS();
@@ -132,7 +132,7 @@ export default function PhrasesInterface() {
           phrasesContent={
             <PhrasesTabContent
               boards={boardData.boards}
-              phrases={boardData.phrases}
+              tiles={boardData.tiles}
               selectedBoard={boardData.selectedBoard}
               validBoardIndex={boardData.validBoardIndex}
               loading={boardData.loading}
@@ -144,12 +144,19 @@ export default function PhrasesInterface() {
               isOnline={isOnline}
               isSpeaking={tts.isSpeaking}
               activePhraseId={activePhraseId}
+              canNavigateBack={boardData.canNavigateBack}
               onPhrasePress={handlePhrasePress}
               onPhraseStop={handlePhraseStop}
               onEditPhrase={boardData.handleEditPhrase}
+              onNavigateTap={(tile: Extract<BoardTileSummary, { kind: 'navigate' }>) =>
+                boardData.handleNavigateToBoard(tile.targetBoardId)
+              }
+              onNavigateEdit={boardData.handleEditNavigateTile}
+              onNavigateBack={boardData.handleNavigateBack}
               onAddPhrase={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddPhrase : undefined}
+              onAddNavigateTile={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddNavigateTile : undefined}
               onAddBoard={boardData.handleAddBoard}
-              onReorderPhrases={boardData.handleReorderPhrases}
+              onReorderTiles={boardData.handleReorderTiles}
               onBoardIndexChange={boardData.handleBoardIndexChange}
               onToggleEditMode={boardData.handleToggleEditMode}
               onSelectBoard={boardData.handleSelectBoard}

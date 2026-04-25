@@ -12,6 +12,7 @@ interface BoardSelectorProps {
   onSelectBoard: (board: BoardSummary) => void;
   onEditBoard?: (boardId: string) => void;
   onAddPhrase?: () => void;
+  onAddNavigateTile?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
   embedded?: boolean;
@@ -24,6 +25,7 @@ export default function BoardSelector({
   onSelectBoard,
   onEditBoard,
   onAddPhrase,
+  onAddNavigateTile,
   onAddBoard,
   onEdit,
   embedded = false,
@@ -87,6 +89,7 @@ export default function BoardSelector({
         </div>
         <BoardActionButtons
           onAddPhrase={onAddPhrase}
+          onAddNavigateTile={onAddNavigateTile}
           onAddBoard={onAddBoard}
           onEdit={onEdit}
           onEditBoard={editSelectedBoard}
@@ -123,6 +126,7 @@ export default function BoardSelector({
         </div>
         <BoardActionButtons
           onAddPhrase={onAddPhrase}
+          onAddNavigateTile={onAddNavigateTile}
           onAddBoard={onAddBoard}
           onEdit={onEdit}
           onEditBoard={editSelectedBoard}

@@ -1,5 +1,61 @@
 import { internalMutation } from './_generated/server';
 
+// Migration: Backfill boardTiles from phraseBoardPhrases.
+//
+// Run AFTER deploying the additive schema change that adds the boardTiles
+// table, and BEFORE deploying the cutover that removes phraseBoardPhrases:
+//   npx convex run migrations:migrateToBoardTiles
+//
+// Idempotent: a boardTile (kind='phrase') is only inserted if no tile already
+// exists for the same (boardId, phraseId) pair.
+export const migrateToBoardTiles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const links = await ctx.db.query('phraseBoardPhrases').collect();
+
+    // Pre-load all existing boardTiles per (boardId, phraseId) for O(1) lookup.
+    const existingKeys = new Set<string>();
+    const existingTiles = await ctx.db.query('boardTiles').collect();
+    for (const tile of existingTiles) {
+      if (tile.kind === 'phrase' && tile.phraseId) {
+        existingKeys.add(`${tile.boardId.toString()}::${tile.phraseId.toString()}`);
+      }
+    }
+
+    let inserted = 0;
+    let skipped = 0;
+    let skippedOrphan = 0;
+
+    for (const link of links) {
+      const key = `${link.boardId.toString()}::${link.phraseId.toString()}`;
+      if (existingKeys.has(key)) {
+        skipped++;
+        continue;
+      }
+      // Skip orphans: a phraseBoardPhrases row whose phraseId or boardId no
+      // longer resolves to a real row would create a permanently broken
+      // boardTile. Drop them on the floor instead of carrying garbage forward.
+      const phrase = await ctx.db.get(link.phraseId);
+      const board = await ctx.db.get(link.boardId);
+      if (!phrase || !board) {
+        skippedOrphan++;
+        continue;
+      }
+
+      await ctx.db.insert('boardTiles', {
+        boardId: link.boardId,
+        phraseId: link.phraseId,
+        position: link.position ?? 0,
+        kind: 'phrase',
+      });
+      existingKeys.add(key);
+      inserted++;
+    }
+
+    return { inserted, skipped, skippedOrphan, totalLinks: links.length };
+  },
+});
+
 // Migration: Convert textSize from enum strings to numbers
 // Run this once via Convex dashboard before deploying schema changes
 export const migrateTextSizeToNumber = internalMutation({

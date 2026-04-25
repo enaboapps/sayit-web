@@ -1,15 +1,16 @@
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
 import PhraseGrid from '../phrases/PhraseGrid';
-import PhraseTile from '../phrases/PhraseTile';
 import SortablePhraseGrid from '../phrases/SortablePhraseGrid';
+import BoardTileRenderer from '../phrases/tiles/BoardTileRenderer';
 import AnimatedLoading from '../phrases/AnimatedLoading';
 import PhraseBar from '../phrase-bar/PhraseBar';
-import type { BoardSummary, PhraseSummary } from '../phrases/types';
+import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
+import type { BoardSummary, BoardTileSummary, PhraseSummary } from '../phrases/types';
 
 interface PhrasesTabContentProps {
   boards: BoardSummary[];
-  phrases: PhraseSummary[];
+  tiles: BoardTileSummary[];
   selectedBoard: BoardSummary | null;
   validBoardIndex: number;
   loading: boolean;
@@ -21,12 +22,17 @@ interface PhrasesTabContentProps {
   isOnline: boolean;
   isSpeaking: boolean;
   activePhraseId: string | null;
+  canNavigateBack: boolean;
   onPhrasePress: (phrase: PhraseSummary) => void;
   onPhraseStop: () => void;
   onEditPhrase: (phrase: PhraseSummary) => void;
+  onNavigateTap: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
+  onNavigateEdit: (tileId: string) => void;
+  onNavigateBack: () => void;
   onAddPhrase: (() => void) | undefined;
+  onAddNavigateTile: (() => void) | undefined;
   onAddBoard: () => void;
-  onReorderPhrases: (orderedIds: string[]) => void;
+  onReorderTiles: (orderedTileIds: string[]) => void;
   onBoardIndexChange: (index: number) => void;
   onToggleEditMode: () => void;
   onSelectBoard: (board: BoardSummary | string) => void;
@@ -38,7 +44,7 @@ interface PhrasesTabContentProps {
 // onEditBoard already guards isOnline internally (from usePhraseBoardData)
 export default function PhrasesTabContent({
   boards,
-  phrases,
+  tiles,
   selectedBoard,
   validBoardIndex,
   loading,
@@ -50,12 +56,17 @@ export default function PhrasesTabContent({
   isOnline,
   isSpeaking,
   activePhraseId,
+  canNavigateBack,
   onPhrasePress,
   onPhraseStop,
   onEditPhrase,
+  onNavigateTap,
+  onNavigateEdit,
+  onNavigateBack,
   onAddPhrase,
+  onAddNavigateTile,
   onAddBoard,
-  onReorderPhrases,
+  onReorderTiles,
   onBoardIndexChange,
   onToggleEditMode,
   onSelectBoard,
@@ -63,32 +74,65 @@ export default function PhrasesTabContent({
   onEditBoard,
   textSizePx,
 }: PhrasesTabContentProps) {
+  const handleNavigateEditTile = (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => {
+    onNavigateEdit(tile.id);
+  };
+
+  // Defensive: parents should always pass an array, but a transient HMR / data
+  // race could leak an undefined into the prop. Default here so we render an
+  // empty grid instead of crashing the tree.
+  const safeTiles = tiles ?? [];
+
   const phraseGrid = isEditMode && canEditCurrentBoard ? (
     <SortablePhraseGrid
-      phrases={phrases}
+      tiles={safeTiles}
       activePhraseId={activePhraseId}
       isSpeaking={isSpeaking}
       onPhrasePress={onPhrasePress}
       onPhraseStop={onPhraseStop}
       onPhraseEdit={onEditPhrase}
-      onReorder={onReorderPhrases}
+      onNavigateTap={onNavigateTap}
+      onNavigateEdit={handleNavigateEditTile}
+      onReorder={onReorderTiles}
       textSizePx={textSizePx}
     />
   ) : (
     <PhraseGrid textSizePx={textSizePx}>
-      {phrases.map((phrase) => (
-        <PhraseTile
-          key={phrase.id}
-          phrase={phrase}
-          onPress={() => onPhrasePress(phrase)}
-          onStop={onPhraseStop}
-          isSpeaking={activePhraseId === phrase.id && isSpeaking}
-          onLongPress={canEditCurrentBoard ? () => onEditPhrase(phrase) : undefined}
-          textSizePx={textSizePx}
-        />
-      ))}
+      {safeTiles.map((tile) => {
+        const isPhraseSpeaking = tile.kind === 'phrase'
+          && activePhraseId === tile.phrase.id
+          && isSpeaking;
+        return (
+          <BoardTileRenderer
+            key={tile.id}
+            tile={tile}
+            textSizePx={textSizePx}
+            onPhrasePress={onPhrasePress}
+            onPhraseStop={onPhraseStop}
+            onPhraseEdit={canEditCurrentBoard ? onEditPhrase : undefined}
+            isPhraseSpeaking={isPhraseSpeaking}
+            onNavigateTap={onNavigateTap}
+            onNavigateEdit={canEditCurrentBoard ? handleNavigateEditTile : undefined}
+            isEditMode={false}
+          />
+        );
+      })}
     </PhraseGrid>
   );
+
+  const backRow = canNavigateBack ? (
+    <div className="px-2 pt-2">
+      <button
+        type="button"
+        onClick={onNavigateBack}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 px-2 py-1 rounded-md hover:bg-surface-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+        aria-label="Back to previous board"
+      >
+        <ArrowUturnLeftIcon className="w-4 h-4" aria-hidden="true" />
+        <span>Back</span>
+      </button>
+    </div>
+  ) : null;
 
   if (showAuthPrompt) {
     return (
@@ -145,6 +189,7 @@ export default function PhrasesTabContent({
           onBoardChange={onBoardIndexChange}
           onOpenBoardPicker={onOpenBoardPicker}
           onAddPhrase={isOnline && canEditCurrentBoard ? onAddPhrase : undefined}
+          onAddNavigateTile={isOnline && canEditCurrentBoard ? onAddNavigateTile : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
           onEdit={onToggleEditMode}
           onEditBoard={isOnline && selectedBoard && canEditCurrentBoard ? () => onEditBoard(selectedBoard.id) : undefined}
@@ -153,6 +198,7 @@ export default function PhrasesTabContent({
         >
           <div className="flex flex-col flex-1 min-h-0">
             <PhraseBar />
+            {backRow}
             <div className="p-2 overflow-auto flex-1">
               {phraseGrid}
             </div>
@@ -172,12 +218,14 @@ export default function PhrasesTabContent({
           onSelectBoard={onSelectBoard}
           onEditBoard={onEditBoard}
           onAddPhrase={isOnline && canEditCurrentBoard ? onAddPhrase : undefined}
+          onAddNavigateTile={isOnline && canEditCurrentBoard ? onAddNavigateTile : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
           onEdit={onToggleEditMode}
           embedded={true}
         />
       </div>
       <PhraseBar />
+      {backRow}
       <div className="flex-1 overflow-auto p-3">
         {phraseGrid}
       </div>

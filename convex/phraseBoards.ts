@@ -1,7 +1,120 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
+import type { QueryCtx } from './_generated/server';
 import { getUserIdentity } from './users';
+
+// ---------------------------------------------------------------------------
+// Shared loaders for tile data (read from boardTiles).
+//
+// The `phrase_board_phrases` field on board query results is preserved for
+// backward compatibility — it returns *only phrase-kind tiles* in the legacy
+// shape. New consumers should read the polymorphic `tiles` field instead.
+// ---------------------------------------------------------------------------
+
+type LegacyPhraseLink = {
+  _id: Id<'boardTiles'>;
+  phraseId: Id<'phrases'>;
+  boardId: Id<'phraseBoards'>;
+  position: number;
+  phrase: Doc<'phrases'> | null;
+};
+
+type PolymorphicBoardTile =
+  | {
+      _id: Id<'boardTiles'>;
+      boardId: Id<'phraseBoards'>;
+      position: number;
+      kind: 'phrase';
+      phrase: Doc<'phrases'> | null;
+    }
+  | {
+      _id: Id<'boardTiles'>;
+      boardId: Id<'phraseBoards'>;
+      position: number;
+      kind: 'navigate';
+      targetBoardId: Id<'phraseBoards'>;
+      targetBoardName: string | null;
+    };
+
+function viewerCanReadBoard(
+  board: Doc<'phraseBoards'> | null,
+  viewerSubject: string
+): boolean {
+  if (!board) return false;
+  return board.userId === viewerSubject || board.forClientId === viewerSubject;
+}
+
+async function loadHydratedBoardTiles(
+  ctx: QueryCtx,
+  boardId: Id<'phraseBoards'>,
+  viewerSubject: string,
+  getCachedPhrase: (phraseId: Id<'phrases'>) => Promise<Doc<'phrases'> | null>,
+  getCachedBoard: (boardId: Id<'phraseBoards'>) => Promise<Doc<'phraseBoards'> | null>
+): Promise<{ tiles: PolymorphicBoardTile[]; phraseLinks: LegacyPhraseLink[] }> {
+  const rows = await ctx.db
+    .query('boardTiles')
+    .withIndex('by_board', (q) => q.eq('boardId', boardId))
+    .collect();
+
+  const sorted = [...rows].sort((a, b) => a.position - b.position);
+
+  const tiles: PolymorphicBoardTile[] = [];
+  const phraseLinks: LegacyPhraseLink[] = [];
+
+  for (const row of sorted) {
+    if (row.kind === 'phrase') {
+      const phrase = row.phraseId ? await getCachedPhrase(row.phraseId) : null;
+      tiles.push({
+        _id: row._id,
+        boardId: row.boardId,
+        position: row.position,
+        kind: 'phrase',
+        phrase,
+      });
+      if (row.phraseId) {
+        phraseLinks.push({
+          _id: row._id,
+          phraseId: row.phraseId,
+          boardId: row.boardId,
+          position: row.position,
+          phrase,
+        });
+      }
+      continue;
+    }
+
+    // kind === 'navigate'
+    if (!row.targetBoardId) {
+      // Defensive: shouldn't happen, but emit a broken-state tile if it does.
+      tiles.push({
+        _id: row._id,
+        boardId: row.boardId,
+        position: row.position,
+        kind: 'navigate',
+        targetBoardId: row.boardId,
+        targetBoardName: null,
+      });
+      continue;
+    }
+    const target = await getCachedBoard(row.targetBoardId);
+    // Only expose the target name when the viewer can actually read the
+    // target board. Otherwise fall back to the broken-state shape so we
+    // don't leak names of boards the viewer has no access to (e.g. a
+    // caregiver's private board referenced from a client-shared board).
+    const canRead = viewerCanReadBoard(target, viewerSubject);
+    tiles.push({
+      _id: row._id,
+      boardId: row.boardId,
+      position: row.position,
+      kind: 'navigate',
+      targetBoardId: row.targetBoardId,
+      targetBoardName: canRead ? (target?.name ?? null) : null,
+    });
+  }
+
+  return { tiles, phraseLinks };
+}
 
 // Query: Get all phrase boards for current user (owned + assigned to them)
 export const getPhraseBoards = query({
@@ -13,6 +126,7 @@ export const getPhraseBoards = query({
 
     const phraseCache = new Map<string, Doc<'phrases'> | null>();
     const profileCache = new Map<string, Doc<'profiles'> | null>();
+    const boardCache = new Map<string, Doc<'phraseBoards'> | null>();
 
     const getCachedPhrase = async (phraseId: Id<'phrases'>) => {
       const cacheKey = phraseId.toString();
@@ -38,18 +152,14 @@ export const getPhraseBoards = query({
       return profile ?? null;
     };
 
-    const loadBoardPhrases = async (boardId: Id<'phraseBoards'>) => {
-      const phraseBoardPhrases = await ctx.db
-        .query('phraseBoardPhrases')
-        .withIndex('by_board', (q) => q.eq('boardId', boardId))
-        .collect();
-
-      return (await Promise.all(
-        phraseBoardPhrases.map(async (pbp) => {
-          const phrase = await getCachedPhrase(pbp.phraseId);
-          return { ...pbp, phrase };
-        })
-      )).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    const getCachedBoard = async (boardId: Id<'phraseBoards'>) => {
+      const cacheKey = boardId.toString();
+      if (boardCache.has(cacheKey)) {
+        return boardCache.get(cacheKey) ?? null;
+      }
+      const board = await ctx.db.get(boardId);
+      boardCache.set(cacheKey, board ?? null);
+      return board ?? null;
     };
 
     // Get boards owned by the user (caregiver's boards)
@@ -67,7 +177,9 @@ export const getPhraseBoards = query({
     // Process owned boards - resolve client names if forClientId is set
     const ownedBoardsWithInfo = await Promise.all(
       ownedBoards.map(async (board) => {
-        const phrases = await loadBoardPhrases(board._id);
+        const { tiles, phraseLinks } = await loadHydratedBoardTiles(
+          ctx, board._id, identity.subject, getCachedPhrase, getCachedBoard
+        );
 
         // Get client name if this board is for a client
         let forClientName = null;
@@ -78,7 +190,8 @@ export const getPhraseBoards = query({
 
         return {
           ...board,
-          phrase_board_phrases: phrases,
+          phrase_board_phrases: phraseLinks,
+          tiles,
           isShared: false,
           isOwner: true,
           accessLevel: 'edit' as const,
@@ -91,14 +204,17 @@ export const getPhraseBoards = query({
     // Process assigned boards (boards where this user is the client)
     const assignedBoardsWithInfo = await Promise.all(
       assignedBoards.map(async (board) => {
-        const phrases = await loadBoardPhrases(board._id);
+        const { tiles, phraseLinks } = await loadHydratedBoardTiles(
+          ctx, board._id, identity.subject, getCachedPhrase, getCachedBoard
+        );
 
         // Get caregiver name
         const caregiverProfile = await getCachedProfile(board.userId);
 
         return {
           ...board,
-          phrase_board_phrases: phrases,
+          phrase_board_phrases: phraseLinks,
+          tiles,
           isShared: true,
           isOwner: false,
           accessLevel: board.clientAccessLevel || 'view',
@@ -124,6 +240,7 @@ export const getPhraseBoard = query({
 
     const phraseCache = new Map<string, Doc<'phrases'> | null>();
     const profileCache = new Map<string, Doc<'profiles'> | null>();
+    const boardCache = new Map<string, Doc<'phraseBoards'> | null>();
 
     const getCachedPhrase = async (phraseId: Id<'phrases'>) => {
       const cacheKey = phraseId.toString();
@@ -149,6 +266,16 @@ export const getPhraseBoard = query({
       return profile ?? null;
     };
 
+    const getCachedBoard = async (boardId: Id<'phraseBoards'>) => {
+      const cacheKey = boardId.toString();
+      if (boardCache.has(cacheKey)) {
+        return boardCache.get(cacheKey) ?? null;
+      }
+      const board = await ctx.db.get(boardId);
+      boardCache.set(cacheKey, board ?? null);
+      return board ?? null;
+    };
+
     const board = await ctx.db.get(args.id);
     if (!board) {
       return null;
@@ -162,17 +289,9 @@ export const getPhraseBoard = query({
       return null; // User has no access
     }
 
-    const phraseBoardPhrases = await ctx.db
-      .query('phraseBoardPhrases')
-      .withIndex('by_board', (q) => q.eq('boardId', args.id))
-      .collect();
-
-    const phrases = (await Promise.all(
-      phraseBoardPhrases.map(async (pbp) => {
-        const phrase = await getCachedPhrase(pbp.phraseId);
-        return { ...pbp, phrase };
-      })
-    )).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    const { tiles, phraseLinks } = await loadHydratedBoardTiles(
+      ctx, args.id, identity.subject, getCachedPhrase, getCachedBoard
+    );
 
     // Get caregiver name for assigned clients
     let sharedBy = null;
@@ -190,7 +309,8 @@ export const getPhraseBoard = query({
 
     return {
       ...board,
-      phrase_board_phrases: phrases,
+      phrase_board_phrases: phraseLinks,
+      tiles,
       isShared: isAssignedClient && !isOwner,
       isOwner,
       accessLevel: isOwner ? 'edit' : (board.clientAccessLevel || 'view'),
@@ -268,16 +388,30 @@ export const deletePhraseBoard = mutation({
       throw new Error('Unauthorized');
     }
 
-    // Delete all phrase associations
-    const phraseBoardPhrases = await ctx.db
-      .query('phraseBoardPhrases')
+    // Delete all tile placements on this board (and the phrase rows that
+    // were exclusive to it). Navigate tiles on OTHER boards that point at
+    // this board are intentionally left in place — they will render as a
+    // broken-target tile until the owner edits or removes them.
+    const tilesOnBoard = await ctx.db
+      .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.id))
       .collect();
 
-    for (const pbp of phraseBoardPhrases) {
-      await ctx.db.delete(pbp._id);
-      // Also delete the phrase itself
-      await ctx.db.delete(pbp.phraseId);
+    for (const tile of tilesOnBoard) {
+      await ctx.db.delete(tile._id);
+      if (tile.kind === 'phrase' && tile.phraseId) {
+        await ctx.db.delete(tile.phraseId);
+      }
+    }
+
+    // Also clean up any legacy phraseBoardPhrases rows still hanging around
+    // pre-migration. Safe even when the table is empty.
+    const legacyLinks = await ctx.db
+      .query('phraseBoardPhrases')
+      .withIndex('by_board', (q) => q.eq('boardId', args.id))
+      .collect();
+    for (const link of legacyLinks) {
+      await ctx.db.delete(link._id);
     }
 
     // Delete the board
@@ -317,24 +451,26 @@ export const addPhraseToBoard = mutation({
       throw new Error('Unauthorized - board');
     }
 
-    // Check for duplicate phrase text on this board
-    const boardPhraseLinks = await ctx.db
-      .query('phraseBoardPhrases')
+    // Check for duplicate phrase text on this board (across all tiles).
+    const existingTiles = await ctx.db
+      .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
       .collect();
 
-    for (const link of boardPhraseLinks) {
-      const existingPhrase = await ctx.db.get(link.phraseId);
+    for (const tile of existingTiles) {
+      if (tile.kind !== 'phrase' || !tile.phraseId) continue;
+      const existingPhrase = await ctx.db.get(tile.phraseId);
       if (existingPhrase && existingPhrase.text === phrase.text) {
         throw new Error('A phrase with this text already exists on this board');
       }
     }
 
-    const position = boardPhraseLinks.length;
-    await ctx.db.insert('phraseBoardPhrases', {
-      phraseId: args.phraseId,
+    const position = existingTiles.length;
+    await ctx.db.insert('boardTiles', {
       boardId: args.boardId,
       position,
+      kind: 'phrase',
+      phraseId: args.phraseId,
     });
   },
 });
@@ -363,17 +499,25 @@ export const reorderPhrasesOnBoard = mutation({
       throw new Error('Unauthorized');
     }
 
-    const links = await ctx.db
-      .query('phraseBoardPhrases')
+    // Reorder by phrase id: only phrase-kind tiles are affected. Navigate-kind
+    // tiles keep their existing position (callers using mixed-kind grids should
+    // use boardTiles.reorderTiles which is tile-id based).
+    const tiles = await ctx.db
+      .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
       .collect();
 
-    const linkByPhraseId = new Map(links.map((l) => [l.phraseId.toString(), l]));
+    const tileByPhraseId = new Map<string, typeof tiles[number]>();
+    for (const tile of tiles) {
+      if (tile.kind === 'phrase' && tile.phraseId) {
+        tileByPhraseId.set(tile.phraseId.toString(), tile);
+      }
+    }
 
     await Promise.all(
       args.orderedPhraseIds.map((phraseId, index) => {
-        const link = linkByPhraseId.get(phraseId.toString());
-        if (link) return ctx.db.patch(link._id, { position: index });
+        const tile = tileByPhraseId.get(phraseId.toString());
+        if (tile) return ctx.db.patch(tile._id, { position: index });
       })
     );
   },
@@ -391,14 +535,28 @@ export const removePhraseFromBoard = mutation({
       throw new Error('Unauthenticated');
     }
 
-    const link = await ctx.db
-      .query('phraseBoardPhrases')
+    // Verify edit access on the target board. (Pre-existing bug: this
+    // mutation only authenticated, not authorized — any logged-in user
+    // could remove tiles from any board.)
+    const board = await ctx.db.get(args.boardId);
+    if (!board) {
+      throw new Error('Board not found');
+    }
+    const isOwner = board.userId === identity.subject;
+    const isAssignedClientWithEdit =
+      board.forClientId === identity.subject && board.clientAccessLevel === 'edit';
+    if (!isOwner && !isAssignedClientWithEdit) {
+      throw new Error('Unauthorized');
+    }
+
+    const tile = await ctx.db
+      .query('boardTiles')
       .withIndex('by_phrase', (q) => q.eq('phraseId', args.phraseId))
       .filter((q) => q.eq(q.field('boardId'), args.boardId))
       .first();
 
-    if (link) {
-      await ctx.db.delete(link._id);
+    if (tile) {
+      await ctx.db.delete(tile._id);
     }
   },
 });
