@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import {
   PlusIcon,
   Squares2X2Icon,
@@ -10,6 +10,7 @@ import {
   ChatBubbleLeftIcon,
   ArrowRightCircleIcon,
 } from '@heroicons/react/24/outline';
+import BottomSheet from '@/app/components/ui/BottomSheet';
 
 interface BoardActionButtonsProps {
   onAddPhrase?: () => void;
@@ -32,30 +33,6 @@ export default function BoardActionButtons({
 }: BoardActionButtonsProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const addMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [menuOpen]);
-
-  useEffect(() => {
-    if (!addMenuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
-        setAddMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [addMenuOpen]);
 
   const showAddPhrase = canEditBoard && !!onAddPhrase;
   const showAddNavigate = canEditBoard && !!onAddNavigateTile;
@@ -70,42 +47,16 @@ export default function BoardActionButtons({
   return (
     <div className="flex items-center justify-center gap-2 py-2 bg-surface">
       {showAddTileMenu ? (
-        <div className="relative" ref={addMenuRef}>
-          <button
-            onClick={() => setAddMenuOpen((o) => !o)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
-            aria-haspopup="menu"
-            aria-expanded={addMenuOpen}
-            aria-label="Add tile"
-          >
-            <PlusIcon className="w-4 h-4" />
-            <span>Add Tile</span>
-          </button>
-
-          {addMenuOpen && (
-            <div
-              role="menu"
-              className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-52 bg-surface border border-border rounded-2xl shadow-xl overflow-hidden z-50"
-            >
-              <button
-                role="menuitem"
-                onClick={() => { onAddPhrase?.(); setAddMenuOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-surface-hover transition-colors"
-              >
-                <ChatBubbleLeftIcon className="w-4 h-4 text-text-secondary" />
-                <span className="text-foreground">Phrase</span>
-              </button>
-              <button
-                role="menuitem"
-                onClick={() => { onAddNavigateTile?.(); setAddMenuOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-surface-hover transition-colors border-t border-border"
-              >
-                <ArrowRightCircleIcon className="w-4 h-4 text-text-secondary" />
-                <span className="text-foreground">Navigate to board</span>
-              </button>
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => setAddMenuOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
+          aria-haspopup="dialog"
+          aria-expanded={addMenuOpen}
+          aria-label="Add tile"
+        >
+          <PlusIcon className="w-4 h-4" />
+          <span>Add Tile</span>
+        </button>
       ) : showAddPhrase ? (
         <button
           onClick={onAddPhrase}
@@ -138,48 +89,87 @@ export default function BoardActionButtons({
       )}
 
       {showMenu && (
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setMenuOpen((o) => !o)}
-            className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-hover text-text-secondary transition-colors"
-            aria-label="More options"
-          >
-            <EllipsisHorizontalIcon className="w-5 h-5" />
-          </button>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-hover text-text-secondary transition-colors"
+          aria-haspopup="dialog"
+          aria-expanded={menuOpen}
+          aria-label="More options"
+        >
+          <EllipsisHorizontalIcon className="w-5 h-5" />
+        </button>
+      )}
 
-          {menuOpen && (
-            <div className="absolute right-0 bottom-full mb-1 w-44 bg-surface border border-border rounded-2xl shadow-xl overflow-hidden z-50">
-              {onEdit && (
-                <button
-                  onClick={() => { onEdit(); setMenuOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-surface-hover transition-colors"
-                >
-                  {isEditMode ? (
-                    <>
-                      <CheckIcon className="w-4 h-4 text-primary-500" />
-                      <span className="text-primary-500 font-medium">Done Editing</span>
-                    </>
-                  ) : (
-                    <>
-                      <PencilIcon className="w-4 h-4 text-text-secondary" />
-                      <span className="text-foreground">Edit Phrases</span>
-                    </>
-                  )}
-                </button>
-              )}
-              {onEditBoard && (
-                <button
-                  onClick={() => { onEditBoard(); setMenuOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-surface-hover transition-colors border-t border-border"
-                >
-                  <PencilIcon className="w-4 h-4 text-text-secondary" />
-                  <span className="text-foreground">Edit Board</span>
-                </button>
-              )}
-            </div>
+      {/* Add-tile bottom sheet */}
+      <BottomSheet
+        isOpen={addMenuOpen}
+        onClose={() => setAddMenuOpen(false)}
+        title="Add tile"
+        snapPoints={[35]}
+        showHandle
+        showCloseButton
+      >
+        <div className="p-2">
+          {showAddPhrase && (
+            <button
+              onClick={() => { onAddPhrase?.(); setAddMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <ChatBubbleLeftIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Phrase</span>
+            </button>
+          )}
+          {showAddNavigate && (
+            <button
+              onClick={() => { onAddNavigateTile?.(); setAddMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <ArrowRightCircleIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Navigate to board</span>
+            </button>
           )}
         </div>
-      )}
+      </BottomSheet>
+
+      {/* More-options bottom sheet */}
+      <BottomSheet
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        title="Board options"
+        snapPoints={[35]}
+        showHandle
+        showCloseButton
+      >
+        <div className="p-2">
+          {onEdit && (
+            <button
+              onClick={() => { onEdit(); setMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              {isEditMode ? (
+                <>
+                  <CheckIcon className="w-5 h-5 text-primary-500" />
+                  <span className="text-primary-500 font-medium">Done Editing</span>
+                </>
+              ) : (
+                <>
+                  <PencilIcon className="w-5 h-5 text-text-secondary" />
+                  <span className="text-foreground">Edit Phrases</span>
+                </>
+              )}
+            </button>
+          )}
+          {onEditBoard && (
+            <button
+              onClick={() => { onEditBoard(); setMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <PencilIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Edit Board</span>
+            </button>
+          )}
+        </div>
+      </BottomSheet>
     </div>
   );
 }
