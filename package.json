@@ -29,6 +29,7 @@
     "framer-motion": "^12.38.0",
     "idb": "^8.0.3",
     "js-tts-wrapper": "^0.1.79",
+    "jszip": "^3.10.1",
     "nanoid": "^5.1.9",
     "next": "^16.2.4",
     "react": "^19.2.5",

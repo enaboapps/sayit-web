@@ -14,6 +14,9 @@ interface BoardSelectorProps {
   onAddPhrase?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
+  onImportOpenBoard?: () => void;
+  onExportCurrentBoard?: () => void;
+  onExportAllBoards?: () => void;
   embedded?: boolean;
 }
 
@@ -26,6 +29,9 @@ export default function BoardSelector({
   onAddPhrase,
   onAddBoard,
   onEdit,
+  onImportOpenBoard,
+  onExportCurrentBoard,
+  onExportAllBoards,
   embedded = false,
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -90,8 +96,13 @@ export default function BoardSelector({
           onAddBoard={onAddBoard}
           onEdit={onEdit}
           onEditBoard={editSelectedBoard}
+          onImportOpenBoard={onImportOpenBoard}
+          onExportCurrentBoard={onExportCurrentBoard}
+          onExportAllBoards={onExportAllBoards}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
+          canExportCurrentBoard={!!selectedBoard}
+          canExportAllBoards={boards.length > 0}
         />
       </div>
     );
@@ -126,8 +137,13 @@ export default function BoardSelector({
           onAddBoard={onAddBoard}
           onEdit={onEdit}
           onEditBoard={editSelectedBoard}
+          onImportOpenBoard={onImportOpenBoard}
+          onExportCurrentBoard={onExportCurrentBoard}
+          onExportAllBoards={onExportAllBoards}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
+          canExportCurrentBoard={!!selectedBoard}
+          canExportAllBoards={boards.length > 0}
         />
       </div>
 

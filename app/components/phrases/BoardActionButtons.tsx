@@ -8,14 +8,20 @@ import {
   PencilIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline';
+import OpenBoardExportMenu from './OpenBoardExportMenu';
 
 interface BoardActionButtonsProps {
   onAddPhrase?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
   onEditBoard?: () => void;
+  onImportOpenBoard?: () => void;
+  onExportCurrentBoard?: () => void;
+  onExportAllBoards?: () => void;
   isEditMode?: boolean;
   canEditBoard?: boolean;
+  canExportCurrentBoard?: boolean;
+  canExportAllBoards?: boolean;
 }
 
 export default function BoardActionButtons({
@@ -23,8 +29,13 @@ export default function BoardActionButtons({
   onAddBoard,
   onEdit,
   onEditBoard,
+  onImportOpenBoard,
+  onExportCurrentBoard,
+  onExportAllBoards,
   isEditMode = false,
   canEditBoard = true,
+  canExportCurrentBoard = false,
+  canExportAllBoards = false,
 }: BoardActionButtonsProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -42,7 +53,8 @@ export default function BoardActionButtons({
 
   const showAddPhrase = canEditBoard && !!onAddPhrase;
   const showAddBoard = !!onAddBoard;
-  const showMenu = !!onEdit || !!onEditBoard;
+  const showOpenBoardMenu = !!onImportOpenBoard || !!onExportCurrentBoard || !!onExportAllBoards;
+  const showMenu = !!onEdit || !!onEditBoard || showOpenBoardMenu;
 
   if (!showAddPhrase && !showAddBoard && !showMenu) return null;
 
@@ -81,7 +93,7 @@ export default function BoardActionButtons({
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 bottom-full mb-1 w-44 bg-surface border border-border rounded-2xl shadow-xl overflow-hidden z-50">
+            <div className="absolute right-0 bottom-full mb-1 w-64 bg-surface border border-border rounded-2xl shadow-xl overflow-hidden z-50">
               {onEdit && (
                 <button
                   onClick={() => { onEdit(); setMenuOpen(false); }}
@@ -109,6 +121,14 @@ export default function BoardActionButtons({
                   <span className="text-foreground">Edit Board</span>
                 </button>
               )}
+              <OpenBoardExportMenu
+                onImportOpenBoard={onImportOpenBoard}
+                onExportCurrentBoard={onExportCurrentBoard}
+                onExportAllBoards={onExportAllBoards}
+                canExportCurrentBoard={canExportCurrentBoard}
+                canExportAllBoards={canExportAllBoards}
+                onAction={() => setMenuOpen(false)}
+              />
             </div>
           )}
         </div>

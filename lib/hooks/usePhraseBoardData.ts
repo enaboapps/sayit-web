@@ -53,8 +53,10 @@ export function usePhraseBoardData() {
     updateUIPreference('selectedBoardId', boards[0]._id);
   }, [boards, shouldLoadBoards, selectedBoardId, updateUIPreference]);
 
-   
-  const phrases: PhraseSummary[] = selectedBoardData?.phrase_board_phrases
+  const mapPhrases = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    phraseBoardPhrases: any[] | undefined
+  ): PhraseSummary[] => phraseBoardPhrases
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ?.map((pbp: any) => pbp.phrase)
     .filter(Boolean)
@@ -66,12 +68,14 @@ export function usePhraseBoardData() {
       symbolStorageId: phrase.symbolStorageId ? String(phrase.symbolStorageId) : undefined,
     })) || [];
 
+  const phrases: PhraseSummary[] = mapPhrases(selectedBoardData?.phrase_board_phrases);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transformedBoards: BoardSummary[] = boards?.map((board: any) => ({
     id: String(board._id),
     name: board.name,
     position: board.position,
-    phrases: board._id === selectedBoardId ? phrases : [],
+    phrases: board._id === selectedBoardId ? phrases : mapPhrases(board.phrase_board_phrases),
     isShared: board.isShared,
     isOwner: board.isOwner,
     accessLevel: board.accessLevel,

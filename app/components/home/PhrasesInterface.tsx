@@ -5,10 +5,12 @@ import Composer from '../composer';
 import AACTabs from './AACTabs';
 import PhrasesTabContent from './PhrasesTabContent';
 import BoardGridPopup from '../phrases/BoardGridPopup';
+import OpenBoardImportModal from '../phrases/OpenBoardImportModal';
 import ConnectionRequestsBanner from '../connection/ConnectionRequestsBanner';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { usePhraseBoardData } from '@/lib/hooks/usePhraseBoardData';
 import { useMessageCapture } from '@/lib/hooks/useMessageCapture';
+import { createOpenBoardBlob, createOpenBoardZipBlob, downloadBlob, filenameForBoard } from '@/lib/open-board-format/export';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
@@ -29,6 +31,7 @@ export default function PhrasesInterface() {
 
   const [typingText, setTypingText] = useState('');
   const [activePhraseId, setActivePhraseId] = useState<string | null>(null);
+  const [isOpenBoardImportOpen, setIsOpenBoardImportOpen] = useState(false);
 
   const activeTabId = uiPreferences.activeTypingTabId;
   const {
@@ -96,6 +99,26 @@ export default function PhrasesInterface() {
     });
   };
 
+  const handleExportCurrentBoard = () => {
+    if (!boardData.selectedBoard) return;
+    downloadBlob(
+      createOpenBoardBlob(boardData.selectedBoard),
+      filenameForBoard(boardData.selectedBoard.name, 'obf')
+    );
+  };
+
+  const handleExportAllBoards = async () => {
+    if (boardData.boards.length === 0) return;
+    const blob = await createOpenBoardZipBlob(boardData.boards);
+    downloadBlob(blob, 'sayit-boards.obz');
+  };
+
+  const handleOpenBoardImported = (boardIds: string[]) => {
+    if (boardIds[0]) {
+      boardData.handleSelectBoard(boardIds[0]);
+    }
+  };
+
   const suggestionContext = useMemo(() => {
     const fallbackLocal = localRecentMessages.map(e => ({ text: e.text, tabId: e.tabId ?? undefined }));
     const allMessages = recentMessages && recentMessages.length > 0 ? recentMessages : fallbackLocal;
@@ -155,6 +178,9 @@ export default function PhrasesInterface() {
               onSelectBoard={boardData.handleSelectBoard}
               onOpenBoardPicker={() => boardData.setIsBoardPickerOpen(true)}
               onEditBoard={boardData.handleEditBoard}
+              onImportOpenBoard={() => setIsOpenBoardImportOpen(true)}
+              onExportCurrentBoard={handleExportCurrentBoard}
+              onExportAllBoards={() => void handleExportAllBoards()}
               textSizePx={settings.textSize}
             />
           }
@@ -193,6 +219,11 @@ export default function PhrasesInterface() {
         onClose={() => boardData.setIsBoardPickerOpen(false)}
         onSelectBoard={boardData.handleSelectBoard}
         onEditBoard={boardData.handleEditBoard}
+      />
+      <OpenBoardImportModal
+        isOpen={isOpenBoardImportOpen}
+        onClose={() => setIsOpenBoardImportOpen(false)}
+        onImported={handleOpenBoardImported}
       />
     </div>
   );

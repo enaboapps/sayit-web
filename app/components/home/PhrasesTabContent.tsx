@@ -32,6 +32,9 @@ interface PhrasesTabContentProps {
   onSelectBoard: (board: BoardSummary | string) => void;
   onOpenBoardPicker: () => void;
   onEditBoard: (boardId: string) => void;
+  onImportOpenBoard: () => void;
+  onExportCurrentBoard: () => void;
+  onExportAllBoards: () => void;
   textSizePx: number;
 }
 
@@ -61,6 +64,9 @@ export default function PhrasesTabContent({
   onSelectBoard,
   onOpenBoardPicker,
   onEditBoard,
+  onImportOpenBoard,
+  onExportCurrentBoard,
+  onExportAllBoards,
   textSizePx,
 }: PhrasesTabContentProps) {
   const phraseGrid = isEditMode && canEditCurrentBoard ? (
@@ -124,12 +130,20 @@ export default function PhrasesTabContent({
           <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
           <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
           {isOnline && (
-            <button
-              onClick={onAddBoard}
-              className="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors"
-            >
-              Create board
-            </button>
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+              <button
+                onClick={onAddBoard}
+                className="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors"
+              >
+                Create board
+              </button>
+              <button
+                onClick={onImportOpenBoard}
+                className="px-5 py-2.5 rounded-xl bg-surface-hover hover:bg-surface text-foreground font-semibold transition-colors"
+              >
+                Import Open Board
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -148,6 +162,9 @@ export default function PhrasesTabContent({
           onAddBoard={isOnline ? onAddBoard : undefined}
           onEdit={onToggleEditMode}
           onEditBoard={isOnline && selectedBoard && canEditCurrentBoard ? () => onEditBoard(selectedBoard.id) : undefined}
+          onImportOpenBoard={isOnline ? onImportOpenBoard : undefined}
+          onExportCurrentBoard={onExportCurrentBoard}
+          onExportAllBoards={onExportAllBoards}
           isEditMode={isEditMode}
           canEditBoard={canEditCurrentBoard}
         >
@@ -174,6 +191,9 @@ export default function PhrasesTabContent({
           onAddPhrase={isOnline && canEditCurrentBoard ? onAddPhrase : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
           onEdit={onToggleEditMode}
+          onImportOpenBoard={isOnline ? onImportOpenBoard : undefined}
+          onExportCurrentBoard={onExportCurrentBoard}
+          onExportAllBoards={onExportAllBoards}
           embedded={true}
         />
       </div>

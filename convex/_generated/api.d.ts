@@ -12,6 +12,7 @@ import type * as caregiverClients from "../caregiverClients.js";
 import type * as connectionRequests from "../connectionRequests.js";
 import type * as conversationHistory from "../conversationHistory.js";
 import type * as migrations from "../migrations.js";
+import type * as openBoardImport from "../openBoardImport.js";
 import type * as phraseBoards from "../phraseBoards.js";
 import type * as phrases from "../phrases.js";
 import type * as profiles from "../profiles.js";
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   connectionRequests: typeof connectionRequests;
   conversationHistory: typeof conversationHistory;
   migrations: typeof migrations;
+  openBoardImport: typeof openBoardImport;
   phraseBoards: typeof phraseBoards;
   phrases: typeof phrases;
   profiles: typeof profiles;
