@@ -84,7 +84,7 @@ export default function SwipeableBoardNavigator({
   const hasNext = currentBoardIndex < boards.length - 1;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Board Header with Navigation */}
       <div className="flex items-center justify-between px-4 py-3 bg-surface rounded-t-2xl">
         {/* Previous Arrow - only show if multiple boards */}
@@ -184,6 +184,7 @@ export default function SwipeableBoardNavigator({
         <AnimatePresence mode="wait">
           <motion.div
             key={currentBoardIndex}
+            className="h-full flex flex-col"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
