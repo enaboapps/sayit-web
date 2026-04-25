@@ -56,6 +56,25 @@ export default defineSchema({
     .index('by_phrase', ['phraseId'])
     .index('by_board', ['boardId']),
 
+  // Polymorphic per-board tile placements. Replaces phraseBoardPhrases.
+  // Each row is one tile slot on one board. `kind` selects the discriminated payload:
+  //   - 'phrase'   -> phraseId set (references the phrases table)
+  //   - 'navigate' -> targetBoardId set (references another phraseBoards row)
+  // Adding a future tile kind: add a literal to the `kind` union, add the optional
+  // payload field(s) here, add a render branch in BoardTileRenderer, add a form.
+  boardTiles: defineTable({
+    boardId: v.id('phraseBoards'),
+    position: v.number(),
+    kind: v.union(v.literal('phrase'), v.literal('navigate')),
+    // kind === 'phrase'
+    phraseId: v.optional(v.id('phrases')),
+    // kind === 'navigate'
+    targetBoardId: v.optional(v.id('phraseBoards')),
+  })
+    .index('by_board', ['boardId'])
+    .index('by_phrase', ['phraseId'])
+    .index('by_target_board', ['targetBoardId']),
+
   typingSessions: defineTable({
     userId: v.string(), // Clerk user ID
     sessionKey: v.string(),
