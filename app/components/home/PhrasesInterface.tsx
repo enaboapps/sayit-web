@@ -10,7 +10,8 @@ import ConnectionRequestsBanner from '../connection/ConnectionRequestsBanner';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { usePhraseBoardData } from '@/lib/hooks/usePhraseBoardData';
 import { useMessageCapture } from '@/lib/hooks/useMessageCapture';
-import { createOpenBoardBlob, createOpenBoardZipBlob, downloadBlob, filenameForBoard } from '@/lib/open-board-format/export';
+import { downloadBlob, filenameForBoard } from '@/lib/open-board-format/export';
+import { localOpenBoardAdapter } from '@/lib/open-board-format/localAdapter';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
@@ -101,15 +102,18 @@ export default function PhrasesInterface() {
 
   const handleExportCurrentBoard = () => {
     if (!boardData.selectedBoard) return;
+    const blob = new Blob([JSON.stringify(localOpenBoardAdapter.exportBoard(boardData.selectedBoard), null, 2)], {
+      type: 'application/json',
+    });
     downloadBlob(
-      createOpenBoardBlob(boardData.selectedBoard),
+      blob,
       filenameForBoard(boardData.selectedBoard.name, 'obf')
     );
   };
 
   const handleExportAllBoards = async () => {
     if (boardData.boards.length === 0) return;
-    const blob = await createOpenBoardZipBlob(boardData.boards);
+    const blob = await localOpenBoardAdapter.exportBoards(boardData.boards);
     downloadBlob(blob, 'sayit-boards.obz');
   };
 

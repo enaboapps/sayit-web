@@ -119,3 +119,10 @@ export interface OpenBoardExportOptions {
 }
 
 export type ExportableBoard = BoardSummary;
+
+export interface OpenBoardProcessorAdapter {
+  parseUpload(file: File): Promise<ParsedOpenBoardPackage>;
+  normalize(pkg: ParsedOpenBoardPackage): NormalizedOpenBoardImport;
+  exportBoard(board: ExportableBoard, options?: OpenBoardExportOptions): OpenBoardFile;
+  exportBoards(boards: ExportableBoard[]): Promise<Blob>;
+}
