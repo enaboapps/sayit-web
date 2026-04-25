@@ -11,7 +11,7 @@ import { useTTS } from '@/lib/hooks/useTTS';
 import { usePhraseBoardData } from '@/lib/hooks/usePhraseBoardData';
 import { useMessageCapture } from '@/lib/hooks/useMessageCapture';
 import { downloadBlob, filenameForBoard } from '@/lib/open-board-format/export';
-import { localOpenBoardAdapter } from '@/lib/open-board-format/localAdapter';
+import { aacProcessorsOpenBoardAdapter } from '@/lib/open-board-format/aacProcessorsAdapter';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
@@ -102,7 +102,7 @@ export default function PhrasesInterface() {
 
   const handleExportCurrentBoard = () => {
     if (!boardData.selectedBoard) return;
-    const blob = new Blob([JSON.stringify(localOpenBoardAdapter.exportBoard(boardData.selectedBoard), null, 2)], {
+    const blob = new Blob([JSON.stringify(aacProcessorsOpenBoardAdapter.exportBoard(boardData.selectedBoard), null, 2)], {
       type: 'application/json',
     });
     downloadBlob(
@@ -113,7 +113,7 @@ export default function PhrasesInterface() {
 
   const handleExportAllBoards = async () => {
     if (boardData.boards.length === 0) return;
-    const blob = await localOpenBoardAdapter.exportBoards(boardData.boards);
+    const blob = await aacProcessorsOpenBoardAdapter.exportBoards(boardData.boards);
     downloadBlob(blob, 'sayit-boards.obz');
   };
 

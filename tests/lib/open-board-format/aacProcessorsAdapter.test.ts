@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { localOpenBoardAdapter } from '@/lib/open-board-format/localAdapter';
+import { aacProcessorsOpenBoardAdapter } from '@/lib/open-board-format/aacProcessorsAdapter';
 import type { BoardSummary } from '@/app/components/phrases/types';
 
 const validBoard = {
@@ -42,11 +42,11 @@ const makeUploadFile = (name: string, text: string): File => ({
   text: async () => text,
 } as File);
 
-describe('localOpenBoardAdapter', () => {
-  it('parses .obf uploads', async () => {
+describe('aacProcessorsOpenBoardAdapter', () => {
+  it('parses .obf uploads with AACProcessors', async () => {
     const file = makeUploadFile('adapter.obf', JSON.stringify(validBoard));
 
-    const parsed = await localOpenBoardAdapter.parseUpload(file);
+    const parsed = await aacProcessorsOpenBoardAdapter.parseUpload(file);
 
     expect(parsed.boards).toHaveLength(1);
     expect(parsed.boards[0].name).toBe('Adapter Board');
@@ -54,8 +54,8 @@ describe('localOpenBoardAdapter', () => {
 
   it('normalizes parsed boards in grid order', async () => {
     const file = makeUploadFile('adapter.obf', JSON.stringify(validBoard));
-    const parsed = await localOpenBoardAdapter.parseUpload(file);
-    const normalized = localOpenBoardAdapter.normalize(parsed);
+    const parsed = await aacProcessorsOpenBoardAdapter.parseUpload(file);
+    const normalized = aacProcessorsOpenBoardAdapter.normalize(parsed);
 
     expect(normalized.boards[0].phrases.map((phrase) => phrase.text)).toEqual([
       'Second',
@@ -64,14 +64,14 @@ describe('localOpenBoardAdapter', () => {
   });
 
   it('exports boards as open-board-0.1', () => {
-    const exported = localOpenBoardAdapter.exportBoard(exportBoard);
+    const exported = aacProcessorsOpenBoardAdapter.exportBoard(exportBoard);
 
     expect(exported.format).toBe('open-board-0.1');
     expect(exported.name).toBe('Needs');
   });
 
   it('exports board sets as .obz packages with a manifest', async () => {
-    const blob = await localOpenBoardAdapter.exportBoards([exportBoard]);
+    const blob = await aacProcessorsOpenBoardAdapter.exportBoards([exportBoard]);
     const zip = await JSZip.loadAsync(await blobToArrayBuffer(blob));
     const manifest = JSON.parse(await zip.file('manifest.json')!.async('text'));
 

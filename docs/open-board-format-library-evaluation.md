@@ -2,16 +2,16 @@
 
 ## Summary
 
-PR #599 adds Open Board Format import and export support with a local TypeScript implementation backed by `jszip`. The local implementation is intentionally narrow: it supports `.obf` JSON files, `.obz` packages, SayIt's board and phrase model, Convex symbol uploads, user-facing import warnings, and deterministic `.obf`/`.obz` export.
+PR #599 adds Open Board Format import and export support. The implementation uses `@willwade/aac-processors` to parse `.obf` and `.obz` uploads into an AAC tree, then maps that parsed tree into SayIt's board and phrase model.
 
-`@willwade/aac-processors` is a relevant future candidate because it is a TypeScript AAC processing library with OBF/OBZ support and a browser-safe entry point. It should not be added as a dependency in this PR until its license position is clarified.
+SayIt still keeps app-specific normalization and export code locally because Convex writes, symbol uploads, import warnings, and deterministic SayIt export behavior are product-specific.
 
 ## Current Implementation
 
-SayIt's current implementation keeps the supported surface small and app-specific:
+SayIt's current implementation keeps the supported surface small while delegating file parsing to AACProcessors:
 
-- Parse `.obf` files directly as JSON.
-- Parse `.obz` files with `jszip`, requiring `manifest.json` and manifest-listed boards.
+- Parse `.obf` and `.obz` uploads with `@willwade/aac-processors` `ObfProcessor.loadIntoTree()`.
+- Convert the resulting `AACTree` pages into SayIt's internal `ParsedOpenBoardPackage`.
 - Normalize OBF boards into SayIt boards and phrases.
 - Upload embedded/package image assets through existing Convex storage upload URLs.
 - Warn and skip unsupported remote image imports, sounds, duplicate phrases, hidden buttons, and linked-board navigation behavior.
@@ -20,7 +20,7 @@ SayIt's current implementation keeps the supported surface small and app-specifi
 
 ## AACProcessors Capabilities
 
-`@willwade/aac-processors` is technically relevant for this area:
+`@willwade/aac-processors` is used for upload parsing in this PR because:
 
 - It provides a browser-safe entry point.
 - It lists OBF/OBZ as supported formats.
@@ -33,24 +33,20 @@ References:
 - Package metadata: https://raw.githubusercontent.com/willwade/AACProcessors-nodejs/main/package.json
 - Repository license file: https://raw.githubusercontent.com/willwade/AACProcessors-nodejs/main/LICENSE
 
-## Blockers
+## License And Permission
 
-The package should not be added to SayIt until these issues are resolved:
+The package metadata reports `MIT`, while the GitHub repository license file is GPL-3.0. The project owner has confirmed they know the maintainer and have permission to use the package in SayIt.
 
-- The npm/package metadata reports `MIT`, while the GitHub repository license file is GPL-3.0. SayIt is closed-source, so GPL-3.0 compatibility is a blocker without explicit legal approval or maintainer clarification.
-- The package has a broad dependency graph, including SQLite-related packages. The browser entry may avoid Node-only runtime paths, but this still needs bundle and build validation before adoption.
+This PR records that permission context and intentionally adds the package as a runtime dependency. If the repository license metadata is later corrected upstream, no SayIt code change should be required.
+
+## Remaining Considerations
+
+- The package has a broad dependency graph, including SQLite-related packages used by other AAC formats. SayIt currently imports only the OBF processor path, and the Next.js production build must remain part of verification.
 - SayIt still needs app-specific behavior regardless of parser library: Convex board creation, symbol upload handling, warnings, duplicate handling, linked-board deferral, and UI integration.
+- Export remains local in this PR to preserve SayIt's deterministic OBF/OBZ output and URL-based symbol export behavior.
 
 ## Recommendation
 
-Keep the current local OBF/OBZ implementation in PR #599 and do not install `@willwade/aac-processors` as a runtime dependency in this PR.
+Use `@willwade/aac-processors` for `.obf`/`.obz` parsing in PR #599 through `aacProcessorsOpenBoardAdapter`.
 
-PR #599 should include an adapter boundary around the current implementation so a future PR can swap in `@willwade/aac-processors` if the license is clarified and bundle/build impact is acceptable.
-
-After PR #599 merges, open a follow-up issue to:
-
-- confirm the package license with the maintainer or legal review,
-- prototype an adapter-backed implementation,
-- compare behavior against the current local adapter,
-- measure Next.js client bundle impact,
-- decide whether broader AAC import support belongs in SayIt.
+Keep SayIt's local normalization and export layers behind the adapter boundary so future work can expand format support without rewriting Convex/UI integration.

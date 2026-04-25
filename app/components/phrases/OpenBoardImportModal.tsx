@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import { Button } from '@/app/components/ui/Button';
-import { localOpenBoardAdapter } from '@/lib/open-board-format/localAdapter';
+import { aacProcessorsOpenBoardAdapter } from '@/lib/open-board-format/aacProcessorsAdapter';
 import type { NormalizedOpenBoardImport } from '@/lib/open-board-format/types';
 
 interface OpenBoardImportModalProps {
@@ -49,8 +49,8 @@ export default function OpenBoardImportModal({ isOpen, onClose, onImported }: Op
 
     setIsParsing(true);
     try {
-      const parsed = await localOpenBoardAdapter.parseUpload(file);
-      setNormalized(localOpenBoardAdapter.normalize(parsed));
+      const parsed = await aacProcessorsOpenBoardAdapter.parseUpload(file);
+      setNormalized(aacProcessorsOpenBoardAdapter.normalize(parsed));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not parse Open Board file.');
     } finally {
