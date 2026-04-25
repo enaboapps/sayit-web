@@ -118,7 +118,7 @@ export default function NavigateTile({
       ? 'bg-surface border-l-4 border-blue-400'
       : isBroken
         ? 'bg-surface border-2 border-dashed border-border opacity-60 cursor-not-allowed'
-        : 'bg-primary-50 dark:bg-primary-950/40 border-2 border-primary-400'}
+        : 'bg-surface border-2 border-primary-400'}
         ${className}`}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
