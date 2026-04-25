@@ -6,7 +6,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import BackButton from '@/app/components/ui/BackButton';
+import PageHeader from '@/app/components/ui/PageHeader';
 
 export default function AddBoardPage() {
   const [name, setName] = useState('');
@@ -45,10 +45,8 @@ export default function AddBoardPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageHeader title="Create New Board" backHref="/" />
       <div className="max-w-2xl mx-auto p-6">
-        <BackButton />
-        <h1 className="text-2xl font-bold text-foreground mb-6">Create New Board</h1>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-1">

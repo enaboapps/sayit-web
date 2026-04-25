@@ -7,7 +7,7 @@ import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import BackButton from '@/app/components/ui/BackButton';
+import PageHeader from '@/app/components/ui/PageHeader';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import { SymbolSelector } from '@/app/components/symbols';
 import { ChevronDownIcon, UserGroupIcon, CheckIcon } from '@heroicons/react/24/outline';
@@ -87,11 +87,9 @@ function AddPhraseForm() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageHeader title="Add New Phrase" backHref="/" />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
-        <BackButton />
-        <h1 className="text-3xl font-bold text-foreground mt-4">Add New Phrase</h1>
-
-        <form onSubmit={handleSubmit} className="bg-surface shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-3xl p-8 mt-6">
+        <form onSubmit={handleSubmit} className="bg-surface shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-3xl p-8">
           {/* Board Picker Button */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-text-secondary mb-2">
