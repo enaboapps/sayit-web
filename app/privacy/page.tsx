@@ -1,22 +1,19 @@
 'use client';
 
-import BackButton from '@/app/components/ui/BackButton';
+import PageHeader from '@/app/components/ui/PageHeader';
 import { motion } from 'framer-motion';
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-screen bg-background py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <BackButton />
-
+    <div className="min-h-screen bg-background">
+      <PageHeader title="Privacy Policy" backHref="/" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 p-8"
         >
-          <h1 className="text-3xl font-bold text-foreground mb-6">Privacy Policy</h1>
-
           <div className="prose prose-slate max-w-none">
             <p className="text-text-secondary mb-6">
               <strong>Effective Date:</strong> {new Date().toLocaleDateString()}<br />

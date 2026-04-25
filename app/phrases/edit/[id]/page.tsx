@@ -8,7 +8,7 @@ import { TrashIcon } from '@heroicons/react/24/outline';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
-import BackButton from '@/app/components/ui/BackButton';
+import PageHeader from '@/app/components/ui/PageHeader';
 import { SymbolSelector } from '@/app/components/symbols';
 import { useAuth } from '@/app/contexts/AuthContext';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -117,11 +117,9 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="min-h-screen bg-background">
+      <PageHeader title="Edit Phrase" backHref="/" />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <BackButton />
-        <h1 className="text-3xl font-bold text-foreground mt-4">Edit Phrase</h1>
-
-        <form onSubmit={handleSubmit} className="bg-surface shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-3xl p-8 mt-6">
+        <form onSubmit={handleSubmit} className="bg-surface shadow-2xl hover:shadow-3xl transition-all duration-300 rounded-3xl p-8">
           <Input
             id="text"
             type="text"
