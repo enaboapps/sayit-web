@@ -76,7 +76,7 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
               key="phrases"
               id="aac-tab-phrases"
               role="tabpanel"
-              className="absolute inset-0"
+              className="absolute inset-0 flex flex-col"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
