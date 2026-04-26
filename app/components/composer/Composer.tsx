@@ -16,6 +16,7 @@ import ActionPromptBanner from '../typing/ActionPromptBanner';
 import TabBar from '../typing-tabs/TabBar';
 import TabManagementSheet from '../typing-tabs/TabManagementSheet';
 import LiveTypingBottomSheet from '../live-typing/LiveTypingBottomSheet';
+import CopyPasteBottomSheet from './CopyPasteBottomSheet';
 import type { ComposerProps } from './types';
 
 export default function Composer({
@@ -38,6 +39,7 @@ export default function Composer({
   const [showTabList, setShowTabList] = useState(false);
   const [showLiveTypingSheet, setShowLiveTypingSheet] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isCopyPasteOpen, setCopyPasteOpen] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { settings } = useSettings();
@@ -104,6 +106,28 @@ export default function Composer({
     }
     setShowLiveTypingSheet(true);
   }, [actions]);
+
+  // Insert clipboard text at the textarea caret (or append if no selection).
+  // Routes through `handleTextChange` so scroll capture, undo reset, and the
+  // tab-store write all run as they would for any other edit.
+  const handleClipboardPaste = useCallback((pasted: string) => {
+    const el = inputRef.current;
+    if (!el) {
+      handleTextChange(currentText + pasted);
+      return;
+    }
+    const start = el.selectionStart ?? currentText.length;
+    const end = el.selectionEnd ?? currentText.length;
+    const next = currentText.slice(0, start) + pasted + currentText.slice(end);
+    handleTextChange(next);
+    // After React rerenders with the new value, restore the caret to the end
+    // of the inserted region so the user can continue typing where they left off.
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + pasted.length;
+      el.setSelectionRange(caret, caret);
+    });
+  }, [currentText, handleTextChange]);
 
   // Banner content — portaled on mobile, inline on desktop
   const bannerContent = (
@@ -178,6 +202,7 @@ export default function Composer({
               suggestionsCount={suggestionsCount}
               onSuggestionsOpen={() => setShowSuggestions(true)}
               suggestionsEnabled={!!replySuggestions && !!actions.user && actions.isOnline}
+              onCopyPasteOpen={() => setCopyPasteOpen(true)}
             />
             {replySuggestions && (
               <SuggestionsPopover
@@ -225,6 +250,14 @@ export default function Composer({
           onEndSession={async () => { await actions.endLiveTypingSession(); }}
         />
       )}
+
+      {/* Copy / Paste sheet */}
+      <CopyPasteBottomSheet
+        isOpen={isCopyPasteOpen}
+        onClose={() => setCopyPasteOpen(false)}
+        currentText={currentText}
+        onPaste={handleClipboardPaste}
+      />
     </>
   );
 }
