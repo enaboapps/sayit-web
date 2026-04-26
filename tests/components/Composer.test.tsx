@@ -101,6 +101,20 @@ jest.mock('@/app/components/ui/BottomSheet', () => ({
   default: () => null,
 }));
 
+// Stub the copy/paste sheet so we can observe when it opens and trigger paste
+// without dealing with the real clipboard or framer-motion lifecycle.
+jest.mock('@/app/components/composer/CopyPasteBottomSheet', () => ({
+  __esModule: true,
+  default: ({ isOpen, onPaste }: { isOpen: boolean; onPaste: (s: string) => void }) =>
+    isOpen ? (
+      <div data-testid="copy-paste-sheet">
+        <button type="button" onClick={() => onPaste('PASTED')}>
+          Trigger Paste
+        </button>
+      </div>
+    ) : null,
+}));
+
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
@@ -391,5 +405,40 @@ describe('Composer', () => {
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
     // The toolbar is in the portal (MobileDockPortal renders children), not a second set inline
     expect(screen.getAllByRole('button', { name: 'Clear' })).toHaveLength(1);
+  });
+
+  it('opens the copy/paste sheet when the sidebar tile is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    expect(screen.queryByTestId('copy-paste-sheet')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Copy and paste' }));
+
+    expect(screen.getByTestId('copy-paste-sheet')).toBeInTheDocument();
+  });
+
+  it('inserts pasted clipboard text at the textarea caret position', async () => {
+    const user = userEvent.setup();
+
+    render(<ControlledComposer initialValue="Hello world" />);
+
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    textarea.focus();
+    // Place caret between "Hello" and " world".
+    textarea.setSelectionRange(5, 5);
+    fireEvent.select(textarea);
+
+    await user.click(screen.getByRole('button', { name: 'Copy and paste' }));
+    await user.click(screen.getByRole('button', { name: 'Trigger Paste' }));
+
+    expect(textarea).toHaveValue('HelloPASTED world');
   });
 });

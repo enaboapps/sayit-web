@@ -7,6 +7,7 @@ import {
   ArrowPathIcon,
   ShareIcon,
   BookmarkIcon,
+  ClipboardIcon,
   LightBulbIcon,
   SpeakerWaveIcon,
   StopIcon,
@@ -37,6 +38,8 @@ interface ComposerSidebarProps {
   suggestionsCount: number;
   onSuggestionsOpen: () => void;
   suggestionsEnabled: boolean;
+  // Copy / Paste
+  onCopyPasteOpen: () => void;
 }
 
 // Shared base classes — every icon tile fills its grid cell as a square.
@@ -64,6 +67,7 @@ export default function ComposerSidebar({
   suggestionsCount,
   onSuggestionsOpen,
   suggestionsEnabled,
+  onCopyPasteOpen,
 }: ComposerSidebarProps) {
   const [showToneSheet, setShowToneSheet] = useState(false);
   const speakDisabled = !isAvailable || !currentText.trim();
@@ -169,6 +173,18 @@ export default function ComposerSidebar({
       </button>
     );
   }
+
+  // Copy / Paste — pink tile (a fifth accent so it's distinct from the others)
+  iconButtons.push(
+    <button
+      key="copy-paste"
+      onClick={onCopyPasteOpen}
+      className={`${TILE_BASE} bg-pink-950/40 text-pink-400 hover:bg-pink-600 hover:text-white`}
+      aria-label="Copy and paste"
+    >
+      <ClipboardIcon className="w-5 h-5" />
+    </button>
+  );
 
   // Balance the 2-column grid when an odd number of buttons rendered.
   if (iconButtons.length % 2 === 1) {
