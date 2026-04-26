@@ -31,11 +31,6 @@ jest.mock('@/app/components/home/GuestCommunication', () => ({
   default: () => <div>Guest Communication</div>,
 }));
 
-jest.mock('@/app/components/home/HomeFeatures', () => ({
-  __esModule: true,
-  default: () => <div>Home Features</div>,
-}));
-
 jest.mock('@/app/components/home/PhrasesInterface', () => ({
   __esModule: true,
   default: () => <div>Phrases Interface</div>,
@@ -74,7 +69,7 @@ describe('Home', () => {
     render(<Home />);
 
     expect(screen.getByText('Guest Communication')).toBeInTheDocument();
-    expect(screen.getByText('Home Features')).toBeInTheDocument();
+    expect(screen.queryByText('Phrases Interface')).not.toBeInTheDocument();
   });
 
   it('shows the signed-in experience when startup data is available', () => {
