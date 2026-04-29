@@ -18,6 +18,9 @@ const mockDb = {
 
 const mockCtx = {
   db: mockDb,
+  storage: {
+    delete: jest.fn(),
+  },
   auth: {
     getUserIdentity: jest.fn(),
   },
@@ -354,6 +357,27 @@ describe('phraseBoards', () => {
       expect(mockDb.delete).toHaveBeenCalledWith('phrase-1');
       expect(mockDb.delete).toHaveBeenCalledWith('pbp-1');
       expect(mockDb.delete).toHaveBeenCalledWith('board-1');
+    });
+
+    test('deletes audio storage for contained audio tiles', async () => {
+      const tilesOnBoard = [
+        {
+          _id: 'tile-audio',
+          boardId: 'board-1',
+          kind: 'audio',
+          audioStorageId: 'storage-1',
+        },
+      ];
+
+      for (const tile of tilesOnBoard) {
+        if (tile.kind === 'audio' && tile.audioStorageId) {
+          await mockCtx.storage.delete(tile.audioStorageId);
+        }
+        await mockDb.delete(tile._id);
+      }
+
+      expect(mockCtx.storage.delete).toHaveBeenCalledWith('storage-1');
+      expect(mockDb.delete).toHaveBeenCalledWith('tile-audio');
     });
   });
 

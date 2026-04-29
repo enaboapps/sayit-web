@@ -15,6 +15,7 @@ interface SwipeableBoardNavigatorProps {
   // Action button props
   onAddPhrase?: () => void;
   onAddNavigateTile?: () => void;
+  onAddAudioTile?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
   onEditBoard?: () => void;
@@ -30,6 +31,7 @@ export default function SwipeableBoardNavigator({
   children,
   onAddPhrase,
   onAddNavigateTile,
+  onAddAudioTile,
   onAddBoard,
   onEdit,
   onEditBoard,
@@ -139,6 +141,7 @@ export default function SwipeableBoardNavigator({
       <BoardActionButtons
         onAddPhrase={onAddPhrase}
         onAddNavigateTile={onAddNavigateTile}
+        onAddAudioTile={onAddAudioTile}
         onAddBoard={onAddBoard}
         onEdit={onEdit}
         onEditBoard={onEditBoard}

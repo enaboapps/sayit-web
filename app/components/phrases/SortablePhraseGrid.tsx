@@ -28,6 +28,7 @@ interface SortableTileItemProps {
   isPhraseSpeaking: boolean;
   onNavigateTap: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
   onNavigateEdit: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
+  onAudioEdit: (tile: Extract<BoardTileSummary, { kind: 'audio' }>) => void;
 }
 
 function SortableTileItem(props: SortableTileItemProps) {
@@ -53,6 +54,7 @@ function SortableTileItem(props: SortableTileItemProps) {
         isPhraseSpeaking={props.isPhraseSpeaking}
         onNavigateTap={props.onNavigateTap}
         onNavigateEdit={props.onNavigateEdit}
+        onAudioEdit={props.onAudioEdit}
         isEditMode
       />
     </div>
@@ -69,6 +71,7 @@ interface SortablePhraseGridProps {
   onPhraseEdit: (phrase: PhraseSummary) => void;
   onNavigateTap: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
   onNavigateEdit: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
+  onAudioEdit: (tile: Extract<BoardTileSummary, { kind: 'audio' }>) => void;
   /** Receives ordered boardTile ids; caller should call api.boardTiles.reorderTiles. */
   onReorder: (orderedTileIds: string[]) => void;
   extraTile?: React.ReactNode;
@@ -84,6 +87,7 @@ export default function SortablePhraseGrid({
   onPhraseEdit,
   onNavigateTap,
   onNavigateEdit,
+  onAudioEdit,
   onReorder,
   extraTile,
   textSizePx,
@@ -131,6 +135,7 @@ export default function SortablePhraseGrid({
                 isPhraseSpeaking={isPhraseSpeaking}
                 onNavigateTap={onNavigateTap}
                 onNavigateEdit={onNavigateEdit}
+                onAudioEdit={onAudioEdit}
               />
             );
           })}

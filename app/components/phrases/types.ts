@@ -29,6 +29,16 @@ export type BoardTileSummary =
       targetBoardId: string;
       /** Live name of the target board; null when target is missing/deleted. */
       targetBoardName: string | null;
+    }
+  | {
+      id: string;
+      kind: 'audio';
+      position: number;
+      audioLabel: string;
+      audioUrl: string | null;
+      audioMimeType: string;
+      audioDurationMs: number;
+      audioByteSize: number;
     };
 
 export interface BoardSummary {

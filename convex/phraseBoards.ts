@@ -35,6 +35,19 @@ type PolymorphicBoardTile =
       kind: 'navigate';
       targetBoardId: Id<'phraseBoards'>;
       targetBoardName: string | null;
+    }
+  | {
+      _id: Id<'boardTiles'>;
+      boardId: Id<'phraseBoards'>;
+      position: number;
+      kind: 'audio';
+      audioLabel: string;
+      /** null when the underlying storage object is missing/unrecoverable. */
+      audioStorageId: Id<'_storage'> | null;
+      audioUrl: string | null;
+      audioMimeType: string;
+      audioDurationMs: number;
+      audioByteSize: number;
     };
 
 function viewerCanReadBoard(
@@ -81,6 +94,46 @@ async function loadHydratedBoardTiles(
           phrase,
         });
       }
+      continue;
+    }
+
+    if (row.kind === 'audio') {
+      // Defensive: surface a broken-state tile if the row is missing one or
+      // more required audio fields. Renderer keys on audioUrl===null.
+      if (
+        !row.audioLabel ||
+        !row.audioStorageId ||
+        !row.audioMimeType ||
+        typeof row.audioDurationMs !== 'number' ||
+        typeof row.audioByteSize !== 'number'
+      ) {
+        tiles.push({
+          _id: row._id,
+          boardId: row.boardId,
+          position: row.position,
+          kind: 'audio',
+          audioLabel: row.audioLabel ?? 'Audio tile',
+          audioStorageId: null,
+          audioUrl: null,
+          audioMimeType: row.audioMimeType ?? '',
+          audioDurationMs: row.audioDurationMs ?? 0,
+          audioByteSize: row.audioByteSize ?? 0,
+        });
+        continue;
+      }
+
+      tiles.push({
+        _id: row._id,
+        boardId: row.boardId,
+        position: row.position,
+        kind: 'audio',
+        audioLabel: row.audioLabel,
+        audioStorageId: row.audioStorageId,
+        audioUrl: await ctx.storage.getUrl(row.audioStorageId),
+        audioMimeType: row.audioMimeType,
+        audioDurationMs: row.audioDurationMs,
+        audioByteSize: row.audioByteSize,
+      });
       continue;
     }
 
@@ -398,6 +451,9 @@ export const deletePhraseBoard = mutation({
       .collect();
 
     for (const tile of tilesOnBoard) {
+      if (tile.kind === 'audio' && tile.audioStorageId) {
+        await ctx.storage.delete(tile.audioStorageId);
+      }
       await ctx.db.delete(tile._id);
       if (tile.kind === 'phrase' && tile.phraseId) {
         await ctx.db.delete(tile.phraseId);

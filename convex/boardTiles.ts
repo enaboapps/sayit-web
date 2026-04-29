@@ -1,35 +1,13 @@
 import { v } from 'convex/values';
-import { mutation, query, type QueryCtx } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
-
-// ---------------------------------------------------------------------------
-// Access helpers
-// ---------------------------------------------------------------------------
-
-type BoardAccess = {
-  board: Doc<'phraseBoards'>;
-  isOwner: boolean;
-  canEdit: boolean;
-  canRead: boolean;
-};
-
-async function getBoardAccess(
-  ctx: QueryCtx,
-  boardId: Id<'phraseBoards'>,
-  userId: string
-): Promise<BoardAccess | null> {
-  const board = await ctx.db.get(boardId);
-  if (!board) return null;
-
-  const isOwner = board.userId === userId;
-  const isAssignedClient = board.forClientId === userId;
-  const canEdit =
-    isOwner || (isAssignedClient && board.clientAccessLevel === 'edit');
-  const canRead = isOwner || isAssignedClient;
-
-  return { board, isOwner, canEdit, canRead };
-}
+import { getBoardAccess } from './boardAccess';
+import {
+  normaliseAudioMimeType,
+  validateAudioLabel,
+  validateAudioMetadata,
+} from './audioLimits';
 
 // ---------------------------------------------------------------------------
 // Query: list tiles on a board (polymorphic, hydrated)
@@ -50,6 +28,19 @@ export type ListedBoardTile =
       kind: 'navigate';
       targetBoardId: Id<'phraseBoards'>;
       targetBoardName: string | null;
+    }
+  | {
+      _id: Id<'boardTiles'>;
+      boardId: Id<'phraseBoards'>;
+      position: number;
+      kind: 'audio';
+      audioLabel: string;
+      /** null when the underlying storage object is missing/unrecoverable. */
+      audioStorageId: Id<'_storage'> | null;
+      audioUrl: string | null;
+      audioMimeType: string;
+      audioDurationMs: number;
+      audioByteSize: number;
     };
 
 export const listByBoard = query({
@@ -80,6 +71,47 @@ export const listByBoard = query({
             phrase: phrase ?? null,
           };
         }
+        if (row.kind === 'audio') {
+          // Defensive: a row could be missing one or more audio fields if it
+          // was written by an older client or partially hydrated. Surface a
+          // broken-state tile (audioUrl=null, audioStorageId=null) — the
+          // renderer keys on audioUrl===null and shows the disabled affordance.
+          if (
+            !row.audioLabel ||
+            !row.audioStorageId ||
+            !row.audioMimeType ||
+            typeof row.audioDurationMs !== 'number' ||
+            typeof row.audioByteSize !== 'number'
+          ) {
+            return {
+              _id: row._id,
+              boardId: row.boardId,
+              position: row.position,
+              kind: 'audio',
+              audioLabel: row.audioLabel ?? 'Audio tile',
+              audioStorageId: null,
+              audioUrl: null,
+              audioMimeType: row.audioMimeType ?? '',
+              audioDurationMs: row.audioDurationMs ?? 0,
+              audioByteSize: row.audioByteSize ?? 0,
+            };
+          }
+
+          const audioUrl = await ctx.storage.getUrl(row.audioStorageId);
+          return {
+            _id: row._id,
+            boardId: row.boardId,
+            position: row.position,
+            kind: 'audio',
+            audioLabel: row.audioLabel,
+            audioStorageId: row.audioStorageId,
+            audioUrl,
+            audioMimeType: row.audioMimeType,
+            audioDurationMs: row.audioDurationMs,
+            audioByteSize: row.audioByteSize,
+          };
+        }
+
         // kind === 'navigate'
         const targetBoardId = row.targetBoardId;
         if (!targetBoardId) {
@@ -112,6 +144,110 @@ export const listByBoard = query({
     );
 
     return hydrated;
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Mutation: add an audio-kind tile
+// ---------------------------------------------------------------------------
+
+export const addAudioTile = mutation({
+  args: {
+    boardId: v.id('phraseBoards'),
+    audioLabel: v.string(),
+    audioStorageId: v.id('_storage'),
+    audioMimeType: v.string(),
+    audioDurationMs: v.number(),
+    audioByteSize: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const access = await getBoardAccess(ctx, args.boardId, identity.subject);
+    if (!access) throw new Error('Board not found');
+    if (!access.canEdit) throw new Error('Unauthorized - board');
+
+    const audioLabel = validateAudioLabel(args.audioLabel);
+    validateAudioMetadata(args);
+    // Strip codec parameters before persisting (keeps stored values uniform
+    // across browsers — Chromium emits "audio/webm;codecs=opus", Safari emits
+    // "audio/mp4;codecs=mp4a.40.2", etc.).
+    const audioMimeType = normaliseAudioMimeType(args.audioMimeType);
+
+    const existingTiles = await ctx.db
+      .query('boardTiles')
+      .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
+      .collect();
+
+    return await ctx.db.insert('boardTiles', {
+      boardId: args.boardId,
+      position: existingTiles.length,
+      kind: 'audio',
+      audioLabel,
+      audioStorageId: args.audioStorageId,
+      audioMimeType,
+      audioDurationMs: args.audioDurationMs,
+      audioByteSize: args.audioByteSize,
+    });
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Mutation: update an audio-kind tile
+// ---------------------------------------------------------------------------
+
+export const updateAudioTile = mutation({
+  args: {
+    tileId: v.id('boardTiles'),
+    audioLabel: v.optional(v.string()),
+    audioStorageId: v.optional(v.id('_storage')),
+    audioMimeType: v.optional(v.string()),
+    audioDurationMs: v.optional(v.number()),
+    audioByteSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) throw new Error('Tile not found');
+    if (tile.kind !== 'audio') throw new Error('Tile is not an audio tile');
+
+    const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
+    if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    const patch: Partial<Doc<'boardTiles'>> = {};
+
+    if (args.audioLabel !== undefined) {
+      patch.audioLabel = validateAudioLabel(args.audioLabel);
+    }
+
+    const isReplacingAudio = args.audioStorageId !== undefined;
+    if (isReplacingAudio) {
+      if (
+        args.audioMimeType === undefined ||
+        args.audioDurationMs === undefined ||
+        args.audioByteSize === undefined
+      ) {
+        throw new Error('Replacement audio metadata is required');
+      }
+      validateAudioMetadata({
+        audioMimeType: args.audioMimeType,
+        audioDurationMs: args.audioDurationMs,
+        audioByteSize: args.audioByteSize,
+      });
+      patch.audioStorageId = args.audioStorageId;
+      patch.audioMimeType = normaliseAudioMimeType(args.audioMimeType);
+      patch.audioDurationMs = args.audioDurationMs;
+      patch.audioByteSize = args.audioByteSize;
+    }
+
+    await ctx.db.patch(args.tileId, patch);
+
+    if (isReplacingAudio && tile.audioStorageId) {
+      await ctx.storage.delete(tile.audioStorageId);
+    }
   },
 });
 
@@ -291,6 +427,10 @@ export const deleteTile = mutation({
 
     const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
     if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    if (tile.kind === 'audio' && tile.audioStorageId) {
+      await ctx.storage.delete(tile.audioStorageId);
+    }
 
     await ctx.db.delete(args.tileId);
   },

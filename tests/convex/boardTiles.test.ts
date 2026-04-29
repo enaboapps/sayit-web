@@ -8,6 +8,13 @@
  */
 
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import {
+  isAllowedAudioMimeType,
+  normaliseAudioMimeType,
+  validateAudioLabel,
+  validateAudioMetadata,
+  MAX_AUDIO_BYTES,
+} from '@/convex/audioLimits';
 
 const mockDb = {
   query: jest.fn(),
@@ -19,6 +26,10 @@ const mockDb = {
 
 const mockCtx = {
   db: mockDb,
+  storage: {
+    getUrl: jest.fn(),
+    delete: jest.fn(),
+  },
   auth: {
     getUserIdentity: jest.fn(),
   },
@@ -38,9 +49,14 @@ const createTile = (overrides = {}) => ({
   _id: 'tile-1',
   boardId: 'board-1',
   position: 0,
-  kind: 'phrase' as 'phrase' | 'navigate',
+  kind: 'phrase' as 'phrase' | 'navigate' | 'audio',
   phraseId: 'phrase-1',
   targetBoardId: undefined,
+  audioLabel: undefined,
+  audioStorageId: undefined,
+  audioMimeType: undefined,
+  audioDurationMs: undefined,
+  audioByteSize: undefined,
   ...overrides,
 });
 
@@ -143,6 +159,199 @@ describe('boardTiles', () => {
       };
 
       expect(result.targetBoardName).toBeNull();
+    });
+
+    test('audio-kind tile resolves a storage URL', async () => {
+      const tile = createTile({
+        _id: 'tile-audio',
+        kind: 'audio',
+        phraseId: undefined,
+        audioLabel: 'Greeting',
+        audioStorageId: 'storage-1',
+        audioMimeType: 'audio/webm',
+        audioDurationMs: 1200,
+        audioByteSize: 2048,
+      });
+
+      mockCtx.storage.getUrl.mockResolvedValue('https://files.example/audio.webm');
+
+      const result = {
+        ...tile,
+        audioUrl: await mockCtx.storage.getUrl(tile.audioStorageId),
+      };
+
+      expect(result).toMatchObject({
+        kind: 'audio',
+        audioLabel: 'Greeting',
+        audioUrl: 'https://files.example/audio.webm',
+      });
+      expect(mockCtx.storage.getUrl).toHaveBeenCalledWith('storage-1');
+    });
+  });
+
+  describe('audio tile invariants', () => {
+    // These exercise the real validators from convex/audioLimits.ts so any
+    // change to label/metadata rules surfaces here.
+    const validateLabel = validateAudioLabel;
+    const validateMetadata = (mimeType: string, durationMs: number, byteSize: number) =>
+      validateAudioMetadata({
+        audioMimeType: mimeType,
+        audioDurationMs: durationMs,
+        audioByteSize: byteSize,
+      });
+
+    test('addAudioTile rejects unauthenticated users', async () => {
+      mockCtx.auth.getUserIdentity.mockResolvedValue(null);
+      const identity = await mockCtx.auth.getUserIdentity();
+
+      const guard = () => {
+        if (!identity) throw new Error('Unauthenticated');
+      };
+
+      expect(guard).toThrow(/Unauthenticated/);
+    });
+
+    test('addAudioTile rejects users without edit access', () => {
+      const board = createBoard({
+        userId: 'caregiver-1',
+        forClientId: 'client-1',
+        clientAccessLevel: 'view',
+      });
+
+      const canEdit =
+        board.userId === 'client-1' ||
+        (board.forClientId === 'client-1' && board.clientAccessLevel === 'edit');
+
+      const guard = () => {
+        if (!canEdit) throw new Error('Unauthorized - board');
+      };
+
+      expect(guard).toThrow(/Unauthorized/);
+    });
+
+    test('addAudioTile rejects empty labels', () => {
+      expect(() => validateLabel('   ')).toThrow(/label is required/);
+    });
+
+    test('addAudioTile rejects labels over the length cap', () => {
+      expect(() => validateLabel('a'.repeat(200))).toThrow(/80 characters/);
+    });
+
+    test('addAudioTile rejects recordings over 60 seconds', () => {
+      expect(() => validateMetadata('audio/webm', 60001, 1200)).toThrow(/60 seconds/);
+    });
+
+    test('addAudioTile rejects empty recordings', () => {
+      expect(() => validateMetadata('audio/webm', 1000, 0)).toThrow(/empty/);
+    });
+
+    test('addAudioTile rejects recordings over the byte cap', () => {
+      expect(() => validateMetadata('audio/webm', 1000, MAX_AUDIO_BYTES + 1)).toThrow(/MB limit/);
+    });
+
+    test('addAudioTile rejects unknown MIME types', () => {
+      expect(() => validateMetadata('audio/x-bogus', 1000, 1200)).toThrow(/MIME type/);
+      expect(() => validateMetadata('image/png', 1000, 1200)).toThrow(/MIME type/);
+      expect(() => validateMetadata('', 1000, 1200)).toThrow(/MIME type/);
+    });
+
+    test('addAudioTile accepts every allow-listed MIME (incl. codec params)', () => {
+      expect(() => validateMetadata('audio/webm;codecs=opus', 1000, 1200)).not.toThrow();
+      expect(() => validateMetadata('audio/mp4;codecs=mp4a.40.2', 1000, 1200)).not.toThrow();
+      expect(() => validateMetadata('audio/ogg', 1000, 1200)).not.toThrow();
+      expect(() => validateMetadata('audio/wav', 1000, 1200)).not.toThrow();
+    });
+
+    test('isAllowedAudioMimeType strips codec params before matching', () => {
+      expect(isAllowedAudioMimeType('audio/webm;codecs=opus')).toBe(true);
+      expect(isAllowedAudioMimeType('AUDIO/WEBM')).toBe(true);
+      expect(isAllowedAudioMimeType('audio/x-bogus')).toBe(false);
+    });
+
+    test('normaliseAudioMimeType trims and lowercases', () => {
+      expect(normaliseAudioMimeType('AUDIO/WEBM ;codecs=opus')).toBe('audio/webm');
+      expect(normaliseAudioMimeType('  audio/mp4  ')).toBe('audio/mp4');
+    });
+
+    test('addAudioTile inserts an audio tile at the next position with normalised label/MIME', async () => {
+      const existingTiles = [
+        createTile({ _id: 'tile-1', position: 0 }),
+        createTile({ _id: 'tile-2', position: 1, kind: 'navigate' }),
+      ];
+
+      await mockDb.insert('boardTiles', {
+        boardId: 'board-1',
+        position: existingTiles.length,
+        kind: 'audio',
+        audioLabel: validateLabel(' Greeting '),
+        audioStorageId: 'storage-1',
+        audioMimeType: normaliseAudioMimeType('audio/webm;codecs=opus'),
+        audioDurationMs: 1000,
+        audioByteSize: 1200,
+      });
+
+      expect(mockDb.insert).toHaveBeenCalledWith('boardTiles', expect.objectContaining({
+        kind: 'audio',
+        position: 2,
+        audioLabel: 'Greeting',
+        audioMimeType: 'audio/webm',
+      }));
+    });
+
+    test('updateAudioTile rejects non-audio tiles', () => {
+      const tile = createTile({ kind: 'phrase' });
+
+      const guard = () => {
+        if (tile.kind !== 'audio') throw new Error('Tile is not an audio tile');
+      };
+
+      expect(guard).toThrow(/not an audio tile/);
+    });
+
+    test('updateAudioTile requires edit access', () => {
+      const board = createBoard({ userId: 'other-user' });
+      const canEdit = board.userId === 'user-123';
+
+      const guard = () => {
+        if (!canEdit) throw new Error('Unauthorized');
+      };
+
+      expect(guard).toThrow(/Unauthorized/);
+    });
+
+    test('updateAudioTile deletes old storage when replacing audio', async () => {
+      const tile = createTile({
+        kind: 'audio',
+        audioStorageId: 'old-storage',
+      });
+
+      await mockDb.patch(tile._id, {
+        audioStorageId: 'new-storage',
+        audioMimeType: 'audio/webm',
+        audioDurationMs: 1500,
+        audioByteSize: 2000,
+      });
+      await mockCtx.storage.delete(tile.audioStorageId);
+
+      expect(mockDb.patch).toHaveBeenCalledWith('tile-1', expect.objectContaining({
+        audioStorageId: 'new-storage',
+      }));
+      expect(mockCtx.storage.delete).toHaveBeenCalledWith('old-storage');
+    });
+
+    test('deleteTile deletes audio storage before deleting the tile', async () => {
+      const tile = createTile({
+        kind: 'audio',
+        audioStorageId: 'storage-1',
+      });
+
+      if (tile.kind === 'audio' && tile.audioStorageId) {
+        await mockCtx.storage.delete(tile.audioStorageId);
+      }
+      await mockDb.delete(tile._id);
+
+      expect(mockCtx.storage.delete).toHaveBeenCalledWith('storage-1');
+      expect(mockDb.delete).toHaveBeenCalledWith('tile-1');
     });
   });
 

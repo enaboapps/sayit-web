@@ -65,15 +65,22 @@ export default defineSchema({
   boardTiles: defineTable({
     boardId: v.id('phraseBoards'),
     position: v.number(),
-    kind: v.union(v.literal('phrase'), v.literal('navigate')),
+    kind: v.union(v.literal('phrase'), v.literal('navigate'), v.literal('audio')),
     // kind === 'phrase'
     phraseId: v.optional(v.id('phrases')),
     // kind === 'navigate'
     targetBoardId: v.optional(v.id('phraseBoards')),
+    // kind === 'audio'
+    audioLabel: v.optional(v.string()),
+    audioStorageId: v.optional(v.id('_storage')),
+    audioMimeType: v.optional(v.string()),
+    audioDurationMs: v.optional(v.number()),
+    audioByteSize: v.optional(v.number()),
   })
     .index('by_board', ['boardId'])
     .index('by_phrase', ['phraseId'])
-    .index('by_target_board', ['targetBoardId']),
+    .index('by_target_board', ['targetBoardId'])
+    .index('by_audio_storage', ['audioStorageId']),
 
   typingSessions: defineTable({
     userId: v.string(), // Clerk user ID

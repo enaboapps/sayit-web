@@ -28,9 +28,11 @@ interface PhrasesTabContentProps {
   onEditPhrase: (phrase: PhraseSummary) => void;
   onNavigateTap: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
   onNavigateEdit: (tileId: string) => void;
+  onAudioEdit: (tileId: string) => void;
   onNavigateBack: () => void;
   onAddPhrase: (() => void) | undefined;
   onAddNavigateTile: (() => void) | undefined;
+  onAddAudioTile: (() => void) | undefined;
   onAddBoard: () => void;
   onReorderTiles: (orderedTileIds: string[]) => void;
   onBoardIndexChange: (index: number) => void;
@@ -62,9 +64,11 @@ export default function PhrasesTabContent({
   onEditPhrase,
   onNavigateTap,
   onNavigateEdit,
+  onAudioEdit,
   onNavigateBack,
   onAddPhrase,
   onAddNavigateTile,
+  onAddAudioTile,
   onAddBoard,
   onReorderTiles,
   onBoardIndexChange,
@@ -76,6 +80,10 @@ export default function PhrasesTabContent({
 }: PhrasesTabContentProps) {
   const handleNavigateEditTile = (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => {
     onNavigateEdit(tile.id);
+  };
+
+  const handleAudioEditTile = (tile: Extract<BoardTileSummary, { kind: 'audio' }>) => {
+    onAudioEdit(tile.id);
   };
 
   // Defensive: parents should always pass an array, but a transient HMR / data
@@ -93,6 +101,7 @@ export default function PhrasesTabContent({
       onPhraseEdit={onEditPhrase}
       onNavigateTap={onNavigateTap}
       onNavigateEdit={handleNavigateEditTile}
+      onAudioEdit={handleAudioEditTile}
       onReorder={onReorderTiles}
       textSizePx={textSizePx}
     />
@@ -113,6 +122,7 @@ export default function PhrasesTabContent({
             isPhraseSpeaking={isPhraseSpeaking}
             onNavigateTap={onNavigateTap}
             onNavigateEdit={canEditCurrentBoard ? handleNavigateEditTile : undefined}
+            onAudioEdit={canEditCurrentBoard ? handleAudioEditTile : undefined}
             isEditMode={false}
           />
         );
@@ -190,6 +200,7 @@ export default function PhrasesTabContent({
           onOpenBoardPicker={onOpenBoardPicker}
           onAddPhrase={isOnline && canEditCurrentBoard ? onAddPhrase : undefined}
           onAddNavigateTile={isOnline && canEditCurrentBoard ? onAddNavigateTile : undefined}
+          onAddAudioTile={isOnline && canEditCurrentBoard ? onAddAudioTile : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
           onEdit={onToggleEditMode}
           onEditBoard={isOnline && selectedBoard && canEditCurrentBoard ? () => onEditBoard(selectedBoard.id) : undefined}
@@ -219,6 +230,7 @@ export default function PhrasesTabContent({
           onEditBoard={onEditBoard}
           onAddPhrase={isOnline && canEditCurrentBoard ? onAddPhrase : undefined}
           onAddNavigateTile={isOnline && canEditCurrentBoard ? onAddNavigateTile : undefined}
+          onAddAudioTile={isOnline && canEditCurrentBoard ? onAddAudioTile : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
           onEdit={onToggleEditMode}
           embedded={true}
