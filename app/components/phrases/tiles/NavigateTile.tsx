@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRightCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
+import { useTileGesture } from '@/lib/hooks/useTileGesture';
 
 interface NavigateTileProps {
   tile: {
@@ -39,50 +39,16 @@ export default function NavigateTile({
   className = '',
   textSizePx,
 }: NavigateTileProps) {
-  const [isPressed, setIsPressed] = useState(false);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
-  const isLongPress = useRef(false);
-
   const isBroken = tile.targetBoardName === null;
 
-  const handleTouchStart = useCallback(() => {
-    if (isBroken && !onEdit) return;
-    isLongPress.current = false;
-    setIsPressed(true);
+  const gesture = useTileGesture({
+    // Tap-to-edit replaces long-press in edit mode.
+    onLongPress: onEdit ? undefined : onLongPress,
+    // Broken tiles without an editor swallow gestures entirely.
+    disabled: isBroken && !onEdit,
+  });
 
-    if (onLongPress && !onEdit) {
-      longPressTimer.current = setTimeout(() => {
-        isLongPress.current = true;
-        setIsPressed(false);
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-        onLongPress();
-      }, 500);
-    }
-  }, [onLongPress, onEdit, isBroken]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsPressed(false);
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-    };
-  }, []);
-
-  const handleClick = () => {
-    if (isLongPress.current) {
-      isLongPress.current = false;
-      return;
-    }
+  const handleClick = gesture.wrapClick(() => {
     if (onEdit) {
       onEdit();
       return;
@@ -94,10 +60,7 @@ export default function NavigateTile({
       return;
     }
     onTap();
-  };
-
-  const prefersReducedMotion = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
 
   const labelText = isBroken ? BROKEN_LABEL : (tile.targetBoardName ?? '');
   const ariaLabel = onEdit
@@ -121,21 +84,16 @@ export default function NavigateTile({
         : 'bg-surface border-2 border-primary-400'}
         ${className}`}
       onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onMouseDown={handleTouchStart}
-      onMouseUp={handleTouchEnd}
-      onMouseLeave={handleTouchEnd}
+      {...gesture.bind}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handleClick();
         }
       }}
-      whileTap={prefersReducedMotion || isBroken ? undefined : { scale: 0.95 }}
-      animate={prefersReducedMotion ? undefined : {
-        scale: isPressed ? 0.95 : 1,
+      whileTap={gesture.prefersReducedMotion || isBroken ? undefined : { scale: 0.95 }}
+      animate={gesture.prefersReducedMotion ? undefined : {
+        scale: gesture.isPressed ? 0.95 : 1,
       }}
       transition={{ duration: 0.15 }}
       role="button"

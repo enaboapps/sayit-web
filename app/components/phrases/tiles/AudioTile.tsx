@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ExclamationTriangleIcon, SpeakerWaveIcon, StopIcon } from '@heroicons/react/24/solid';
+import { useTileGesture } from '@/lib/hooks/useTileGesture';
 
 interface AudioTileProps {
   tile: {
@@ -23,13 +24,15 @@ export default function AudioTile({
   className = '',
   textSizePx,
 }: AudioTileProps) {
-  const [isPressed, setIsPressed] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPress = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const isBroken = tile.audioUrl === null;
+
+  const gesture = useTileGesture({
+    onLongPress: onEdit ? undefined : onLongPress,
+    disabled: isBroken && !onEdit,
+  });
 
   const stopAudio = useCallback(() => {
     const audio = audioRef.current;
@@ -39,11 +42,9 @@ export default function AudioTile({
     setIsPlaying(false);
   }, []);
 
+  // Tear down any in-flight audio on unmount.
   useEffect(() => {
     return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.src = '';
@@ -52,35 +53,12 @@ export default function AudioTile({
     };
   }, []);
 
+  // If the underlying audioUrl changes (e.g. the user edited the tile), stop
+  // any currently-playing clip and forget the old <audio> element.
   useEffect(() => {
     stopAudio();
     audioRef.current = null;
   }, [stopAudio, tile.audioUrl]);
-
-  const handleTouchStart = useCallback(() => {
-    if (isBroken && !onEdit) return;
-    isLongPress.current = false;
-    setIsPressed(true);
-
-    if (onLongPress && !onEdit) {
-      longPressTimer.current = setTimeout(() => {
-        isLongPress.current = true;
-        setIsPressed(false);
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-        onLongPress();
-      }, 500);
-    }
-  }, [isBroken, onEdit, onLongPress]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsPressed(false);
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
 
   const playAudio = () => {
     if (!tile.audioUrl) return;
@@ -95,11 +73,7 @@ export default function AudioTile({
     });
   };
 
-  const handleClick = () => {
-    if (isLongPress.current) {
-      isLongPress.current = false;
-      return;
-    }
+  const handleClick = gesture.wrapClick(() => {
     if (onEdit) {
       onEdit();
       return;
@@ -110,10 +84,7 @@ export default function AudioTile({
       return;
     }
     playAudio();
-  };
-
-  const prefersReducedMotion = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
 
   const ariaLabel = onEdit
     ? `Edit audio tile: ${tile.audioLabel}`
@@ -140,21 +111,16 @@ export default function AudioTile({
           : 'bg-surface border-2 border-primary-400'}
         ${className}`}
       onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onMouseDown={handleTouchStart}
-      onMouseUp={handleTouchEnd}
-      onMouseLeave={handleTouchEnd}
+      {...gesture.bind}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handleClick();
         }
       }}
-      whileTap={prefersReducedMotion || isBroken ? undefined : { scale: 0.95 }}
-      animate={prefersReducedMotion ? undefined : {
-        scale: isPressed ? 0.95 : 1,
+      whileTap={gesture.prefersReducedMotion || isBroken ? undefined : { scale: 0.95 }}
+      animate={gesture.prefersReducedMotion ? undefined : {
+        scale: gesture.isPressed ? 0.95 : 1,
       }}
       transition={{ duration: 0.15 }}
       role="button"

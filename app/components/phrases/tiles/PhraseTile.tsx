@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { StopIcon } from '@heroicons/react/24/solid';
-import { SymbolImage } from '../symbols';
+import { SymbolImage } from '../../symbols';
+import { useTileGesture } from '@/lib/hooks/useTileGesture';
 
 interface PhraseTileProps {
   phrase: {
@@ -30,51 +30,13 @@ export default function PhraseTile({
   className = '',
   textSizePx,
 }: PhraseTileProps) {
-  const [isPressed, setIsPressed] = useState(false);
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
-  const isLongPress = useRef(false);
+  // Tap-to-edit takes precedence over long-press: when onEdit is wired in
+  // (the board is in edit mode), suppress long-press detection entirely.
+  const gesture = useTileGesture({
+    onLongPress: onEdit ? undefined : onLongPress,
+  });
 
-  const handleTouchStart = useCallback(() => {
-    isLongPress.current = false;
-    setIsPressed(true);
-
-    if (onLongPress && !onEdit) {
-      longPressTimer.current = setTimeout(() => {
-        isLongPress.current = true;
-        setIsPressed(false);
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-        onLongPress();
-      }, 500);
-    }
-  }, [onLongPress, onEdit]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsPressed(false);
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }, []);
-
-  // Cleanup timer on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-    };
-  }, []);
-
-  const handleClick = () => {
-    // Ignore click if it was a long press
-    if (isLongPress.current) {
-      isLongPress.current = false;
-      return;
-    }
-
+  const handleClick = gesture.wrapClick(() => {
     if (onEdit) {
       onEdit();
     } else if (isSpeaking && onStop) {
@@ -82,11 +44,7 @@ export default function PhraseTile({
     } else {
       onPress();
     }
-  };
-
-  // Check for reduced motion preference
-  const prefersReducedMotion = typeof window !== 'undefined'
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
 
   return (
     <motion.div
@@ -96,22 +54,17 @@ export default function PhraseTile({
         ${onEdit ? 'border-l-4 border-blue-400' : isSpeaking ? 'border-2 border-warning' : ''}
         ${className}`}
       onClick={handleClick}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-      onMouseDown={handleTouchStart}
-      onMouseUp={handleTouchEnd}
-      onMouseLeave={handleTouchEnd}
+      {...gesture.bind}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           handleClick();
         }
       }}
-      whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-      animate={prefersReducedMotion ? undefined : {
-        scale: isPressed ? 0.95 : 1,
-        backgroundColor: isPressed ? 'var(--surface-hover)' : 'var(--surface)',
+      whileTap={gesture.prefersReducedMotion ? undefined : { scale: 0.95 }}
+      animate={gesture.prefersReducedMotion ? undefined : {
+        scale: gesture.isPressed ? 0.95 : 1,
+        backgroundColor: gesture.isPressed ? 'var(--surface-hover)' : 'var(--surface)',
       }}
       transition={{ duration: 0.15 }}
       role="button"
