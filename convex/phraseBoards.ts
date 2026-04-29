@@ -42,7 +42,8 @@ type PolymorphicBoardTile =
       position: number;
       kind: 'audio';
       audioLabel: string;
-      audioStorageId: Id<'_storage'>;
+      /** null when the underlying storage object is missing/unrecoverable. */
+      audioStorageId: Id<'_storage'> | null;
       audioUrl: string | null;
       audioMimeType: string;
       audioDurationMs: number;
@@ -97,6 +98,8 @@ async function loadHydratedBoardTiles(
     }
 
     if (row.kind === 'audio') {
+      // Defensive: surface a broken-state tile if the row is missing one or
+      // more required audio fields. Renderer keys on audioUrl===null.
       if (
         !row.audioLabel ||
         !row.audioStorageId ||
@@ -110,9 +113,9 @@ async function loadHydratedBoardTiles(
           position: row.position,
           kind: 'audio',
           audioLabel: row.audioLabel ?? 'Audio tile',
-          audioStorageId: row.audioStorageId ?? (row._id as unknown as Id<'_storage'>),
+          audioStorageId: null,
           audioUrl: null,
-          audioMimeType: row.audioMimeType ?? 'audio/webm',
+          audioMimeType: row.audioMimeType ?? '',
           audioDurationMs: row.audioDurationMs ?? 0,
           audioByteSize: row.audioByteSize ?? 0,
         });

@@ -1,8 +1,9 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery } from 'convex/react';
+import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
@@ -10,20 +11,12 @@ import { Button } from '@/app/components/ui/Button';
 import PageHeader from '@/app/components/ui/PageHeader';
 import AudioRecorderControl, { RecordedAudio } from '@/app/components/phrases/tiles/AudioRecorderControl';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
+import { MAX_AUDIO_LABEL_LENGTH } from '@/lib/audio/constants';
+import { uploadRecording } from '@/lib/audio/upload';
 
-const MAX_LABEL_LENGTH = 80;
-
-async function uploadRecording(uploadUrl: string, recording: RecordedAudio) {
-  const response = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': recording.blob.type || 'audio/webm' },
-    body: recording.blob,
-  });
-
-  if (!response.ok) throw new Error('Failed to upload audio. Please try again.');
-  const { storageId } = await response.json();
-  return storageId as Id<'_storage'>;
-}
+type BoardData = NonNullable<FunctionReturnType<typeof api.phraseBoards.getPhraseBoard>>;
+type BoardTile = BoardData['tiles'][number];
+type AudioBoardTile = Extract<BoardTile, { kind: 'audio' }>;
 
 function EditAudioTileForm() {
   const router = useRouter();
@@ -37,51 +30,63 @@ function EditAudioTileForm() {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Prefill the label exactly once when the tile loads. Using a ref (not the
+  // current label value) avoids the footgun where clearing the input would
+  // restore the original on the next re-render.
+  const labelInitialisedRef = useRef(false);
 
   const boardData = useQuery(
     api.phraseBoards.getPhraseBoard,
     boardId ? { id: boardId as Id<'phraseBoards'> } : 'skip'
   );
   const generateUploadUrl = useMutation(api.audio.generateUploadUrl);
+  const deleteOrphanUpload = useMutation(api.audio.deleteOrphanUpload);
   const updateAudioTile = useMutation(api.boardTiles.updateAudioTile);
   const deleteTile = useMutation(api.boardTiles.deleteTile);
 
-  const existingTile = useMemo(() => {
+  const existingTile = useMemo<AudioBoardTile | null>(() => {
     if (!boardData || !tileId) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tiles = (boardData.tiles ?? []) as any[];
-    return tiles.find((tile) => String(tile._id) === tileId && tile.kind === 'audio') ?? null;
+    const tiles = (boardData.tiles ?? []) as BoardTile[];
+    const match = tiles.find(
+      (tile): tile is AudioBoardTile =>
+        String(tile._id) === tileId && tile.kind === 'audio'
+    );
+    return match ?? null;
   }, [boardData, tileId]);
 
   useEffect(() => {
-    if (existingTile && !label) {
+    if (existingTile && !labelInitialisedRef.current) {
       setLabel(existingTile.audioLabel ?? '');
+      labelInitialisedRef.current = true;
     }
-  }, [existingTile, label]);
+  }, [existingTile]);
 
   const trimmedLabel = label.trim();
-  const labelError = trimmedLabel.length > MAX_LABEL_LENGTH
-    ? `Label must be ${MAX_LABEL_LENGTH} characters or fewer`
+  const labelError = trimmedLabel.length > MAX_AUDIO_LABEL_LENGTH
+    ? `Label must be ${MAX_AUDIO_LABEL_LENGTH} characters or fewer`
     : undefined;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!tileId || !existingTile || !trimmedLabel || labelError) return;
+    if (!boardId || !tileId || !existingTile || !trimmedLabel || labelError) return;
 
     setLoading(true);
     setError(null);
+    const typedBoardId = boardId as Id<'phraseBoards'>;
+    let uploadedStorageId: Id<'_storage'> | null = null;
     try {
       if (replacementRecording) {
-        const uploadUrl = await generateUploadUrl();
-        const storageId = await uploadRecording(uploadUrl, replacementRecording);
+        const uploadUrl = await generateUploadUrl({ boardId: typedBoardId });
+        uploadedStorageId = await uploadRecording(uploadUrl, replacementRecording);
         await updateAudioTile({
           tileId: tileId as Id<'boardTiles'>,
           audioLabel: trimmedLabel,
-          audioStorageId: storageId,
+          audioStorageId: uploadedStorageId,
           audioMimeType: replacementRecording.blob.type || 'audio/webm',
           audioDurationMs: replacementRecording.durationMs,
           audioByteSize: replacementRecording.blob.size,
         });
+        uploadedStorageId = null;
       } else {
         await updateAudioTile({
           tileId: tileId as Id<'boardTiles'>,
@@ -92,6 +97,13 @@ function EditAudioTileForm() {
     } catch (err) {
       console.error('Error updating audio tile:', err);
       setError(err instanceof Error ? err.message : 'Failed to update audio tile.');
+      if (uploadedStorageId) {
+        try {
+          await deleteOrphanUpload({ boardId: typedBoardId, storageId: uploadedStorageId });
+        } catch (cleanupErr) {
+          console.error('Failed to clean up orphaned upload:', cleanupErr);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -142,7 +154,7 @@ function EditAudioTileForm() {
                 value={label}
                 onChange={(event) => setLabel(event.target.value)}
                 placeholder="Tile label"
-                maxLength={MAX_LABEL_LENGTH}
+                maxLength={MAX_AUDIO_LABEL_LENGTH}
                 required
                 error={labelError}
               />

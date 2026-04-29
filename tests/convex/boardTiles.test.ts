@@ -8,6 +8,13 @@
  */
 
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import {
+  isAllowedAudioMimeType,
+  normaliseAudioMimeType,
+  validateAudioLabel,
+  validateAudioMetadata,
+  MAX_AUDIO_BYTES,
+} from '@/convex/audioLimits';
 
 const mockDb = {
   query: jest.fn(),
@@ -183,18 +190,15 @@ describe('boardTiles', () => {
   });
 
   describe('audio tile invariants', () => {
-    const validateLabel = (label: string) => {
-      const trimmed = label.trim();
-      if (!trimmed) throw new Error('Audio tile label is required');
-      if (trimmed.length > 80) throw new Error('Audio tile label must be 80 characters or fewer');
-      return trimmed;
-    };
-
-    const validateMetadata = (mimeType: string, durationMs: number, byteSize: number) => {
-      if (!mimeType.startsWith('audio/')) throw new Error('Audio file must use an audio MIME type');
-      if (durationMs <= 0 || durationMs > 60000) throw new Error('Audio recording must be 60 seconds or less');
-      if (byteSize <= 0) throw new Error('Audio recording is empty');
-    };
+    // These exercise the real validators from convex/audioLimits.ts so any
+    // change to label/metadata rules surfaces here.
+    const validateLabel = validateAudioLabel;
+    const validateMetadata = (mimeType: string, durationMs: number, byteSize: number) =>
+      validateAudioMetadata({
+        audioMimeType: mimeType,
+        audioDurationMs: durationMs,
+        audioByteSize: byteSize,
+      });
 
     test('addAudioTile rejects unauthenticated users', async () => {
       mockCtx.auth.getUserIdentity.mockResolvedValue(null);
@@ -229,11 +233,47 @@ describe('boardTiles', () => {
       expect(() => validateLabel('   ')).toThrow(/label is required/);
     });
 
+    test('addAudioTile rejects labels over the length cap', () => {
+      expect(() => validateLabel('a'.repeat(200))).toThrow(/80 characters/);
+    });
+
     test('addAudioTile rejects recordings over 60 seconds', () => {
       expect(() => validateMetadata('audio/webm', 60001, 1200)).toThrow(/60 seconds/);
     });
 
-    test('addAudioTile inserts an audio tile at the next position', async () => {
+    test('addAudioTile rejects empty recordings', () => {
+      expect(() => validateMetadata('audio/webm', 1000, 0)).toThrow(/empty/);
+    });
+
+    test('addAudioTile rejects recordings over the byte cap', () => {
+      expect(() => validateMetadata('audio/webm', 1000, MAX_AUDIO_BYTES + 1)).toThrow(/MB limit/);
+    });
+
+    test('addAudioTile rejects unknown MIME types', () => {
+      expect(() => validateMetadata('audio/x-bogus', 1000, 1200)).toThrow(/MIME type/);
+      expect(() => validateMetadata('image/png', 1000, 1200)).toThrow(/MIME type/);
+      expect(() => validateMetadata('', 1000, 1200)).toThrow(/MIME type/);
+    });
+
+    test('addAudioTile accepts every allow-listed MIME (incl. codec params)', () => {
+      expect(() => validateMetadata('audio/webm;codecs=opus', 1000, 1200)).not.toThrow();
+      expect(() => validateMetadata('audio/mp4;codecs=mp4a.40.2', 1000, 1200)).not.toThrow();
+      expect(() => validateMetadata('audio/ogg', 1000, 1200)).not.toThrow();
+      expect(() => validateMetadata('audio/wav', 1000, 1200)).not.toThrow();
+    });
+
+    test('isAllowedAudioMimeType strips codec params before matching', () => {
+      expect(isAllowedAudioMimeType('audio/webm;codecs=opus')).toBe(true);
+      expect(isAllowedAudioMimeType('AUDIO/WEBM')).toBe(true);
+      expect(isAllowedAudioMimeType('audio/x-bogus')).toBe(false);
+    });
+
+    test('normaliseAudioMimeType trims and lowercases', () => {
+      expect(normaliseAudioMimeType('AUDIO/WEBM ;codecs=opus')).toBe('audio/webm');
+      expect(normaliseAudioMimeType('  audio/mp4  ')).toBe('audio/mp4');
+    });
+
+    test('addAudioTile inserts an audio tile at the next position with normalised label/MIME', async () => {
       const existingTiles = [
         createTile({ _id: 'tile-1', position: 0 }),
         createTile({ _id: 'tile-2', position: 1, kind: 'navigate' }),
@@ -245,7 +285,7 @@ describe('boardTiles', () => {
         kind: 'audio',
         audioLabel: validateLabel(' Greeting '),
         audioStorageId: 'storage-1',
-        audioMimeType: 'audio/webm',
+        audioMimeType: normaliseAudioMimeType('audio/webm;codecs=opus'),
         audioDurationMs: 1000,
         audioByteSize: 1200,
       });
@@ -254,6 +294,7 @@ describe('boardTiles', () => {
         kind: 'audio',
         position: 2,
         audioLabel: 'Greeting',
+        audioMimeType: 'audio/webm',
       }));
     });
 

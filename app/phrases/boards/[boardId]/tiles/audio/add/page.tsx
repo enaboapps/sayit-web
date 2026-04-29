@@ -10,20 +10,8 @@ import { Button } from '@/app/components/ui/Button';
 import PageHeader from '@/app/components/ui/PageHeader';
 import AudioRecorderControl, { RecordedAudio } from '@/app/components/phrases/tiles/AudioRecorderControl';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-
-const MAX_LABEL_LENGTH = 80;
-
-async function uploadRecording(uploadUrl: string, recording: RecordedAudio) {
-  const response = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': recording.blob.type || 'audio/webm' },
-    body: recording.blob,
-  });
-
-  if (!response.ok) throw new Error('Failed to upload audio. Please try again.');
-  const { storageId } = await response.json();
-  return storageId as Id<'_storage'>;
-}
+import { MAX_AUDIO_LABEL_LENGTH } from '@/lib/audio/constants';
+import { uploadRecording } from '@/lib/audio/upload';
 
 function AddAudioTileForm() {
   const router = useRouter();
@@ -37,11 +25,12 @@ function AddAudioTileForm() {
   const [error, setError] = useState<string | null>(null);
 
   const generateUploadUrl = useMutation(api.audio.generateUploadUrl);
+  const deleteOrphanUpload = useMutation(api.audio.deleteOrphanUpload);
   const addAudioTile = useMutation(api.boardTiles.addAudioTile);
 
   const trimmedLabel = label.trim();
-  const labelError = trimmedLabel.length > MAX_LABEL_LENGTH
-    ? `Label must be ${MAX_LABEL_LENGTH} characters or fewer`
+  const labelError = trimmedLabel.length > MAX_AUDIO_LABEL_LENGTH
+    ? `Label must be ${MAX_AUDIO_LABEL_LENGTH} characters or fewer`
     : undefined;
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -50,21 +39,33 @@ function AddAudioTileForm() {
 
     setLoading(true);
     setError(null);
+    const typedBoardId = boardId as Id<'phraseBoards'>;
+    let uploadedStorageId: Id<'_storage'> | null = null;
     try {
-      const uploadUrl = await generateUploadUrl();
-      const storageId = await uploadRecording(uploadUrl, recording);
+      const uploadUrl = await generateUploadUrl({ boardId: typedBoardId });
+      uploadedStorageId = await uploadRecording(uploadUrl, recording);
       await addAudioTile({
-        boardId: boardId as Id<'phraseBoards'>,
+        boardId: typedBoardId,
         audioLabel: trimmedLabel,
-        audioStorageId: storageId,
+        audioStorageId: uploadedStorageId,
         audioMimeType: recording.blob.type || 'audio/webm',
         audioDurationMs: recording.durationMs,
         audioByteSize: recording.blob.size,
       });
+      // Tile owns the storageId now; clear so the catch below doesn't reap it.
+      uploadedStorageId = null;
       router.back();
     } catch (err) {
       console.error('Error adding audio tile:', err);
       setError(err instanceof Error ? err.message : 'Failed to add audio tile.');
+      // If we uploaded but the tile insert failed, reap the orphaned blob.
+      if (uploadedStorageId) {
+        try {
+          await deleteOrphanUpload({ boardId: typedBoardId, storageId: uploadedStorageId });
+        } catch (cleanupErr) {
+          console.error('Failed to clean up orphaned upload:', cleanupErr);
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -90,7 +91,7 @@ function AddAudioTileForm() {
             value={label}
             onChange={(event) => setLabel(event.target.value)}
             placeholder="Tile label"
-            maxLength={MAX_LABEL_LENGTH}
+            maxLength={MAX_AUDIO_LABEL_LENGTH}
             required
             error={labelError}
           />

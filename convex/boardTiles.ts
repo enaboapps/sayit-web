@@ -1,63 +1,13 @@
 import { v } from 'convex/values';
-import { mutation, query, type QueryCtx } from './_generated/server';
+import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
-
-// ---------------------------------------------------------------------------
-// Access helpers
-// ---------------------------------------------------------------------------
-
-type BoardAccess = {
-  board: Doc<'phraseBoards'>;
-  isOwner: boolean;
-  canEdit: boolean;
-  canRead: boolean;
-};
-
-const MAX_AUDIO_LABEL_LENGTH = 80;
-const MAX_AUDIO_DURATION_MS = 60_000;
-
-function validateAudioLabel(label: string): string {
-  const trimmed = label.trim();
-  if (!trimmed) throw new Error('Audio tile label is required');
-  if (trimmed.length > MAX_AUDIO_LABEL_LENGTH) {
-    throw new Error(`Audio tile label must be ${MAX_AUDIO_LABEL_LENGTH} characters or fewer`);
-  }
-  return trimmed;
-}
-
-function validateAudioMetadata(args: {
-  audioMimeType: string;
-  audioDurationMs: number;
-  audioByteSize: number;
-}) {
-  if (!args.audioMimeType.startsWith('audio/')) {
-    throw new Error('Audio file must use an audio MIME type');
-  }
-  if (args.audioDurationMs <= 0 || args.audioDurationMs > MAX_AUDIO_DURATION_MS) {
-    throw new Error('Audio recording must be 60 seconds or less');
-  }
-  if (args.audioByteSize <= 0) {
-    throw new Error('Audio recording is empty');
-  }
-}
-
-async function getBoardAccess(
-  ctx: QueryCtx,
-  boardId: Id<'phraseBoards'>,
-  userId: string
-): Promise<BoardAccess | null> {
-  const board = await ctx.db.get(boardId);
-  if (!board) return null;
-
-  const isOwner = board.userId === userId;
-  const isAssignedClient = board.forClientId === userId;
-  const canEdit =
-    isOwner || (isAssignedClient && board.clientAccessLevel === 'edit');
-  const canRead = isOwner || isAssignedClient;
-
-  return { board, isOwner, canEdit, canRead };
-}
+import { getBoardAccess } from './boardAccess';
+import {
+  normaliseAudioMimeType,
+  validateAudioLabel,
+  validateAudioMetadata,
+} from './audioLimits';
 
 // ---------------------------------------------------------------------------
 // Query: list tiles on a board (polymorphic, hydrated)
@@ -85,7 +35,8 @@ export type ListedBoardTile =
       position: number;
       kind: 'audio';
       audioLabel: string;
-      audioStorageId: Id<'_storage'>;
+      /** null when the underlying storage object is missing/unrecoverable. */
+      audioStorageId: Id<'_storage'> | null;
       audioUrl: string | null;
       audioMimeType: string;
       audioDurationMs: number;
@@ -121,6 +72,10 @@ export const listByBoard = query({
           };
         }
         if (row.kind === 'audio') {
+          // Defensive: a row could be missing one or more audio fields if it
+          // was written by an older client or partially hydrated. Surface a
+          // broken-state tile (audioUrl=null, audioStorageId=null) — the
+          // renderer keys on audioUrl===null and shows the disabled affordance.
           if (
             !row.audioLabel ||
             !row.audioStorageId ||
@@ -134,9 +89,9 @@ export const listByBoard = query({
               position: row.position,
               kind: 'audio',
               audioLabel: row.audioLabel ?? 'Audio tile',
-              audioStorageId: row.audioStorageId ?? (row._id as unknown as Id<'_storage'>),
+              audioStorageId: null,
               audioUrl: null,
-              audioMimeType: row.audioMimeType ?? 'audio/webm',
+              audioMimeType: row.audioMimeType ?? '',
               audioDurationMs: row.audioDurationMs ?? 0,
               audioByteSize: row.audioByteSize ?? 0,
             };
@@ -215,6 +170,10 @@ export const addAudioTile = mutation({
 
     const audioLabel = validateAudioLabel(args.audioLabel);
     validateAudioMetadata(args);
+    // Strip codec parameters before persisting (keeps stored values uniform
+    // across browsers — Chromium emits "audio/webm;codecs=opus", Safari emits
+    // "audio/mp4;codecs=mp4a.40.2", etc.).
+    const audioMimeType = normaliseAudioMimeType(args.audioMimeType);
 
     const existingTiles = await ctx.db
       .query('boardTiles')
@@ -227,7 +186,7 @@ export const addAudioTile = mutation({
       kind: 'audio',
       audioLabel,
       audioStorageId: args.audioStorageId,
-      audioMimeType: args.audioMimeType,
+      audioMimeType,
       audioDurationMs: args.audioDurationMs,
       audioByteSize: args.audioByteSize,
     });
@@ -279,7 +238,7 @@ export const updateAudioTile = mutation({
         audioByteSize: args.audioByteSize,
       });
       patch.audioStorageId = args.audioStorageId;
-      patch.audioMimeType = args.audioMimeType;
+      patch.audioMimeType = normaliseAudioMimeType(args.audioMimeType);
       patch.audioDurationMs = args.audioDurationMs;
       patch.audioByteSize = args.audioByteSize;
     }
