@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import PhraseTile from '@/app/components/phrases/PhraseTile';
+import PhraseTile from '@/app/components/phrases/tiles/PhraseTile';
 
 describe('PhraseTile', () => {
   it('uses the configured text size for phrase text', () => {

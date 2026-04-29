@@ -1,6 +1,6 @@
 'use client';
 
-import PhraseTile from '../PhraseTile';
+import PhraseTile from './PhraseTile';
 import NavigateTile from './NavigateTile';
 import AudioTile from './AudioTile';
 import type { BoardTileSummary, PhraseSummary } from '../types';

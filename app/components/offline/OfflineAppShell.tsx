@@ -5,7 +5,7 @@ import AACTabs from '@/app/components/home/AACTabs';
 import Composer from '@/app/components/composer';
 import BoardSelector from '@/app/components/phrases/BoardSelector';
 import PhraseGrid from '@/app/components/phrases/PhraseGrid';
-import PhraseTile from '@/app/components/phrases/PhraseTile';
+import PhraseTile from '@/app/components/phrases/tiles/PhraseTile';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import type { BoardSummary, PhraseSummary } from '@/app/components/phrases/types';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
