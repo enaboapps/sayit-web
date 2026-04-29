@@ -2,6 +2,7 @@
 
 import PhraseTile from '../PhraseTile';
 import NavigateTile from './NavigateTile';
+import AudioTile from './AudioTile';
 import type { BoardTileSummary, PhraseSummary } from '../types';
 
 interface BoardTileRendererProps {
@@ -15,6 +16,8 @@ interface BoardTileRendererProps {
   // Navigate-tile handlers
   onNavigateTap: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
   onNavigateEdit?: (tile: Extract<BoardTileSummary, { kind: 'navigate' }>) => void;
+  // Audio-tile handlers
+  onAudioEdit?: (tile: Extract<BoardTileSummary, { kind: 'audio' }>) => void;
   // True when the parent grid is in edit mode (long-press → edit on phrase tiles
   // is replaced by tap-to-edit). Both kinds use the same affordance.
   isEditMode?: boolean;
@@ -35,6 +38,7 @@ export default function BoardTileRenderer({
   isPhraseSpeaking = false,
   onNavigateTap,
   onNavigateEdit,
+  onAudioEdit,
   isEditMode = false,
   className,
 }: BoardTileRendererProps) {
@@ -51,6 +55,17 @@ export default function BoardTileRenderer({
         // opens edit (when `onPhraseEdit` is supplied).
         onEdit={isEditMode && onPhraseEdit ? () => onPhraseEdit(phrase) : undefined}
         onLongPress={!isEditMode && onPhraseEdit ? () => onPhraseEdit(phrase) : undefined}
+        textSizePx={textSizePx}
+        className={className}
+      />
+    );
+  }
+  case 'audio': {
+    return (
+      <AudioTile
+        tile={tile}
+        onEdit={isEditMode && onAudioEdit ? () => onAudioEdit(tile) : undefined}
+        onLongPress={!isEditMode && onAudioEdit ? () => onAudioEdit(tile) : undefined}
         textSizePx={textSizePx}
         className={className}
       />

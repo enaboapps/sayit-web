@@ -14,6 +14,34 @@ type BoardAccess = {
   canRead: boolean;
 };
 
+const MAX_AUDIO_LABEL_LENGTH = 80;
+const MAX_AUDIO_DURATION_MS = 60_000;
+
+function validateAudioLabel(label: string): string {
+  const trimmed = label.trim();
+  if (!trimmed) throw new Error('Audio tile label is required');
+  if (trimmed.length > MAX_AUDIO_LABEL_LENGTH) {
+    throw new Error(`Audio tile label must be ${MAX_AUDIO_LABEL_LENGTH} characters or fewer`);
+  }
+  return trimmed;
+}
+
+function validateAudioMetadata(args: {
+  audioMimeType: string;
+  audioDurationMs: number;
+  audioByteSize: number;
+}) {
+  if (!args.audioMimeType.startsWith('audio/')) {
+    throw new Error('Audio file must use an audio MIME type');
+  }
+  if (args.audioDurationMs <= 0 || args.audioDurationMs > MAX_AUDIO_DURATION_MS) {
+    throw new Error('Audio recording must be 60 seconds or less');
+  }
+  if (args.audioByteSize <= 0) {
+    throw new Error('Audio recording is empty');
+  }
+}
+
 async function getBoardAccess(
   ctx: QueryCtx,
   boardId: Id<'phraseBoards'>,
@@ -50,6 +78,18 @@ export type ListedBoardTile =
       kind: 'navigate';
       targetBoardId: Id<'phraseBoards'>;
       targetBoardName: string | null;
+    }
+  | {
+      _id: Id<'boardTiles'>;
+      boardId: Id<'phraseBoards'>;
+      position: number;
+      kind: 'audio';
+      audioLabel: string;
+      audioStorageId: Id<'_storage'>;
+      audioUrl: string | null;
+      audioMimeType: string;
+      audioDurationMs: number;
+      audioByteSize: number;
     };
 
 export const listByBoard = query({
@@ -80,6 +120,43 @@ export const listByBoard = query({
             phrase: phrase ?? null,
           };
         }
+        if (row.kind === 'audio') {
+          if (
+            !row.audioLabel ||
+            !row.audioStorageId ||
+            !row.audioMimeType ||
+            typeof row.audioDurationMs !== 'number' ||
+            typeof row.audioByteSize !== 'number'
+          ) {
+            return {
+              _id: row._id,
+              boardId: row.boardId,
+              position: row.position,
+              kind: 'audio',
+              audioLabel: row.audioLabel ?? 'Audio tile',
+              audioStorageId: row.audioStorageId ?? (row._id as unknown as Id<'_storage'>),
+              audioUrl: null,
+              audioMimeType: row.audioMimeType ?? 'audio/webm',
+              audioDurationMs: row.audioDurationMs ?? 0,
+              audioByteSize: row.audioByteSize ?? 0,
+            };
+          }
+
+          const audioUrl = await ctx.storage.getUrl(row.audioStorageId);
+          return {
+            _id: row._id,
+            boardId: row.boardId,
+            position: row.position,
+            kind: 'audio',
+            audioLabel: row.audioLabel,
+            audioStorageId: row.audioStorageId,
+            audioUrl,
+            audioMimeType: row.audioMimeType,
+            audioDurationMs: row.audioDurationMs,
+            audioByteSize: row.audioByteSize,
+          };
+        }
+
         // kind === 'navigate'
         const targetBoardId = row.targetBoardId;
         if (!targetBoardId) {
@@ -112,6 +189,106 @@ export const listByBoard = query({
     );
 
     return hydrated;
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Mutation: add an audio-kind tile
+// ---------------------------------------------------------------------------
+
+export const addAudioTile = mutation({
+  args: {
+    boardId: v.id('phraseBoards'),
+    audioLabel: v.string(),
+    audioStorageId: v.id('_storage'),
+    audioMimeType: v.string(),
+    audioDurationMs: v.number(),
+    audioByteSize: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const access = await getBoardAccess(ctx, args.boardId, identity.subject);
+    if (!access) throw new Error('Board not found');
+    if (!access.canEdit) throw new Error('Unauthorized - board');
+
+    const audioLabel = validateAudioLabel(args.audioLabel);
+    validateAudioMetadata(args);
+
+    const existingTiles = await ctx.db
+      .query('boardTiles')
+      .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
+      .collect();
+
+    return await ctx.db.insert('boardTiles', {
+      boardId: args.boardId,
+      position: existingTiles.length,
+      kind: 'audio',
+      audioLabel,
+      audioStorageId: args.audioStorageId,
+      audioMimeType: args.audioMimeType,
+      audioDurationMs: args.audioDurationMs,
+      audioByteSize: args.audioByteSize,
+    });
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Mutation: update an audio-kind tile
+// ---------------------------------------------------------------------------
+
+export const updateAudioTile = mutation({
+  args: {
+    tileId: v.id('boardTiles'),
+    audioLabel: v.optional(v.string()),
+    audioStorageId: v.optional(v.id('_storage')),
+    audioMimeType: v.optional(v.string()),
+    audioDurationMs: v.optional(v.number()),
+    audioByteSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) throw new Error('Tile not found');
+    if (tile.kind !== 'audio') throw new Error('Tile is not an audio tile');
+
+    const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
+    if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    const patch: Partial<Doc<'boardTiles'>> = {};
+
+    if (args.audioLabel !== undefined) {
+      patch.audioLabel = validateAudioLabel(args.audioLabel);
+    }
+
+    const isReplacingAudio = args.audioStorageId !== undefined;
+    if (isReplacingAudio) {
+      if (
+        args.audioMimeType === undefined ||
+        args.audioDurationMs === undefined ||
+        args.audioByteSize === undefined
+      ) {
+        throw new Error('Replacement audio metadata is required');
+      }
+      validateAudioMetadata({
+        audioMimeType: args.audioMimeType,
+        audioDurationMs: args.audioDurationMs,
+        audioByteSize: args.audioByteSize,
+      });
+      patch.audioStorageId = args.audioStorageId;
+      patch.audioMimeType = args.audioMimeType;
+      patch.audioDurationMs = args.audioDurationMs;
+      patch.audioByteSize = args.audioByteSize;
+    }
+
+    await ctx.db.patch(args.tileId, patch);
+
+    if (isReplacingAudio && tile.audioStorageId) {
+      await ctx.storage.delete(tile.audioStorageId);
+    }
   },
 });
 
@@ -291,6 +468,10 @@ export const deleteTile = mutation({
 
     const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
     if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    if (tile.kind === 'audio' && tile.audioStorageId) {
+      await ctx.storage.delete(tile.audioStorageId);
+    }
 
     await ctx.db.delete(args.tileId);
   },

@@ -152,9 +152,11 @@ export default function PhrasesInterface() {
                 boardData.handleNavigateToBoard(tile.targetBoardId)
               }
               onNavigateEdit={boardData.handleEditNavigateTile}
+              onAudioEdit={boardData.handleEditAudioTile}
               onNavigateBack={boardData.handleNavigateBack}
               onAddPhrase={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddPhrase : undefined}
               onAddNavigateTile={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddNavigateTile : undefined}
+              onAddAudioTile={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddAudioTile : undefined}
               onAddBoard={boardData.handleAddBoard}
               onReorderTiles={boardData.handleReorderTiles}
               onBoardIndexChange={boardData.handleBoardIndexChange}

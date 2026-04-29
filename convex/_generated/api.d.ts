@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as audio from "../audio.js";
 import type * as boardTiles from "../boardTiles.js";
 import type * as caregiverClients from "../caregiverClients.js";
 import type * as connectionRequests from "../connectionRequests.js";
@@ -28,6 +29,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  audio: typeof audio;
   boardTiles: typeof boardTiles;
   caregiverClients: typeof caregiverClients;
   connectionRequests: typeof connectionRequests;

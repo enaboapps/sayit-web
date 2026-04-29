@@ -9,12 +9,14 @@ import {
   CheckIcon,
   ChatBubbleLeftIcon,
   ArrowRightCircleIcon,
+  SpeakerWaveIcon,
 } from '@heroicons/react/24/outline';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 
 interface BoardActionButtonsProps {
   onAddPhrase?: () => void;
   onAddNavigateTile?: () => void;
+  onAddAudioTile?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
   onEditBoard?: () => void;
@@ -25,6 +27,7 @@ interface BoardActionButtonsProps {
 export default function BoardActionButtons({
   onAddPhrase,
   onAddNavigateTile,
+  onAddAudioTile,
   onAddBoard,
   onEdit,
   onEditBoard,
@@ -36,13 +39,15 @@ export default function BoardActionButtons({
 
   const showAddPhrase = canEditBoard && !!onAddPhrase;
   const showAddNavigate = canEditBoard && !!onAddNavigateTile;
-  // If both add-options are present, render them as a single "Add Tile" menu;
+  const showAddAudio = canEditBoard && !!onAddAudioTile;
+  // If multiple add-options are present, render them as a single "Add Tile" menu;
   // if only one is present, fall back to the legacy single button.
-  const showAddTileMenu = showAddPhrase && showAddNavigate;
+  const addTileOptionCount = [showAddPhrase, showAddNavigate, showAddAudio].filter(Boolean).length;
+  const showAddTileMenu = addTileOptionCount > 1;
   const showAddBoard = !!onAddBoard;
   const showMenu = !!onEdit || !!onEditBoard;
 
-  if (!showAddPhrase && !showAddNavigate && !showAddBoard && !showMenu) return null;
+  if (!showAddPhrase && !showAddNavigate && !showAddAudio && !showAddBoard && !showMenu) return null;
 
   return (
     <div className="flex items-center justify-center gap-2 py-2 bg-surface">
@@ -74,6 +79,15 @@ export default function BoardActionButtons({
         >
           <PlusIcon className="w-4 h-4" />
           <span>Add Navigate Tile</span>
+        </button>
+      ) : showAddAudio ? (
+        <button
+          onClick={onAddAudioTile}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
+          aria-label="Add audio tile"
+        >
+          <PlusIcon className="w-4 h-4" />
+          <span>Add Audio Tile</span>
         </button>
       ) : null}
 
@@ -126,6 +140,15 @@ export default function BoardActionButtons({
             >
               <ArrowRightCircleIcon className="w-5 h-5 text-text-secondary" />
               <span className="text-foreground">Navigate to board</span>
+            </button>
+          )}
+          {showAddAudio && (
+            <button
+              onClick={() => { onAddAudioTile?.(); setAddMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <SpeakerWaveIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Recorded audio</span>
             </button>
           )}
         </div>

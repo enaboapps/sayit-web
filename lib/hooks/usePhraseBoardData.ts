@@ -95,6 +95,19 @@ export function usePhraseBoardData() {
           },
         };
       }
+      if (tile.kind === 'audio') {
+        return {
+          id: String(tile._id),
+          kind: 'audio',
+          position: tile.position,
+          audioLabel: tile.audioLabel,
+          audioUrl: tile.audioUrl ?? null,
+          audioMimeType: tile.audioMimeType,
+          audioDurationMs: tile.audioDurationMs,
+          audioByteSize: tile.audioByteSize,
+        };
+      }
+
       // kind === 'navigate'
       return {
         id: String(tile._id),
@@ -191,6 +204,11 @@ export function usePhraseBoardData() {
     router.push(`/phrases/boards/${selectedBoardId}/tiles/navigate/add`);
   };
 
+  const handleAddAudioTile = () => {
+    if (!isOnline || !selectedBoardId || !canEditCurrentBoard) return;
+    router.push(`/phrases/boards/${selectedBoardId}/tiles/audio/add`);
+  };
+
   const handleEditPhrase = (phrase: PhraseSummary) => {
     if (!isOnline || !selectedBoardId) return;
     router.push(`/phrases/edit/${phrase.id}?boardId=${selectedBoardId}`);
@@ -199,6 +217,11 @@ export function usePhraseBoardData() {
   const handleEditNavigateTile = (tileId: string) => {
     if (!isOnline || !selectedBoardId) return;
     router.push(`/phrases/boards/${selectedBoardId}/tiles/navigate/${tileId}/edit`);
+  };
+
+  const handleEditAudioTile = (tileId: string) => {
+    if (!isOnline || !selectedBoardId) return;
+    router.push(`/phrases/boards/${selectedBoardId}/tiles/audio/${tileId}/edit`);
   };
 
   const handleAddBoard = () => {
@@ -240,8 +263,10 @@ export function usePhraseBoardData() {
     handleReorderTiles,
     handleAddPhrase,
     handleAddNavigateTile,
+    handleAddAudioTile,
     handleEditPhrase,
     handleEditNavigateTile,
+    handleEditAudioTile,
     handleAddBoard,
     handleEditBoard,
     handleAddAsPhrase,
