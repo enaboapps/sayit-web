@@ -134,7 +134,9 @@ git push origin vX.Y.Z
 ```
 
 Pushing the tag triggers the Release GitHub Action (`.github/workflows/release.yml`) which will:
-- Build the project
+- Deploy Convex functions
+- Build and deploy the web app
+- Build and deploy the landing site
 - Automatically create the GitHub Release with auto-generated notes
 
 Vercel automatically deploys to production when the release is created.
