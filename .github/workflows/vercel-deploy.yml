@@ -43,7 +43,7 @@ jobs:
         if: success()
         continue-on-error: true
         run: |
-          echo "✅ Deployment completed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> deployment_note.txt
+          echo "Deployment completed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> deployment_note.txt
           gh release edit ${{ github.event.release.tag_name }} --notes-file deployment_note.txt
         env:
           GH_TOKEN: ${{ github.token }}
