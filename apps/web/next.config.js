@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const workspaceRoot = path.resolve(__dirname, '../..');
 
 const nextConfig = {
   serverExternalPackages: ['sherpa-onnx-node', 'js-tts-wrapper'],
@@ -18,9 +19,9 @@ const nextConfig = {
       },
     ],
   },
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: workspaceRoot,
   turbopack: {
-    root: __dirname,
+    root: workspaceRoot,
   },
 };
 

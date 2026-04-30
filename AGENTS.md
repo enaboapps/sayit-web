@@ -38,7 +38,7 @@ For each issue:
 
 **Always build before committing:**
 ```bash
-npm run build
+pnpm build
 ```
 
 Ensure the build passes successfully. Do not create PRs with broken builds.
@@ -85,7 +85,7 @@ Perform all subsequent release steps in this branch before merging it back into 
 **Step 1: Run Tests**
 ```bash
 # Ensure all tests pass before release
-npm test
+pnpm test
 ```
 
 Do not proceed with release if any tests fail.
@@ -93,7 +93,7 @@ Do not proceed with release if any tests fail.
 **Step 2: Run Linting**
 ```bash
 # Fix any linting issues before release
-npx eslint . --ext .js,.jsx,.ts,.tsx --fix
+pnpm lint
 ```
 
 **Step 3: Commit and Push Lint Fixes**
@@ -104,7 +104,7 @@ git push
 ```
 
 **Step 4: Version Bump**
-- Update version in package.json and run npm install
+- Update version in package.json and run pnpm install
 - Create a git commit with the version bump
 
 **Step 5: Open and Merge a Pull Request**
@@ -151,9 +151,9 @@ When working with AI agents on this project:
 
 1. **Always create an issue first** - Don't start coding without a tracked issue
 2. **Work in feature branches** - Never commit directly to `main`
-3. **Run tests before PR** - Run `npm test` to catch regressions
-4. **Build before PR** - Run `npm run build` to catch issues early
-5. **Follow the release process** - Use npm version commands and gh CLI for releases
+3. **Run tests before PR** - Run `pnpm test` to catch regressions
+4. **Build before PR** - Run `pnpm build` to catch issues early
+5. **Follow the release process** - Use package version commands and gh CLI for releases
 6. **Check dependencies** - Ensure any new dependencies align with the existing tech stack
 7. **Keep repository content public-safe** - Treat repository files as public-facing unless explicitly private and ignored
 
@@ -171,12 +171,11 @@ When working with AI agents on this project:
 
 ```text
 sayit-web/
-|-- app/              # Next.js app directory
-|-- components/       # React components
-|-- convex/           # Convex backend functions
-|-- lib/              # Utility functions
-|-- public/           # Static assets
-|-- tests/            # Jest test suites
+|-- apps/
+|   `-- web/          # Next.js app, Convex functions, tests, and assets
+|-- .github/          # GitHub workflows and templates
+|-- package.json      # Workspace orchestration scripts
+|-- pnpm-workspace.yaml
 `-- ...
 ```
 

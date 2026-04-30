@@ -2,16 +2,20 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # testing
 /coverage
+**/coverage
 
 # next.js
 /.next/
+**/.next/
 /out/
+**/out/
 
 # production
 /build
@@ -31,6 +35,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+**/.vercel
 
 # typescript
 *.tsbuildinfo
@@ -39,12 +44,19 @@ next-env.d.ts
 # PWA - generated at build time from public/sw.template.js
 public/sw.js
 public/sw.js.map
+**/public/sw.js
+**/public/sw.js.map
 # Legacy serwist/workbox artifacts
 public/serwist-*.js
 public/serwist-*.js.map
 public/workbox-*.js
 public/worker-*.js
 public/fallback-*.js
+**/public/serwist-*.js
+**/public/serwist-*.js.map
+**/public/workbox-*.js
+**/public/worker-*.js
+**/public/fallback-*.js
 
 # Local dev tools
 .claude/

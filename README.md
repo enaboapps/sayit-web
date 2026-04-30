@@ -37,9 +37,9 @@ The SayIt! name, logos, icons, domain names, and other brand assets are reserved
 ## Development Setup
 
 ```bash
-npm install
-cp .env.example .env.local
-npm run dev
+pnpm install
+cp .env.example apps/web/.env.local
+pnpm dev
 ```
 
 The development server runs at `http://localhost:3000`.
@@ -59,13 +59,13 @@ Many UI and unit-test changes can be developed without every provider key. Authe
 ## Available Scripts
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm test
-npm run test:watch
-npm run test:coverage
+pnpm dev
+pnpm build
+pnpm start
+pnpm lint
+pnpm test
+pnpm test:watch
+pnpm test:coverage
 ```
 
 ## Testing
@@ -73,9 +73,9 @@ npm run test:coverage
 Before opening a pull request, run:
 
 ```bash
-npm run lint
-npm test
-npm run build
+pnpm lint
+pnpm test
+pnpm build
 ```
 
 ## Security Reporting
