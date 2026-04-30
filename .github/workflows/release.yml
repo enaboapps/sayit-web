@@ -28,14 +28,14 @@ jobs:
       - name: Pull Vercel project settings
         run: npx vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_ORG_ID: team_U9zs0AFsLTkLlpalDoH22Ru4
-          VERCEL_PROJECT_ID: prj_P7rsaUaL1aHaab6R0gliU7lyHLPq
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Build
         run: npx vercel build --prod --token ${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_ORG_ID: team_U9zs0AFsLTkLlpalDoH22Ru4
-          VERCEL_PROJECT_ID: prj_P7rsaUaL1aHaab6R0gliU7lyHLPq
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Create GitHub Release
         run: gh release create ${{ github.ref_name }} --generate-notes
@@ -45,5 +45,5 @@ jobs:
       - name: Deploy to Vercel
         run: npx vercel deploy --prebuilt --prod --token ${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_ORG_ID: team_U9zs0AFsLTkLlpalDoH22Ru4
-          VERCEL_PROJECT_ID: prj_P7rsaUaL1aHaab6R0gliU7lyHLPq
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

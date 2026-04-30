@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest a focused improvement for SayIt! Web.
+title: "feature: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior or workflow you want.
+    validations:
+      required: true
+  - type: input
+    id: user_group
+    attributes:
+      label: User group affected
+      placeholder: "Communicators, caregivers, guests, admins, etc."
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility considerations
+      description: Note any communication, motor, cognitive, speech, visual, hearing, or assistive technology considerations.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope notes
+      description: Include constraints, non-goals, or rollout notes.

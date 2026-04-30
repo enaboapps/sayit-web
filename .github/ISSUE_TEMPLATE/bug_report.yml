@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible problem in SayIt! Web.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps needed to reproduce the issue.
+      placeholder: |
+        1. Go to ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: browser_device
+    attributes:
+      label: Browser/device
+      placeholder: "Chrome 123 on Windows 11, iPadOS Safari, etc."
+  - type: dropdown
+    id: auth_state
+    attributes:
+      label: Auth state
+      options:
+        - Signed out
+        - Communicator
+        - Caregiver
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs/screenshots
+      description: Include non-sensitive logs, screenshots, or recordings if useful.
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility impact
+      description: Describe any impact on communication access, keyboard use, screen readers, text sizing, audio, or other accessibility needs.
+  - type: input
+    id: regression
+    attributes:
+      label: Regression version
+      description: If known, provide the version or release where this last worked.

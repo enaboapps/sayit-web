@@ -1,8 +1,8 @@
 # SayIt! Web - AI Agent Development Guide
 
-> **Main branch protection:**  
-> Never commit or push directly to `main`.  
-> Always use a feature or fix branch created from `main`—see "Branch Strategy" below for workflow.  
+> **Main branch protection:**
+> Never commit or push directly to `main`.
+> Always use a feature or fix branch created from `main`; see "Branch Strategy" below for workflow.
 > Direct changes to `main` are prohibited to preserve codebase integrity, CI reliability, and production stability.
 
 ## Project Overview
@@ -24,7 +24,7 @@ SayIt! is an AI-powered augmentative and alternative communication (AAC) web app
 
 Every piece of work starts with a GitHub issue:
 - Create an issue for each feature, bug fix, or task
-- Attach the issue to the **latest milestone**
+- Attach the issue to the latest milestone when one exists
 - Provide clear description and acceptance criteria
 
 ### 2. Branch Strategy
@@ -66,7 +66,7 @@ Before starting the release process, create a dedicated release branch from the 
    git pull
    ```
 
-2. Check the current open milestone on GitHub — its title is the intended release version:
+2. Check the current open milestone on GitHub. Its title is the intended release version:
    ```bash
    gh api repos/{owner}/{repo}/milestones --jq '.[] | select(.state=="open") | .title'
    ```
@@ -81,7 +81,6 @@ Before starting the release process, create a dedicated release branch from the 
    ```
 
 Perform all subsequent release steps in this branch before merging it back into `main` and tagging the release.
-
 
 **Step 1: Run Tests**
 ```bash
@@ -107,7 +106,6 @@ git push
 **Step 4: Version Bump**
 - Update version in package.json and run npm install
 - Create a git commit with the version bump
-
 
 **Step 5: Open and Merge a Pull Request**
 
@@ -135,7 +133,7 @@ git tag vX.Y.Z origin/main
 git push origin vX.Y.Z
 ```
 
-Pushing the tag triggers the **Release GitHub Action** (`.github/workflows/release.yml`) which will:
+Pushing the tag triggers the Release GitHub Action (`.github/workflows/release.yml`) which will:
 - Build the project
 - Automatically create the GitHub Release with auto-generated notes
 
@@ -157,24 +155,36 @@ When working with AI agents on this project:
 4. **Build before PR** - Run `npm run build` to catch issues early
 5. **Follow the release process** - Use npm version commands and gh CLI for releases
 6. **Check dependencies** - Ensure any new dependencies align with the existing tech stack
+7. **Keep repository content public-safe** - Treat repository files as public-facing unless explicitly private and ignored
+
+## Public Repository Hygiene
+
+- Never commit secrets, tokens, credentials, private keys, or provider configuration values.
+- Never include private user data, production logs, or screenshots containing sensitive information.
+- Never expose production identifiers unless they are intentionally public and documented.
+- Keep repository content public-safe and contributor-oriented.
+- Use `.env.example` for placeholder environment variable names only.
+- If a secret is exposed, assume it is compromised and rotate it with the provider.
+- Open-source issue and PR workflow remains issue-first and branch-based.
 
 ## Project Structure
 
-```
+```text
 sayit-web/
-├── app/              # Next.js app directory
-├── components/       # React components
-├── convex/          # Convex backend functions
-├── lib/             # Utility functions
-├── public/          # Static assets
-├── tests/           # Jest test suites
-└── ...
+|-- app/              # Next.js app directory
+|-- components/       # React components
+|-- convex/           # Convex backend functions
+|-- lib/              # Utility functions
+|-- public/           # Static assets
+|-- tests/            # Jest test suites
+`-- ...
 ```
 
 ## Important Notes
 
 - This is a PWA (Progressive Web App) with offline support
 - Authentication is handled by Clerk
-- AI features require DeepInfra API key
-- High-quality TTS requires ElevenLabs API key (falls back to browser TTS)
+- AI features require an OpenRouter-compatible API key
+- High-quality TTS requires a configured premium provider key and falls back to browser TTS
 - All user data is stored in Convex
+- The SayIt! name, logos, icons, domain names, and other brand assets are reserved by Enabo Apps
