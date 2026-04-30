@@ -2,7 +2,9 @@
 
 SayIt! is an AI-powered augmentative and alternative communication (AAC) web application that helps users express thoughts, feelings, needs, and wants more effectively.
 
-**Live app:** [sayitaac.com](https://sayitaac.com)
+**Landing site:** [sayitaac.com](https://sayitaac.com)
+
+**App:** [app.sayitaac.com](https://app.sayitaac.com)
 
 ## Features
 
@@ -39,7 +41,8 @@ The SayIt! name, logos, icons, domain names, and other brand assets are reserved
 ```bash
 pnpm install
 cp .env.example apps/web/.env.local
-pnpm dev
+pnpm dev:web
+pnpm dev:landing
 ```
 
 The development server runs at `http://localhost:3000`.
@@ -60,9 +63,15 @@ Many UI and unit-test changes can be developed without every provider key. Authe
 
 ```bash
 pnpm dev
+pnpm dev:web
+pnpm dev:landing
 pnpm build
+pnpm build:web
+pnpm build:landing
 pnpm start
 pnpm lint
+pnpm lint:web
+pnpm lint:landing
 pnpm test
 pnpm test:watch
 pnpm test:coverage

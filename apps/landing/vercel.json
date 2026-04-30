@@ -1,0 +1,59 @@
+{
+  "redirects": [
+    {
+      "source": "/dashboard/:path*",
+      "destination": "https://app.sayitaac.com/dashboard/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/phrases/:path*",
+      "destination": "https://app.sayitaac.com/phrases/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/settings",
+      "destination": "https://app.sayitaac.com/settings",
+      "permanent": true
+    },
+    {
+      "source": "/pricing",
+      "destination": "https://app.sayitaac.com/pricing",
+      "permanent": true
+    },
+    {
+      "source": "/privacy",
+      "destination": "https://app.sayitaac.com/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/support",
+      "destination": "https://app.sayitaac.com/support",
+      "permanent": true
+    },
+    {
+      "source": "/sign-in/:path*",
+      "destination": "https://app.sayitaac.com/sign-in/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/sign-up/:path*",
+      "destination": "https://app.sayitaac.com/sign-up/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/reset-password",
+      "destination": "https://app.sayitaac.com/reset-password",
+      "permanent": true
+    },
+    {
+      "source": "/typing-share/:path*",
+      "destination": "https://app.sayitaac.com/typing-share/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/offline",
+      "destination": "https://app.sayitaac.com/offline",
+      "permanent": true
+    }
+  ]
+}
