@@ -1,0 +1,48 @@
+---
+export interface Props {
+  id?: string;
+  eyebrow?: string;
+  tone?: 'paper' | 'soft' | 'ink';
+  width?: 'prose' | 'wide';
+  divider?: boolean;
+}
+
+const {
+  id,
+  eyebrow,
+  tone = 'paper',
+  width = 'wide',
+  divider = true,
+} = Astro.props;
+
+const toneClasses: Record<NonNullable<Props['tone']>, string> = {
+  paper: 'bg-paper text-ink',
+  soft: 'bg-soft text-ink',
+  ink: 'bg-ink text-paper',
+};
+
+const widthClass =
+  width === 'prose'
+    ? 'max-w-[var(--container-prose)]'
+    : 'max-w-[var(--container-wide)]';
+
+const showDivider = divider && tone !== 'ink';
+const dividerClass = showDivider ? 'border-t border-line' : '';
+const eyebrowClass =
+  tone === 'ink'
+    ? 'text-xs uppercase tracking-[0.12em] font-bold text-accent mb-4'
+    : 'text-xs uppercase tracking-[0.12em] font-bold text-accent-strong mb-4';
+---
+
+<section
+  id={id}
+  class={`${toneClasses[tone]} ${dividerClass} py-20 md:py-28`}
+>
+  <div class={`${widthClass} mx-auto px-6 md:px-12 lg:px-16`}>
+    {eyebrow && <p class={eyebrowClass}>{eyebrow}</p>}
+    <slot name="heading" />
+    <div class="mt-8">
+      <slot />
+    </div>
+  </div>
+</section>
