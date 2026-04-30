@@ -17,9 +17,9 @@ Never commit directly to `main`.
 Run:
 
 ```bash
-npm run lint
-npm test
-npm run build
+pnpm lint
+pnpm test
+pnpm build
 ```
 
 ## Public Repository Hygiene
