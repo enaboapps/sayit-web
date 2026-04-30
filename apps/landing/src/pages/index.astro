@@ -10,9 +10,9 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'https://app.sayitaac.com';
 const githubUrl =
   import.meta.env.PUBLIC_GITHUB_URL ?? 'https://github.com/enaboapps/sayit-web';
 
-const title = 'SayIt! — AAC software for people who need help being heard';
+const title = 'SayIt! — communication software for people who need help being heard';
 const description =
-  'AAC software with phrase boards, AI-assisted writing, and text-to-speech. Built so the person being supported is the person being heard.';
+  'Phrase boards, writing help, and spoken voices. Built so the person being supported is the person being heard.';
 ---
 
 <BaseLayout title={title} description={description}>
@@ -30,12 +30,12 @@ const description =
         <p
           class="mt-8 text-2xl font-medium leading-tight text-ink md:text-4xl"
         >
-          AAC software for people who need help being heard — and the people
-          helping them.
+          Communication software for people who need help being heard — and
+          the people helping them.
         </p>
         <p class="mt-6 text-[1.0625rem] leading-[1.65] text-muted md:text-lg">
-          Phrase boards, AI-assisted writing, and text-to-speech, designed so
-          the person communicating stays in charge of what gets said.
+          Phrase boards, writing help, and spoken voices, designed so the
+          person communicating stays in charge of what gets said.
         </p>
         <div class="mt-10 flex flex-wrap gap-3">
           <a
@@ -83,7 +83,7 @@ const description =
         </div>
         <div>
           <h3 class="text-lg font-semibold text-ink md:text-xl">
-            For caregivers, teachers, and SLPs.
+            For caregivers, teachers, and therapists.
           </h3>
           <p
             class="mt-3 text-[1.0625rem] leading-[1.65] text-muted md:text-lg"
@@ -114,8 +114,8 @@ const description =
             <p
               class="mt-2 text-[1.0625rem] leading-[1.65] text-muted md:text-lg"
             >
-              AI suggests. The person sends. Nothing autoplays, nothing speaks
-              without a tap.
+              The app may suggest. The person sends. Nothing autoplays,
+              nothing speaks without a tap.
             </p>
           </div>
         </li>
@@ -142,8 +142,8 @@ const description =
             <p
               class="mt-2 text-[1.0625rem] leading-[1.65] text-muted md:text-lg"
             >
-              Browser TTS, typed messages, and cached boards work without a
-              subscription. Premium voices and AI assistance are opt-in.
+              Free voices, typed messages, and saved boards work without a
+              subscription. More natural voices and writing help are opt-in.
             </p>
           </div>
         </li>
@@ -156,8 +156,8 @@ const description =
             <p
               class="mt-2 text-[1.0625rem] leading-[1.65] text-muted md:text-lg"
             >
-              The code is AGPL-3.0. The SayIt! name and marks are reserved by
-              Enabo Apps.
+              The code is open source. The SayIt! name and marks are not part
+              of that license.
             </p>
           </div>
         </li>
@@ -178,8 +178,8 @@ const description =
           sets.
         </Capability>
         <Capability n="02" name="Tile types" state="recent">
-          Phrase tiles, navigation tiles, and recorded-audio tiles. Recorded
-          audio shipped in v3.16.4.
+          Phrase tiles, link tiles, and tiles that play a recorded clip.
+          Recorded audio is the newest addition.
         </Capability>
         <Capability n="03" name="Composer" state="shipping">
           Tabs, multiple drafts, undo and redo. Built for the rhythm of
@@ -192,20 +192,20 @@ const description =
         <Capability n="05" name="Reply Suggestions" state="shipping">
           Hints for what to say next, never sent automatically.
         </Capability>
-        <Capability n="06" name="Text-to-speech" state="shipping">
-          Browser voices by default. ElevenLabs, Azure, and Gemini available
-          with a configured premium key.
+        <Capability n="06" name="Spoken voices" state="shipping">
+          Free voices built into your browser by default. More natural,
+          premium voices available on a paid plan.
         </Capability>
         <Capability n="07" name="Live Typing" state="shipping">
-          Share a typing session in real time over Convex when the receiver
-          can't read a screen up close.
+          Share a typing session in real time, so someone across the room can
+          read along as you write.
         </Capability>
-        <Capability n="08" name="Symbol search" state="shipping">
-          Symbol picker backed by a licensed symbol set.
+        <Capability n="08" name="Picture symbols" state="shipping">
+          A built-in library of pictograms to attach to phrases.
         </Capability>
-        <Capability n="09" name="Caregiver workflows" state="shipping">
-          Distinct caregiver role with managed clients and per-board view or
-          edit access.
+        <Capability n="09" name="Caregiver mode" state="shipping">
+          A separate caregiver mode with its own dashboard, a list of clients,
+          and view-only or edit access set per board.
         </Capability>
       </div>
     </Section>
@@ -219,9 +219,9 @@ const description =
         Honest about what works without a connection.
       </h2>
       <p class="text-xl leading-[1.55] text-ink md:text-2xl">
-        SayIt! installs as a PWA. Some things keep working when the network
-        drops. Others can't — and we'd rather say so than let you discover it
-        mid-conversation.
+        SayIt! installs to your phone or desktop. Some things keep working
+        when the network drops. Others can't — and we'd rather say so than
+        let you discover it mid-conversation.
       </p>
       <table class="mt-10 w-full border-collapse text-left">
         <thead>
@@ -248,7 +248,7 @@ const description =
             <td
               class="py-4 pl-4 text-[1.0625rem] leading-[1.5] text-muted md:text-lg"
             >
-              AI assistance (Fix Text, Reply Suggestions)
+              Writing help (Fix Text, Reply Suggestions)
             </td>
           </tr>
           <tr class="border-b border-line">
@@ -260,7 +260,7 @@ const description =
             <td
               class="py-4 pl-4 text-[1.0625rem] leading-[1.5] text-muted md:text-lg"
             >
-              Premium TTS (ElevenLabs, Azure, Gemini)
+              Premium voices
             </td>
           </tr>
           <tr class="border-b border-line">
@@ -284,7 +284,7 @@ const description =
             <td
               class="py-4 pl-4 text-[1.0625rem] leading-[1.5] text-muted md:text-lg"
             >
-              Convex sync, sign-in, billing
+              Syncing across devices, sign-in, billing
             </td>
           </tr>
         </tbody>
@@ -300,16 +300,17 @@ const description =
         Where your data goes, named out loud.
       </h2>
       <p class="text-[1.0625rem] leading-[1.65] text-muted md:text-lg">
-        User data lives in Convex. Authentication is handled by Clerk. Billing
-        runs on Stripe via Clerk — SayIt! never sees your card.
+        Your boards and messages stay in your account. Sign-in and billing
+        run through trusted services, so SayIt! never sees your card or
+        password.
       </p>
       <p class="mt-6 text-[1.0625rem] leading-[1.65] text-muted md:text-lg">
-        Premium AI calls go to OpenRouter. Premium voices run on ElevenLabs,
-        Azure, or Gemini, only when configured and only when invoked. Symbols
-        come from a licensed symbol set.
+        Writing help and premium voices only run when you ask for them, and
+        only when a paid plan is set up. Picture symbols come from a licensed
+        library.
       </p>
       <p class="mt-6 text-[1.0625rem] leading-[1.65] text-muted md:text-lg">
-        The full privacy policy lives at the app subdomain.
+        The full privacy policy lives in the app.
       </p>
       <p class="mt-8">
         <a
@@ -331,9 +332,8 @@ const description =
       </h2>
       <div class="grid grid-cols-1 gap-12 md:grid-cols-2">
         <p class="text-[1.0625rem] leading-[1.65] text-muted md:text-lg">
-          The code is public under AGPL-3.0. Run it, read it, fork it. The
-          SayIt! name, logo, and domain are not part of that license — they
-          belong to Enabo Apps.
+          The code is open source. Read it, run it, fork it. The SayIt! name,
+          logo, and domain are not part of that license.
         </p>
         <dl
           class="space-y-3 border-l-2 border-line pl-6 text-[1.0625rem] leading-[1.55] md:text-lg"
@@ -361,7 +361,7 @@ const description =
             <dt class="text-xs font-bold uppercase tracking-[0.12em] text-accent-strong">
               Brand
             </dt>
-            <dd class="text-ink">Reserved by Enabo Apps</dd>
+            <dd class="text-ink">Reserved</dd>
           </div>
         </dl>
       </div>
