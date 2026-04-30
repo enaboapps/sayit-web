@@ -7,9 +7,15 @@
   "packageManager": "pnpm@10.30.1",
   "scripts": {
     "dev": "pnpm --filter @sayit/web dev",
-    "build": "pnpm --filter @sayit/web build",
+    "dev:web": "pnpm --filter @sayit/web dev",
+    "dev:landing": "pnpm --filter @sayit/landing dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter @sayit/web build",
+    "build:landing": "pnpm --filter @sayit/landing build",
     "start": "pnpm --filter @sayit/web start",
-    "lint": "pnpm --filter @sayit/web lint",
+    "lint": "pnpm -r lint",
+    "lint:web": "pnpm --filter @sayit/web lint",
+    "lint:landing": "pnpm --filter @sayit/landing lint",
     "test": "pnpm --filter @sayit/web test",
     "test:watch": "pnpm --filter @sayit/web test:watch",
     "test:coverage": "pnpm --filter @sayit/web test:coverage"

@@ -1,0 +1,126 @@
+---
+import ProductPreview from '../components/ProductPreview.astro';
+import '../styles/global.css';
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'https://app.sayitaac.com';
+const githubUrl = import.meta.env.PUBLIC_GITHUB_URL ?? 'https://github.com/enaboapps/sayit-web';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="SayIt! is an AAC communication app with phrase boards, AI-assisted writing, and text-to-speech."
+    />
+    <title>SayIt! | AAC communication app</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="SayIt! home">
+        <img src="/app-icon.png" alt="" width="36" height="36" />
+        <span>SayIt!</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy</a>
+        <a href={`${appUrl}/pricing`}>Pricing</a>
+        <a href={`${appUrl}/support`}>Support</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero__content">
+          <p class="eyebrow">Accessible communication software</p>
+          <h1 id="hero-title">SayIt!</h1>
+          <p class="hero__copy">
+            AAC communication with phrase boards, AI-assisted writing, and text-to-speech.
+          </p>
+          <div class="hero__actions" aria-label="Primary actions">
+            <a class="button button--primary" href={appUrl}>Open SayIt!</a>
+            <a class="button button--secondary" href={githubUrl}>View on GitHub</a>
+          </div>
+        </div>
+        <ProductPreview />
+      </section>
+
+      <section class="section section--audience" aria-labelledby="audience-title">
+        <div>
+          <p class="eyebrow">Who it supports</p>
+          <h2 id="audience-title">For communicators, caregivers, and teams.</h2>
+        </div>
+        <p>
+          SayIt! is built for people who need support expressing themselves clearly, and for the
+          caregivers who help prepare communication boards, routines, and shared vocabulary.
+        </p>
+      </section>
+
+      <section class="section" id="features" aria-labelledby="features-title">
+        <p class="eyebrow">Core tools</p>
+        <h2 id="features-title">Communication features that stay close to the person using them.</h2>
+        <div class="feature-grid">
+          <article>
+            <h3>Phrase boards</h3>
+            <p>Create reusable words, phrases, and boards for daily communication and specific routines.</p>
+          </article>
+          <article>
+            <h3>AI-assisted writing</h3>
+            <p>Turn rough thoughts into clearer messages while keeping the communicator in control.</p>
+          </article>
+          <article>
+            <h3>Text-to-speech</h3>
+            <p>Speak typed messages and phrases with browser speech or configured premium voices.</p>
+          </article>
+          <article>
+            <h3>Offline support</h3>
+            <p>Keep text communication available when the installed app starts without a connection.</p>
+          </article>
+          <article>
+            <h3>Caregiver workflows</h3>
+            <p>Prepare and manage boards for clients while keeping communicator access simple.</p>
+          </article>
+          <article>
+            <h3>Open source</h3>
+            <p>SayIt! is public source under AGPL-3.0, with brand assets reserved by Enabo Apps.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section split" id="privacy" aria-labelledby="privacy-title">
+        <div>
+          <p class="eyebrow">Privacy and safety</p>
+          <h2 id="privacy-title">Clear boundaries for sensitive communication data.</h2>
+        </div>
+        <div class="stack">
+          <p>
+            User data is stored in Convex, authentication is handled by Clerk, and premium AI or
+            voice features use configured providers only when enabled.
+          </p>
+          <a href={`${appUrl}/privacy`}>Read the privacy policy</a>
+        </div>
+      </section>
+
+      <section class="cta" aria-labelledby="cta-title">
+        <h2 id="cta-title">Open SayIt! and start communicating.</h2>
+        <p>Use the web app, install it as a PWA, or review the source on GitHub.</p>
+        <div class="hero__actions">
+          <a class="button button--primary" href={appUrl}>Open SayIt!</a>
+          <a class="button button--secondary" href={`${appUrl}/support`}>Get support</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>SayIt!</span>
+      <div>
+        <a href={`${appUrl}/pricing`}>Pricing</a>
+        <a href={`${appUrl}/privacy`}>Privacy</a>
+        <a href={`${appUrl}/support`}>Support</a>
+        <a href={githubUrl}>GitHub</a>
+      </div>
+    </footer>
+  </body>
+</html>
