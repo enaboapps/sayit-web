@@ -1,0 +1,35 @@
+---
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'https://app.sayitaac.com';
+---
+
+<header
+  class="sticky top-0 z-10 border-b border-line bg-paper/95 backdrop-blur-sm"
+>
+  <div
+    class="mx-auto flex max-w-[var(--container-wide)] flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-12 lg:px-16"
+  >
+    <a href="/" class="flex items-center gap-3 text-ink no-underline">
+      <img
+        src="/app-icon.png"
+        alt=""
+        width="32"
+        height="32"
+        class="h-8 w-8 rounded-md"
+      />
+      <span class="text-base font-bold tracking-tight">SayIt!</span>
+    </a>
+    <nav
+      class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-accent-strong"
+    >
+      <a href="#principles" class="hover:text-accent">Principles</a>
+      <a href="#capabilities" class="hover:text-accent">Capabilities</a>
+      <a href="#offline" class="hover:text-accent">Offline</a>
+      <a
+        href={appUrl}
+        class="rounded-md bg-accent px-3 py-1.5 text-paper hover:bg-accent-strong"
+      >
+        Open the app
+      </a>
+    </nav>
+  </div>
+</header>

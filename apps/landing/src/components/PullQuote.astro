@@ -1,0 +1,14 @@
+---
+// PullQuote: a typographic punctuation block. Used to set or restate the thesis.
+// No props; copy lives in the slot.
+---
+
+<section class="bg-paper py-16 md:py-24">
+  <div class="mx-auto max-w-[var(--container-wide)] px-6 md:px-12 lg:px-16">
+    <blockquote
+      class="max-w-[28ch] border-l-2 border-accent pl-8 text-3xl font-medium leading-[1.15] text-ink md:text-5xl"
+    >
+      <slot />
+    </blockquote>
+  </div>
+</section>

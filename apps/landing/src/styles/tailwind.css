@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter/index.css";
+
+@theme {
+  /* Brand palette */
+  --color-ink: #17201a;
+  --color-muted: #52645a;
+  --color-paper: #fbfcf8;
+  --color-surface: #ffffff;
+  --color-line: #dce5dd;
+  --color-accent: #2f6f4e;
+  --color-accent-strong: #1f563b;
+  --color-soft: #edf5ee;
+  --color-focus: #0d7a55;
+
+  /* Typography */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+
+  /* Layout widths */
+  --container-prose: 65ch;
+  --container-wide: 72rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+}

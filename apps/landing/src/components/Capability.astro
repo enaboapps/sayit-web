@@ -1,0 +1,44 @@
+---
+export interface Props {
+  n: string;
+  name: string;
+  state: 'shipping' | 'recent' | 'planned';
+}
+
+const { n, name, state } = Astro.props;
+
+const stateLabel: Record<Props['state'], string> = {
+  shipping: 'Shipping',
+  recent: 'Recent',
+  planned: 'In progress',
+};
+
+const stateClasses: Record<Props['state'], string> = {
+  shipping: 'bg-soft text-accent-strong',
+  recent: 'bg-accent text-paper',
+  planned: 'bg-line text-ink',
+};
+---
+
+<article
+  class="grid grid-cols-1 gap-3 border-t border-line py-8 md:grid-cols-12 md:gap-6"
+>
+  <div
+    class="text-sm font-semibold tracking-[0.12em] text-muted md:col-span-1"
+  >
+    {n}
+  </div>
+  <h3 class="text-lg font-semibold text-ink md:col-span-3 md:text-xl">
+    {name}
+  </h3>
+  <div class="text-[1.0625rem] leading-[1.65] text-muted md:col-span-7 md:text-lg">
+    <slot />
+  </div>
+  <div class="md:col-span-1 md:text-right">
+    <span
+      class={`inline-block rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] ${stateClasses[state]}`}
+    >
+      {stateLabel[state]}
+    </span>
+  </div>
+</article>

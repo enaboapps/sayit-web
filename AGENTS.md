@@ -104,7 +104,13 @@ git push
 ```
 
 **Step 4: Version Bump**
-- Update version in package.json and run pnpm install
+- Update the `version` field in **all three** `package.json` files, keeping them in lockstep:
+  - `package.json` (workspace root)
+  - `apps/web/package.json`
+  - `apps/landing/package.json`
+
+  The landing footer on `sayitaac.com` reads its version from `apps/landing/package.json` at build time, so any drift between these files will show stale or wrong numbers in production.
+- Run `pnpm install` to update the lockfile
 - Create a git commit with the version bump
 
 **Step 5: Open and Merge a Pull Request**
@@ -174,7 +180,8 @@ When working with AI agents on this project:
 ```text
 sayit-web/
 |-- apps/
-|   `-- web/          # Next.js app, Convex functions, tests, and assets
+|   |-- web/          # Next.js app, Convex functions, tests, and assets
+|   `-- landing/      # Astro marketing site served at sayitaac.com
 |-- .github/          # GitHub workflows and templates
 |-- package.json      # Workspace orchestration scripts
 |-- pnpm-workspace.yaml

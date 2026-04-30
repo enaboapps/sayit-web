@@ -1,0 +1,23 @@
+---
+import pkg from '../../package.json';
+
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'https://app.sayitaac.com';
+const githubUrl = import.meta.env.PUBLIC_GITHUB_URL ?? 'https://github.com/enaboapps/sayit-web';
+const version = pkg.version;
+---
+
+<footer class="border-t border-line">
+  <div
+    class="mx-auto flex max-w-[var(--container-wide)] flex-col gap-3 px-6 py-8 text-sm text-muted md:flex-row md:items-center md:justify-between md:px-12 lg:px-16"
+  >
+    <p>
+      SayIt! · v{version}
+    </p>
+    <nav class="flex flex-wrap gap-x-5 gap-y-2 font-semibold text-accent-strong">
+      <a href={`${appUrl}/pricing`} class="hover:text-accent">Pricing</a>
+      <a href={`${appUrl}/privacy`} class="hover:text-accent">Privacy</a>
+      <a href={`${appUrl}/support`} class="hover:text-accent">Support</a>
+      <a href={githubUrl} class="hover:text-accent">GitHub</a>
+    </nav>
+  </div>
+</footer>
