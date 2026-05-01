@@ -38,7 +38,7 @@ const nextConfig = {
     // node:fs/node:path. Re-verify this list after each willwade upgrade —
     // a new transitive `adm-zip` reference would silently throw at runtime.
     resolveAlias: {
-      'adm-zip': path.resolve(__dirname, 'lib/stubs/empty-module.js').replace(/\\/g, '/'),
+      'adm-zip': { browser: './lib/stubs/empty-module.js' },
     },
   },
 };
