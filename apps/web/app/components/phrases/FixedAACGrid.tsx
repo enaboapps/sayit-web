@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import BoardTileRenderer from './tiles/BoardTileRenderer';
 import type { BoardTileSummary, PhraseSummary } from './types';
+import { appLogger } from '@/lib/logger';
 
 const WORD_CLASS_ACCENTS: Record<string, string> = {
   pronoun: 'ring-1 ring-slate-300/70',
@@ -70,16 +71,11 @@ export default function FixedAACGrid({
     for (const tile of tiles) {
       const { row, column } = tileCell(tile, columns);
       if (row < 0 || column < 0 || row >= rows || column >= columns) {
-        // Surface the silent drop in dev so a user reporting "my tile
-        // disappeared" has a breadcrumb. Skipped in production to avoid
-        // noisy warnings from valid migration / import cases where cell
-        // metadata is being filled in lazily.
-        if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
-          console.warn(
-            `[FixedAACGrid] Tile ${tile.id} has out-of-bounds cell (${row}, ${column}) for ${rows}x${columns} grid; skipping.`
-          );
-        }
+        appLogger.warn(
+          'FixedAACGrid skipped an out-of-bounds tile',
+          { tileId: tile.id, row, column, rows, columns },
+          { production: false }
+        );
         continue;
       }
       map.set(`${row}:${column}`, tile);
