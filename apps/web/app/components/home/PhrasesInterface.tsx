@@ -37,6 +37,7 @@ export default function PhrasesInterface() {
   const [typingText, setTypingText] = useState('');
   const [activePhraseId, setActivePhraseId] = useState<string | null>(null);
   const [isOpenBoardImportOpen, setIsOpenBoardImportOpen] = useState(false);
+  const [openBoardExportError, setOpenBoardExportError] = useState<string | null>(null);
 
   const activeTabId = uiPreferences.activeTypingTabId;
   const {
@@ -119,6 +120,7 @@ export default function PhrasesInterface() {
 
   const handleExportOpenBoard = () => {
     if (!boardData.selectedBoard) return;
+    setOpenBoardExportError(null);
     const blob = createOpenBoardBlob({
       ...boardData.selectedBoard,
       tiles: boardData.tiles,
@@ -127,48 +129,57 @@ export default function PhrasesInterface() {
   };
 
   const handleExportAllOpenBoards = async () => {
+    if (!isOnline || !user) {
+      setOpenBoardExportError('Connect to the internet before exporting all boards.');
+      return;
+    }
+
+    setOpenBoardExportError(null);
     // Fire the query at click time (not via useQuery at module mount) so we
     // don't pay for a permanent subscription to every board's tiles for
     // users who never export. One-shot read against the same handler that
     // `usePhraseBoardData` subscribes to — Convex caches what it can.
-    const allBoardsWithTiles = await convex.query(api.phraseBoards.getPhraseBoards, {});
-    if (!allBoardsWithTiles?.length) return;
-    // Map each Convex result row to the BoardSummary shape `createOpenBoardZipBlob`
-    // consumes. Phrases come in via `phrase_board_phrases` (legacy free-mode) and
-    // `tiles` (fixed-grid + polymorphic). Both are populated server-side. The
-    // Convex result shape is narrower than BoardSummary, so we cast to a duck
-    // type rather than restate every field — matches the pattern in
-    // `usePhraseBoardData` and `lib/offline/storage.ts`.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const summaries: BoardSummary[] = (allBoardsWithTiles as any[]).map((board) => ({
-      id: String(board._id),
-      name: board.name,
-      position: board.position,
-      phrases: ((board.phrase_board_phrases ?? []) as Array<{ phrase?: { _id?: string; text?: string; symbolUrl?: string } | null }>)
-        .map((link) => link.phrase)
-        .filter((phrase): phrase is { _id?: string; text: string; symbolUrl?: string } => Boolean(phrase?.text))
-        .map((phrase) => ({
-          id: String(phrase._id ?? phrase.text),
-          text: phrase.text,
-          symbolUrl: phrase.symbolUrl,
-        } as PhraseSummary)),
-      tiles: (board.tiles ?? undefined) as BoardTileSummary[] | undefined,
-      isShared: board.isShared,
-      isOwner: board.isOwner,
-      accessLevel: board.accessLevel,
-      sharedBy: board.sharedBy,
-      forClientId: board.forClientId,
-      forClientName: board.forClientName,
-      layoutMode: board.layoutMode ?? 'free',
-      layoutPreset: board.layoutPreset,
-      gridRows: board.gridRows,
-      gridColumns: board.gridColumns,
-      layoutVersion: board.layoutVersion,
-      sourceTemplate: board.sourceTemplate,
-    }));
-    const blob = await createOpenBoardZipBlob(summaries);
-    const stamp = new Date().toISOString().slice(0, 10);
-    downloadBlob(blob, `sayit-boards-${stamp}.obz`);
+    try {
+      const allBoardsWithTiles = await convex.query(api.phraseBoards.getPhraseBoards, {});
+      if (!allBoardsWithTiles?.length) return;
+      // Map each Convex result row to the BoardSummary shape `createOpenBoardZipBlob`
+      // consumes. Phrases come in via `phrase_board_phrases` (legacy free-mode) and
+      // `tiles` (fixed-grid + polymorphic). Both are populated server-side. The
+      // Convex result shape is narrower than BoardSummary, so we cast to a duck
+      // type rather than restate every field — matches the pattern in
+      // `usePhraseBoardData` and `lib/offline/storage.ts`.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const summaries: BoardSummary[] = (allBoardsWithTiles as any[]).map((board) => ({
+        id: String(board._id),
+        name: board.name,
+        position: board.position,
+        phrases: ((board.phrase_board_phrases ?? []) as Array<{ phrase?: { _id?: string; text?: string; symbolUrl?: string } | null }>)
+          .map((link) => link.phrase)
+          .filter((phrase): phrase is { _id?: string; text: string; symbolUrl?: string } => Boolean(phrase?.text))
+          .map((phrase) => ({
+            id: String(phrase._id ?? phrase.text),
+            text: phrase.text,
+            symbolUrl: phrase.symbolUrl,
+          } as PhraseSummary)),
+        tiles: (board.tiles ?? undefined) as BoardTileSummary[] | undefined,
+        isShared: board.isShared,
+        isOwner: board.isOwner,
+        accessLevel: board.accessLevel,
+        sharedBy: board.sharedBy,
+        forClientId: board.forClientId,
+        forClientName: board.forClientName,
+        layoutMode: board.layoutMode ?? 'free',
+        gridRows: board.gridRows,
+        gridColumns: board.gridColumns,
+        layoutVersion: board.layoutVersion,
+      }));
+      const blob = await createOpenBoardZipBlob(summaries);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `sayit-boards-${stamp}.obz`);
+    } catch (error) {
+      console.error('Failed to export Open Board package:', error);
+      setOpenBoardExportError('Could not export all boards. Try again when your connection is stable.');
+    }
   };
 
   const suggestionContext = useMemo(() => {
@@ -200,6 +211,15 @@ export default function PhrasesInterface() {
           aria-live="polite"
         >
           Couldn&apos;t save message to history. It will be retried next time.
+        </div>
+      )}
+      {openBoardExportError && (
+        <div
+          className="sticky top-0 z-40 shrink-0 border-b border-red-900 bg-surface px-4 py-3 text-sm text-red-300"
+          role="status"
+          aria-live="polite"
+        >
+          {openBoardExportError}
         </div>
       )}
       <div className="flex min-h-0 flex-1 flex-col">
@@ -239,7 +259,7 @@ export default function PhrasesInterface() {
                 // Use the already-loaded full board list to gate the menu —
                 // including hidden drill-downs since they belong in the .obz.
                 // The actual export query fires at click time inside the handler.
-                boardData.boards.length > 0 ? handleExportAllOpenBoards : undefined
+                isOnline && !!user && boardData.boards.length > 0 ? handleExportAllOpenBoards : undefined
               }
               onReorderTiles={boardData.handleReorderTiles}
               onMoveTileToCell={boardData.handleMoveTileToCell}
