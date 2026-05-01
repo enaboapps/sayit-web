@@ -32,6 +32,36 @@ function tileLayoutSummary(tile: {
   };
 }
 
+type BoardSelectionSummary = Pick<BoardSummary, 'id' | 'hiddenFromPicker'>;
+
+export function preferredBoardSelection<TBoard extends BoardSelectionSummary>(
+  boards: TBoard[],
+  selectedBoardId: string | null
+): {
+  selectedBoard: TBoard | null;
+  visibleBoards: TBoard[];
+  validBoardIndex: number;
+  preferredSelectedBoardId: string | null;
+} {
+  const visibleBoards = boards.filter((board) => !board.hiddenFromPicker);
+  const selectedVisibleBoard = selectedBoardId
+    ? visibleBoards.find((board) => board.id === selectedBoardId) ?? null
+    : null;
+  const selectedBoard = selectedVisibleBoard
+    ?? visibleBoards[0]
+    ?? (selectedBoardId ? boards.find((board) => board.id === selectedBoardId) : undefined)
+    ?? boards[0]
+    ?? null;
+  const currentBoardIndex = visibleBoards.findIndex((board) => board.id === selectedBoard?.id);
+
+  return {
+    selectedBoard,
+    visibleBoards,
+    validBoardIndex: currentBoardIndex >= 0 ? currentBoardIndex : 0,
+    preferredSelectedBoardId: selectedBoard?.id ?? null,
+  };
+}
+
 export function usePhraseBoardData() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -81,9 +111,15 @@ export function usePhraseBoardData() {
       }
       return;
     }
-    if (selectedBoardId && boards.some(board => board._id === selectedBoardId)) return;
+    const visibleBoards = boards.filter((board) => !board.hiddenFromPicker);
+    const preferredBoard = (
+      selectedBoardId
+        ? visibleBoards.find((board) => board._id === selectedBoardId)
+        : null
+    ) ?? visibleBoards[0] ?? boards[0];
+    if (selectedBoardId === preferredBoard._id) return;
     navStack.clear();
-    updateUIPreference('selectedBoardId', boards[0]._id);
+    updateUIPreference('selectedBoardId', preferredBoard._id);
   }, [boards, shouldLoadBoards, selectedBoardId, updateUIPreference, navStack]);
 
 
@@ -166,17 +202,14 @@ export function usePhraseBoardData() {
 
   // `visibleBoards` is what picker UIs walk through — drill-down boards
   // imported from OBF vocabularies (CommuniKate, etc.) are flagged
-  // `hiddenFromPicker` so they don't clutter the picker, while remaining
-  // fully reachable through navigate tiles. `transformedBoards` (full list)
-  // is still used for `selectedBoard` resolution so navigating to a hidden
-  // board via a nav tile still renders that board.
-  const visibleBoards = transformedBoards.filter((board) => !board.hiddenFromPicker);
-
-  const selectedBoard = transformedBoards.find(b => b.id === selectedBoardId) || null;
-  // Carousel/swipe nav cycles through visibleBoards only — falling off the
-  // end onto a hidden drill-down would feel like a bug to the user.
-  const currentBoardIndex = visibleBoards.findIndex(b => b.id === selectedBoardId);
-  const validBoardIndex = currentBoardIndex >= 0 ? currentBoardIndex : 0;
+  // `hiddenFromPicker` so they don't clutter the picker. Default selection
+  // prefers visible boards, with an all-hidden fallback for malformed or
+  // manually-hidden libraries.
+  const {
+    selectedBoard,
+    visibleBoards,
+    validBoardIndex,
+  } = preferredBoardSelection(transformedBoards, selectedBoardId);
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
   // Manual board picks (sidebar, dropdown, board-grid popup) reset the back
