@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
+import { AAC_LAYOUT_VERSION } from './aacLayout';
 
 const MAX_IMPORT_BOARDS = 50;
 const MAX_IMPORT_TILES = 4000;
@@ -77,7 +78,7 @@ export const importBoards = mutation({
         layoutMode: 'fixedGrid',
         gridRows: board.gridRows,
         gridColumns: board.gridColumns,
-        layoutVersion: 1,
+        layoutVersion: AAC_LAYOUT_VERSION,
         sourceTemplate: 'custom',
       });
 
@@ -85,10 +86,10 @@ export const importBoards = mutation({
       importedBoardIds.push(boardId);
     }
 
+    // Validate every tile up front so we fail before mutating anything;
+    // the cell-collision and bounds checks are cheap and let us batch the
+    // inserts below with Promise.all without worrying about partial state.
     for (const board of args.boards) {
-      const boardId = sourceIdToBoardId.get(board.sourceId);
-      if (!boardId) continue;
-
       const occupiedCells = new Set<string>();
       for (const tile of board.tiles) {
         if (!Number.isInteger(tile.cellRow) || !Number.isInteger(tile.cellColumn)) {
@@ -102,16 +103,26 @@ export const importBoards = mutation({
         ) {
           throw new Error('Imported tile cell coordinates are outside the board grid');
         }
-
         const cellKey = `${tile.cellRow}:${tile.cellColumn}`;
         if (occupiedCells.has(cellKey)) {
           throw new Error('Import contains multiple tiles in the same grid cell');
         }
         occupiedCells.add(cellKey);
+      }
+    }
 
+    // Insert tiles in parallel per-board. Convex mutations are atomic so
+    // concurrent ctx.db.insert calls within a single mutation are safe;
+    // sequential awaits were the prior cost per imported tile (50 boards
+    // x dozens of tiles each made the import noticeably slow).
+    await Promise.all(args.boards.map(async (board) => {
+      const boardId = sourceIdToBoardId.get(board.sourceId);
+      if (!boardId) return;
+
+      await Promise.all(board.tiles.map(async (tile) => {
         if (tile.kind === 'phrase') {
           const text = tile.text.trim();
-          if (!text) continue;
+          if (!text) return;
 
           const symbolUrl = tile.symbolStorageId
             ? await ctx.storage.getUrl(tile.symbolStorageId)
@@ -137,11 +148,11 @@ export const importBoards = mutation({
             tileRole: 'fringe',
             isLocked: false,
           });
-          continue;
+          return;
         }
 
         const targetBoardId = sourceIdToBoardId.get(tile.targetSourceId);
-        if (!targetBoardId || targetBoardId === boardId) continue;
+        if (!targetBoardId || targetBoardId === boardId) return;
 
         await ctx.db.insert('boardTiles', {
           boardId,
@@ -155,8 +166,8 @@ export const importBoards = mutation({
           tileRole: 'navigation',
           isLocked: false,
         });
-      }
-    }
+      }));
+    }));
 
     return {
       importedBoardIds,

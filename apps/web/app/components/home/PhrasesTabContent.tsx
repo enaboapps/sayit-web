@@ -95,10 +95,9 @@ export default function PhrasesTabContent({
     onAudioEdit(tile.id);
   };
 
-  // Defensive: parents should always pass an array, but a transient HMR / data
-  // race could leak an undefined into the prop. Default here so we render an
-  // empty grid instead of crashing the tree.
-  const safeTiles = tiles ?? [];
+  // The `tiles` prop is typed `BoardTileSummary[]` (non-optional) and the
+  // hook always returns an array — see `usePhraseBoardData`'s `tiles` derivation.
+  const safeTiles = tiles;
 
   const isFixedGrid = selectedBoard?.layoutMode === 'fixedGrid'
     && typeof selectedBoard.gridRows === 'number'

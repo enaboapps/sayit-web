@@ -8,6 +8,7 @@ import {
   AAC_SOURCE_TEMPLATE,
   getCoreWordsForPreset,
   getPresetDimensions,
+  nextFixedGridCell,
 } from './aacLayout';
 
 // ---------------------------------------------------------------------------
@@ -87,41 +88,6 @@ function tileLayoutMetadata(row: Doc<'boardTiles'>) {
     wordClass: row.wordClass,
     isLocked: row.isLocked,
   };
-}
-
-function nextFixedGridCell(
-  board: Doc<'phraseBoards'>,
-  tiles: Doc<'boardTiles'>[]
-): { cellRow: number; cellColumn: number; cellRowSpan: 1; cellColumnSpan: 1 } | null {
-  if (
-    board.layoutMode !== 'fixedGrid' ||
-    typeof board.gridRows !== 'number' ||
-    typeof board.gridColumns !== 'number'
-  ) {
-    return null;
-  }
-
-  const occupied = new Set<string>();
-  for (const tile of tiles) {
-    if (typeof tile.cellRow === 'number' && typeof tile.cellColumn === 'number') {
-      occupied.add(`${tile.cellRow}:${tile.cellColumn}`);
-    }
-  }
-
-  for (let row = 0; row < board.gridRows; row++) {
-    for (let column = 0; column < board.gridColumns; column++) {
-      if (!occupied.has(`${row}:${column}`)) {
-        return {
-          cellRow: row,
-          cellColumn: column,
-          cellRowSpan: 1,
-          cellColumnSpan: 1,
-        };
-      }
-    }
-  }
-
-  throw new Error('No empty fixed-grid cells are available on this board');
 }
 
 function viewerCanReadBoard(
@@ -655,19 +621,15 @@ export const addPhraseToBoard = mutation({
       throw new Error('Unauthorized - board');
     }
 
-    // Check for duplicate phrase text on this board (across all tiles).
+    // Load tiles for cell-collision detection and position derivation.
+    // We deliberately allow duplicate phrase text within a board: the polymorphic
+    // tile model uses tile-level identity, and OBF imports may legitimately
+    // produce duplicates (e.g. ergonomic placement of "yes" in two cells).
+    // Cell-collision is the binding constraint, not text uniqueness.
     const existingTiles = await ctx.db
       .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
       .collect();
-
-    for (const tile of existingTiles) {
-      if (tile.kind !== 'phrase' || !tile.phraseId) continue;
-      const existingPhrase = await ctx.db.get(tile.phraseId);
-      if (existingPhrase && existingPhrase.text === phrase.text) {
-        throw new Error('A phrase with this text already exists on this board');
-      }
-    }
 
     const position = existingTiles.length;
     await ctx.db.insert('boardTiles', {

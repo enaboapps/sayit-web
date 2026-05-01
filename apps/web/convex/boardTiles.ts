@@ -9,6 +9,7 @@ import {
   validateAudioLabel,
   validateAudioMetadata,
 } from './audioLimits';
+import { nextFixedGridCell } from './aacLayout';
 
 const tileRoleValidator = v.union(
   v.literal('core'),
@@ -67,41 +68,6 @@ async function assertFixedGridCellAvailable(
   if (occupant) {
     throw new Error('Cell is already occupied');
   }
-}
-
-function nextFixedGridCell(
-  board: Doc<'phraseBoards'>,
-  tiles: Doc<'boardTiles'>[]
-): { cellRow: number; cellColumn: number; cellRowSpan: 1; cellColumnSpan: 1 } | null {
-  if (
-    board.layoutMode !== 'fixedGrid' ||
-    typeof board.gridRows !== 'number' ||
-    typeof board.gridColumns !== 'number'
-  ) {
-    return null;
-  }
-
-  const occupied = new Set<string>();
-  for (const tile of tiles) {
-    if (typeof tile.cellRow === 'number' && typeof tile.cellColumn === 'number') {
-      occupied.add(`${tile.cellRow}:${tile.cellColumn}`);
-    }
-  }
-
-  for (let row = 0; row < board.gridRows; row++) {
-    for (let column = 0; column < board.gridColumns; column++) {
-      if (!occupied.has(`${row}:${column}`)) {
-        return {
-          cellRow: row,
-          cellColumn: column,
-          cellRowSpan: 1,
-          cellColumnSpan: 1,
-        };
-      }
-    }
-  }
-
-  throw new Error('No empty fixed-grid cells are available on this board');
 }
 
 // ---------------------------------------------------------------------------
@@ -399,19 +365,14 @@ export const addPhraseTile = mutation({
     if (!access) throw new Error('Board not found');
     if (!access.canEdit) throw new Error('Unauthorized - board');
 
-    // Reject duplicate phrase text on the same board (preserves prior UX rule).
+    // Load tiles for cell-collision detection and position derivation.
+    // Duplicate phrase text on a single board is allowed — see the matching
+    // comment in phraseBoards.ts:addPhraseToBoard. Cell-collision is what we
+    // actually need to enforce.
     const existingTiles = await ctx.db
       .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
       .collect();
-
-    for (const tile of existingTiles) {
-      if (tile.kind !== 'phrase' || !tile.phraseId) continue;
-      const existing = await ctx.db.get(tile.phraseId);
-      if (existing && existing.text === phrase.text) {
-        throw new Error('A phrase with this text already exists on this board');
-      }
-    }
 
     const position = existingTiles.length;
     return await ctx.db.insert('boardTiles', {

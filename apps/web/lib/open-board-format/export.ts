@@ -11,11 +11,24 @@ export function boardToOpenBoardFile(board: ExportableBoard, options: OpenBoardE
   const columns = fixedColumns ?? (tiles.length > 0 ? (options.columns ?? DEFAULT_COLUMNS) : 1);
   const rows = fixedRows ?? Math.max(1, Math.ceil(tiles.length / columns));
 
+  // Buttons reference images by id. Build a phrase.id -> imageId map so two
+  // tiles wired to the same phrase produce ONE images[] entry (the OBF spec
+  // explicitly allows multiple buttons to share an image_id, and emitting
+  // duplicates inflates the export and confuses downstream importers about
+  // whether the assets are intentionally distinct).
+  const imageIdByPhraseId = new Map<string, string>();
+  for (const [index, tile] of tiles.entries()) {
+    if (tile.kind !== 'phrase' || !tile.phrase.symbolUrl) continue;
+    const phraseId = tile.phrase.id || `tile_${index}`;
+    if (imageIdByPhraseId.has(phraseId)) continue;
+    imageIdByPhraseId.set(phraseId, `image_${sanitizeId(phraseId)}`);
+  }
+
   const buttons = tiles.map((tile, index) => {
     const id = `button_${sanitizeId(tile.id || String(index))}`;
     const label = labelForTile(tile);
     const imageId = tile.kind === 'phrase' && tile.phrase.symbolUrl
-      ? `image_${sanitizeId(tile.phrase.id || String(index))}`
+      ? imageIdByPhraseId.get(tile.phrase.id || `tile_${index}`)
       : undefined;
 
     return {
@@ -29,17 +42,20 @@ export function boardToOpenBoardFile(board: ExportableBoard, options: OpenBoardE
     };
   });
 
-  const images = tiles
-    .map((tile, index) => tile.kind === 'phrase' && tile.phrase.symbolUrl
-      ? {
-        id: `image_${sanitizeId(tile.phrase.id || String(index))}`,
-        width: 300,
-        height: 300,
-        content_type: 'image/png',
-        url: tile.phrase.symbolUrl,
-      }
-      : null)
-    .filter((image): image is NonNullable<typeof image> => image !== null);
+  const seenImageIds = new Set<string>();
+  const images = tiles.flatMap((tile, index) => {
+    if (tile.kind !== 'phrase' || !tile.phrase.symbolUrl) return [];
+    const imageId = imageIdByPhraseId.get(tile.phrase.id || `tile_${index}`);
+    if (!imageId || seenImageIds.has(imageId)) return [];
+    seenImageIds.add(imageId);
+    return [{
+      id: imageId,
+      width: 300,
+      height: 300,
+      content_type: 'image/png',
+      url: tile.phrase.symbolUrl,
+    }];
+  });
 
   const order = Array.from({ length: rows }, () => Array.from({ length: columns }, () => null as string | null));
   tiles.forEach((tile, index) => {

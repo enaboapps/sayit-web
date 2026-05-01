@@ -1,3 +1,5 @@
+import type { Doc } from './_generated/dataModel';
+
 export type AacLayoutPreset = 'largeAccess16' | 'standard36' | 'dense48';
 export type AacWordClass =
   | 'pronoun'
@@ -12,11 +14,55 @@ export type AacWordClass =
 export const AAC_LAYOUT_VERSION = 1;
 export const AAC_SOURCE_TEMPLATE = 'sayitCoreV1' as const;
 
+// Canonical preset dimensions. The UI module `lib/aacLayout.ts` keeps a
+// parallel map with display labels — `tests/lib/aacLayout.test.ts` asserts
+// that the two stay in sync so adding/resizing a preset breaks the test if
+// only one side gets touched.
 export const AAC_PRESETS: Record<AacLayoutPreset, { rows: number; columns: number }> = {
   largeAccess16: { rows: 4, columns: 4 },
   standard36: { rows: 6, columns: 6 },
   dense48: { rows: 6, columns: 8 },
 };
+
+/**
+ * Find the next empty cell (row-major scan) on a fixed-grid board, given the
+ * tiles already placed there. Returns `null` for free-mode boards (callers
+ * spread the result so a null collapses to no cell metadata). Throws when
+ * every cell is occupied — fixed-grid boards have a hard capacity ceiling
+ * and the caller can't paper over that.
+ *
+ * Lives in convex/aacLayout.ts because both `boardTiles.ts` and
+ * `phraseBoards.ts` need it; previously each had its own copy.
+ */
+export function nextFixedGridCell(
+  board: Doc<'phraseBoards'>,
+  tiles: Doc<'boardTiles'>[]
+): { cellRow: number; cellColumn: number; cellRowSpan: 1; cellColumnSpan: 1 } | null {
+  if (
+    board.layoutMode !== 'fixedGrid' ||
+    typeof board.gridRows !== 'number' ||
+    typeof board.gridColumns !== 'number'
+  ) {
+    return null;
+  }
+
+  const occupied = new Set<string>();
+  for (const tile of tiles) {
+    if (typeof tile.cellRow === 'number' && typeof tile.cellColumn === 'number') {
+      occupied.add(`${tile.cellRow}:${tile.cellColumn}`);
+    }
+  }
+
+  for (let row = 0; row < board.gridRows; row++) {
+    for (let column = 0; column < board.gridColumns; column++) {
+      if (!occupied.has(`${row}:${column}`)) {
+        return { cellRow: row, cellColumn: column, cellRowSpan: 1, cellColumnSpan: 1 };
+      }
+    }
+  }
+
+  throw new Error('No empty fixed-grid cells are available on this board');
+}
 
 export const PROJECT_CORE_ATTRIBUTION =
   'Universal Core vocabulary words are based on Project Core, licensed CC BY-SA 4.0.';

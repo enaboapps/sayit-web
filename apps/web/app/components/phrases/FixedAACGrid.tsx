@@ -69,7 +69,19 @@ export default function FixedAACGrid({
     const map = new Map<string, BoardTileSummary>();
     for (const tile of tiles) {
       const { row, column } = tileCell(tile, columns);
-      if (row < 0 || column < 0 || row >= rows || column >= columns) continue;
+      if (row < 0 || column < 0 || row >= rows || column >= columns) {
+        // Surface the silent drop in dev so a user reporting "my tile
+        // disappeared" has a breadcrumb. Skipped in production to avoid
+        // noisy warnings from valid migration / import cases where cell
+        // metadata is being filled in lazily.
+        if (process.env.NODE_ENV !== 'production') {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[FixedAACGrid] Tile ${tile.id} has out-of-bounds cell (${row}, ${column}) for ${rows}x${columns} grid; skipping.`
+          );
+        }
+        continue;
+      }
       map.set(`${row}:${column}`, tile);
     }
     return map;

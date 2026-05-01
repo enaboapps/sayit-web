@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useConvex } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import Composer from '../composer';
 import AACTabs from './AACTabs';
@@ -68,14 +68,12 @@ export default function PhrasesInterface() {
     boardData.shouldLoadBoards ? { limit: 20 } : 'skip'
   );
 
-  // Convex deduplicates this with `usePhraseBoardData`'s subscription. We need
-  // the raw shape (every board's tiles + phrase links) for multi-board export
-  // because the hook reshapes its own copy to populate tiles only for the
-  // currently selected board.
-  const allBoardsWithTiles = useQuery(
-    api.phraseBoards.getPhraseBoards,
-    boardData.shouldLoadBoards ? {} : 'skip'
-  );
+  // Multi-board .obz export needs the raw shape (every board's tiles +
+  // phrase links) that `usePhraseBoardData` reshapes away. We fetch it
+  // *on demand* via `convex.query(...)` inside the click handler instead
+  // of subscribing at mount — keeping a thousands-of-tiles snapshot in
+  // memory for users who never click "Export All Boards" was wasteful.
+  const convex = useConvex();
 
   const handlePhrasePress = (phrase: PhraseSummary) => {
     if (settings.usePhraseBar) {
@@ -129,6 +127,11 @@ export default function PhrasesInterface() {
   };
 
   const handleExportAllOpenBoards = async () => {
+    // Fire the query at click time (not via useQuery at module mount) so we
+    // don't pay for a permanent subscription to every board's tiles for
+    // users who never export. One-shot read against the same handler that
+    // `usePhraseBoardData` subscribes to — Convex caches what it can.
+    const allBoardsWithTiles = await convex.query(api.phraseBoards.getPhraseBoards, {});
     if (!allBoardsWithTiles?.length) return;
     // Map each Convex result row to the BoardSummary shape `createOpenBoardZipBlob`
     // consumes. Phrases come in via `phrase_board_phrases` (legacy free-mode) and
@@ -233,9 +236,9 @@ export default function PhrasesInterface() {
               onImportOpenBoard={isOnline && !!user ? () => setIsOpenBoardImportOpen(true) : undefined}
               onExportOpenBoard={boardData.selectedBoard ? handleExportOpenBoard : undefined}
               onExportAllOpenBoards={
-                allBoardsWithTiles && allBoardsWithTiles.length > 0
-                  ? handleExportAllOpenBoards
-                  : undefined
+                // Use the already-loaded board list to gate the menu item.
+                // The actual export query fires at click time inside the handler.
+                boardData.boards.length > 0 ? handleExportAllOpenBoards : undefined
               }
               onReorderTiles={boardData.handleReorderTiles}
               onMoveTileToCell={boardData.handleMoveTileToCell}
