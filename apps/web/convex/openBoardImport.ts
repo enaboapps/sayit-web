@@ -64,6 +64,14 @@ export const importBoards = mutation({
       throw new Error(`Import package contains more than ${MAX_IMPORT_TILES} tiles`);
     }
 
+    const seenSourceIds = new Set<string>();
+    for (const board of args.boards) {
+      if (seenSourceIds.has(board.sourceId)) {
+        throw new Error(`Import package contains duplicate board id "${board.sourceId}"`);
+      }
+      seenSourceIds.add(board.sourceId);
+    }
+
     // Conflict pre-flight: if any source ID in this package matches an
     // already-imported board for the same user, refuse the whole import.
     // Real-world AAC tools generate distinctive page IDs (UUID-like or

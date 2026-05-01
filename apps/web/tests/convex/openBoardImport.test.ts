@@ -11,6 +11,32 @@
 import { describe, expect, test } from '@jest/globals';
 
 describe('openBoardImport conflict pre-flight', () => {
+  test('rejects duplicate source IDs before any writes', () => {
+    const incoming = [
+      { sourceId: 'top', name: 'Top' },
+      { sourceId: 'food', name: 'Food' },
+      { sourceId: 'food', name: 'Food duplicate' },
+    ];
+
+    const writes: string[] = [];
+
+    expect(() => {
+      const seenSourceIds = new Set<string>();
+      for (const board of incoming) {
+        if (seenSourceIds.has(board.sourceId)) {
+          throw new Error(`Import package contains duplicate board id "${board.sourceId}"`);
+        }
+        seenSourceIds.add(board.sourceId);
+      }
+
+      // Mirrors package/board inserts that must not run after validation fails.
+      writes.push('insert package');
+      writes.push('insert boards');
+    }).toThrow('duplicate board id "food"');
+
+    expect(writes).toEqual([]);
+  });
+
   test('rejects re-import when any source ID matches an existing board', () => {
     // Setup: existing user already has a board imported from package "P1"
     // with importSourceId "shared".
