@@ -14,7 +14,54 @@ const BOARD_STORE = 'boards';
 export interface OfflinePhraseDocument {
   id: string;
   text: string;
+  symbolUrl?: string;
 }
+
+export type OfflineBoardTileDocument =
+  | {
+      id: string;
+      kind: 'phrase';
+      position: number;
+      phrase: OfflinePhraseDocument;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: string;
+      wordClass?: string;
+      isLocked?: boolean;
+    }
+  | {
+      id: string;
+      kind: 'navigate';
+      position: number;
+      targetBoardId: string;
+      targetBoardName: string | null;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: string;
+      wordClass?: string;
+      isLocked?: boolean;
+    }
+  | {
+      id: string;
+      kind: 'audio';
+      position: number;
+      audioLabel: string;
+      audioUrl: string | null;
+      audioMimeType: string;
+      audioDurationMs: number;
+      audioByteSize: number;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: string;
+      wordClass?: string;
+      isLocked?: boolean;
+    };
 
 export interface OfflineBoardDocument {
   cacheKey: string;
@@ -23,6 +70,13 @@ export interface OfflineBoardDocument {
   name: string;
   position: number;
   phrases: OfflinePhraseDocument[];
+  tiles?: OfflineBoardTileDocument[];
+  layoutMode?: 'free' | 'fixedGrid';
+  layoutPreset?: 'largeAccess16' | 'standard36' | 'dense48';
+  gridRows?: number;
+  gridColumns?: number;
+  layoutVersion?: number;
+  sourceTemplate?: 'sayitCoreV1' | 'custom';
   isShared: boolean;
   isOwner: boolean;
   accessLevel: 'view' | 'edit';
@@ -66,8 +120,115 @@ interface CacheablePhraseBoard {
     phrase?: {
       _id?: string;
       text?: string;
+      symbolUrl?: string;
     } | null;
   }> | null;
+  tiles?: Array<{
+    _id?: string;
+    kind?: string;
+    position?: number;
+    phrase?: {
+      _id?: string;
+      text?: string;
+      symbolUrl?: string;
+    } | null;
+    targetBoardId?: string;
+    targetBoardName?: string | null;
+    audioLabel?: string;
+    audioUrl?: string | null;
+    audioMimeType?: string;
+    audioDurationMs?: number;
+    audioByteSize?: number;
+    cellRow?: number;
+    cellColumn?: number;
+    cellRowSpan?: number;
+    cellColumnSpan?: number;
+    tileRole?: string;
+    wordClass?: string;
+    isLocked?: boolean;
+  }> | null;
+  layoutMode?: 'free' | 'fixedGrid' | null;
+  layoutPreset?: 'largeAccess16' | 'standard36' | 'dense48' | null;
+  gridRows?: number | null;
+  gridColumns?: number | null;
+  layoutVersion?: number | null;
+  sourceTemplate?: 'sayitCoreV1' | 'custom' | null;
+}
+
+function normalizeTileMetadata(tile: {
+  cellRow?: number;
+  cellColumn?: number;
+  cellRowSpan?: number;
+  cellColumnSpan?: number;
+  tileRole?: string;
+  wordClass?: string;
+  isLocked?: boolean;
+}) {
+  return {
+    cellRow: tile.cellRow,
+    cellColumn: tile.cellColumn,
+    cellRowSpan: tile.cellRowSpan,
+    cellColumnSpan: tile.cellColumnSpan,
+    tileRole: tile.tileRole,
+    wordClass: tile.wordClass,
+    isLocked: tile.isLocked,
+  };
+}
+
+function normalizeTiles(
+  userId: string,
+  board: CacheablePhraseBoard,
+  cachedAt: number
+): OfflineBoardTileDocument[] | undefined {
+  if (!board.tiles) return undefined;
+
+  return board.tiles
+    .map((tile, index): OfflineBoardTileDocument | null => {
+      const id = String(tile._id ?? `${userId}-${cachedAt}-tile-${index}`);
+      const position = tile.position ?? index;
+
+      if (tile.kind === 'phrase' && tile.phrase?.text) {
+        return {
+          id,
+          kind: 'phrase',
+          position,
+          phrase: {
+            id: String(tile.phrase._id ?? `${userId}-${cachedAt}-${tile.phrase.text}`),
+            text: String(tile.phrase.text),
+            symbolUrl: tile.phrase.symbolUrl,
+          },
+          ...normalizeTileMetadata(tile),
+        };
+      }
+
+      if (tile.kind === 'navigate' && tile.targetBoardId) {
+        return {
+          id,
+          kind: 'navigate',
+          position,
+          targetBoardId: String(tile.targetBoardId),
+          targetBoardName: tile.targetBoardName ?? null,
+          ...normalizeTileMetadata(tile),
+        };
+      }
+
+      if (tile.kind === 'audio') {
+        return {
+          id,
+          kind: 'audio',
+          position,
+          audioLabel: tile.audioLabel ?? 'Audio tile',
+          audioUrl: tile.audioUrl ?? null,
+          audioMimeType: tile.audioMimeType ?? '',
+          audioDurationMs: tile.audioDurationMs ?? 0,
+          audioByteSize: tile.audioByteSize ?? 0,
+          ...normalizeTileMetadata(tile),
+        };
+      }
+
+      return null;
+    })
+    .filter((tile): tile is OfflineBoardTileDocument => tile !== null);
 }
 
 function createDefaultBootstrap(
@@ -139,7 +300,7 @@ async function getDb() {
   }
 }
 
-function normalizeBoardDocuments(
+export function normalizeBoardDocuments(
   userId: string,
   boards: CacheablePhraseBoard[],
   cachedAt = Date.now()
@@ -147,19 +308,30 @@ function normalizeBoardDocuments(
   return boards.map((board) => {
     const accessLevel: 'view' | 'edit' = board.accessLevel === 'view' ? 'view' : 'edit';
 
+    const phrases = (board.phrase_board_phrases ?? [])
+      .map((entry) => entry.phrase)
+      .filter((phrase): phrase is { _id?: string; text?: string; symbolUrl?: string } => Boolean(phrase?.text))
+      .map((phrase) => ({
+        id: String(phrase._id ?? `${userId}-${cachedAt}-${phrase.text}`),
+        text: String(phrase.text),
+        symbolUrl: phrase.symbolUrl,
+      }));
+    const tiles = normalizeTiles(userId, board, cachedAt);
+
     return {
       cacheKey: boardCacheKey(userId, String(board._id)),
       id: String(board._id),
       userId,
       name: board.name,
       position: board.position ?? 0,
-      phrases: (board.phrase_board_phrases ?? [])
-        .map((entry) => entry.phrase)
-        .filter((phrase): phrase is { _id?: string; text?: string } => Boolean(phrase?.text))
-        .map((phrase) => ({
-          id: String(phrase._id ?? `${userId}-${cachedAt}-${phrase.text}`),
-          text: String(phrase.text),
-        })),
+      phrases,
+      tiles,
+      layoutMode: board.layoutMode ?? 'free',
+      layoutPreset: board.layoutPreset ?? undefined,
+      gridRows: board.gridRows ?? undefined,
+      gridColumns: board.gridColumns ?? undefined,
+      layoutVersion: board.layoutVersion ?? undefined,
+      sourceTemplate: board.sourceTemplate ?? undefined,
       isShared: Boolean(board.isShared),
       isOwner: board.isOwner ?? true,
       accessLevel,

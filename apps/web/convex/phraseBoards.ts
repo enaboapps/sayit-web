@@ -3,6 +3,12 @@ import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 import { getUserIdentity } from './users';
+import {
+  AAC_LAYOUT_VERSION,
+  AAC_SOURCE_TEMPLATE,
+  getCoreWordsForPreset,
+  getPresetDimensions,
+} from './aacLayout';
 
 // ---------------------------------------------------------------------------
 // Shared loaders for tile data (read from boardTiles).
@@ -27,6 +33,13 @@ type PolymorphicBoardTile =
       position: number;
       kind: 'phrase';
       phrase: Doc<'phrases'> | null;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: Doc<'boardTiles'>['tileRole'];
+      wordClass?: Doc<'boardTiles'>['wordClass'];
+      isLocked?: boolean;
     }
   | {
       _id: Id<'boardTiles'>;
@@ -35,6 +48,13 @@ type PolymorphicBoardTile =
       kind: 'navigate';
       targetBoardId: Id<'phraseBoards'>;
       targetBoardName: string | null;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: Doc<'boardTiles'>['tileRole'];
+      wordClass?: Doc<'boardTiles'>['wordClass'];
+      isLocked?: boolean;
     }
   | {
       _id: Id<'boardTiles'>;
@@ -48,7 +68,61 @@ type PolymorphicBoardTile =
       audioMimeType: string;
       audioDurationMs: number;
       audioByteSize: number;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: Doc<'boardTiles'>['tileRole'];
+      wordClass?: Doc<'boardTiles'>['wordClass'];
+      isLocked?: boolean;
     };
+
+function tileLayoutMetadata(row: Doc<'boardTiles'>) {
+  return {
+    cellRow: row.cellRow,
+    cellColumn: row.cellColumn,
+    cellRowSpan: row.cellRowSpan,
+    cellColumnSpan: row.cellColumnSpan,
+    tileRole: row.tileRole,
+    wordClass: row.wordClass,
+    isLocked: row.isLocked,
+  };
+}
+
+function nextFixedGridCell(
+  board: Doc<'phraseBoards'>,
+  tiles: Doc<'boardTiles'>[]
+): { cellRow: number; cellColumn: number; cellRowSpan: 1; cellColumnSpan: 1 } | null {
+  if (
+    board.layoutMode !== 'fixedGrid' ||
+    typeof board.gridRows !== 'number' ||
+    typeof board.gridColumns !== 'number'
+  ) {
+    return null;
+  }
+
+  const occupied = new Set<string>();
+  for (const tile of tiles) {
+    if (typeof tile.cellRow === 'number' && typeof tile.cellColumn === 'number') {
+      occupied.add(`${tile.cellRow}:${tile.cellColumn}`);
+    }
+  }
+
+  for (let row = 0; row < board.gridRows; row++) {
+    for (let column = 0; column < board.gridColumns; column++) {
+      if (!occupied.has(`${row}:${column}`)) {
+        return {
+          cellRow: row,
+          cellColumn: column,
+          cellRowSpan: 1,
+          cellColumnSpan: 1,
+        };
+      }
+    }
+  }
+
+  throw new Error('No empty fixed-grid cells are available on this board');
+}
 
 function viewerCanReadBoard(
   board: Doc<'phraseBoards'> | null,
@@ -84,6 +158,7 @@ async function loadHydratedBoardTiles(
         position: row.position,
         kind: 'phrase',
         phrase,
+        ...tileLayoutMetadata(row),
       });
       if (row.phraseId) {
         phraseLinks.push({
@@ -118,6 +193,7 @@ async function loadHydratedBoardTiles(
           audioMimeType: row.audioMimeType ?? '',
           audioDurationMs: row.audioDurationMs ?? 0,
           audioByteSize: row.audioByteSize ?? 0,
+          ...tileLayoutMetadata(row),
         });
         continue;
       }
@@ -133,6 +209,7 @@ async function loadHydratedBoardTiles(
         audioMimeType: row.audioMimeType,
         audioDurationMs: row.audioDurationMs,
         audioByteSize: row.audioByteSize,
+        ...tileLayoutMetadata(row),
       });
       continue;
     }
@@ -147,6 +224,7 @@ async function loadHydratedBoardTiles(
         kind: 'navigate',
         targetBoardId: row.boardId,
         targetBoardName: null,
+        ...tileLayoutMetadata(row),
       });
       continue;
     }
@@ -163,6 +241,7 @@ async function loadHydratedBoardTiles(
       kind: 'navigate',
       targetBoardId: row.targetBoardId,
       targetBoardName: canRead ? (target?.name ?? null) : null,
+      ...tileLayoutMetadata(row),
     });
   }
 
@@ -393,7 +472,76 @@ export const addPhraseBoard = mutation({
       position: args.position,
       forClientId: args.forClientId,
       clientAccessLevel: args.forClientId ? (args.clientAccessLevel || 'view') : undefined,
+      layoutMode: 'free',
+      sourceTemplate: 'custom',
     });
+
+    return boardId;
+  },
+});
+
+// Mutation: Create a stable fixed-grid AAC starter board using Project Core's
+// Universal Core word list (labels only; no third-party symbols are bundled).
+export const createAACStarterBoard = mutation({
+  args: {
+    name: v.string(),
+    preset: v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48')),
+    position: v.number(),
+    forClientId: v.optional(v.string()),
+    clientAccessLevel: v.optional(v.union(v.literal('view'), v.literal('edit'))),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+
+    const trimmedName = args.name.trim();
+    if (!trimmedName) {
+      throw new Error('Board name is required');
+    }
+
+    const dimensions = getPresetDimensions(args.preset);
+    const boardId = await ctx.db.insert('phraseBoards', {
+      userId: identity.subject,
+      name: trimmedName,
+      position: args.position,
+      forClientId: args.forClientId,
+      clientAccessLevel: args.forClientId ? (args.clientAccessLevel || 'view') : undefined,
+      layoutMode: 'fixedGrid',
+      layoutPreset: args.preset,
+      gridRows: dimensions.rows,
+      gridColumns: dimensions.columns,
+      layoutVersion: AAC_LAYOUT_VERSION,
+      sourceTemplate: AAC_SOURCE_TEMPLATE,
+    });
+
+    const words = getCoreWordsForPreset(args.preset);
+    for (let index = 0; index < words.length; index++) {
+      const word = words[index];
+      const row = Math.floor(index / dimensions.columns);
+      const column = index % dimensions.columns;
+      const phraseId = await ctx.db.insert('phrases', {
+        userId: identity.subject,
+        text: word.text,
+        frequency: 0,
+        position: index,
+      });
+
+      await ctx.db.insert('boardTiles', {
+        boardId,
+        position: index,
+        kind: 'phrase',
+        phraseId,
+        cellRow: row,
+        cellColumn: column,
+        cellRowSpan: 1,
+        cellColumnSpan: 1,
+        tileRole: 'core',
+        wordClass: word.wordClass,
+        isLocked: true,
+      });
+    }
 
     return boardId;
   },
@@ -527,6 +675,8 @@ export const addPhraseToBoard = mutation({
       position,
       kind: 'phrase',
       phraseId: args.phraseId,
+      tileRole: board.layoutMode === 'fixedGrid' ? 'fringe' : undefined,
+      ...(nextFixedGridCell(board, existingTiles) ?? {}),
     });
   },
 });

@@ -44,6 +44,12 @@ export default defineSchema({
     position: v.number(),
     forClientId: v.optional(v.string()), // If set, this board is for a specific client
     clientAccessLevel: v.optional(v.union(v.literal('view'), v.literal('edit'))), // Client's permission level
+    layoutMode: v.optional(v.union(v.literal('free'), v.literal('fixedGrid'))),
+    layoutPreset: v.optional(v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48'))),
+    gridRows: v.optional(v.number()),
+    gridColumns: v.optional(v.number()),
+    layoutVersion: v.optional(v.number()),
+    sourceTemplate: v.optional(v.union(v.literal('sayitCoreV1'), v.literal('custom'))),
   })
     .index('by_user_id', ['userId'])
     .index('by_client', ['forClientId']),
@@ -76,6 +82,31 @@ export default defineSchema({
     audioMimeType: v.optional(v.string()),
     audioDurationMs: v.optional(v.number()),
     audioByteSize: v.optional(v.number()),
+    // kind-agnostic fixed-grid metadata. Optional so legacy/free boards render
+    // exactly as they did before this layout system existed.
+    cellRow: v.optional(v.number()),
+    cellColumn: v.optional(v.number()),
+    cellRowSpan: v.optional(v.number()),
+    cellColumnSpan: v.optional(v.number()),
+    tileRole: v.optional(v.union(
+      v.literal('core'),
+      v.literal('fringe'),
+      v.literal('navigation'),
+      v.literal('control'),
+      v.literal('quickPhrase'),
+      v.literal('audio')
+    )),
+    wordClass: v.optional(v.union(
+      v.literal('pronoun'),
+      v.literal('verb'),
+      v.literal('descriptor'),
+      v.literal('preposition'),
+      v.literal('question'),
+      v.literal('social'),
+      v.literal('noun'),
+      v.literal('other')
+    )),
+    isLocked: v.optional(v.boolean()),
   })
     .index('by_board', ['boardId'])
     .index('by_phrase', ['phraseId'])
@@ -128,6 +159,7 @@ export default defineSchema({
     ),
     usePhraseBar: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
+    aacGridPresetPreference: v.optional(v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48'))),
 
     // UI Preferences (consolidated from various components)
     typingAreaVisible: v.boolean(),

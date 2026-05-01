@@ -1,6 +1,7 @@
 import {
   clearOfflineBootstrap,
   deriveOfflineBootMode,
+  normalizeBoardDocuments,
   readOfflineBootstrap,
   updateOfflineSelectedBoard,
   updateOfflineSyncStatus,
@@ -57,5 +58,89 @@ describe('offline bootstrap storage', () => {
 
   it('falls back to online mode when the browser is online', () => {
     expect(deriveOfflineBootMode({ isOnline: true })).toBe('online');
+  });
+
+  it('preserves fixed-grid tile metadata when normalizing cached boards', () => {
+    const [board] = normalizeBoardDocuments('user_123', [
+      {
+        _id: 'board_1',
+        name: 'Core',
+        position: 0,
+        layoutMode: 'fixedGrid',
+        layoutPreset: 'standard36',
+        gridRows: 6,
+        gridColumns: 6,
+        layoutVersion: 1,
+        sourceTemplate: 'sayitCoreV1',
+        tiles: [
+          {
+            _id: 'tile_1',
+            kind: 'phrase',
+            position: 0,
+            phrase: { _id: 'phrase_1', text: 'go', symbolUrl: 'https://example.com/go.png' },
+            cellRow: 0,
+            cellColumn: 0,
+            tileRole: 'core',
+            wordClass: 'verb',
+            isLocked: true,
+          },
+        ],
+      },
+    ], 123);
+
+    expect(board).toMatchObject({
+      layoutMode: 'fixedGrid',
+      layoutPreset: 'standard36',
+      gridRows: 6,
+      gridColumns: 6,
+      tiles: [
+        {
+          kind: 'phrase',
+          cellRow: 0,
+          cellColumn: 0,
+          tileRole: 'core',
+          wordClass: 'verb',
+          isLocked: true,
+          phrase: { text: 'go', symbolUrl: 'https://example.com/go.png' },
+        },
+      ],
+    });
+  });
+
+  it('normalizes legacy boards (no layoutMode/grid metadata) into free-mode without crashing', () => {
+    // Boards created before issue #649 have no layoutMode, no grid dims, no
+    // cell metadata on tiles, and may store phrases via the legacy
+    // phrase_board_phrases array rather than the polymorphic tiles array.
+    // The chooser at PhrasesTabContent only routes to FixedAACGrid when
+    // layoutMode === 'fixedGrid' AND gridRows/gridColumns are numbers, so
+    // a normalized free-mode board must keep grid dims undefined for the
+    // legacy renderer to receive control.
+    const [board] = normalizeBoardDocuments('user_123', [
+      {
+        _id: 'legacy_board',
+        name: 'My Phrases',
+        position: 1,
+        // layoutMode/layoutPreset/gridRows/gridColumns/sourceTemplate all
+        // intentionally omitted to mimic a board persisted before this PR.
+        phrase_board_phrases: [
+          { phrase: { _id: 'phrase_a', text: 'hello' } },
+          { phrase: { _id: 'phrase_b', text: 'thanks', symbolUrl: 'https://example.com/thanks.png' } },
+        ],
+      },
+    ], 456);
+
+    expect(board.layoutMode).toBe('free');
+    expect(board.layoutPreset).toBeUndefined();
+    expect(board.gridRows).toBeUndefined();
+    expect(board.gridColumns).toBeUndefined();
+    expect(board.layoutVersion).toBeUndefined();
+    expect(board.sourceTemplate).toBeUndefined();
+    expect(board.phrases).toEqual([
+      { id: 'phrase_a', text: 'hello', symbolUrl: undefined },
+      { id: 'phrase_b', text: 'thanks', symbolUrl: 'https://example.com/thanks.png' },
+    ]);
+    // No tiles array on the source means tiles is undefined in the normalized
+    // output — legacy renderers consume `phrases`, not `tiles`.
+    expect(board.tiles).toBeUndefined();
   });
 });

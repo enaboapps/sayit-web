@@ -19,6 +19,9 @@ interface SwipeableBoardNavigatorProps {
   onAddBoard?: () => void;
   onEdit?: () => void;
   onEditBoard?: () => void;
+  onImportOpenBoard?: () => void;
+  onExportOpenBoard?: () => void;
+  onExportAllOpenBoards?: () => void;
   isEditMode?: boolean;
   canEditBoard?: boolean;
 }
@@ -35,6 +38,9 @@ export default function SwipeableBoardNavigator({
   onAddBoard,
   onEdit,
   onEditBoard,
+  onImportOpenBoard,
+  onExportOpenBoard,
+  onExportAllOpenBoards,
   isEditMode = false,
   canEditBoard = true,
 }: SwipeableBoardNavigatorProps) {
@@ -145,6 +151,9 @@ export default function SwipeableBoardNavigator({
         onAddBoard={onAddBoard}
         onEdit={onEdit}
         onEditBoard={onEditBoard}
+        onImportOpenBoard={onImportOpenBoard}
+        onExportOpenBoard={onExportOpenBoard}
+        onExportAllOpenBoards={onExportAllOpenBoards}
         isEditMode={isEditMode}
         canEditBoard={canEditBoard}
       />

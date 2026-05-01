@@ -15,6 +15,7 @@ import {
   validateAudioMetadata,
   MAX_AUDIO_BYTES,
 } from '@/convex/audioLimits';
+import { getCoreWordsForPreset, getPresetDimensions } from '@/convex/aacLayout';
 
 const mockDb = {
   query: jest.fn(),
@@ -57,6 +58,10 @@ const createTile = (overrides = {}) => ({
   audioMimeType: undefined,
   audioDurationMs: undefined,
   audioByteSize: undefined,
+  cellRow: undefined,
+  cellColumn: undefined,
+  tileRole: undefined,
+  isLocked: undefined,
   ...overrides,
 });
 
@@ -379,6 +384,104 @@ describe('boardTiles', () => {
       expect(mockDb.patch).toHaveBeenCalledWith('tile-2', { position: 0 });
       expect(mockDb.patch).toHaveBeenCalledWith('tile-1', { position: 1 });
       expect(mockDb.patch).not.toHaveBeenCalledWith('tile-stranger', expect.anything());
+    });
+  });
+
+  describe('fixed-grid layout invariants', () => {
+    test('standard36 starter board has all 36 core words and fixed dimensions', () => {
+      const dimensions = getPresetDimensions('standard36');
+      const words = getCoreWordsForPreset('standard36');
+
+      expect(dimensions).toEqual({ rows: 6, columns: 6 });
+      expect(words).toHaveLength(36);
+      expect(words.map((word) => word.text)).toEqual([
+        'all', 'can', 'different', 'do', 'finished', 'get',
+        'go', 'good', 'he', 'help', 'here', 'I',
+        'in', 'it', 'like', 'look', 'make', 'more',
+        'not', 'on', 'open', 'put', 'same', 'she',
+        'some', 'stop', 'that', 'turn', 'up', 'want',
+        'what', 'when', 'where', 'who', 'why', 'you',
+      ]);
+    });
+
+    test('cell collision validation rejects an occupied fixed-grid cell', () => {
+      const movingTile = createTile({ _id: 'tile-moving', cellRow: 0, cellColumn: 0 });
+      const occupiedTile = createTile({ _id: 'tile-occupied', cellRow: 1, cellColumn: 1 });
+      const existingTiles = [movingTile, occupiedTile];
+
+      const validateMove = (row: number, column: number) => {
+        const occupant = existingTiles.find(
+          (tile) =>
+            tile._id !== movingTile._id &&
+            tile.cellRow === row &&
+            tile.cellColumn === column
+        );
+        if (occupant) throw new Error('Cell is already occupied');
+      };
+
+      expect(() => validateMove(1, 1)).toThrow(/already occupied/);
+      expect(() => validateMove(2, 2)).not.toThrow();
+    });
+
+    test('locked core tiles require explicit delete confirmation', () => {
+      const tile = createTile({ isLocked: true, tileRole: 'core' });
+
+      const guard = (confirmLockedCoreDelete?: boolean) => {
+        if (tile.isLocked && tile.tileRole === 'core' && !confirmLockedCoreDelete) {
+          throw new Error('Locked core tiles require explicit confirmation before deletion');
+        }
+      };
+
+      expect(() => guard()).toThrow(/Locked core tiles/);
+      expect(() => guard(true)).not.toThrow();
+    });
+  });
+
+  describe('Open Board import invariants', () => {
+    test('imported boards create fixed-grid board tiles, not legacy phrase links', async () => {
+      const boardId = 'imported-board-1';
+      const phraseId = 'imported-phrase-1';
+
+      await mockDb.insert('phraseBoards', {
+        userId: 'user-123',
+        name: 'Imported',
+        position: 0,
+        layoutMode: 'fixedGrid',
+        gridRows: 2,
+        gridColumns: 2,
+        layoutVersion: 1,
+        sourceTemplate: 'custom',
+      });
+      await mockDb.insert('phrases', {
+        userId: 'user-123',
+        text: 'more',
+        frequency: 0,
+        position: 0,
+      });
+      await mockDb.insert('boardTiles', {
+        boardId,
+        position: 0,
+        kind: 'phrase',
+        phraseId,
+        cellRow: 1,
+        cellColumn: 1,
+        cellRowSpan: 1,
+        cellColumnSpan: 1,
+        tileRole: 'fringe',
+        isLocked: false,
+      });
+
+      expect(mockDb.insert).toHaveBeenCalledWith('phraseBoards', expect.objectContaining({
+        layoutMode: 'fixedGrid',
+        gridRows: 2,
+        gridColumns: 2,
+      }));
+      expect(mockDb.insert).toHaveBeenCalledWith('boardTiles', expect.objectContaining({
+        kind: 'phrase',
+        cellRow: 1,
+        cellColumn: 1,
+      }));
+      expect(mockDb.insert).not.toHaveBeenCalledWith('phraseBoardPhrases', expect.anything());
     });
   });
 

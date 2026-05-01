@@ -8,12 +8,16 @@
  * @module
  */
 
+import type * as aacLayout from "../aacLayout.js";
 import type * as audio from "../audio.js";
+import type * as audioLimits from "../audioLimits.js";
+import type * as boardAccess from "../boardAccess.js";
 import type * as boardTiles from "../boardTiles.js";
 import type * as caregiverClients from "../caregiverClients.js";
 import type * as connectionRequests from "../connectionRequests.js";
 import type * as conversationHistory from "../conversationHistory.js";
 import type * as migrations from "../migrations.js";
+import type * as openBoardImport from "../openBoardImport.js";
 import type * as phraseBoards from "../phraseBoards.js";
 import type * as phrases from "../phrases.js";
 import type * as profiles from "../profiles.js";
@@ -29,12 +33,16 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aacLayout: typeof aacLayout;
   audio: typeof audio;
+  audioLimits: typeof audioLimits;
+  boardAccess: typeof boardAccess;
   boardTiles: typeof boardTiles;
   caregiverClients: typeof caregiverClients;
   connectionRequests: typeof connectionRequests;
   conversationHistory: typeof conversationHistory;
   migrations: typeof migrations;
+  openBoardImport: typeof openBoardImport;
   phraseBoards: typeof phraseBoards;
   phrases: typeof phrases;
   profiles: typeof profiles;

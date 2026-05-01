@@ -4,10 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import AACTabs from '@/app/components/home/AACTabs';
 import Composer from '@/app/components/composer';
 import BoardSelector from '@/app/components/phrases/BoardSelector';
+import FixedAACGrid from '@/app/components/phrases/FixedAACGrid';
 import PhraseGrid from '@/app/components/phrases/PhraseGrid';
-import PhraseTile from '@/app/components/phrases/tiles/PhraseTile';
 import { useSettings } from '@/app/contexts/SettingsContext';
-import type { BoardSummary, PhraseSummary } from '@/app/components/phrases/types';
+import BoardTileRenderer from '@/app/components/phrases/tiles/BoardTileRenderer';
+import type { BoardSummary, BoardTileSummary, PhraseSummary, TileLayoutSummary } from '@/app/components/phrases/types';
+import type { TileRole, WordClass } from '@/lib/aacLayout';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
 import { useOfflineTTS } from '@/lib/hooks/useOfflineTTS';
 import {
@@ -40,7 +42,55 @@ function toBoardSummary(boards: Awaited<ReturnType<typeof readLastCachedBoards>>
     phrases: board.phrases.map((phrase) => ({
       id: phrase.id,
       text: phrase.text,
+      symbolUrl: phrase.symbolUrl,
     })),
+    tiles: board.tiles?.map((tile): BoardTileSummary => {
+      const metadata: TileLayoutSummary = {
+        cellRow: tile.cellRow,
+        cellColumn: tile.cellColumn,
+        cellRowSpan: tile.cellRowSpan,
+        cellColumnSpan: tile.cellColumnSpan,
+        tileRole: tile.tileRole as TileRole | undefined,
+        wordClass: tile.wordClass as WordClass | undefined,
+        isLocked: tile.isLocked,
+      };
+      if (tile.kind === 'phrase') {
+        return {
+          id: tile.id,
+          kind: 'phrase',
+          position: tile.position,
+          phrase: tile.phrase,
+          ...metadata,
+        };
+      }
+      if (tile.kind === 'navigate') {
+        return {
+          id: tile.id,
+          kind: 'navigate',
+          position: tile.position,
+          targetBoardId: tile.targetBoardId,
+          targetBoardName: tile.targetBoardName,
+          ...metadata,
+        };
+      }
+      return {
+        id: tile.id,
+        kind: 'audio',
+        position: tile.position,
+        audioLabel: tile.audioLabel,
+        audioUrl: null,
+        audioMimeType: tile.audioMimeType,
+        audioDurationMs: tile.audioDurationMs,
+        audioByteSize: tile.audioByteSize,
+        ...metadata,
+      };
+    }),
+    layoutMode: board.layoutMode,
+    layoutPreset: board.layoutPreset,
+    gridRows: board.gridRows,
+    gridColumns: board.gridColumns,
+    layoutVersion: board.layoutVersion,
+    sourceTemplate: board.sourceTemplate,
     isShared: board.isShared,
     isOwner: board.isOwner,
     accessLevel: board.accessLevel,
@@ -121,6 +171,12 @@ export default function OfflineAppShell({
     [boards, selectedBoardId]
   );
   const phrases: PhraseSummary[] = selectedBoard?.phrases ?? [];
+  const tiles: BoardTileSummary[] = selectedBoard?.tiles ?? phrases.map((phrase, index) => ({
+    id: phrase.id,
+    kind: 'phrase',
+    position: index,
+    phrase,
+  }));
 
   const handlePhrasePress = useCallback((phrase: PhraseSummary) => {
     setText(phrase.text);
@@ -133,6 +189,49 @@ export default function OfflineAppShell({
       setActivePhraseId(null);
     }
   }, [tts.isSpeaking]);
+
+  const boardGrid = selectedBoard?.layoutMode === 'fixedGrid'
+    && typeof selectedBoard.gridRows === 'number'
+    && typeof selectedBoard.gridColumns === 'number' ? (
+      <FixedAACGrid
+        tiles={tiles}
+        rows={selectedBoard.gridRows}
+        columns={selectedBoard.gridColumns}
+        activePhraseId={activePhraseId}
+        isSpeaking={tts.isSpeaking}
+        isEditMode={false}
+        canEdit={false}
+        textSizePx={settings.textSize}
+        onPhrasePress={handlePhrasePress}
+        onPhraseStop={tts.stop}
+        onPhraseEdit={() => {}}
+        onNavigateTap={(tile) => setSelectedBoardId(tile.targetBoardId)}
+        onNavigateEdit={() => {}}
+        onAudioEdit={() => {}}
+      />
+    ) : (
+      <PhraseGrid textSizePx={settings.textSize}>
+        {tiles.map((tile) => {
+          const isPhraseSpeaking = tile.kind === 'phrase'
+            && activePhraseId === tile.phrase.id
+            && tts.isSpeaking;
+          return (
+            <BoardTileRenderer
+              key={tile.id}
+              tile={tile}
+              onPhrasePress={handlePhrasePress}
+              onPhraseStop={tts.stop}
+              onPhraseEdit={undefined}
+              isPhraseSpeaking={isPhraseSpeaking}
+              onNavigateTap={(navigateTile) => setSelectedBoardId(navigateTile.targetBoardId)}
+              onNavigateEdit={undefined}
+              onAudioEdit={undefined}
+              textSizePx={settings.textSize}
+            />
+          );
+        })}
+      </PhraseGrid>
+    );
 
   const phrasesContent = isLoadingBoards ? (
     <div className="flex h-full items-center justify-center px-6 text-center text-text-secondary">
@@ -168,18 +267,7 @@ export default function OfflineAppShell({
         />
       </div>
       <div className="flex-1 overflow-auto p-3 pt-4">
-        <PhraseGrid textSizePx={settings.textSize}>
-          {phrases.map((phrase) => (
-            <PhraseTile
-              key={phrase.id}
-              phrase={phrase}
-              onPress={() => handlePhrasePress(phrase)}
-              onStop={tts.stop}
-              isSpeaking={activePhraseId === phrase.id && tts.isSpeaking}
-              textSizePx={settings.textSize}
-            />
-          ))}
-        </PhraseGrid>
+        {boardGrid}
       </div>
     </div>
   );

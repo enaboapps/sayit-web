@@ -5,6 +5,7 @@ import Composer from '../composer';
 import AACTabs from './AACTabs';
 import PhrasesTabContent from './PhrasesTabContent';
 import BoardGridPopup from '../phrases/BoardGridPopup';
+import OpenBoardImportModal from '../phrases/OpenBoardImportModal';
 import ConnectionRequestsBanner from '../connection/ConnectionRequestsBanner';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { usePhraseBoardData } from '@/lib/hooks/usePhraseBoardData';
@@ -14,7 +15,13 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import type { BoardTileSummary, PhraseSummary } from '../phrases/types';
+import {
+  createOpenBoardBlob,
+  createOpenBoardZipBlob,
+  downloadBlob,
+  filenameForBoard,
+} from '@/lib/open-board-format/export';
+import type { BoardSummary, BoardTileSummary, PhraseSummary } from '../phrases/types';
 
 export default function PhrasesInterface() {
   const tts = useTTS();
@@ -29,6 +36,7 @@ export default function PhrasesInterface() {
 
   const [typingText, setTypingText] = useState('');
   const [activePhraseId, setActivePhraseId] = useState<string | null>(null);
+  const [isOpenBoardImportOpen, setIsOpenBoardImportOpen] = useState(false);
 
   const activeTabId = uiPreferences.activeTypingTabId;
   const {
@@ -58,6 +66,15 @@ export default function PhrasesInterface() {
   const recentMessages = useQuery(
     api.conversationHistory.getRecentMessages,
     boardData.shouldLoadBoards ? { limit: 20 } : 'skip'
+  );
+
+  // Convex deduplicates this with `usePhraseBoardData`'s subscription. We need
+  // the raw shape (every board's tiles + phrase links) for multi-board export
+  // because the hook reshapes its own copy to populate tiles only for the
+  // currently selected board.
+  const allBoardsWithTiles = useQuery(
+    api.phraseBoards.getPhraseBoards,
+    boardData.shouldLoadBoards ? {} : 'skip'
   );
 
   const handlePhrasePress = (phrase: PhraseSummary) => {
@@ -94,6 +111,61 @@ export default function PhrasesInterface() {
       const sep = current.endsWith(' ') || current.endsWith('\n') ? '' : ' ';
       return `${current}${sep}${suggestion}`;
     });
+  };
+
+  const handleOpenBoardImported = (boardIds: string[]) => {
+    if (boardIds[0]) {
+      boardData.handleSelectBoard(boardIds[0]);
+    }
+  };
+
+  const handleExportOpenBoard = () => {
+    if (!boardData.selectedBoard) return;
+    const blob = createOpenBoardBlob({
+      ...boardData.selectedBoard,
+      tiles: boardData.tiles,
+    });
+    downloadBlob(blob, filenameForBoard(boardData.selectedBoard.name, 'obf'));
+  };
+
+  const handleExportAllOpenBoards = async () => {
+    if (!allBoardsWithTiles?.length) return;
+    // Map each Convex result row to the BoardSummary shape `createOpenBoardZipBlob`
+    // consumes. Phrases come in via `phrase_board_phrases` (legacy free-mode) and
+    // `tiles` (fixed-grid + polymorphic). Both are populated server-side. The
+    // Convex result shape is narrower than BoardSummary, so we cast to a duck
+    // type rather than restate every field — matches the pattern in
+    // `usePhraseBoardData` and `lib/offline/storage.ts`.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const summaries: BoardSummary[] = (allBoardsWithTiles as any[]).map((board) => ({
+      id: String(board._id),
+      name: board.name,
+      position: board.position,
+      phrases: ((board.phrase_board_phrases ?? []) as Array<{ phrase?: { _id?: string; text?: string; symbolUrl?: string } | null }>)
+        .map((link) => link.phrase)
+        .filter((phrase): phrase is { _id?: string; text: string; symbolUrl?: string } => Boolean(phrase?.text))
+        .map((phrase) => ({
+          id: String(phrase._id ?? phrase.text),
+          text: phrase.text,
+          symbolUrl: phrase.symbolUrl,
+        } as PhraseSummary)),
+      tiles: (board.tiles ?? undefined) as BoardTileSummary[] | undefined,
+      isShared: board.isShared,
+      isOwner: board.isOwner,
+      accessLevel: board.accessLevel,
+      sharedBy: board.sharedBy,
+      forClientId: board.forClientId,
+      forClientName: board.forClientName,
+      layoutMode: board.layoutMode ?? 'free',
+      layoutPreset: board.layoutPreset,
+      gridRows: board.gridRows,
+      gridColumns: board.gridColumns,
+      layoutVersion: board.layoutVersion,
+      sourceTemplate: board.sourceTemplate,
+    }));
+    const blob = await createOpenBoardZipBlob(summaries);
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadBlob(blob, `sayit-boards-${stamp}.obz`);
   };
 
   const suggestionContext = useMemo(() => {
@@ -158,7 +230,15 @@ export default function PhrasesInterface() {
               onAddNavigateTile={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddNavigateTile : undefined}
               onAddAudioTile={isOnline && boardData.canEditCurrentBoard ? boardData.handleAddAudioTile : undefined}
               onAddBoard={boardData.handleAddBoard}
+              onImportOpenBoard={isOnline && !!user ? () => setIsOpenBoardImportOpen(true) : undefined}
+              onExportOpenBoard={boardData.selectedBoard ? handleExportOpenBoard : undefined}
+              onExportAllOpenBoards={
+                allBoardsWithTiles && allBoardsWithTiles.length > 0
+                  ? handleExportAllOpenBoards
+                  : undefined
+              }
               onReorderTiles={boardData.handleReorderTiles}
+              onMoveTileToCell={boardData.handleMoveTileToCell}
               onBoardIndexChange={boardData.handleBoardIndexChange}
               onToggleEditMode={boardData.handleToggleEditMode}
               onSelectBoard={boardData.handleSelectBoard}
@@ -202,6 +282,11 @@ export default function PhrasesInterface() {
         onClose={() => boardData.setIsBoardPickerOpen(false)}
         onSelectBoard={boardData.handleSelectBoard}
         onEditBoard={boardData.handleEditBoard}
+      />
+      <OpenBoardImportModal
+        isOpen={isOpenBoardImportOpen}
+        onClose={() => setIsOpenBoardImportOpen(false)}
+        onImported={handleOpenBoardImported}
       />
     </div>
   );

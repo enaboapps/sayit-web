@@ -5,6 +5,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { TTSProviderType } from '@/lib/tts-provider';
 import { useAuth } from './AuthContext';
+import { DEFAULT_AAC_PRESET, type AacLayoutPreset } from '@/lib/aacLayout';
 
 type TextSize = number;
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -34,6 +35,7 @@ interface Settings {
   messageCaptureMode: MessageCaptureMode;
   usePhraseBar: boolean;
   speakPhrasesOnTap: boolean;
+  aacGridPresetPreference: AacLayoutPreset;
 }
 
 interface UIPreferences {
@@ -75,6 +77,7 @@ const defaultSettings: Settings = {
   messageCaptureMode: 'speakOnly',
   usePhraseBar: false,
   speakPhrasesOnTap: false,
+  aacGridPresetPreference: DEFAULT_AAC_PRESET,
 };
 
 const defaultUIPreferences: UIPreferences = {
@@ -201,6 +204,7 @@ function saveToLocalStorage(allSettings: AllSettings) {
     messageCaptureMode: allSettings.messageCaptureMode,
     usePhraseBar: allSettings.usePhraseBar,
     speakPhrasesOnTap: allSettings.speakPhrasesOnTap,
+    aacGridPresetPreference: allSettings.aacGridPresetPreference,
   };
   localStorage.setItem('settings', JSON.stringify(settings));
 
@@ -279,6 +283,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         messageCaptureMode: localSettings.messageCaptureMode,
         usePhraseBar: localSettings.usePhraseBar,
         speakPhrasesOnTap: localSettings.speakPhrasesOnTap,
+        aacGridPresetPreference: localSettings.aacGridPresetPreference,
         typingAreaVisible: localSettings.typingAreaVisible,
         typingAreaExpanded: localSettings.typingAreaExpanded,
         selectedBoardId: localSettings.selectedBoardId ?? undefined,
@@ -317,6 +322,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         messageCaptureMode: convexSettings.messageCaptureMode ?? defaultSettings.messageCaptureMode,
         usePhraseBar: convexSettings.usePhraseBar ?? defaultSettings.usePhraseBar,
         speakPhrasesOnTap: convexSettings.speakPhrasesOnTap ?? defaultSettings.speakPhrasesOnTap,
+        aacGridPresetPreference: convexSettings.aacGridPresetPreference ?? defaultSettings.aacGridPresetPreference,
         typingAreaVisible: convexSettings.typingAreaVisible,
         typingAreaExpanded: convexSettings.typingAreaExpanded,
         selectedBoardId: convexSettings.selectedBoardId ?? null,
@@ -417,6 +423,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     messageCaptureMode: allSettings.messageCaptureMode,
     usePhraseBar: allSettings.usePhraseBar,
     speakPhrasesOnTap: allSettings.speakPhrasesOnTap,
+    aacGridPresetPreference: allSettings.aacGridPresetPreference,
   };
 
   const uiPreferences: UIPreferences = {

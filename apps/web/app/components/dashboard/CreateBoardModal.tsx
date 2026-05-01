@@ -5,6 +5,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { XMarkIcon, EyeIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { AAC_PRESETS, DEFAULT_AAC_PRESET, type AacLayoutPreset } from '@/lib/aacLayout';
 
 interface CreateBoardModalProps {
   communicatorId: string;
@@ -14,10 +15,13 @@ interface CreateBoardModalProps {
 export default function CreateBoardModal({ communicatorId, onClose }: CreateBoardModalProps) {
   const [name, setName] = useState('');
   const [accessLevel, setAccessLevel] = useState<'view' | 'edit'>('view');
+  const [isAACBoard, setIsAACBoard] = useState(false);
+  const [preset, setPreset] = useState<AacLayoutPreset>(DEFAULT_AAC_PRESET);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const addBoard = useMutation(api.phraseBoards.addPhraseBoard);
+  const createAACStarterBoard = useMutation(api.phraseBoards.createAACStarterBoard);
   const existingBoards = useQuery(api.phraseBoards.getPhraseBoards);
 
   const handleCreate = async () => {
@@ -33,12 +37,22 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
       // Get position for new board (after existing boards)
       const position = existingBoards?.length ?? 0;
 
-      await addBoard({
-        name: name.trim(),
-        position,
-        forClientId: communicatorId,
-        clientAccessLevel: accessLevel,
-      });
+      if (isAACBoard) {
+        await createAACStarterBoard({
+          name: name.trim(),
+          preset,
+          position,
+          forClientId: communicatorId,
+          clientAccessLevel: accessLevel,
+        });
+      } else {
+        await addBoard({
+          name: name.trim(),
+          position,
+          forClientId: communicatorId,
+          clientAccessLevel: accessLevel,
+        });
+      }
       onClose();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create board';
@@ -49,7 +63,7 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
 
   return (
     <div className="fixed inset-0 bg-overlay  flex items-center justify-center p-4 z-50">
-      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6 bg-surface">
+      <div className="rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 bg-surface">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-foreground">Create Board for Client</h2>
           <button
@@ -74,6 +88,59 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
             autoFocus
           />
         </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-foreground mb-2">
+            Board type
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setIsAACBoard(false)}
+              className={`p-3 rounded-xl border-2 text-sm transition-all ${
+                !isAACBoard ? 'border-primary-500 bg-primary-950' : 'border-border hover:border-primary-700'
+              }`}
+            >
+              Blank phrase board
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAACBoard(true)}
+              className={`p-3 rounded-xl border-2 text-sm transition-all ${
+                isAACBoard ? 'border-primary-500 bg-primary-950' : 'border-border hover:border-primary-700'
+              }`}
+            >
+              AAC core board
+            </button>
+          </div>
+        </div>
+
+        {isAACBoard && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-foreground mb-2">
+              AAC grid preset
+            </label>
+            <div className="space-y-2">
+              {(Object.keys(AAC_PRESETS) as AacLayoutPreset[]).map((presetKey) => (
+                <button
+                  key={presetKey}
+                  type="button"
+                  onClick={() => setPreset(presetKey)}
+                  className={`w-full rounded-xl border px-3 py-2 text-left text-sm transition-colors ${
+                    preset === presetKey
+                      ? 'border-primary-500 bg-primary-950'
+                      : 'border-border hover:bg-surface-hover'
+                  }`}
+                >
+                  <span className="font-medium text-foreground">{AAC_PRESETS[presetKey].label}</span>
+                  <span className="ml-2 text-xs text-text-secondary">
+                    {AAC_PRESETS[presetKey].rows} x {AAC_PRESETS[presetKey].columns}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-foreground mb-2">

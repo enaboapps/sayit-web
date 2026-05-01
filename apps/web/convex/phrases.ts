@@ -114,6 +114,7 @@ export const updatePhrase = mutation({
 export const deletePhrase = mutation({
   args: {
     id: v.id('phrases'),
+    confirmLockedCoreDelete: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -141,6 +142,12 @@ export const deletePhrase = mutation({
       .query('boardTiles')
       .withIndex('by_phrase', (q) => q.eq('phraseId', args.id))
       .collect();
+    if (
+      referencingTiles.some((tile) => tile.isLocked && tile.tileRole === 'core') &&
+      !args.confirmLockedCoreDelete
+    ) {
+      throw new Error('Locked core phrases require explicit confirmation before deletion');
+    }
     for (const tile of referencingTiles) {
       await ctx.db.delete(tile._id);
     }

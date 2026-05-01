@@ -1,8 +1,20 @@
+import type { AacLayoutMode, AacLayoutPreset, TileRole, WordClass } from '@/lib/aacLayout';
+
 export interface PhraseSummary {
   id: string;
   text: string;
   symbolUrl?: string;
   symbolStorageId?: string;
+}
+
+export interface TileLayoutSummary {
+  cellRow?: number;
+  cellColumn?: number;
+  cellRowSpan?: number;
+  cellColumnSpan?: number;
+  tileRole?: TileRole;
+  wordClass?: WordClass;
+  isLocked?: boolean;
 }
 
 /**
@@ -16,21 +28,21 @@ export interface PhraseSummary {
  * in BoardTileRenderer, add a form for creating/editing it.
  */
 export type BoardTileSummary =
-  | {
+  | ({
       id: string;
       kind: 'phrase';
       position: number;
       phrase: PhraseSummary;
-    }
-  | {
+    } & TileLayoutSummary)
+  | ({
       id: string;
       kind: 'navigate';
       position: number;
       targetBoardId: string;
       /** Live name of the target board; null when target is missing/deleted. */
       targetBoardName: string | null;
-    }
-  | {
+    } & TileLayoutSummary)
+  | ({
       id: string;
       kind: 'audio';
       position: number;
@@ -39,7 +51,7 @@ export type BoardTileSummary =
       audioMimeType: string;
       audioDurationMs: number;
       audioByteSize: number;
-    };
+    } & TileLayoutSummary);
 
 export interface BoardSummary {
   id: string;
@@ -53,4 +65,10 @@ export interface BoardSummary {
   sharedBy?: string | null;
   forClientId?: string | null;
   forClientName?: string | null;
+  layoutMode?: AacLayoutMode;
+  layoutPreset?: AacLayoutPreset;
+  gridRows?: number;
+  gridColumns?: number;
+  layoutVersion?: number;
+  sourceTemplate?: 'sayitCoreV1' | 'custom';
 }

@@ -22,6 +22,13 @@ const nextConfig = {
   outputFileTracingRoot: workspaceRoot,
   turbopack: {
     root: workspaceRoot,
+    // @willwade/aac-processors' browser bundle has runtime-conditional dynamic
+    // imports for Node-only modules (adm-zip) that never execute in the
+    // browser (guarded by `isNodeRuntime()`). Turbopack still tries to resolve
+    // these statically; alias them to a no-op stub.
+    resolveAlias: {
+      'adm-zip': path.resolve(__dirname, 'lib/stubs/empty-module.js').replace(/\\/g, '/'),
+    },
   },
 };
 

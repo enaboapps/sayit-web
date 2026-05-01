@@ -1,6 +1,7 @@
 import BoardSelector from '../phrases/BoardSelector';
 import SwipeableBoardNavigator from '../phrases/SwipeableBoardNavigator';
 import PhraseGrid from '../phrases/PhraseGrid';
+import FixedAACGrid from '../phrases/FixedAACGrid';
 import SortablePhraseGrid from '../phrases/SortablePhraseGrid';
 import BoardTileRenderer from '../phrases/tiles/BoardTileRenderer';
 import AnimatedLoading from '../phrases/AnimatedLoading';
@@ -34,7 +35,11 @@ interface PhrasesTabContentProps {
   onAddNavigateTile: (() => void) | undefined;
   onAddAudioTile: (() => void) | undefined;
   onAddBoard: () => void;
+  onImportOpenBoard?: () => void;
+  onExportOpenBoard?: () => void;
+  onExportAllOpenBoards?: () => void;
   onReorderTiles: (orderedTileIds: string[]) => void;
+  onMoveTileToCell: (tileId: string, row: number, column: number) => void;
   onBoardIndexChange: (index: number) => void;
   onToggleEditMode: () => void;
   onSelectBoard: (board: BoardSummary | string) => void;
@@ -70,7 +75,11 @@ export default function PhrasesTabContent({
   onAddNavigateTile,
   onAddAudioTile,
   onAddBoard,
+  onImportOpenBoard,
+  onExportOpenBoard,
+  onExportAllOpenBoards,
   onReorderTiles,
+  onMoveTileToCell,
   onBoardIndexChange,
   onToggleEditMode,
   onSelectBoard,
@@ -91,7 +100,29 @@ export default function PhrasesTabContent({
   // empty grid instead of crashing the tree.
   const safeTiles = tiles ?? [];
 
-  const phraseGrid = isEditMode && canEditCurrentBoard ? (
+  const isFixedGrid = selectedBoard?.layoutMode === 'fixedGrid'
+    && typeof selectedBoard.gridRows === 'number'
+    && typeof selectedBoard.gridColumns === 'number';
+
+  const phraseGrid = isFixedGrid ? (
+    <FixedAACGrid
+      tiles={safeTiles}
+      rows={selectedBoard.gridRows as number}
+      columns={selectedBoard.gridColumns as number}
+      activePhraseId={activePhraseId}
+      isSpeaking={isSpeaking}
+      isEditMode={isEditMode}
+      canEdit={canEditCurrentBoard}
+      onPhrasePress={onPhrasePress}
+      onPhraseStop={onPhraseStop}
+      onPhraseEdit={onEditPhrase}
+      onNavigateTap={onNavigateTap}
+      onNavigateEdit={handleNavigateEditTile}
+      onAudioEdit={handleAudioEditTile}
+      onMoveTileToCell={onMoveTileToCell}
+      textSizePx={textSizePx}
+    />
+  ) : isEditMode && canEditCurrentBoard ? (
     <SortablePhraseGrid
       tiles={safeTiles}
       activePhraseId={activePhraseId}
@@ -202,6 +233,9 @@ export default function PhrasesTabContent({
           onAddNavigateTile={isOnline && canEditCurrentBoard ? onAddNavigateTile : undefined}
           onAddAudioTile={isOnline && canEditCurrentBoard ? onAddAudioTile : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
+          onImportOpenBoard={isOnline ? onImportOpenBoard : undefined}
+          onExportOpenBoard={onExportOpenBoard}
+          onExportAllOpenBoards={onExportAllOpenBoards}
           onEdit={onToggleEditMode}
           onEditBoard={isOnline && selectedBoard && canEditCurrentBoard ? () => onEditBoard(selectedBoard.id) : undefined}
           isEditMode={isEditMode}
@@ -232,6 +266,9 @@ export default function PhrasesTabContent({
           onAddNavigateTile={isOnline && canEditCurrentBoard ? onAddNavigateTile : undefined}
           onAddAudioTile={isOnline && canEditCurrentBoard ? onAddAudioTile : undefined}
           onAddBoard={isOnline ? onAddBoard : undefined}
+          onImportOpenBoard={isOnline ? onImportOpenBoard : undefined}
+          onExportOpenBoard={onExportOpenBoard}
+          onExportAllOpenBoards={onExportAllOpenBoards}
           onEdit={onToggleEditMode}
           embedded={true}
         />
