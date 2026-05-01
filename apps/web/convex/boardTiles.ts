@@ -9,7 +9,13 @@ import {
   validateAudioLabel,
   validateAudioMetadata,
 } from './audioLimits';
-import { nextFixedGridCell } from './aacLayout';
+import {
+  fixedGridRectWithinBoard,
+  fixedGridRectsOverlap,
+  nextFixedGridCell,
+  normaliseFixedGridSpan,
+  tileFixedGridRect,
+} from './aacLayout';
 
 const tileRoleValidator = v.union(
   v.literal('core'),
@@ -44,27 +50,35 @@ async function assertFixedGridCellAvailable(
   if (!Number.isInteger(row) || !Number.isInteger(column) || row < 0 || column < 0) {
     throw new Error('Cell coordinates must be non-negative integers');
   }
-  if (
-    typeof board.gridRows !== 'number' ||
-    typeof board.gridColumns !== 'number' ||
-    row >= board.gridRows ||
-    column >= board.gridColumns
-  ) {
+  if (typeof board.gridRows !== 'number' || typeof board.gridColumns !== 'number') {
     throw new Error('Cell coordinates are outside the board grid');
+  }
+  if (row >= board.gridRows || column >= board.gridColumns) {
+    throw new Error('Cell coordinates are outside the board grid');
+  }
+
+  const requestedRect = {
+    row,
+    column,
+    rowSpan: normaliseFixedGridSpan(tile.cellRowSpan),
+    columnSpan: normaliseFixedGridSpan(tile.cellColumnSpan),
+  };
+
+  if (!fixedGridRectWithinBoard(board, requestedRect)) {
+    throw new Error('Cell span exceeds the board grid');
   }
 
   const existing = await ctx.db
     .query('boardTiles')
     .withIndex('by_board', (q) => q.eq('boardId', board._id))
-    .filter((q) =>
-      q.and(
-        q.eq(q.field('cellRow'), row),
-        q.eq(q.field('cellColumn'), column)
-      )
-    )
     .collect();
 
-  const occupant = existing.find((candidate) => candidate._id !== tile._id);
+  const occupant = existing.find((candidate) => {
+    if (candidate._id === tile._id) return false;
+
+    const candidateRect = tileFixedGridRect(candidate);
+    return candidateRect ? fixedGridRectsOverlap(requestedRect, candidateRect) : false;
+  });
   if (occupant) {
     throw new Error('Cell is already occupied');
   }
