@@ -56,6 +56,43 @@ export const migrateToBoardTiles = internalMutation({
   },
 });
 
+// Migration: clear legacy AAC-preset fields ahead of dropping them from
+// schema. The named-preset feature (largeAccess16/standard36/dense48) was
+// retired; existing rows still hold values that would block the
+// schema-strict deploy. Run AFTER the code that stops *writing* these
+// fields lands (commit A on branch `feature/issue-649-aac-board-layout`)
+// and BEFORE the schema-drop deploy (commit B):
+//   npx convex run migrations:clearLegacyAacFields
+//
+// Idempotent: only patches rows that still hold a value, returns the count.
+export const clearLegacyAacFields = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let boardsCleared = 0;
+    const boards = await ctx.db.query('phraseBoards').collect();
+    for (const board of boards) {
+      const patch: { layoutPreset?: undefined; sourceTemplate?: undefined } = {};
+      if (board.layoutPreset !== undefined) patch.layoutPreset = undefined;
+      if (board.sourceTemplate !== undefined) patch.sourceTemplate = undefined;
+      if (Object.keys(patch).length > 0) {
+        await ctx.db.patch(board._id, patch);
+        boardsCleared += 1;
+      }
+    }
+
+    let settingsCleared = 0;
+    const allSettings = await ctx.db.query('userSettings').collect();
+    for (const settings of allSettings) {
+      if (settings.aacGridPresetPreference !== undefined) {
+        await ctx.db.patch(settings._id, { aacGridPresetPreference: undefined });
+        settingsCleared += 1;
+      }
+    }
+
+    return { boardsCleared, settingsCleared, totalBoards: boards.length, totalSettings: allSettings.length };
+  },
+});
+
 // Migration: Convert textSize from enum strings to numbers
 // Run this once via Convex dashboard before deploying schema changes
 export const migrateTextSizeToNumber = internalMutation({

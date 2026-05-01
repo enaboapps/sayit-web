@@ -67,11 +67,9 @@ describe('offline bootstrap storage', () => {
         name: 'Core',
         position: 0,
         layoutMode: 'fixedGrid',
-        layoutPreset: 'standard36',
         gridRows: 6,
         gridColumns: 6,
         layoutVersion: 1,
-        sourceTemplate: 'sayitCoreV1',
         tiles: [
           {
             _id: 'tile_1',
@@ -90,7 +88,6 @@ describe('offline bootstrap storage', () => {
 
     expect(board).toMatchObject({
       layoutMode: 'fixedGrid',
-      layoutPreset: 'standard36',
       gridRows: 6,
       gridColumns: 6,
       tiles: [
@@ -162,8 +159,8 @@ describe('offline bootstrap storage', () => {
         _id: 'legacy_board',
         name: 'My Phrases',
         position: 1,
-        // layoutMode/layoutPreset/gridRows/gridColumns/sourceTemplate all
-        // intentionally omitted to mimic a board persisted before this PR.
+        // layoutMode/gridRows/gridColumns all intentionally omitted to mimic
+        // a board persisted before the fixed-grid feature shipped.
         phrase_board_phrases: [
           { phrase: { _id: 'phrase_a', text: 'hello' } },
           { phrase: { _id: 'phrase_b', text: 'thanks', symbolUrl: 'https://example.com/thanks.png' } },
@@ -172,11 +169,9 @@ describe('offline bootstrap storage', () => {
     ], 456);
 
     expect(board.layoutMode).toBe('free');
-    expect(board.layoutPreset).toBeUndefined();
     expect(board.gridRows).toBeUndefined();
     expect(board.gridColumns).toBeUndefined();
     expect(board.layoutVersion).toBeUndefined();
-    expect(board.sourceTemplate).toBeUndefined();
     expect(board.phrases).toEqual([
       { id: 'phrase_a', text: 'hello', symbolUrl: undefined },
       { id: 'phrase_b', text: 'thanks', symbolUrl: 'https://example.com/thanks.png' },

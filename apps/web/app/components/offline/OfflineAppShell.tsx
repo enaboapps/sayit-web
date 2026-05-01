@@ -86,11 +86,9 @@ function toBoardSummary(boards: Awaited<ReturnType<typeof readLastCachedBoards>>
       };
     }),
     layoutMode: board.layoutMode,
-    layoutPreset: board.layoutPreset,
     gridRows: board.gridRows,
     gridColumns: board.gridColumns,
     layoutVersion: board.layoutVersion,
-    sourceTemplate: board.sourceTemplate,
     hiddenFromPicker: board.hiddenFromPicker,
     isShared: board.isShared,
     isOwner: board.isOwner,

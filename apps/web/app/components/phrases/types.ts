@@ -1,4 +1,4 @@
-import type { AacLayoutMode, AacLayoutPreset, TileRole, WordClass } from '@/lib/aacLayout';
+import type { AacLayoutMode, TileRole, WordClass } from '@/lib/aacLayout';
 
 export interface PhraseSummary {
   id: string;
@@ -66,11 +66,9 @@ export interface BoardSummary {
   forClientId?: string | null;
   forClientName?: string | null;
   layoutMode?: AacLayoutMode;
-  layoutPreset?: AacLayoutPreset;
   gridRows?: number;
   gridColumns?: number;
   layoutVersion?: number;
-  sourceTemplate?: 'sayitCoreV1' | 'custom';
   /**
    * When true, the board is omitted from picker UIs (sidebar dropdown,
    * mobile carousel, board grid popup) but remains fully usable through

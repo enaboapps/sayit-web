@@ -158,11 +158,9 @@ export function usePhraseBoardData() {
     forClientId: board.forClientId,
     forClientName: board.forClientName,
     layoutMode: board.layoutMode ?? 'free',
-    layoutPreset: board.layoutPreset,
     gridRows: board.gridRows,
     gridColumns: board.gridColumns,
     layoutVersion: board.layoutVersion,
-    sourceTemplate: board.sourceTemplate,
     hiddenFromPicker: board.hiddenFromPicker,
   })) || [];
 

@@ -3,7 +3,7 @@ import { mutation, internalMutation } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
-import { AAC_LAYOUT_VERSION } from './aacLayout';
+import { FIXED_GRID_LAYOUT_VERSION } from './aacLayout';
 import { MAX_IMPORT_BOARDS, MAX_IMPORT_TILES } from './openBoardLimits';
 
 // How many boards we cascade-delete per scheduled tick. Convex mutations have
@@ -133,8 +133,7 @@ export const importBoards = mutation({
         layoutMode: 'fixedGrid',
         gridRows: board.gridRows,
         gridColumns: board.gridColumns,
-        layoutVersion: AAC_LAYOUT_VERSION,
-        sourceTemplate: 'custom',
+        layoutVersion: FIXED_GRID_LAYOUT_VERSION,
         hiddenFromPicker: navTargetSourceIds.has(board.sourceId) ? true : undefined,
         importPackageId: packageId,
         importSourceId: board.sourceId,

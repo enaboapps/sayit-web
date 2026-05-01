@@ -41,7 +41,6 @@ export const initializeSettings = mutation({
     messageCaptureMode: v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny')),
     usePhraseBar: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
-    aacGridPresetPreference: v.optional(v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48'))),
     typingAreaVisible: v.boolean(),
     typingAreaExpanded: v.boolean(),
     selectedBoardId: v.optional(v.string()),
@@ -113,7 +112,6 @@ export const initializeSettings = mutation({
       messageCaptureMode: args.messageCaptureMode,
       usePhraseBar: args.usePhraseBar,
       speakPhrasesOnTap: args.speakPhrasesOnTap,
-      aacGridPresetPreference: args.aacGridPresetPreference,
       typingAreaVisible: args.typingAreaVisible,
       typingAreaExpanded: args.typingAreaExpanded,
       selectedBoardId: args.selectedBoardId,
@@ -148,7 +146,6 @@ export const updateSettings = mutation({
     messageCaptureMode: v.optional(v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny'))),
     usePhraseBar: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
-    aacGridPresetPreference: v.optional(v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48'))),
     typingAreaVisible: v.optional(v.boolean()),
     typingAreaExpanded: v.optional(v.boolean()),
     selectedBoardId: v.optional(v.string()),
@@ -247,7 +244,6 @@ export const updateSettings = mutation({
     if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
     if (updates.usePhraseBar !== undefined) updateData.usePhraseBar = updates.usePhraseBar;
     if (updates.speakPhrasesOnTap !== undefined) updateData.speakPhrasesOnTap = updates.speakPhrasesOnTap;
-    if (updates.aacGridPresetPreference !== undefined) updateData.aacGridPresetPreference = updates.aacGridPresetPreference;
     if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;
     if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;
     if (updates.selectedBoardId !== undefined) updateData.selectedBoardId = updates.selectedBoardId;

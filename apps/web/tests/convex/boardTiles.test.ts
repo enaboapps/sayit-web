@@ -15,7 +15,6 @@ import {
   validateAudioMetadata,
   MAX_AUDIO_BYTES,
 } from '@/convex/audioLimits';
-import { getCoreWordsForPreset, getPresetDimensions } from '@/convex/aacLayout';
 
 const mockDb = {
   query: jest.fn(),
@@ -388,22 +387,6 @@ describe('boardTiles', () => {
   });
 
   describe('fixed-grid layout invariants', () => {
-    test('standard36 starter board has all 36 core words and fixed dimensions', () => {
-      const dimensions = getPresetDimensions('standard36');
-      const words = getCoreWordsForPreset('standard36');
-
-      expect(dimensions).toEqual({ rows: 6, columns: 6 });
-      expect(words).toHaveLength(36);
-      expect(words.map((word) => word.text)).toEqual([
-        'all', 'can', 'different', 'do', 'finished', 'get',
-        'go', 'good', 'he', 'help', 'here', 'I',
-        'in', 'it', 'like', 'look', 'make', 'more',
-        'not', 'on', 'open', 'put', 'same', 'she',
-        'some', 'stop', 'that', 'turn', 'up', 'want',
-        'what', 'when', 'where', 'who', 'why', 'you',
-      ]);
-    });
-
     test('cell collision validation rejects an occupied fixed-grid cell', () => {
       const movingTile = createTile({ _id: 'tile-moving', cellRow: 0, cellColumn: 0 });
       const occupiedTile = createTile({ _id: 'tile-occupied', cellRow: 1, cellColumn: 1 });
@@ -421,35 +404,6 @@ describe('boardTiles', () => {
 
       expect(() => validateMove(1, 1)).toThrow(/already occupied/);
       expect(() => validateMove(2, 2)).not.toThrow();
-    });
-
-    test('every preset core word fits inside its grid dimensions', () => {
-      // Each preset must promise enough cells for the core vocabulary it
-      // returns; otherwise createAACStarterBoard's `cellRow = floor(index / cols)`
-      // derivation overflows the last row and tiles render off-grid. Asserting
-      // here keeps preset/word-list edits in sync.
-      for (const preset of ['largeAccess16', 'standard36', 'dense48'] as const) {
-        const { rows, columns } = getPresetDimensions(preset);
-        const words = getCoreWordsForPreset(preset);
-        const capacity = rows * columns;
-        expect(words.length).toBeLessThanOrEqual(capacity);
-        // Spot-check the index -> (row, column) derivation for the last word
-        // doesn't blow past `rows`, since that's exactly what would happen if
-        // someone bumped a word list without bumping the grid.
-        const lastIndex = words.length - 1;
-        expect(Math.floor(lastIndex / columns)).toBeLessThan(rows);
-        expect(lastIndex % columns).toBeLessThan(columns);
-      }
-    });
-
-    test('largeAccess16 produces exactly 16 core words for a 4x4 grid', () => {
-      // The motor-impaired access preset has zero margin: 16 words, 16 cells.
-      // If the word list grows or shrinks, either the grid resizes too or the
-      // user gets a truncated / sparse board. Lock both numbers in.
-      const { rows, columns } = getPresetDimensions('largeAccess16');
-      const words = getCoreWordsForPreset('largeAccess16');
-      expect(rows * columns).toBe(16);
-      expect(words).toHaveLength(16);
     });
 
     test('locked core tiles require explicit delete confirmation', () => {
@@ -566,7 +520,6 @@ describe('boardTiles', () => {
         gridRows: 2,
         gridColumns: 2,
         layoutVersion: 1,
-        sourceTemplate: 'custom',
       });
       await mockDb.insert('phrases', {
         userId: 'user-123',

@@ -72,11 +72,9 @@ export interface OfflineBoardDocument {
   phrases: OfflinePhraseDocument[];
   tiles?: OfflineBoardTileDocument[];
   layoutMode?: 'free' | 'fixedGrid';
-  layoutPreset?: 'largeAccess16' | 'standard36' | 'dense48';
   gridRows?: number;
   gridColumns?: number;
   layoutVersion?: number;
-  sourceTemplate?: 'sayitCoreV1' | 'custom';
   hiddenFromPicker?: boolean;
   isShared: boolean;
   isOwner: boolean;
@@ -149,11 +147,9 @@ interface CacheablePhraseBoard {
     isLocked?: boolean;
   }> | null;
   layoutMode?: 'free' | 'fixedGrid' | null;
-  layoutPreset?: 'largeAccess16' | 'standard36' | 'dense48' | null;
   gridRows?: number | null;
   gridColumns?: number | null;
   layoutVersion?: number | null;
-  sourceTemplate?: 'sayitCoreV1' | 'custom' | null;
   hiddenFromPicker?: boolean | null;
   // pendingDelete flips on the server when a user clicks Delete on an
   // imported package. We treat its presence as "skip me on next normalize"
@@ -340,11 +336,9 @@ export function normalizeBoardDocuments(
       phrases,
       tiles,
       layoutMode: board.layoutMode ?? 'free',
-      layoutPreset: board.layoutPreset ?? undefined,
       gridRows: board.gridRows ?? undefined,
       gridColumns: board.gridColumns ?? undefined,
       layoutVersion: board.layoutVersion ?? undefined,
-      sourceTemplate: board.sourceTemplate ?? undefined,
       hiddenFromPicker: board.hiddenFromPicker ?? undefined,
       isShared: Boolean(board.isShared),
       isOwner: board.isOwner ?? true,

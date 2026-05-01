@@ -23,7 +23,6 @@ import { Slider } from '@/app/components/ui/Slider';
 import { Switch } from '@/app/components/ui/Switch';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { UserButton } from '@clerk/nextjs';
-import type { AacLayoutPreset } from '@/lib/aacLayout';
 
 // Import types from SettingsContext
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
@@ -113,12 +112,6 @@ export default function SettingsPage() {
     { value: 'speakAndClearOnly' as MessageCaptureMode, label: 'On Speak & Clear Only' },
     { value: 'speakAny' as MessageCaptureMode, label: 'On Speak or Speak & Clear' },
   ];
-  const aacGridPresetOptions = [
-    { value: 'largeAccess16' as AacLayoutPreset, label: 'Large Access 16' },
-    { value: 'standard36' as AacLayoutPreset, label: 'Standard 36' },
-    { value: 'dense48' as AacLayoutPreset, label: 'Dense 48' },
-  ];
-
   // Mobile layout with categories
   if (isMobile) {
     return (
@@ -276,13 +269,6 @@ export default function SettingsPage() {
               options={enterKeyOptions}
               value={settings.enterKeyBehavior}
               onChange={(value) => updateSetting('enterKeyBehavior', value)}
-            />
-            <Dropdown
-              label="AAC Grid Preset"
-              description="Default layout when creating AAC core boards"
-              options={aacGridPresetOptions}
-              value={settings.aacGridPresetPreference}
-              onChange={(value) => updateSetting('aacGridPresetPreference', value)}
             />
             <Switch
               label="Double-Enter"
@@ -475,12 +461,6 @@ export default function SettingsPage() {
                       value={settings.doubleEnterAction}
                       onChange={(value) => updateSetting('doubleEnterAction', value)}
                       disabled={!settings.doubleEnterEnabled}
-                    />
-                    <Dropdown
-                      label="AAC Grid Preset"
-                      options={aacGridPresetOptions}
-                      value={settings.aacGridPresetPreference}
-                      onChange={(value) => updateSetting('aacGridPresetPreference', value)}
                     />
                   </div>
                   <div className="mt-6">
