@@ -1,7 +1,9 @@
-import type {
-  NormalizedOpenBoardBoard,
-  NormalizedOpenBoardImport,
-  NormalizedOpenBoardTile,
+import {
+  MAX_OPEN_BOARD_FILE_BYTES,
+  MAX_OPEN_BOARD_FILE_MB,
+  type NormalizedOpenBoardBoard,
+  type NormalizedOpenBoardImport,
+  type NormalizedOpenBoardTile,
 } from './types';
 import { OpenBoardFormatError, validateImportLimits } from './validation';
 
@@ -78,6 +80,15 @@ export function canUseAacProcessorsForFile(fileName: string) {
 }
 
 export async function normalizeAacProcessorsUpload(file: File): Promise<NormalizedOpenBoardImport> {
+  // Refuse oversize files BEFORE reading them into memory. Without this gate
+  // a malicious / malformed .obz could OOM the browser tab — the post-parse
+  // caps in `validateImportLimits` only fire after JSZip has decompressed
+  // every entry. Pair this with the 4000-tile / 50-board caps below.
+  if (file.size > MAX_OPEN_BOARD_FILE_BYTES) {
+    throw new OpenBoardFormatError(
+      `File is larger than the ${MAX_OPEN_BOARD_FILE_MB} MB import limit.`
+    );
+  }
   const extension = extensionForFile(file.name);
   const [processor, buffer] = await Promise.all([
     processorForExtension(extension),

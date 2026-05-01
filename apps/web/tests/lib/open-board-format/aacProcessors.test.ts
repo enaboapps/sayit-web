@@ -1,4 +1,26 @@
-import { normalizeAacProcessorsTree } from '@/lib/open-board-format/aacProcessors';
+import {
+  normalizeAacProcessorsTree,
+  normalizeAacProcessorsUpload,
+} from '@/lib/open-board-format/aacProcessors';
+import {
+  MAX_OPEN_BOARD_FILE_BYTES,
+  MAX_OPEN_BOARD_FILE_MB,
+} from '@/lib/open-board-format/types';
+import { OpenBoardFormatError } from '@/lib/open-board-format/validation';
+
+describe('AAC upload size guard', () => {
+  it('rejects files larger than the import limit before parsing', async () => {
+    // Construct a File whose `size` exceeds the cap without actually allocating
+    // that many bytes — the guard checks `file.size`, never reads it.
+    const overLimit = new File(['stub'], 'huge.obz', { type: 'application/zip' });
+    Object.defineProperty(overLimit, 'size', { value: MAX_OPEN_BOARD_FILE_BYTES + 1 });
+
+    await expect(normalizeAacProcessorsUpload(overLimit)).rejects.toBeInstanceOf(OpenBoardFormatError);
+    await expect(normalizeAacProcessorsUpload(overLimit)).rejects.toThrow(
+      `File is larger than the ${MAX_OPEN_BOARD_FILE_MB} MB import limit.`
+    );
+  });
+});
 
 describe('AACProcessors normalization', () => {
   it('rewrites .obz path-based navigation targets back to the destination page id', () => {
