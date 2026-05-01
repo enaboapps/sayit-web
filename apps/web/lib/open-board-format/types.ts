@@ -1,13 +1,16 @@
 import type { BoardSummary, BoardTileSummary } from '@/app/components/phrases/types';
 
+// Re-export the canonical import caps so callers in lib/ keep their existing
+// import path. Source of truth lives next to the server-side enforcement in
+// `convex/openBoardLimits.ts` — bumping a number there lifts both bounds.
+export {
+  MAX_IMPORT_BOARDS,
+  MAX_IMPORT_TILES,
+  MAX_OPEN_BOARD_FILE_MB,
+  MAX_OPEN_BOARD_FILE_BYTES,
+} from '@/convex/openBoardLimits';
+
 export const OPEN_BOARD_FORMAT = 'open-board-0.1';
-export const MAX_IMPORT_BOARDS = 50;
-export const MAX_IMPORT_TILES = 4000;
-// Hard upper bound on the raw file size we'll feed to the parser. Keeps a
-// malicious / malformed .obz from OOM-ing the browser tab before the
-// post-parse caps (MAX_IMPORT_BOARDS / MAX_IMPORT_TILES) kick in.
-export const MAX_OPEN_BOARD_FILE_MB = 50;
-export const MAX_OPEN_BOARD_FILE_BYTES = MAX_OPEN_BOARD_FILE_MB * 1024 * 1024;
 
 export interface OpenBoardLicense {
   type?: string;

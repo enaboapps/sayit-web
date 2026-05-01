@@ -3,9 +3,7 @@ import { mutation } from './_generated/server';
 import type { Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
 import { AAC_LAYOUT_VERSION } from './aacLayout';
-
-const MAX_IMPORT_BOARDS = 50;
-const MAX_IMPORT_TILES = 4000;
+import { MAX_IMPORT_BOARDS, MAX_IMPORT_TILES } from './openBoardLimits';
 
 const phraseTileValidator = v.object({
   kind: v.literal('phrase'),
@@ -113,8 +111,8 @@ export const importBoards = mutation({
 
     // Insert tiles in parallel per-board. Convex mutations are atomic so
     // concurrent ctx.db.insert calls within a single mutation are safe;
-    // sequential awaits were the prior cost per imported tile (50 boards
-    // x dozens of tiles each made the import noticeably slow).
+    // sequential awaits were the prior cost per imported tile (e.g. 150
+    // boards x dozens of tiles each made the import noticeably slow).
     await Promise.all(args.boards.map(async (board) => {
       const boardId = sourceIdToBoardId.get(board.sourceId);
       if (!boardId) return;
