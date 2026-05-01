@@ -46,6 +46,18 @@ interface OpenBoardImportModalProps {
   onImported: (boardIds: string[]) => void;
 }
 
+// How many symbol uploads to keep in flight at once. Real-world AAC packages
+// (e.g. CommuniKate-20) can carry 1300+ embedded images; sequential uploads
+// at ~150-500ms each turn into multi-minute hangs. 6 matches the conventional
+// browser per-origin connection ceiling — enough to saturate uplink without
+// overwhelming Convex's rate limiting.
+const SYMBOL_UPLOAD_CONCURRENCY = 6;
+
+type ImportStage =
+  | { kind: 'idle' }
+  | { kind: 'uploading'; uploaded: number; total: number }
+  | { kind: 'saving' };
+
 export default function OpenBoardImportModal({
   isOpen,
   onClose,
@@ -55,7 +67,8 @@ export default function OpenBoardImportModal({
   const [preview, setPreview] = useState<NormalizedOpenBoardImport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+  const [importStage, setImportStage] = useState<ImportStage>({ kind: 'idle' });
+  const isImporting = importStage.kind !== 'idle';
 
   const generateUploadUrl = useMutation(api.symbols.generateUploadUrl);
   const importBoards = useMutation(api.openBoardImport.importBoards);
@@ -70,7 +83,7 @@ export default function OpenBoardImportModal({
     setPreview(null);
     setError(null);
     setIsParsing(false);
-    setIsImporting(false);
+    setImportStage({ kind: 'idle' });
   };
 
   const handleClose = () => {
@@ -87,6 +100,11 @@ export default function OpenBoardImportModal({
     if (!file) return;
 
     setIsParsing(true);
+    // Force a paint so "Reading <filename>..." appears before the synchronous
+    // ZIP/JSON parsing chunk locks the main thread. setState alone schedules
+    // a render but the next macrotask runs `loadIntoTree` before the paint
+    // completes; the rAF hop yields long enough for the browser to flush.
+    await new Promise<void>((r) => requestAnimationFrame(() => r()));
     try {
       // All AAC formats (.obf, .obz, .dot, .opml) flow through a single
       // adapter backed by @willwade/aac-processors' browser bundle.
@@ -115,7 +133,13 @@ export default function OpenBoardImportModal({
     return payload.storageId;
   };
 
-  const buildTilePayload = async (tile: NormalizedOpenBoardTile): Promise<ConvexImportBoard['tiles'][number]> => {
+  // Pure shape transform — uploads happen in handleImport's parallel pass and
+  // the resolved storage id is plumbed back in here. Keeping this sync makes
+  // the per-board map() call obvious and predictable.
+  const buildTilePayload = (
+    tile: NormalizedOpenBoardTile,
+    symbolStorageId: Id<'_storage'> | undefined
+  ): ConvexImportBoard['tiles'][number] => {
     if (tile.kind === 'navigate') {
       return {
         kind: 'navigate',
@@ -126,8 +150,6 @@ export default function OpenBoardImportModal({
         targetSourceId: tile.targetSourceId,
       };
     }
-
-    const symbolStorageId = tile.symbolBlob ? await uploadSymbol(tile.symbolBlob) : undefined;
     return {
       kind: 'phrase',
       text: tile.text,
@@ -138,26 +160,84 @@ export default function OpenBoardImportModal({
     };
   };
 
+  // Run an async worker over `items` with at most `concurrency` in flight.
+  // We call setProgress after each completion so the modal can show
+  // "Uploading 543 of 1379..." live instead of staring at a spinner for
+  // multiple minutes.
+  const runWithConcurrency = async <T, R>(
+    items: T[],
+    concurrency: number,
+    worker: (item: T, index: number) => Promise<R>,
+    onProgress: (completed: number) => void
+  ): Promise<R[]> => {
+    const results = new Array<R>(items.length);
+    let cursor = 0;
+    let completed = 0;
+
+    const runOne = async () => {
+      while (true) {
+        const index = cursor;
+        cursor += 1;
+        if (index >= items.length) return;
+        results[index] = await worker(items[index], index);
+        completed += 1;
+        onProgress(completed);
+      }
+    };
+
+    const runners = Array.from({ length: Math.min(concurrency, items.length) }, runOne);
+    await Promise.all(runners);
+    return results;
+  };
+
   const handleImport = async () => {
     if (!preview || isImporting) return;
     setError(null);
-    setIsImporting(true);
+
+    // Walk the preview once to (a) collect every blob that needs uploading
+    // (with a back-reference for stitching results onto the right tile) and
+    // (b) record per-tile metadata so we can rebuild the import payload
+    // after uploads finish. Doing the walk up-front lets us show an accurate
+    // "X of Y" progress count.
+    type UploadJob = { boardIndex: number; tileIndex: number; blob: Blob };
+    const uploadJobs: UploadJob[] = [];
+    preview.boards.forEach((board, boardIndex) => {
+      board.tiles.forEach((tile, tileIndex) => {
+        if (tile.kind === 'phrase' && tile.symbolBlob) {
+          uploadJobs.push({ boardIndex, tileIndex, blob: tile.symbolBlob });
+        }
+      });
+    });
+
+    setImportStage({ kind: 'uploading', uploaded: 0, total: uploadJobs.length });
 
     try {
-      const boards: ConvexImportBoard[] = [];
-      for (const board of preview.boards) {
-        const tiles = [];
-        for (const tile of board.tiles) {
-          tiles.push(await buildTilePayload(tile));
-        }
-        boards.push({
-          sourceId: board.sourceId,
-          name: board.name,
-          gridRows: board.gridRows,
-          gridColumns: board.gridColumns,
-          tiles,
-        });
-      }
+      const symbolIds = uploadJobs.length === 0
+        ? []
+        : await runWithConcurrency(
+          uploadJobs,
+          SYMBOL_UPLOAD_CONCURRENCY,
+          (job) => uploadSymbol(job.blob),
+          (uploaded) => setImportStage({ kind: 'uploading', uploaded, total: uploadJobs.length })
+        );
+
+      // Stitch storageIds back onto the tile payloads.
+      const symbolByKey = new Map<string, Id<'_storage'>>();
+      uploadJobs.forEach((job, index) => {
+        symbolByKey.set(`${job.boardIndex}:${job.tileIndex}`, symbolIds[index]);
+      });
+
+      setImportStage({ kind: 'saving' });
+      const boards: ConvexImportBoard[] = preview.boards.map((board, boardIndex) => ({
+        sourceId: board.sourceId,
+        name: board.name,
+        gridRows: board.gridRows,
+        gridColumns: board.gridColumns,
+        tiles: board.tiles.map((tile, tileIndex) => buildTilePayload(
+          tile,
+          symbolByKey.get(`${boardIndex}:${tileIndex}`)
+        )),
+      }));
 
       const result = await importBoards({ boards });
       onImported(result.importedBoardIds.map(String));
@@ -165,8 +245,7 @@ export default function OpenBoardImportModal({
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not import this Open Board file.');
-    } finally {
-      setIsImporting(false);
+      setImportStage({ kind: 'idle' });
     }
   };
 
@@ -193,6 +272,28 @@ export default function OpenBoardImportModal({
 
         {isParsing && (
           <p className="text-sm text-text-secondary">Reading {selectedFile?.name ?? 'file'}...</p>
+        )}
+
+        {importStage.kind === 'uploading' && (
+          <div className="space-y-1">
+            <p className="text-sm text-text-secondary">
+              Uploading symbols ({importStage.uploaded} of {importStage.total})...
+            </p>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-hover">
+              <div
+                className="h-full bg-primary-500 transition-[width] duration-150"
+                style={{
+                  width: importStage.total === 0
+                    ? '100%'
+                    : `${Math.round((importStage.uploaded / importStage.total) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {importStage.kind === 'saving' && (
+          <p className="text-sm text-text-secondary">Saving boards...</p>
         )}
 
         {preview && (
@@ -229,7 +330,11 @@ export default function OpenBoardImportModal({
             Cancel
           </Button>
           <Button type="button" onClick={handleImport} disabled={!preview || isParsing || isImporting}>
-            {isImporting ? 'Importing...' : 'Import'}
+            {importStage.kind === 'uploading'
+              ? `Uploading ${importStage.uploaded}/${importStage.total}`
+              : importStage.kind === 'saving'
+                ? 'Saving...'
+                : 'Import'}
           </Button>
         </div>
       </div>
