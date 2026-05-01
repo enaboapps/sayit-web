@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
+import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
-import { Id } from '@/convex/_generated/dataModel';
+import type { Id } from '@/convex/_generated/dataModel';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { useBoardNavStack } from '@/app/contexts/BoardNavStackContext';
@@ -12,7 +13,14 @@ import { useOnlineStatus } from './useOnlineStatus';
 import type { BoardSummary, BoardTileSummary, PhraseSummary, TileLayoutSummary } from '@/app/components/phrases/types';
 import type { TileRole, WordClass } from '@/lib/aacLayout';
 
-function tileLayoutSummary(tile: {
+type PhraseBoardsResult = FunctionReturnType<typeof api.phraseBoards.getPhraseBoards>;
+type ConvexBoardSummary = PhraseBoardsResult[number];
+type SelectedBoardData = NonNullable<FunctionReturnType<typeof api.phraseBoards.getPhraseBoard>>;
+type ConvexPhraseLink = SelectedBoardData['phrase_board_phrases'][number];
+type ConvexPhrase = NonNullable<ConvexPhraseLink['phrase']>;
+type ConvexBoardTile = SelectedBoardData['tiles'][number];
+
+type ConvexTileLayout = {
   cellRow?: unknown;
   cellColumn?: unknown;
   cellRowSpan?: unknown;
@@ -20,7 +28,9 @@ function tileLayoutSummary(tile: {
   tileRole?: unknown;
   wordClass?: unknown;
   isLocked?: unknown;
-}): TileLayoutSummary {
+};
+
+function tileLayoutSummary(tile: ConvexTileLayout): TileLayoutSummary {
   return {
     cellRow: typeof tile.cellRow === 'number' ? tile.cellRow : undefined,
     cellColumn: typeof tile.cellColumn === 'number' ? tile.cellColumn : undefined,
@@ -29,6 +39,84 @@ function tileLayoutSummary(tile: {
     tileRole: typeof tile.tileRole === 'string' ? tile.tileRole as TileRole : undefined,
     wordClass: typeof tile.wordClass === 'string' ? tile.wordClass as WordClass : undefined,
     isLocked: typeof tile.isLocked === 'boolean' ? tile.isLocked : undefined,
+  };
+}
+
+function hasPhrase(link: ConvexPhraseLink): link is ConvexPhraseLink & { phrase: ConvexPhrase } {
+  return link.phrase !== null;
+}
+
+export function toPhraseSummary(phrase: ConvexPhrase): PhraseSummary {
+  return {
+    id: String(phrase._id),
+    text: phrase.text,
+    symbolUrl: phrase.symbolUrl,
+    symbolStorageId: phrase.symbolStorageId ? String(phrase.symbolStorageId) : undefined,
+  };
+}
+
+export function toTileSummary(tile: ConvexBoardTile): BoardTileSummary | null {
+  if (tile.kind === 'phrase') {
+    if (!tile.phrase) return null;
+
+    return {
+      id: String(tile._id),
+      kind: 'phrase',
+      position: tile.position,
+      ...tileLayoutSummary(tile),
+      phrase: toPhraseSummary(tile.phrase),
+    };
+  }
+
+  if (tile.kind === 'audio') {
+    return {
+      id: String(tile._id),
+      kind: 'audio',
+      position: tile.position,
+      audioLabel: tile.audioLabel,
+      audioUrl: tile.audioUrl ?? null,
+      audioMimeType: tile.audioMimeType,
+      audioDurationMs: tile.audioDurationMs,
+      audioByteSize: tile.audioByteSize,
+      ...tileLayoutSummary(tile),
+    };
+  }
+
+  return {
+    id: String(tile._id),
+    kind: 'navigate',
+    position: tile.position,
+    targetBoardId: String(tile.targetBoardId),
+    targetBoardName: tile.targetBoardName ?? null,
+    ...tileLayoutSummary(tile),
+  };
+}
+
+export function toBoardSummary(
+  board: ConvexBoardSummary,
+  selectedBoardId: string | null,
+  phrases: PhraseSummary[],
+  tiles: BoardTileSummary[]
+): BoardSummary {
+  const isSelectedBoard = String(board._id) === selectedBoardId;
+
+  return {
+    id: String(board._id),
+    name: board.name,
+    position: board.position,
+    phrases: isSelectedBoard ? phrases : [],
+    tiles: isSelectedBoard ? tiles : undefined,
+    isShared: board.isShared,
+    isOwner: board.isOwner,
+    accessLevel: board.accessLevel,
+    sharedBy: board.sharedBy,
+    forClientId: board.forClientId,
+    forClientName: board.forClientName,
+    layoutMode: board.layoutMode ?? 'free',
+    gridRows: board.gridRows,
+    gridColumns: board.gridColumns,
+    layoutVersion: board.layoutVersion,
+    hiddenFromPicker: board.hiddenFromPicker,
   };
 }
 
@@ -124,81 +212,16 @@ export function usePhraseBoardData() {
 
 
   const phrases: PhraseSummary[] = selectedBoardData?.phrase_board_phrases
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ?.map((pbp: any) => pbp.phrase)
-    .filter(Boolean)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((phrase: any) => ({
-      id: String(phrase._id),
-      text: phrase.text,
-      symbolUrl: phrase.symbolUrl,
-      symbolStorageId: phrase.symbolStorageId ? String(phrase.symbolStorageId) : undefined,
-    })) || [];
+    ?.filter(hasPhrase)
+    .map((pbp) => toPhraseSummary(pbp.phrase)) || [];
 
    
   const tiles: BoardTileSummary[] = (selectedBoardData?.tiles ?? [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((tile: any): BoardTileSummary | null => {
-      if (tile.kind === 'phrase') {
-        if (!tile.phrase) return null; // skip orphaned phrase rows defensively
-        return {
-          id: String(tile._id),
-          kind: 'phrase',
-          position: tile.position,
-          ...tileLayoutSummary(tile),
-          phrase: {
-            id: String(tile.phrase._id),
-            text: tile.phrase.text,
-            symbolUrl: tile.phrase.symbolUrl,
-            symbolStorageId: tile.phrase.symbolStorageId ? String(tile.phrase.symbolStorageId) : undefined,
-          },
-        };
-      }
-      if (tile.kind === 'audio') {
-        return {
-          id: String(tile._id),
-          kind: 'audio',
-          position: tile.position,
-          audioLabel: tile.audioLabel,
-          audioUrl: tile.audioUrl ?? null,
-          audioMimeType: tile.audioMimeType,
-          audioDurationMs: tile.audioDurationMs,
-          audioByteSize: tile.audioByteSize,
-          ...tileLayoutSummary(tile),
-        };
-      }
-
-      // kind === 'navigate'
-      return {
-        id: String(tile._id),
-        kind: 'navigate',
-        position: tile.position,
-        targetBoardId: String(tile.targetBoardId),
-        targetBoardName: tile.targetBoardName ?? null,
-        ...tileLayoutSummary(tile),
-      };
-    })
+    .map(toTileSummary)
     .filter((t: BoardTileSummary | null): t is BoardTileSummary => t !== null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const transformedBoards: BoardSummary[] = boards?.map((board: any) => ({
-    id: String(board._id),
-    name: board.name,
-    position: board.position,
-    phrases: board._id === selectedBoardId ? phrases : [],
-    tiles: board._id === selectedBoardId ? tiles : undefined,
-    isShared: board.isShared,
-    isOwner: board.isOwner,
-    accessLevel: board.accessLevel,
-    sharedBy: board.sharedBy,
-    forClientId: board.forClientId,
-    forClientName: board.forClientName,
-    layoutMode: board.layoutMode ?? 'free',
-    gridRows: board.gridRows,
-    gridColumns: board.gridColumns,
-    layoutVersion: board.layoutVersion,
-    hiddenFromPicker: board.hiddenFromPicker,
-  })) || [];
+  const transformedBoards: BoardSummary[] = boards
+    ?.map((board) => toBoardSummary(board, selectedBoardId, phrases, tiles)) || [];
 
   // `visibleBoards` is what picker UIs walk through — drill-down boards
   // imported from OBF vocabularies (CommuniKate, etc.) are flagged
