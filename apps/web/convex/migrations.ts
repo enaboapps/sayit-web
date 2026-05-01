@@ -58,24 +58,33 @@ export const migrateToBoardTiles = internalMutation({
 
 // Migration: clear legacy AAC-preset fields ahead of dropping them from
 // schema. The named-preset feature (largeAccess16/standard36/dense48) was
-// retired; existing rows still hold values that would block the
-// schema-strict deploy. Run AFTER the code that stops *writing* these
-// fields lands (commit A on branch `feature/issue-649-aac-board-layout`)
-// and BEFORE the schema-drop deploy (commit B):
-//   npx convex run migrations:clearLegacyAacFields
+// retired; existing rows held values that would block the schema-strict
+// deploy until cleared. Run order:
+//   1. Deploy commit A (code stops writing the fields, schema unchanged).
+//   2. `npx convex run migrations:clearLegacyAacFields`.
+//   3. Deploy commit B (schema drops the fields).
 //
 // Idempotent: only patches rows that still hold a value, returns the count.
+//
+// The fields no longer appear in `Doc<'phraseBoards'>`/`Doc<'userSettings'>`
+// since commit B; reads are cast through Record<string, unknown> so the
+// migration remains compilable for future environments that still need to
+// run it (e.g. prod first-time deploy after both commits land together).
 export const clearLegacyAacFields = internalMutation({
   args: {},
   handler: async (ctx) => {
     let boardsCleared = 0;
     const boards = await ctx.db.query('phraseBoards').collect();
     for (const board of boards) {
+      const legacy = board as unknown as Record<string, unknown>;
       const patch: { layoutPreset?: undefined; sourceTemplate?: undefined } = {};
-      if (board.layoutPreset !== undefined) patch.layoutPreset = undefined;
-      if (board.sourceTemplate !== undefined) patch.sourceTemplate = undefined;
+      if (legacy.layoutPreset !== undefined) patch.layoutPreset = undefined;
+      if (legacy.sourceTemplate !== undefined) patch.sourceTemplate = undefined;
       if (Object.keys(patch).length > 0) {
-        await ctx.db.patch(board._id, patch);
+        // Patch shape isn't in the current schema validator; cast to
+        // unknown so the patch call accepts it. Convex tolerates patching
+        // a key to undefined regardless of schema (it removes the field).
+        await ctx.db.patch(board._id, patch as unknown as Partial<typeof board>);
         boardsCleared += 1;
       }
     }
@@ -83,8 +92,12 @@ export const clearLegacyAacFields = internalMutation({
     let settingsCleared = 0;
     const allSettings = await ctx.db.query('userSettings').collect();
     for (const settings of allSettings) {
-      if (settings.aacGridPresetPreference !== undefined) {
-        await ctx.db.patch(settings._id, { aacGridPresetPreference: undefined });
+      const legacy = settings as unknown as Record<string, unknown>;
+      if (legacy.aacGridPresetPreference !== undefined) {
+        await ctx.db.patch(
+          settings._id,
+          { aacGridPresetPreference: undefined } as unknown as Partial<typeof settings>
+        );
         settingsCleared += 1;
       }
     }

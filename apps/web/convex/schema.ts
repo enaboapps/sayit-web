@@ -45,11 +45,9 @@ export default defineSchema({
     forClientId: v.optional(v.string()), // If set, this board is for a specific client
     clientAccessLevel: v.optional(v.union(v.literal('view'), v.literal('edit'))), // Client's permission level
     layoutMode: v.optional(v.union(v.literal('free'), v.literal('fixedGrid'))),
-    layoutPreset: v.optional(v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48'))),
     gridRows: v.optional(v.number()),
     gridColumns: v.optional(v.number()),
     layoutVersion: v.optional(v.number()),
-    sourceTemplate: v.optional(v.union(v.literal('sayitCoreV1'), v.literal('custom'))),
     // Drill-down boards reachable only via a navigate tile from another board
     // (typical for OBF imports of vocabularies like CommuniKate-20). These
     // stay fully usable — they just don't clutter the picker. Set during
@@ -190,7 +188,6 @@ export default defineSchema({
     ),
     usePhraseBar: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
-    aacGridPresetPreference: v.optional(v.union(v.literal('largeAccess16'), v.literal('standard36'), v.literal('dense48'))),
 
     // UI Preferences (consolidated from various components)
     typingAreaVisible: v.boolean(),
