@@ -244,6 +244,37 @@ describe('AACProcessors normalization', () => {
     expect(normalized.boards.map((b) => b.sourceId).sort()).toEqual(['first', 'second']);
   });
 
+  it('warns when a button has recorded audio attached', () => {
+    // OBF buttons can carry sound_id; the willwade library exposes that as
+    // `audioRecording`. We don't import these as native audio tiles today —
+    // the warning lets users know the audio data is dropped on import so
+    // they aren't surprised by silent buttons.
+    const normalized = normalizeAacProcessorsTree({
+      pages: {
+        root: {
+          id: 'root',
+          name: 'Sounds',
+          grid: [
+            [
+              {
+                id: 'with_audio',
+                label: 'hello',
+                message: 'hello',
+                audioRecording: { id: 1 },
+              },
+            ],
+          ],
+        },
+      },
+    });
+
+    // The phrase tile is still imported (just without audio).
+    expect(normalized.boards[0].tiles).toHaveLength(1);
+    expect(normalized.warnings).toEqual([
+      'Sounds: dropped audio for "hello" — recorded sounds are not imported.',
+    ]);
+  });
+
   it('warns and skips the tile when a button image is a malformed data URI', () => {
     // The willwade library returns inline images as data URIs on
     // button.image / button.resolvedImageEntry. A malformed URI shouldn't

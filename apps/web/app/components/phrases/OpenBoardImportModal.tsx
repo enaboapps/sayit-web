@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -53,6 +53,16 @@ interface OpenBoardImportModalProps {
 // overwhelming Convex's rate limiting.
 const SYMBOL_UPLOAD_CONCURRENCY = 6;
 
+// Sentinel thrown when the user cancels a running import. Keeps the catch
+// path small: cleanup runs unconditionally, but we don't want to surface a
+// user-visible error message for a deliberate cancel.
+class ImportCancelledError extends Error {
+  constructor() {
+    super('Import cancelled');
+    this.name = 'ImportCancelledError';
+  }
+}
+
 type ImportStage =
   | { kind: 'idle' }
   | { kind: 'uploading'; uploaded: number; total: number }
@@ -70,7 +80,16 @@ export default function OpenBoardImportModal({
   const [importStage, setImportStage] = useState<ImportStage>({ kind: 'idle' });
   const isImporting = importStage.kind !== 'idle';
 
+  // Mutable refs that survive across the async import: the AbortController
+  // backing in-flight uploads, and the running list of storage IDs we've
+  // successfully created. Both feed the cancel/error cleanup path so we
+  // never leak storage objects when the import doesn't reach the final
+  // `importBoards` mutation.
+  const abortRef = useRef<AbortController | null>(null);
+  const uploadedRef = useRef<Id<'_storage'>[]>([]);
+
   const generateUploadUrl = useMutation(api.symbols.generateUploadUrl);
+  const cleanupOrphanSymbols = useMutation(api.symbols.cleanupOrphanSymbols);
   const importBoards = useMutation(api.openBoardImport.importBoards);
 
   const tileCount = useMemo(
@@ -84,10 +103,47 @@ export default function OpenBoardImportModal({
     setError(null);
     setIsParsing(false);
     setImportStage({ kind: 'idle' });
+    abortRef.current = null;
+    uploadedRef.current = [];
+  };
+
+  // Best-effort: if we've uploaded anything since the last reset, ask the
+  // server to delete those storage objects. Fire-and-forget — a network
+  // failure here just means the orphans live on, but we've already done what
+  // we can for the user.
+  const cleanupOrphans = async () => {
+    const ids = uploadedRef.current;
+    uploadedRef.current = [];
+    if (ids.length === 0) return;
+    try {
+      await cleanupOrphanSymbols({ storageIds: ids });
+    } catch {
+      // Swallow — if cleanup fails we don't have a sensible recovery path
+      // and the user already has bigger fish to fry.
+    }
   };
 
   const handleClose = () => {
     if (isImporting) return;
+    reset();
+    onClose();
+  };
+
+  // Cancel button during upload: abort in-flight fetches, await them so the
+  // cleanup IDs are stable, then delete the orphans on the server.
+  const handleCancel = async () => {
+    if (importStage.kind === 'uploading') {
+      abortRef.current?.abort();
+      // The runWithConcurrency loop will throw ImportCancelledError on the
+      // next iteration; handleImport's catch runs cleanup. Reset is
+      // optimistic so the UI stops showing "Uploading X of Y..." right away.
+      setImportStage({ kind: 'idle' });
+      // Schedule cleanup in case the abort beat us to the catch handler
+      // (rare but possible if abort fires between iterations).
+      void cleanupOrphans();
+      return;
+    }
+    // Idle / parsing / saving — no in-flight uploads to abort, plain close.
     reset();
     onClose();
   };
@@ -119,12 +175,17 @@ export default function OpenBoardImportModal({
     }
   };
 
-  const uploadSymbol = async (blob: Blob): Promise<Id<'_storage'>> => {
+  // Single symbol upload. Threads the AbortSignal so handleCancel can yank
+  // every in-flight fetch when the user clicks Cancel.
+  const uploadSymbol = async (blob: Blob, signal: AbortSignal): Promise<Id<'_storage'>> => {
+    if (signal.aborted) throw new ImportCancelledError();
     const uploadUrl = await generateUploadUrl();
+    if (signal.aborted) throw new ImportCancelledError();
     const result = await fetch(uploadUrl, {
       method: 'POST',
       headers: { 'Content-Type': blob.type || 'application/octet-stream' },
       body: blob,
+      signal,
     });
     if (!result.ok) {
       throw new Error('Could not upload an imported symbol image.');
@@ -163,12 +224,14 @@ export default function OpenBoardImportModal({
   // Run an async worker over `items` with at most `concurrency` in flight.
   // We call setProgress after each completion so the modal can show
   // "Uploading 543 of 1379..." live instead of staring at a spinner for
-  // multiple minutes.
+  // multiple minutes. The signal short-circuits the queue so a Cancel click
+  // doesn't keep firing fetches after the user has bailed.
   const runWithConcurrency = async <T, R>(
     items: T[],
     concurrency: number,
     worker: (item: T, index: number) => Promise<R>,
-    onProgress: (completed: number) => void
+    onProgress: (completed: number) => void,
+    signal: AbortSignal
   ): Promise<R[]> => {
     const results = new Array<R>(items.length);
     let cursor = 0;
@@ -176,6 +239,7 @@ export default function OpenBoardImportModal({
 
     const runOne = async () => {
       while (true) {
+        if (signal.aborted) throw new ImportCancelledError();
         const index = cursor;
         cursor += 1;
         if (index >= items.length) return;
@@ -209,6 +273,12 @@ export default function OpenBoardImportModal({
       });
     });
 
+    // Fresh abort controller + uploaded list per attempt — handleCancel and
+    // the catch handler both consult these refs.
+    const controller = new AbortController();
+    abortRef.current = controller;
+    uploadedRef.current = [];
+
     setImportStage({ kind: 'uploading', uploaded: 0, total: uploadJobs.length });
 
     try {
@@ -217,8 +287,15 @@ export default function OpenBoardImportModal({
         : await runWithConcurrency(
           uploadJobs,
           SYMBOL_UPLOAD_CONCURRENCY,
-          (job) => uploadSymbol(job.blob),
-          (uploaded) => setImportStage({ kind: 'uploading', uploaded, total: uploadJobs.length })
+          async (job) => {
+            const id = await uploadSymbol(job.blob, controller.signal);
+            // Track as we go (not after Promise.all settles) so a cancel
+            // mid-batch still picks up the in-flight successes for cleanup.
+            uploadedRef.current.push(id);
+            return id;
+          },
+          (uploaded) => setImportStage({ kind: 'uploading', uploaded, total: uploadJobs.length }),
+          controller.signal
         );
 
       // Stitch storageIds back onto the tile payloads.
@@ -239,11 +316,30 @@ export default function OpenBoardImportModal({
         )),
       }));
 
-      const result = await importBoards({ boards });
+      // Package name shown in Settings → Imported AAC vocabularies. Prefer
+      // the OBF root board name (CommuniKate's first board is "CommuniKate
+      // Top Page"); fall back to the filename so users can identify the
+      // upload regardless of OBF metadata quality.
+      const packageName = preview.boards[0]?.name?.trim() || selectedFile?.name || 'Imported AAC vocabulary';
+
+      const result = await importBoards({ packageName, boards });
+      // Boards are now persisted — the storage IDs are referenced by phrase
+      // rows and must NOT be cleaned up. Clear the ref before reset() runs.
+      uploadedRef.current = [];
       onImported(result.importedBoardIds.map(String));
       reset();
       onClose();
     } catch (err) {
+      // Cancel: cleanup runs, no error message shown.
+      if (err instanceof ImportCancelledError || (err instanceof Error && err.name === 'AbortError')) {
+        await cleanupOrphans();
+        setImportStage({ kind: 'idle' });
+        return;
+      }
+      // Real failure (server error, network drop, conflict): clean up the
+      // partial uploads, surface the message, leave the modal open so the
+      // user can read the error and adjust.
+      await cleanupOrphans();
       setError(err instanceof Error ? err.message : 'Could not import this Open Board file.');
       setImportStage({ kind: 'idle' });
     }
@@ -326,7 +422,15 @@ export default function OpenBoardImportModal({
         )}
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={handleClose} disabled={isImporting}>
+          {/* Cancel stays interactive during upload so the user can bail out
+              of a long import. Disabled only during the (very fast) saving
+              tick, where aborting mid-mutation would just confuse things. */}
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleCancel}
+            disabled={importStage.kind === 'saving'}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={handleImport} disabled={!preview || isParsing || isImporting}>

@@ -55,9 +55,35 @@ export default defineSchema({
     // stay fully usable — they just don't clutter the picker. Set during
     // import; toggleable from the edit-board UI.
     hiddenFromPicker: v.optional(v.boolean()),
+    // Boards that came in via OBF/OBZ import are tagged with the package they
+    // came from + the source page id within that package. These power
+    // (a) re-import conflict detection and (b) "Delete imported package"
+    // bulk cleanup from Settings.
+    importPackageId: v.optional(v.id('importedPackages')),
+    importSourceId: v.optional(v.string()),
+    // `deleteImportedPackage` flips this immediately; an internal scheduled
+    // action then chunks through the actual cascade delete. Hides the board
+    // from queries while the sweep runs so the picker doesn't stale-render
+    // boards mid-deletion.
+    pendingDelete: v.optional(v.boolean()),
   })
     .index('by_user_id', ['userId'])
-    .index('by_client', ['forClientId']),
+    .index('by_client', ['forClientId'])
+    .index('by_import_package', ['importPackageId'])
+    .index('by_user_and_source', ['userId', 'importSourceId']),
+
+  // One row per OBF/OBZ import. Authoritative record for the Settings page
+  // "Imported AAC vocabularies" listing and the cascade-delete scheduler.
+  // The boards belonging to a package reference it via
+  // `phraseBoards.importPackageId`.
+  importedPackages: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    importedAt: v.number(),
+    boardCount: v.number(),
+    pendingDelete: v.optional(v.boolean()),
+  })
+    .index('by_user_id', ['userId']),
 
   phraseBoardPhrases: defineTable({
     phraseId: v.id('phrases'),

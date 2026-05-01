@@ -155,6 +155,13 @@ interface CacheablePhraseBoard {
   layoutVersion?: number | null;
   sourceTemplate?: 'sayitCoreV1' | 'custom' | null;
   hiddenFromPicker?: boolean | null;
+  // pendingDelete flips on the server when a user clicks Delete on an
+  // imported package. We treat its presence as "skip me on next normalize"
+  // so the cached offline copy doesn't outlive the user's intent. If the
+  // input ever carries pendingDelete=true the caller upstream is expected
+  // to NOT cache it; this field is here so the type matches the Convex
+  // shape without having to filter at every caller.
+  pendingDelete?: boolean | null;
 }
 
 function normalizeTileMetadata(tile: {
@@ -307,7 +314,11 @@ export function normalizeBoardDocuments(
   boards: CacheablePhraseBoard[],
   cachedAt = Date.now()
 ): OfflineBoardDocument[] {
-  return boards.map((board) => {
+  // Skip boards mid-cascade-delete. The server already excludes them from
+  // `getPhraseBoards` but a stale cache snapshot could still carry them; the
+  // filter here prevents the offline picker from rendering doomed boards
+  // until the next sync arrives.
+  return boards.filter((board) => !board.pendingDelete).map((board) => {
     const accessLevel: 'view' | 'edit' = board.accessLevel === 'view' ? 'view' : 'edit';
 
     const phrases = (board.phrase_board_phrases ?? [])

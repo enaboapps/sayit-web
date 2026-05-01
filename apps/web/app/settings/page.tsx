@@ -12,8 +12,10 @@ import {
   InformationCircleIcon,
   ChevronRightIcon,
   RectangleStackIcon,
+  ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
+import ImportedPackagesSection from '@/app/components/settings/ImportedPackagesSection';
 import { useAuth } from '../contexts/AuthContext';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 import { Dropdown } from '@/app/components/ui/Dropdown';
@@ -160,6 +162,17 @@ export default function SettingsPage() {
               onClick={() => setActiveSheet('phraseBar')}
               value={settings.usePhraseBar ? 'On' : 'Off'}
             />
+
+            {/* Imported AAC vocabularies — only when signed in (the underlying
+                query is auth-gated and would just return []) */}
+            {user && (
+              <SettingsCategory
+                icon={<ArrowDownTrayIcon className="w-6 h-6" />}
+                title="Imported AAC vocabularies"
+                description="Manage packages imported from .obf or .obz files"
+                onClick={() => setActiveSheet('importedPackages')}
+              />
+            )}
 
             {/* Account - only when logged in */}
             {user && (
@@ -353,6 +366,18 @@ export default function SettingsPage() {
             >
               Privacy Policy
             </a>
+          </div>
+        </BottomSheet>
+
+        {/* Imported AAC vocabularies sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'importedPackages'}
+          onClose={() => setActiveSheet(null)}
+          title="Imported AAC vocabularies"
+          snapPoints={[60, 90]}
+        >
+          <div className="p-4">
+            <ImportedPackagesSection variant="sheet" />
           </div>
         </BottomSheet>
       </div>
@@ -569,6 +594,22 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+
+          {/* Imported AAC vocabularies — only when signed in (the underlying
+              query is auth-gated and would just return []) */}
+          {user && (
+            <section className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">Imported AAC vocabularies</h2>
+                <p className="text-sm text-text-secondary mt-1">Manage packages imported from .obf or .obz files</p>
+              </div>
+              <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300">
+                <div className="px-8 py-6">
+                  <ImportedPackagesSection variant="desktop" />
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Account Settings - Only show when logged in */}
           {user && (

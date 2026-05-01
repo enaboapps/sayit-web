@@ -260,17 +260,20 @@ export const getPhraseBoards = query({
       return board ?? null;
     };
 
-    // Get boards owned by the user (caregiver's boards)
-    const ownedBoards = await ctx.db
+    // Get boards owned by the user (caregiver's boards). Exclude
+    // pendingDelete rows so the picker stops rendering them the instant the
+    // user clicks Delete on an imported package — the cascade sweep then
+    // chunks through the actual delete in the background.
+    const ownedBoards = (await ctx.db
       .query('phraseBoards')
       .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
-      .collect();
+      .collect()).filter((board) => !board.pendingDelete);
 
-    // Get boards assigned to this user as a client
-    const assignedBoards = await ctx.db
+    // Get boards assigned to this user as a client (same exclusion).
+    const assignedBoards = (await ctx.db
       .query('phraseBoards')
       .withIndex('by_client', (q) => q.eq('forClientId', identity.subject))
-      .collect();
+      .collect()).filter((board) => !board.pendingDelete);
 
     // Process owned boards - resolve client names if forClientId is set
     const ownedBoardsWithInfo = await Promise.all(
@@ -804,5 +807,31 @@ export const unassignBoardFromClient = mutation({
       forClientId: undefined,
       clientAccessLevel: undefined,
     });
+  },
+});
+
+// Query: list AAC import packages for the current user. Powers the Settings
+// page "Imported AAC vocabularies" section so users can see what they've
+// imported and trigger a bulk Delete. pendingDelete packages are still
+// surfaced (their cascade sweep is in flight) but the UI grays them out.
+export const listImportedPackages = query({
+  handler: async (ctx) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) return [];
+
+    const packages = await ctx.db
+      .query('importedPackages')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .collect();
+
+    return packages
+      .map((pkg) => ({
+        id: pkg._id,
+        name: pkg.name,
+        importedAt: pkg.importedAt,
+        boardCount: pkg.boardCount,
+        pendingDelete: Boolean(pkg.pendingDelete),
+      }))
+      .sort((left, right) => right.importedAt - left.importedAt);
   },
 });

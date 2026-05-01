@@ -43,6 +43,10 @@ type AacProcessorButton = {
       message?: string;
     };
   };
+  // Recorded sound attached to the button (OBF `sound_id`). The willwade
+  // library exposes it as `audioRecording`. We don't import these as audio
+  // tiles today — pushing a warning lets users know the data was dropped.
+  audioRecording?: unknown;
 };
 
 type AacProcessorPage = {
@@ -159,6 +163,16 @@ function normalizePage(
       const cellKey = `${rowIndex}:${columnIndex}`;
       if (seenCells.has(cellKey)) continue;
       seenCells.add(cellKey);
+
+      // OBF buttons can carry a recorded sound (`sound_id` -> resolved by
+      // the library to `audioRecording`). We don't import these as native
+      // audio tiles today; warn the user that the audio data was dropped
+      // so they aren't surprised by silent buttons in the imported board.
+      if (button.audioRecording) {
+        warnings.push(
+          `${boardLabel}: dropped audio for "${labelForButton(button) || button.id}" — recorded sounds are not imported.`
+        );
+      }
 
       const position = rowIndex * columns + columnIndex;
       const rawTarget = navigationTarget(button);

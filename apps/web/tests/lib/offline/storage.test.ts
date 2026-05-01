@@ -107,6 +107,21 @@ describe('offline bootstrap storage', () => {
     });
   });
 
+  it('skips boards with pendingDelete during normalize so offline picker matches online', () => {
+    // Server flips pendingDelete on every board belonging to a package the
+    // user is currently deleting. Offline cache snapshots taken just before
+    // that flip would otherwise keep showing those boards until the next
+    // sync; filtering at normalize time means the offline view aligns
+    // immediately on the next read.
+    const cached = normalizeBoardDocuments('user_xyz', [
+      { _id: 'keep', name: 'Keep me', position: 0 },
+      { _id: 'going', name: 'Removing', position: 1, pendingDelete: true },
+      { _id: 'also_keep', name: 'Also visible', position: 2 },
+    ], 999);
+
+    expect(cached.map((b) => b.name)).toEqual(['Keep me', 'Also visible']);
+  });
+
   it('round-trips hiddenFromPicker so offline picker matches online behavior', () => {
     // Imported drill-down boards are flagged hiddenFromPicker on the server.
     // Offline mode reads boards from the cached document; without preserving
