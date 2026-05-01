@@ -9,7 +9,28 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { useBoardNavStack } from '@/app/contexts/BoardNavStackContext';
 import { useOnlineStatus } from './useOnlineStatus';
-import type { BoardSummary, BoardTileSummary, PhraseSummary } from '@/app/components/phrases/types';
+import type { BoardSummary, BoardTileSummary, PhraseSummary, TileLayoutSummary } from '@/app/components/phrases/types';
+import type { TileRole, WordClass } from '@/lib/aacLayout';
+
+function tileLayoutSummary(tile: {
+  cellRow?: unknown;
+  cellColumn?: unknown;
+  cellRowSpan?: unknown;
+  cellColumnSpan?: unknown;
+  tileRole?: unknown;
+  wordClass?: unknown;
+  isLocked?: unknown;
+}): TileLayoutSummary {
+  return {
+    cellRow: typeof tile.cellRow === 'number' ? tile.cellRow : undefined,
+    cellColumn: typeof tile.cellColumn === 'number' ? tile.cellColumn : undefined,
+    cellRowSpan: typeof tile.cellRowSpan === 'number' ? tile.cellRowSpan : undefined,
+    cellColumnSpan: typeof tile.cellColumnSpan === 'number' ? tile.cellColumnSpan : undefined,
+    tileRole: typeof tile.tileRole === 'string' ? tile.tileRole as TileRole : undefined,
+    wordClass: typeof tile.wordClass === 'string' ? tile.wordClass as WordClass : undefined,
+    isLocked: typeof tile.isLocked === 'boolean' ? tile.isLocked : undefined,
+  };
+}
 
 export function usePhraseBoardData() {
   const router = useRouter();
@@ -38,6 +59,7 @@ export function usePhraseBoardData() {
 
   const reorderPhrasesOnBoard = useMutation(api.phraseBoards.reorderPhrasesOnBoard);
   const reorderTiles = useMutation(api.boardTiles.reorderTiles);
+  const moveTileToCell = useMutation(api.boardTiles.moveTileToCell);
 
   const loading = authLoading || (shouldLoadBoards && boards === undefined);
   const showOfflineBoardsState = !isOnline && shouldLoadBoards && boards === undefined;
@@ -87,6 +109,7 @@ export function usePhraseBoardData() {
           id: String(tile._id),
           kind: 'phrase',
           position: tile.position,
+          ...tileLayoutSummary(tile),
           phrase: {
             id: String(tile.phrase._id),
             text: tile.phrase.text,
@@ -105,6 +128,7 @@ export function usePhraseBoardData() {
           audioMimeType: tile.audioMimeType,
           audioDurationMs: tile.audioDurationMs,
           audioByteSize: tile.audioByteSize,
+          ...tileLayoutSummary(tile),
         };
       }
 
@@ -115,6 +139,7 @@ export function usePhraseBoardData() {
         position: tile.position,
         targetBoardId: String(tile.targetBoardId),
         targetBoardName: tile.targetBoardName ?? null,
+        ...tileLayoutSummary(tile),
       };
     })
     .filter((t: BoardTileSummary | null): t is BoardTileSummary => t !== null);
@@ -132,10 +157,25 @@ export function usePhraseBoardData() {
     sharedBy: board.sharedBy,
     forClientId: board.forClientId,
     forClientName: board.forClientName,
+    layoutMode: board.layoutMode ?? 'free',
+    gridRows: board.gridRows,
+    gridColumns: board.gridColumns,
+    layoutVersion: board.layoutVersion,
+    hiddenFromPicker: board.hiddenFromPicker,
   })) || [];
 
+  // `visibleBoards` is what picker UIs walk through — drill-down boards
+  // imported from OBF vocabularies (CommuniKate, etc.) are flagged
+  // `hiddenFromPicker` so they don't clutter the picker, while remaining
+  // fully reachable through navigate tiles. `transformedBoards` (full list)
+  // is still used for `selectedBoard` resolution so navigating to a hidden
+  // board via a nav tile still renders that board.
+  const visibleBoards = transformedBoards.filter((board) => !board.hiddenFromPicker);
+
   const selectedBoard = transformedBoards.find(b => b.id === selectedBoardId) || null;
-  const currentBoardIndex = transformedBoards.findIndex(b => b.id === selectedBoardId);
+  // Carousel/swipe nav cycles through visibleBoards only — falling off the
+  // end onto a hidden drill-down would feel like a bug to the user.
+  const currentBoardIndex = visibleBoards.findIndex(b => b.id === selectedBoardId);
   const validBoardIndex = currentBoardIndex >= 0 ? currentBoardIndex : 0;
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
@@ -146,11 +186,12 @@ export function usePhraseBoardData() {
     updateUIPreference('selectedBoardId', typeof board === 'string' ? board : board.id);
   };
 
-  // Mobile swipe nav also counts as a non-tile board pick.
+  // Mobile swipe nav also counts as a non-tile board pick. Index is into
+  // `visibleBoards` since that's what the swipe carousel renders.
   const handleBoardIndexChange = (index: number) => {
-    if (transformedBoards[index]) {
+    if (visibleBoards[index]) {
       navStack.clear();
-      updateUIPreference('selectedBoardId', transformedBoards[index].id);
+      updateUIPreference('selectedBoardId', visibleBoards[index].id);
     }
   };
 
@@ -177,6 +218,15 @@ export function usePhraseBoardData() {
     void reorderTiles({
       boardId: selectedBoardId as Id<'phraseBoards'>,
       orderedTileIds: orderedTileIds as Id<'boardTiles'>[],
+    });
+  };
+
+  const handleMoveTileToCell = (tileId: string, row: number, column: number) => {
+    if (!selectedBoardId) return;
+    void moveTileToCell({
+      tileId: tileId as Id<'boardTiles'>,
+      row,
+      column,
     });
   };
 
@@ -243,6 +293,7 @@ export function usePhraseBoardData() {
 
   return {
     boards: transformedBoards,
+    visibleBoards,
     phrases,
     tiles,
     selectedBoard,
@@ -261,6 +312,7 @@ export function usePhraseBoardData() {
     handleBoardIndexChange,
     handleReorderPhrases,
     handleReorderTiles,
+    handleMoveTileToCell,
     handleAddPhrase,
     handleAddNavigateTile,
     handleAddAudioTile,

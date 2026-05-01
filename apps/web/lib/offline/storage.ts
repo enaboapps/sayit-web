@@ -14,7 +14,54 @@ const BOARD_STORE = 'boards';
 export interface OfflinePhraseDocument {
   id: string;
   text: string;
+  symbolUrl?: string;
 }
+
+export type OfflineBoardTileDocument =
+  | {
+      id: string;
+      kind: 'phrase';
+      position: number;
+      phrase: OfflinePhraseDocument;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: string;
+      wordClass?: string;
+      isLocked?: boolean;
+    }
+  | {
+      id: string;
+      kind: 'navigate';
+      position: number;
+      targetBoardId: string;
+      targetBoardName: string | null;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: string;
+      wordClass?: string;
+      isLocked?: boolean;
+    }
+  | {
+      id: string;
+      kind: 'audio';
+      position: number;
+      audioLabel: string;
+      audioUrl: string | null;
+      audioMimeType: string;
+      audioDurationMs: number;
+      audioByteSize: number;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: string;
+      wordClass?: string;
+      isLocked?: boolean;
+    };
 
 export interface OfflineBoardDocument {
   cacheKey: string;
@@ -23,6 +70,12 @@ export interface OfflineBoardDocument {
   name: string;
   position: number;
   phrases: OfflinePhraseDocument[];
+  tiles?: OfflineBoardTileDocument[];
+  layoutMode?: 'free' | 'fixedGrid';
+  gridRows?: number;
+  gridColumns?: number;
+  layoutVersion?: number;
+  hiddenFromPicker?: boolean;
   isShared: boolean;
   isOwner: boolean;
   accessLevel: 'view' | 'edit';
@@ -66,8 +119,121 @@ interface CacheablePhraseBoard {
     phrase?: {
       _id?: string;
       text?: string;
+      symbolUrl?: string;
     } | null;
   }> | null;
+  tiles?: Array<{
+    _id?: string;
+    kind?: string;
+    position?: number;
+    phrase?: {
+      _id?: string;
+      text?: string;
+      symbolUrl?: string;
+    } | null;
+    targetBoardId?: string;
+    targetBoardName?: string | null;
+    audioLabel?: string;
+    audioUrl?: string | null;
+    audioMimeType?: string;
+    audioDurationMs?: number;
+    audioByteSize?: number;
+    cellRow?: number;
+    cellColumn?: number;
+    cellRowSpan?: number;
+    cellColumnSpan?: number;
+    tileRole?: string;
+    wordClass?: string;
+    isLocked?: boolean;
+  }> | null;
+  layoutMode?: 'free' | 'fixedGrid' | null;
+  gridRows?: number | null;
+  gridColumns?: number | null;
+  layoutVersion?: number | null;
+  hiddenFromPicker?: boolean | null;
+  // pendingDelete flips on the server when a user clicks Delete on an
+  // imported package. We treat its presence as "skip me on next normalize"
+  // so the cached offline copy doesn't outlive the user's intent. If the
+  // input ever carries pendingDelete=true the caller upstream is expected
+  // to NOT cache it; this field is here so the type matches the Convex
+  // shape without having to filter at every caller.
+  pendingDelete?: boolean | null;
+}
+
+function normalizeTileMetadata(tile: {
+  cellRow?: number;
+  cellColumn?: number;
+  cellRowSpan?: number;
+  cellColumnSpan?: number;
+  tileRole?: string;
+  wordClass?: string;
+  isLocked?: boolean;
+}) {
+  return {
+    cellRow: tile.cellRow,
+    cellColumn: tile.cellColumn,
+    cellRowSpan: tile.cellRowSpan,
+    cellColumnSpan: tile.cellColumnSpan,
+    tileRole: tile.tileRole,
+    wordClass: tile.wordClass,
+    isLocked: tile.isLocked,
+  };
+}
+
+function normalizeTiles(
+  userId: string,
+  board: CacheablePhraseBoard,
+  cachedAt: number
+): OfflineBoardTileDocument[] | undefined {
+  if (!board.tiles) return undefined;
+
+  return board.tiles
+    .map((tile, index): OfflineBoardTileDocument | null => {
+      const id = String(tile._id ?? `${userId}-${cachedAt}-tile-${index}`);
+      const position = tile.position ?? index;
+
+      if (tile.kind === 'phrase' && tile.phrase?.text) {
+        return {
+          id,
+          kind: 'phrase',
+          position,
+          phrase: {
+            id: String(tile.phrase._id ?? `${userId}-${cachedAt}-${tile.phrase.text}`),
+            text: String(tile.phrase.text),
+            symbolUrl: tile.phrase.symbolUrl,
+          },
+          ...normalizeTileMetadata(tile),
+        };
+      }
+
+      if (tile.kind === 'navigate' && tile.targetBoardId) {
+        return {
+          id,
+          kind: 'navigate',
+          position,
+          targetBoardId: String(tile.targetBoardId),
+          targetBoardName: tile.targetBoardName ?? null,
+          ...normalizeTileMetadata(tile),
+        };
+      }
+
+      if (tile.kind === 'audio') {
+        return {
+          id,
+          kind: 'audio',
+          position,
+          audioLabel: tile.audioLabel ?? 'Audio tile',
+          audioUrl: tile.audioUrl ?? null,
+          audioMimeType: tile.audioMimeType ?? '',
+          audioDurationMs: tile.audioDurationMs ?? 0,
+          audioByteSize: tile.audioByteSize ?? 0,
+          ...normalizeTileMetadata(tile),
+        };
+      }
+
+      return null;
+    })
+    .filter((tile): tile is OfflineBoardTileDocument => tile !== null);
 }
 
 function createDefaultBootstrap(
@@ -139,13 +305,27 @@ async function getDb() {
   }
 }
 
-function normalizeBoardDocuments(
+export function normalizeBoardDocuments(
   userId: string,
   boards: CacheablePhraseBoard[],
   cachedAt = Date.now()
 ): OfflineBoardDocument[] {
-  return boards.map((board) => {
+  // Skip boards mid-cascade-delete. The server already excludes them from
+  // `getPhraseBoards` but a stale cache snapshot could still carry them; the
+  // filter here prevents the offline picker from rendering doomed boards
+  // until the next sync arrives.
+  return boards.filter((board) => !board.pendingDelete).map((board) => {
     const accessLevel: 'view' | 'edit' = board.accessLevel === 'view' ? 'view' : 'edit';
+
+    const phrases = (board.phrase_board_phrases ?? [])
+      .map((entry) => entry.phrase)
+      .filter((phrase): phrase is { _id?: string; text?: string; symbolUrl?: string } => Boolean(phrase?.text))
+      .map((phrase) => ({
+        id: String(phrase._id ?? `${userId}-${cachedAt}-${phrase.text}`),
+        text: String(phrase.text),
+        symbolUrl: phrase.symbolUrl,
+      }));
+    const tiles = normalizeTiles(userId, board, cachedAt);
 
     return {
       cacheKey: boardCacheKey(userId, String(board._id)),
@@ -153,13 +333,13 @@ function normalizeBoardDocuments(
       userId,
       name: board.name,
       position: board.position ?? 0,
-      phrases: (board.phrase_board_phrases ?? [])
-        .map((entry) => entry.phrase)
-        .filter((phrase): phrase is { _id?: string; text?: string } => Boolean(phrase?.text))
-        .map((phrase) => ({
-          id: String(phrase._id ?? `${userId}-${cachedAt}-${phrase.text}`),
-          text: String(phrase.text),
-        })),
+      phrases,
+      tiles,
+      layoutMode: board.layoutMode ?? 'free',
+      gridRows: board.gridRows ?? undefined,
+      gridColumns: board.gridColumns ?? undefined,
+      layoutVersion: board.layoutVersion ?? undefined,
+      hiddenFromPicker: board.hiddenFromPicker ?? undefined,
       isShared: Boolean(board.isShared),
       isOwner: board.isOwner ?? true,
       accessLevel,

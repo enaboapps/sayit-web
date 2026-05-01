@@ -11,6 +11,11 @@ interface CreateBoardModalProps {
   onClose: () => void;
 }
 
+// Caregiver-side "create board for client" modal. Always creates a blank
+// board now — the AAC-preset starter mode (issue #649) was retired in
+// favor of OBF/OBZ import for AAC vocabularies. Caregivers who want a
+// shared AAC vocabulary should import an .obz then assign / share the
+// resulting boards.
 export default function CreateBoardModal({ communicatorId, onClose }: CreateBoardModalProps) {
   const [name, setName] = useState('');
   const [accessLevel, setAccessLevel] = useState<'view' | 'edit'>('view');
@@ -49,7 +54,7 @@ export default function CreateBoardModal({ communicatorId, onClose }: CreateBoar
 
   return (
     <div className="fixed inset-0 bg-overlay  flex items-center justify-center p-4 z-50">
-      <div className="rounded-2xl shadow-2xl max-w-md w-full p-6 bg-surface">
+      <div className="rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 bg-surface">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-foreground">Create Board for Client</h2>
           <button

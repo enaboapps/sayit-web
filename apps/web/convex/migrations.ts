@@ -56,6 +56,56 @@ export const migrateToBoardTiles = internalMutation({
   },
 });
 
+// Migration: clear legacy AAC-preset fields ahead of dropping them from
+// schema. The named-preset feature (largeAccess16/standard36/dense48) was
+// retired; existing rows held values that would block the schema-strict
+// deploy until cleared. Run order:
+//   1. Deploy commit A (code stops writing the fields, schema unchanged).
+//   2. `npx convex run migrations:clearLegacyAacFields`.
+//   3. Deploy commit B (schema drops the fields).
+//
+// Idempotent: only patches rows that still hold a value, returns the count.
+//
+// The fields no longer appear in `Doc<'phraseBoards'>`/`Doc<'userSettings'>`
+// since commit B; reads are cast through Record<string, unknown> so the
+// migration remains compilable for future environments that still need to
+// run it (e.g. prod first-time deploy after both commits land together).
+export const clearLegacyAacFields = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    let boardsCleared = 0;
+    const boards = await ctx.db.query('phraseBoards').collect();
+    for (const board of boards) {
+      const legacy = board as unknown as Record<string, unknown>;
+      const patch: { layoutPreset?: undefined; sourceTemplate?: undefined } = {};
+      if (legacy.layoutPreset !== undefined) patch.layoutPreset = undefined;
+      if (legacy.sourceTemplate !== undefined) patch.sourceTemplate = undefined;
+      if (Object.keys(patch).length > 0) {
+        // Patch shape isn't in the current schema validator; cast to
+        // unknown so the patch call accepts it. Convex tolerates patching
+        // a key to undefined regardless of schema (it removes the field).
+        await ctx.db.patch(board._id, patch as unknown as Partial<typeof board>);
+        boardsCleared += 1;
+      }
+    }
+
+    let settingsCleared = 0;
+    const allSettings = await ctx.db.query('userSettings').collect();
+    for (const settings of allSettings) {
+      const legacy = settings as unknown as Record<string, unknown>;
+      if (legacy.aacGridPresetPreference !== undefined) {
+        await ctx.db.patch(
+          settings._id,
+          { aacGridPresetPreference: undefined } as unknown as Partial<typeof settings>
+        );
+        settingsCleared += 1;
+      }
+    }
+
+    return { boardsCleared, settingsCleared, totalBoards: boards.length, totalSettings: allSettings.length };
+  },
+});
+
 // Migration: Convert textSize from enum strings to numbers
 // Run this once via Convex dashboard before deploying schema changes
 export const migrateTextSizeToNumber = internalMutation({

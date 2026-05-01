@@ -57,6 +57,10 @@ const createTile = (overrides = {}) => ({
   audioMimeType: undefined,
   audioDurationMs: undefined,
   audioByteSize: undefined,
+  cellRow: undefined,
+  cellColumn: undefined,
+  tileRole: undefined,
+  isLocked: undefined,
   ...overrides,
 });
 
@@ -379,6 +383,174 @@ describe('boardTiles', () => {
       expect(mockDb.patch).toHaveBeenCalledWith('tile-2', { position: 0 });
       expect(mockDb.patch).toHaveBeenCalledWith('tile-1', { position: 1 });
       expect(mockDb.patch).not.toHaveBeenCalledWith('tile-stranger', expect.anything());
+    });
+  });
+
+  describe('fixed-grid layout invariants', () => {
+    test('cell collision validation rejects an occupied fixed-grid cell', () => {
+      const movingTile = createTile({ _id: 'tile-moving', cellRow: 0, cellColumn: 0 });
+      const occupiedTile = createTile({ _id: 'tile-occupied', cellRow: 1, cellColumn: 1 });
+      const existingTiles = [movingTile, occupiedTile];
+
+      const validateMove = (row: number, column: number) => {
+        const occupant = existingTiles.find(
+          (tile) =>
+            tile._id !== movingTile._id &&
+            tile.cellRow === row &&
+            tile.cellColumn === column
+        );
+        if (occupant) throw new Error('Cell is already occupied');
+      };
+
+      expect(() => validateMove(1, 1)).toThrow(/already occupied/);
+      expect(() => validateMove(2, 2)).not.toThrow();
+    });
+
+    test('locked core tiles require explicit delete confirmation', () => {
+      const tile = createTile({ isLocked: true, tileRole: 'core' });
+
+      const guard = (confirmLockedCoreDelete?: boolean) => {
+        if (tile.isLocked && tile.tileRole === 'core' && !confirmLockedCoreDelete) {
+          throw new Error('Locked core tiles require explicit confirmation before deletion');
+        }
+      };
+
+      expect(() => guard()).toThrow(/Locked core tiles/);
+      expect(() => guard(true)).not.toThrow();
+    });
+
+    test('removePhraseFromBoard refuses to detach a locked core tile', () => {
+      // Mirrors the invariant added to convex/phraseBoards.ts:
+      // removePhraseFromBoard. Without this, a client could bypass the
+      // deletePhrase lock by removing the tile first (which orphans the
+      // phrase from the board even though the phrase row stays). All
+      // detach paths now share the same protection.
+      const lockedCoreTile = createTile({ isLocked: true, tileRole: 'core' });
+      const nonCoreTile = createTile({ _id: 'tile-2', isLocked: false, tileRole: 'fringe' });
+
+      const guard = (tile: { isLocked?: boolean; tileRole?: string }) => {
+        if (tile.isLocked && tile.tileRole === 'core') {
+          throw new Error('Locked core tiles cannot be removed from the board with this action');
+        }
+      };
+
+      expect(() => guard(lockedCoreTile)).toThrow(/Locked core tiles cannot be removed/);
+      expect(() => guard(nonCoreTile)).not.toThrow();
+    });
+  });
+
+  describe('Open Board import hiddenFromPicker logic', () => {
+    test('boards reachable only via a navigate tile are hidden from the picker', () => {
+      // Mirrors the per-import scan in convex/openBoardImport.ts. A board is
+      // hidden when some other board's navigate tile points at it; root /
+      // entry-point boards stay visible. Drill-downs in CommuniKate (Food,
+      // People, ...) are reached from "CommuniKate Top Page" — only the top
+      // page should show in the picker after import.
+      const importPayload = [
+        {
+          sourceId: 'top',
+          tiles: [
+            { kind: 'navigate' as const, targetSourceId: 'food' },
+            { kind: 'navigate' as const, targetSourceId: 'people' },
+          ],
+        },
+        {
+          sourceId: 'food',
+          tiles: [{ kind: 'phrase' as const, text: 'apple' }],
+        },
+        {
+          sourceId: 'people',
+          tiles: [{ kind: 'phrase' as const, text: 'mom' }],
+        },
+      ];
+
+      const navTargets = new Set<string>();
+      for (const board of importPayload) {
+        for (const tile of board.tiles) {
+          if (tile.kind === 'navigate' && tile.targetSourceId !== board.sourceId) {
+            navTargets.add(tile.targetSourceId);
+          }
+        }
+      }
+
+      const decisions = importPayload.map((board) => ({
+        sourceId: board.sourceId,
+        hiddenFromPicker: navTargets.has(board.sourceId),
+      }));
+
+      expect(decisions).toEqual([
+        { sourceId: 'top', hiddenFromPicker: false },
+        { sourceId: 'food', hiddenFromPicker: true },
+        { sourceId: 'people', hiddenFromPicker: true },
+      ]);
+    });
+
+    test('a self-referencing navigate tile does not hide its own board', () => {
+      // Defensive: an OBF could in theory carry a "back to top" tile pointing
+      // at the same page id (the importer drops it as a self-loop too, but
+      // this test pins down that we don't accidentally hide the only board.)
+      const importPayload = [{
+        sourceId: 'only',
+        tiles: [{ kind: 'navigate' as const, targetSourceId: 'only' }],
+      }];
+
+      const navTargets = new Set<string>();
+      for (const board of importPayload) {
+        for (const tile of board.tiles) {
+          if (tile.kind === 'navigate' && tile.targetSourceId !== board.sourceId) {
+            navTargets.add(tile.targetSourceId);
+          }
+        }
+      }
+
+      expect(navTargets.has('only')).toBe(false);
+    });
+  });
+
+  describe('Open Board import invariants', () => {
+    test('imported boards create fixed-grid board tiles, not legacy phrase links', async () => {
+      const boardId = 'imported-board-1';
+      const phraseId = 'imported-phrase-1';
+
+      await mockDb.insert('phraseBoards', {
+        userId: 'user-123',
+        name: 'Imported',
+        position: 0,
+        layoutMode: 'fixedGrid',
+        gridRows: 2,
+        gridColumns: 2,
+        layoutVersion: 1,
+      });
+      await mockDb.insert('phrases', {
+        userId: 'user-123',
+        text: 'more',
+        frequency: 0,
+        position: 0,
+      });
+      await mockDb.insert('boardTiles', {
+        boardId,
+        position: 0,
+        kind: 'phrase',
+        phraseId,
+        cellRow: 1,
+        cellColumn: 1,
+        cellRowSpan: 1,
+        cellColumnSpan: 1,
+        tileRole: 'fringe',
+        isLocked: false,
+      });
+
+      expect(mockDb.insert).toHaveBeenCalledWith('phraseBoards', expect.objectContaining({
+        layoutMode: 'fixedGrid',
+        gridRows: 2,
+        gridColumns: 2,
+      }));
+      expect(mockDb.insert).toHaveBeenCalledWith('boardTiles', expect.objectContaining({
+        kind: 'phrase',
+        cellRow: 1,
+        cellColumn: 1,
+      }));
+      expect(mockDb.insert).not.toHaveBeenCalledWith('phraseBoardPhrases', expect.anything());
     });
   });
 

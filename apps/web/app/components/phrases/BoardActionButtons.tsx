@@ -10,6 +10,8 @@ import {
   ChatBubbleLeftIcon,
   ArrowRightCircleIcon,
   SpeakerWaveIcon,
+  ArrowDownTrayIcon,
+  ArrowUpTrayIcon,
 } from '@heroicons/react/24/outline';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 
@@ -20,6 +22,9 @@ interface BoardActionButtonsProps {
   onAddBoard?: () => void;
   onEdit?: () => void;
   onEditBoard?: () => void;
+  onImportOpenBoard?: () => void;
+  onExportOpenBoard?: () => void;
+  onExportAllOpenBoards?: () => void;
   isEditMode?: boolean;
   canEditBoard?: boolean;
 }
@@ -31,6 +36,9 @@ export default function BoardActionButtons({
   onAddBoard,
   onEdit,
   onEditBoard,
+  onImportOpenBoard,
+  onExportOpenBoard,
+  onExportAllOpenBoards,
   isEditMode = false,
   canEditBoard = true,
 }: BoardActionButtonsProps) {
@@ -45,7 +53,10 @@ export default function BoardActionButtons({
   const addTileOptionCount = [showAddPhrase, showAddNavigate, showAddAudio].filter(Boolean).length;
   const showAddTileMenu = addTileOptionCount > 1;
   const showAddBoard = !!onAddBoard;
-  const showMenu = !!onEdit || !!onEditBoard;
+  const showImport = !!onImportOpenBoard;
+  const showExport = !!onExportOpenBoard;
+  const showExportAll = !!onExportAllOpenBoards;
+  const showMenu = !!onEdit || !!onEditBoard || showImport || showExport || showExportAll;
 
   if (!showAddPhrase && !showAddNavigate && !showAddAudio && !showAddBoard && !showMenu) return null;
 
@@ -119,7 +130,7 @@ export default function BoardActionButtons({
         isOpen={addMenuOpen}
         onClose={() => setAddMenuOpen(false)}
         title="Add tile"
-        snapPoints={[35]}
+        snapPoints={[45]}
         showHandle
         showCloseButton
       >
@@ -189,6 +200,33 @@ export default function BoardActionButtons({
             >
               <PencilIcon className="w-5 h-5 text-text-secondary" />
               <span className="text-foreground">Edit Board</span>
+            </button>
+          )}
+          {showExport && (
+            <button
+              onClick={() => { onExportOpenBoard?.(); setMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Export Open Board</span>
+            </button>
+          )}
+          {showExportAll && (
+            <button
+              onClick={() => { onExportAllOpenBoards?.(); setMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Export All Boards (.obz)</span>
+            </button>
+          )}
+          {showImport && (
+            <button
+              onClick={() => { onImportOpenBoard?.(); setMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-4 text-base rounded-2xl hover:bg-surface-hover transition-colors"
+            >
+              <ArrowUpTrayIcon className="w-5 h-5 text-text-secondary" />
+              <span className="text-foreground">Import Open Board</span>
             </button>
           )}
         </div>

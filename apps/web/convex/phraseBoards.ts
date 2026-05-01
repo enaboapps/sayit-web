@@ -3,6 +3,7 @@ import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import type { QueryCtx } from './_generated/server';
 import { getUserIdentity } from './users';
+import { nextFixedGridCell } from './aacLayout';
 
 // ---------------------------------------------------------------------------
 // Shared loaders for tile data (read from boardTiles).
@@ -27,6 +28,13 @@ type PolymorphicBoardTile =
       position: number;
       kind: 'phrase';
       phrase: Doc<'phrases'> | null;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: Doc<'boardTiles'>['tileRole'];
+      wordClass?: Doc<'boardTiles'>['wordClass'];
+      isLocked?: boolean;
     }
   | {
       _id: Id<'boardTiles'>;
@@ -35,6 +43,13 @@ type PolymorphicBoardTile =
       kind: 'navigate';
       targetBoardId: Id<'phraseBoards'>;
       targetBoardName: string | null;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: Doc<'boardTiles'>['tileRole'];
+      wordClass?: Doc<'boardTiles'>['wordClass'];
+      isLocked?: boolean;
     }
   | {
       _id: Id<'boardTiles'>;
@@ -48,7 +63,26 @@ type PolymorphicBoardTile =
       audioMimeType: string;
       audioDurationMs: number;
       audioByteSize: number;
+      cellRow?: number;
+      cellColumn?: number;
+      cellRowSpan?: number;
+      cellColumnSpan?: number;
+      tileRole?: Doc<'boardTiles'>['tileRole'];
+      wordClass?: Doc<'boardTiles'>['wordClass'];
+      isLocked?: boolean;
     };
+
+function tileLayoutMetadata(row: Doc<'boardTiles'>) {
+  return {
+    cellRow: row.cellRow,
+    cellColumn: row.cellColumn,
+    cellRowSpan: row.cellRowSpan,
+    cellColumnSpan: row.cellColumnSpan,
+    tileRole: row.tileRole,
+    wordClass: row.wordClass,
+    isLocked: row.isLocked,
+  };
+}
 
 function viewerCanReadBoard(
   board: Doc<'phraseBoards'> | null,
@@ -84,6 +118,7 @@ async function loadHydratedBoardTiles(
         position: row.position,
         kind: 'phrase',
         phrase,
+        ...tileLayoutMetadata(row),
       });
       if (row.phraseId) {
         phraseLinks.push({
@@ -118,6 +153,7 @@ async function loadHydratedBoardTiles(
           audioMimeType: row.audioMimeType ?? '',
           audioDurationMs: row.audioDurationMs ?? 0,
           audioByteSize: row.audioByteSize ?? 0,
+          ...tileLayoutMetadata(row),
         });
         continue;
       }
@@ -133,6 +169,7 @@ async function loadHydratedBoardTiles(
         audioMimeType: row.audioMimeType,
         audioDurationMs: row.audioDurationMs,
         audioByteSize: row.audioByteSize,
+        ...tileLayoutMetadata(row),
       });
       continue;
     }
@@ -147,6 +184,7 @@ async function loadHydratedBoardTiles(
         kind: 'navigate',
         targetBoardId: row.boardId,
         targetBoardName: null,
+        ...tileLayoutMetadata(row),
       });
       continue;
     }
@@ -163,6 +201,7 @@ async function loadHydratedBoardTiles(
       kind: 'navigate',
       targetBoardId: row.targetBoardId,
       targetBoardName: canRead ? (target?.name ?? null) : null,
+      ...tileLayoutMetadata(row),
     });
   }
 
@@ -215,17 +254,20 @@ export const getPhraseBoards = query({
       return board ?? null;
     };
 
-    // Get boards owned by the user (caregiver's boards)
-    const ownedBoards = await ctx.db
+    // Get boards owned by the user (caregiver's boards). Exclude
+    // pendingDelete rows so the picker stops rendering them the instant the
+    // user clicks Delete on an imported package — the cascade sweep then
+    // chunks through the actual delete in the background.
+    const ownedBoards = (await ctx.db
       .query('phraseBoards')
       .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
-      .collect();
+      .collect()).filter((board) => !board.pendingDelete);
 
-    // Get boards assigned to this user as a client
-    const assignedBoards = await ctx.db
+    // Get boards assigned to this user as a client (same exclusion).
+    const assignedBoards = (await ctx.db
       .query('phraseBoards')
       .withIndex('by_client', (q) => q.eq('forClientId', identity.subject))
-      .collect();
+      .collect()).filter((board) => !board.pendingDelete);
 
     // Process owned boards - resolve client names if forClientId is set
     const ownedBoardsWithInfo = await Promise.all(
@@ -393,11 +435,16 @@ export const addPhraseBoard = mutation({
       position: args.position,
       forClientId: args.forClientId,
       clientAccessLevel: args.forClientId ? (args.clientAccessLevel || 'view') : undefined,
+      layoutMode: 'free',
     });
 
     return boardId;
   },
 });
+
+// Note: `createAACStarterBoard` was removed when the named-preset feature was
+// retired. OBF/OBZ import (see `convex/openBoardImport.ts`) is now the
+// canonical way to seed a board with AAC vocabulary.
 
 // Mutation: Update a phrase board
 export const updatePhraseBoard = mutation({
@@ -405,6 +452,10 @@ export const updatePhraseBoard = mutation({
     id: v.id('phraseBoards'),
     name: v.optional(v.string()),
     position: v.optional(v.number()),
+    // User-toggleable: drill-down boards imported from OBF vocabularies are
+    // hidden by default but the user can promote any board to the picker
+    // (or hide a manually-created one) from the edit-board page.
+    hiddenFromPicker: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
@@ -507,19 +558,15 @@ export const addPhraseToBoard = mutation({
       throw new Error('Unauthorized - board');
     }
 
-    // Check for duplicate phrase text on this board (across all tiles).
+    // Load tiles for cell-collision detection and position derivation.
+    // We deliberately allow duplicate phrase text within a board: the polymorphic
+    // tile model uses tile-level identity, and OBF imports may legitimately
+    // produce duplicates (e.g. ergonomic placement of "yes" in two cells).
+    // Cell-collision is the binding constraint, not text uniqueness.
     const existingTiles = await ctx.db
       .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
       .collect();
-
-    for (const tile of existingTiles) {
-      if (tile.kind !== 'phrase' || !tile.phraseId) continue;
-      const existingPhrase = await ctx.db.get(tile.phraseId);
-      if (existingPhrase && existingPhrase.text === phrase.text) {
-        throw new Error('A phrase with this text already exists on this board');
-      }
-    }
 
     const position = existingTiles.length;
     await ctx.db.insert('boardTiles', {
@@ -527,6 +574,8 @@ export const addPhraseToBoard = mutation({
       position,
       kind: 'phrase',
       phraseId: args.phraseId,
+      tileRole: board.layoutMode === 'fixedGrid' ? 'fringe' : undefined,
+      ...(nextFixedGridCell(board, existingTiles) ?? {}),
     });
   },
 });
@@ -612,6 +661,14 @@ export const removePhraseFromBoard = mutation({
       .first();
 
     if (tile) {
+      // Locked AAC core tiles are protected at every entry point — without
+      // this check a client could bypass the lock by calling
+      // removePhraseFromBoard directly (the deletePhrase guard fires too late
+      // because by then the tile is already gone). Sibling mutation
+      // boardTiles.removePhraseTileFromBoard enforces the same invariant.
+      if (tile.isLocked && tile.tileRole === 'core') {
+        throw new Error('Locked core tiles cannot be removed from the board with this action');
+      }
       await ctx.db.delete(tile._id);
     }
   },
@@ -680,5 +737,31 @@ export const unassignBoardFromClient = mutation({
       forClientId: undefined,
       clientAccessLevel: undefined,
     });
+  },
+});
+
+// Query: list AAC import packages for the current user. Powers the Settings
+// page "Imported AAC vocabularies" section so users can see what they've
+// imported and trigger a bulk Delete. pendingDelete packages are still
+// surfaced (their cascade sweep is in flight) but the UI grays them out.
+export const listImportedPackages = query({
+  handler: async (ctx) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) return [];
+
+    const packages = await ctx.db
+      .query('importedPackages')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .collect();
+
+    return packages
+      .map((pkg) => ({
+        id: pkg._id,
+        name: pkg.name,
+        importedAt: pkg.importedAt,
+        boardCount: pkg.boardCount,
+        pendingDelete: Boolean(pkg.pendingDelete),
+      }))
+      .sort((left, right) => right.importedAt - left.importedAt);
   },
 });

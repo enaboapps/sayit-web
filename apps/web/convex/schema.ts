@@ -36,7 +36,9 @@ export default defineSchema({
     position: v.number(),
     symbolStorageId: v.optional(v.id('_storage')),
     symbolUrl: v.optional(v.string()),
-  }).index('by_user_id', ['userId']),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_symbol_storage', ['symbolStorageId']),
 
   phraseBoards: defineTable({
     userId: v.string(), // Clerk user ID (creator/owner)
@@ -44,9 +46,44 @@ export default defineSchema({
     position: v.number(),
     forClientId: v.optional(v.string()), // If set, this board is for a specific client
     clientAccessLevel: v.optional(v.union(v.literal('view'), v.literal('edit'))), // Client's permission level
+    layoutMode: v.optional(v.union(v.literal('free'), v.literal('fixedGrid'))),
+    gridRows: v.optional(v.number()),
+    gridColumns: v.optional(v.number()),
+    layoutVersion: v.optional(v.number()),
+    // Drill-down boards reachable only via a navigate tile from another board
+    // (typical for OBF imports of vocabularies like CommuniKate-20). These
+    // stay fully usable — they just don't clutter the picker. Set during
+    // import; toggleable from the edit-board UI.
+    hiddenFromPicker: v.optional(v.boolean()),
+    // Boards that came in via OBF/OBZ import are tagged with the package they
+    // came from + the source page id within that package. These power
+    // (a) re-import conflict detection and (b) "Delete imported package"
+    // bulk cleanup from Settings.
+    importPackageId: v.optional(v.id('importedPackages')),
+    importSourceId: v.optional(v.string()),
+    // `deleteImportedPackage` flips this immediately; an internal scheduled
+    // action then chunks through the actual cascade delete. Hides the board
+    // from queries while the sweep runs so the picker doesn't stale-render
+    // boards mid-deletion.
+    pendingDelete: v.optional(v.boolean()),
   })
     .index('by_user_id', ['userId'])
-    .index('by_client', ['forClientId']),
+    .index('by_client', ['forClientId'])
+    .index('by_import_package', ['importPackageId'])
+    .index('by_user_and_source', ['userId', 'importSourceId']),
+
+  // One row per OBF/OBZ import. Authoritative record for the Settings page
+  // "Imported AAC vocabularies" listing and the cascade-delete scheduler.
+  // The boards belonging to a package reference it via
+  // `phraseBoards.importPackageId`.
+  importedPackages: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    importedAt: v.number(),
+    boardCount: v.number(),
+    pendingDelete: v.optional(v.boolean()),
+  })
+    .index('by_user_id', ['userId']),
 
   phraseBoardPhrases: defineTable({
     phraseId: v.id('phrases'),
@@ -76,6 +113,31 @@ export default defineSchema({
     audioMimeType: v.optional(v.string()),
     audioDurationMs: v.optional(v.number()),
     audioByteSize: v.optional(v.number()),
+    // kind-agnostic fixed-grid metadata. Optional so legacy/free boards render
+    // exactly as they did before this layout system existed.
+    cellRow: v.optional(v.number()),
+    cellColumn: v.optional(v.number()),
+    cellRowSpan: v.optional(v.number()),
+    cellColumnSpan: v.optional(v.number()),
+    tileRole: v.optional(v.union(
+      v.literal('core'),
+      v.literal('fringe'),
+      v.literal('navigation'),
+      v.literal('control'),
+      v.literal('quickPhrase'),
+      v.literal('audio')
+    )),
+    wordClass: v.optional(v.union(
+      v.literal('pronoun'),
+      v.literal('verb'),
+      v.literal('descriptor'),
+      v.literal('preposition'),
+      v.literal('question'),
+      v.literal('social'),
+      v.literal('noun'),
+      v.literal('other')
+    )),
+    isLocked: v.optional(v.boolean()),
   })
     .index('by_board', ['boardId'])
     .index('by_phrase', ['phraseId'])

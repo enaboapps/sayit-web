@@ -16,6 +16,9 @@ interface BoardSelectorProps {
   onAddAudioTile?: () => void;
   onAddBoard?: () => void;
   onEdit?: () => void;
+  onImportOpenBoard?: () => void;
+  onExportOpenBoard?: () => void;
+  onExportAllOpenBoards?: () => void;
   embedded?: boolean;
 }
 
@@ -30,6 +33,9 @@ export default function BoardSelector({
   onAddAudioTile,
   onAddBoard,
   onEdit,
+  onImportOpenBoard,
+  onExportOpenBoard,
+  onExportAllOpenBoards,
   embedded = false,
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -96,6 +102,9 @@ export default function BoardSelector({
           onAddBoard={onAddBoard}
           onEdit={onEdit}
           onEditBoard={editSelectedBoard}
+          onImportOpenBoard={onImportOpenBoard}
+          onExportOpenBoard={onExportOpenBoard}
+          onExportAllOpenBoards={onExportAllOpenBoards}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
         />
@@ -134,6 +143,9 @@ export default function BoardSelector({
           onAddBoard={onAddBoard}
           onEdit={onEdit}
           onEditBoard={editSelectedBoard}
+          onImportOpenBoard={onImportOpenBoard}
+          onExportOpenBoard={onExportOpenBoard}
+          onExportAllOpenBoards={onExportAllOpenBoards}
           isEditMode={isEditMode}
           canEditBoard={canEditSelected}
         />

@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { getUserIdentity } from './users';
 import { getBoardAccess } from './boardAccess';
 import {
@@ -8,28 +9,110 @@ import {
   validateAudioLabel,
   validateAudioMetadata,
 } from './audioLimits';
+import { nextFixedGridCell } from './aacLayout';
+
+const tileRoleValidator = v.union(
+  v.literal('core'),
+  v.literal('fringe'),
+  v.literal('navigation'),
+  v.literal('control'),
+  v.literal('quickPhrase'),
+  v.literal('audio')
+);
+
+const wordClassValidator = v.union(
+  v.literal('pronoun'),
+  v.literal('verb'),
+  v.literal('descriptor'),
+  v.literal('preposition'),
+  v.literal('question'),
+  v.literal('social'),
+  v.literal('noun'),
+  v.literal('other')
+);
+
+async function assertFixedGridCellAvailable(
+  ctx: MutationCtx,
+  board: Doc<'phraseBoards'>,
+  tile: Doc<'boardTiles'>,
+  row: number,
+  column: number
+) {
+  if (board.layoutMode !== 'fixedGrid') {
+    throw new Error('Board does not use fixed-grid layout');
+  }
+  if (!Number.isInteger(row) || !Number.isInteger(column) || row < 0 || column < 0) {
+    throw new Error('Cell coordinates must be non-negative integers');
+  }
+  if (
+    typeof board.gridRows !== 'number' ||
+    typeof board.gridColumns !== 'number' ||
+    row >= board.gridRows ||
+    column >= board.gridColumns
+  ) {
+    throw new Error('Cell coordinates are outside the board grid');
+  }
+
+  const existing = await ctx.db
+    .query('boardTiles')
+    .withIndex('by_board', (q) => q.eq('boardId', board._id))
+    .filter((q) =>
+      q.and(
+        q.eq(q.field('cellRow'), row),
+        q.eq(q.field('cellColumn'), column)
+      )
+    )
+    .collect();
+
+  const occupant = existing.find((candidate) => candidate._id !== tile._id);
+  if (occupant) {
+    throw new Error('Cell is already occupied');
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Query: list tiles on a board (polymorphic, hydrated)
 // ---------------------------------------------------------------------------
 
+type TileLayoutMetadata = {
+  cellRow?: number;
+  cellColumn?: number;
+  cellRowSpan?: number;
+  cellColumnSpan?: number;
+  tileRole?: Doc<'boardTiles'>['tileRole'];
+  wordClass?: Doc<'boardTiles'>['wordClass'];
+  isLocked?: boolean;
+};
+
+function tileLayoutMetadata(row: Doc<'boardTiles'>): TileLayoutMetadata {
+  return {
+    cellRow: row.cellRow,
+    cellColumn: row.cellColumn,
+    cellRowSpan: row.cellRowSpan,
+    cellColumnSpan: row.cellColumnSpan,
+    tileRole: row.tileRole,
+    wordClass: row.wordClass,
+    isLocked: row.isLocked,
+  };
+}
+
 export type ListedBoardTile =
-  | {
+  | ({
       _id: Id<'boardTiles'>;
       boardId: Id<'phraseBoards'>;
       position: number;
       kind: 'phrase';
       phrase: Doc<'phrases'> | null;
-    }
-  | {
+    } & TileLayoutMetadata)
+  | ({
       _id: Id<'boardTiles'>;
       boardId: Id<'phraseBoards'>;
       position: number;
       kind: 'navigate';
       targetBoardId: Id<'phraseBoards'>;
       targetBoardName: string | null;
-    }
-  | {
+    } & TileLayoutMetadata)
+  | ({
       _id: Id<'boardTiles'>;
       boardId: Id<'phraseBoards'>;
       position: number;
@@ -41,7 +124,7 @@ export type ListedBoardTile =
       audioMimeType: string;
       audioDurationMs: number;
       audioByteSize: number;
-    };
+    } & TileLayoutMetadata);
 
 export const listByBoard = query({
   args: { boardId: v.id('phraseBoards') },
@@ -69,6 +152,7 @@ export const listByBoard = query({
             position: row.position,
             kind: 'phrase',
             phrase: phrase ?? null,
+            ...tileLayoutMetadata(row),
           };
         }
         if (row.kind === 'audio') {
@@ -94,6 +178,7 @@ export const listByBoard = query({
               audioMimeType: row.audioMimeType ?? '',
               audioDurationMs: row.audioDurationMs ?? 0,
               audioByteSize: row.audioByteSize ?? 0,
+              ...tileLayoutMetadata(row),
             };
           }
 
@@ -109,6 +194,7 @@ export const listByBoard = query({
             audioMimeType: row.audioMimeType,
             audioDurationMs: row.audioDurationMs,
             audioByteSize: row.audioByteSize,
+            ...tileLayoutMetadata(row),
           };
         }
 
@@ -123,6 +209,7 @@ export const listByBoard = query({
             kind: 'navigate',
             targetBoardId: row.boardId, // self-ref to satisfy id type; renderer treats null name as broken
             targetBoardName: null,
+            ...tileLayoutMetadata(row),
           };
         }
         const target = await ctx.db.get(targetBoardId);
@@ -139,6 +226,7 @@ export const listByBoard = query({
           kind: 'navigate',
           targetBoardId,
           targetBoardName: canRead ? (target?.name ?? null) : null,
+          ...tileLayoutMetadata(row),
         };
       })
     );
@@ -189,6 +277,8 @@ export const addAudioTile = mutation({
       audioMimeType,
       audioDurationMs: args.audioDurationMs,
       audioByteSize: args.audioByteSize,
+      tileRole: 'audio',
+      ...(nextFixedGridCell(access.board, existingTiles) ?? {}),
     });
   },
 });
@@ -275,19 +365,14 @@ export const addPhraseTile = mutation({
     if (!access) throw new Error('Board not found');
     if (!access.canEdit) throw new Error('Unauthorized - board');
 
-    // Reject duplicate phrase text on the same board (preserves prior UX rule).
+    // Load tiles for cell-collision detection and position derivation.
+    // Duplicate phrase text on a single board is allowed — see the matching
+    // comment in phraseBoards.ts:addPhraseToBoard. Cell-collision is what we
+    // actually need to enforce.
     const existingTiles = await ctx.db
       .query('boardTiles')
       .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
       .collect();
-
-    for (const tile of existingTiles) {
-      if (tile.kind !== 'phrase' || !tile.phraseId) continue;
-      const existing = await ctx.db.get(tile.phraseId);
-      if (existing && existing.text === phrase.text) {
-        throw new Error('A phrase with this text already exists on this board');
-      }
-    }
 
     const position = existingTiles.length;
     return await ctx.db.insert('boardTiles', {
@@ -295,6 +380,8 @@ export const addPhraseTile = mutation({
       position,
       kind: 'phrase',
       phraseId: args.phraseId,
+      tileRole: access.board.layoutMode === 'fixedGrid' ? 'fringe' : undefined,
+      ...(nextFixedGridCell(access.board, existingTiles) ?? {}),
     });
   },
 });
@@ -339,6 +426,8 @@ export const addNavigateTile = mutation({
       position,
       kind: 'navigate',
       targetBoardId: args.targetBoardId,
+      tileRole: sourceAccess.board.layoutMode === 'fixedGrid' ? 'navigation' : undefined,
+      ...(nextFixedGridCell(sourceAccess.board, existingTiles) ?? {}),
     });
   },
 });
@@ -413,11 +502,75 @@ export const reorderTiles = mutation({
 });
 
 // ---------------------------------------------------------------------------
+// Mutation: move a tile to a fixed-grid cell
+// ---------------------------------------------------------------------------
+
+export const moveTileToCell = mutation({
+  args: {
+    tileId: v.id('boardTiles'),
+    row: v.number(),
+    column: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) throw new Error('Tile not found');
+
+    const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
+    if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    await assertFixedGridCellAvailable(ctx, access.board, tile, args.row, args.column);
+
+    await ctx.db.patch(args.tileId, {
+      cellRow: args.row,
+      cellColumn: args.column,
+      cellRowSpan: tile.cellRowSpan ?? 1,
+      cellColumnSpan: tile.cellColumnSpan ?? 1,
+    });
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Mutation: update fixed-grid metadata on any tile kind
+// ---------------------------------------------------------------------------
+
+export const updateTileLayoutMetadata = mutation({
+  args: {
+    tileId: v.id('boardTiles'),
+    tileRole: v.optional(tileRoleValidator),
+    wordClass: v.optional(wordClassValidator),
+    isLocked: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const tile = await ctx.db.get(args.tileId);
+    if (!tile) throw new Error('Tile not found');
+
+    const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
+    if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    const patch: Partial<Doc<'boardTiles'>> = {};
+    if (args.tileRole !== undefined) patch.tileRole = args.tileRole;
+    if (args.wordClass !== undefined) patch.wordClass = args.wordClass;
+    if (args.isLocked !== undefined) patch.isLocked = args.isLocked;
+
+    await ctx.db.patch(args.tileId, patch);
+  },
+});
+
+// ---------------------------------------------------------------------------
 // Mutation: delete a tile (does not delete the underlying phrase)
 // ---------------------------------------------------------------------------
 
 export const deleteTile = mutation({
-  args: { tileId: v.id('boardTiles') },
+  args: {
+    tileId: v.id('boardTiles'),
+    confirmLockedCoreDelete: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) throw new Error('Unauthenticated');
@@ -427,6 +580,10 @@ export const deleteTile = mutation({
 
     const access = await getBoardAccess(ctx, tile.boardId, identity.subject);
     if (!access || !access.canEdit) throw new Error('Unauthorized');
+
+    if (tile.isLocked && tile.tileRole === 'core' && !args.confirmLockedCoreDelete) {
+      throw new Error('Locked core tiles require explicit confirmation before deletion');
+    }
 
     if (tile.kind === 'audio' && tile.audioStorageId) {
       await ctx.storage.delete(tile.audioStorageId);
@@ -458,6 +615,11 @@ export const removePhraseTileFromBoard = mutation({
       .filter((q) => q.eq(q.field('boardId'), args.boardId))
       .first();
 
-    if (tile) await ctx.db.delete(tile._id);
+    if (tile) {
+      if (tile.isLocked && tile.tileRole === 'core') {
+        throw new Error('Locked core tiles cannot be removed from the board with this action');
+      }
+      await ctx.db.delete(tile._id);
+    }
   },
 });
