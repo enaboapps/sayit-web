@@ -15,6 +15,13 @@ import {
   validateAudioMetadata,
   MAX_AUDIO_BYTES,
 } from '@/convex/audioLimits';
+import {
+  fixedGridRectWithinBoard,
+  fixedGridRectsOverlap,
+  nextFixedGridCell,
+  normaliseFixedGridSpan,
+  tileFixedGridRect,
+} from '@/convex/aacLayout';
 
 const mockDb = {
   query: jest.fn(),
@@ -59,6 +66,8 @@ const createTile = (overrides = {}) => ({
   audioByteSize: undefined,
   cellRow: undefined,
   cellColumn: undefined,
+  cellRowSpan: undefined,
+  cellColumnSpan: undefined,
   tileRole: undefined,
   isLocked: undefined,
   ...overrides,
@@ -404,6 +413,81 @@ describe('boardTiles', () => {
 
       expect(() => validateMove(1, 1)).toThrow(/already occupied/);
       expect(() => validateMove(2, 2)).not.toThrow();
+    });
+
+    test('cell collision validation rejects span overlaps', () => {
+      const board = createBoard({ layoutMode: 'fixedGrid', gridRows: 3, gridColumns: 3 });
+      const movingTile = createTile({
+        _id: 'tile-moving',
+        cellRow: 0,
+        cellColumn: 0,
+        cellRowSpan: 1,
+        cellColumnSpan: 2,
+      });
+      const occupiedTile = createTile({
+        _id: 'tile-occupied',
+        cellRow: 1,
+        cellColumn: 1,
+        cellRowSpan: 2,
+        cellColumnSpan: 1,
+      });
+      const existingTiles = [movingTile, occupiedTile];
+
+      const validateMove = (row: number, column: number) => {
+        const requestedRect = {
+          row,
+          column,
+          rowSpan: normaliseFixedGridSpan(movingTile.cellRowSpan),
+          columnSpan: normaliseFixedGridSpan(movingTile.cellColumnSpan),
+        };
+        if (!fixedGridRectWithinBoard(board, requestedRect)) {
+          throw new Error('Cell span exceeds the board grid');
+        }
+
+        const occupant = existingTiles.find((tile) => {
+          if (tile._id === movingTile._id) return false;
+
+          const rect = tileFixedGridRect(tile);
+          return rect ? fixedGridRectsOverlap(requestedRect, rect) : false;
+        });
+        if (occupant) throw new Error('Cell is already occupied');
+      };
+
+      expect(() => validateMove(1, 0)).toThrow(/already occupied/);
+      expect(() => validateMove(2, 2)).toThrow(/span exceeds/);
+      expect(() => validateMove(0, 0)).not.toThrow();
+    });
+
+    test('next fixed-grid cell skips every cell covered by tile spans', () => {
+      const board = createBoard({ layoutMode: 'fixedGrid', gridRows: 2, gridColumns: 3 });
+      const spanningTile = createTile({
+        cellRow: 0,
+        cellColumn: 0,
+        cellRowSpan: 1,
+        cellColumnSpan: 2,
+      });
+
+      expect(nextFixedGridCell(board, [spanningTile] as never)).toEqual({
+        cellRow: 0,
+        cellColumn: 2,
+        cellRowSpan: 1,
+        cellColumnSpan: 1,
+      });
+    });
+
+    test('fixed-grid rectangles treat adjacent spans as non-overlapping', () => {
+      expect(
+        fixedGridRectsOverlap(
+          { row: 0, column: 0, rowSpan: 2, columnSpan: 1 },
+          { row: 0, column: 1, rowSpan: 2, columnSpan: 1 }
+        )
+      ).toBe(false);
+      expect(
+        fixedGridRectsOverlap(
+          { row: 0, column: 0, rowSpan: 2, columnSpan: 2 },
+          { row: 1, column: 1, rowSpan: 1, columnSpan: 1 }
+        )
+      ).toBe(true);
     });
 
     test('locked core tiles require explicit delete confirmation', () => {
