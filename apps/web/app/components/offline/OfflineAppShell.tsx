@@ -91,6 +91,7 @@ function toBoardSummary(boards: Awaited<ReturnType<typeof readLastCachedBoards>>
     gridColumns: board.gridColumns,
     layoutVersion: board.layoutVersion,
     sourceTemplate: board.sourceTemplate,
+    hiddenFromPicker: board.hiddenFromPicker,
     isShared: board.isShared,
     isOwner: board.isOwner,
     accessLevel: board.accessLevel,
@@ -166,9 +167,16 @@ export default function OfflineAppShell({
     updateOfflineSelectedBoard(selectedBoardId);
   }, [selectedBoardId]);
 
+  // Drill-down boards (typical for OBF imports) carry hiddenFromPicker so the
+  // offline picker shows only top-level boards. Navigation tiles still resolve
+  // to hidden boards via `selectedBoard` lookup against the full list.
+  const visibleBoards = useMemo(
+    () => boards.filter((board) => !board.hiddenFromPicker),
+    [boards]
+  );
   const selectedBoard = useMemo(
-    () => boards.find((board) => board.id === selectedBoardId) ?? boards[0] ?? null,
-    [boards, selectedBoardId]
+    () => boards.find((board) => board.id === selectedBoardId) ?? visibleBoards[0] ?? null,
+    [boards, selectedBoardId, visibleBoards]
   );
   const phrases: PhraseSummary[] = selectedBoard?.phrases ?? [];
   const tiles: BoardTileSummary[] = selectedBoard?.tiles ?? phrases.map((phrase, index) => ({
@@ -258,7 +266,7 @@ export default function OfflineAppShell({
           </span>
         </div>
         <BoardSelector
-          boards={boards}
+          boards={visibleBoards}
           selectedBoard={selectedBoard}
           isEditMode={false}
           onSelectBoard={(board) => setSelectedBoardId(board.id)}

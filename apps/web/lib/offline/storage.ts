@@ -77,6 +77,7 @@ export interface OfflineBoardDocument {
   gridColumns?: number;
   layoutVersion?: number;
   sourceTemplate?: 'sayitCoreV1' | 'custom';
+  hiddenFromPicker?: boolean;
   isShared: boolean;
   isOwner: boolean;
   accessLevel: 'view' | 'edit';
@@ -153,6 +154,7 @@ interface CacheablePhraseBoard {
   gridColumns?: number | null;
   layoutVersion?: number | null;
   sourceTemplate?: 'sayitCoreV1' | 'custom' | null;
+  hiddenFromPicker?: boolean | null;
 }
 
 function normalizeTileMetadata(tile: {
@@ -332,6 +334,7 @@ export function normalizeBoardDocuments(
       gridColumns: board.gridColumns ?? undefined,
       layoutVersion: board.layoutVersion ?? undefined,
       sourceTemplate: board.sourceTemplate ?? undefined,
+      hiddenFromPicker: board.hiddenFromPicker ?? undefined,
       isShared: Boolean(board.isShared),
       isOwner: board.isOwner ?? true,
       accessLevel,

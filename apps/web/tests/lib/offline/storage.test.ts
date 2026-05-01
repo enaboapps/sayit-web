@@ -107,6 +107,33 @@ describe('offline bootstrap storage', () => {
     });
   });
 
+  it('round-trips hiddenFromPicker so offline picker matches online behavior', () => {
+    // Imported drill-down boards are flagged hiddenFromPicker on the server.
+    // Offline mode reads boards from the cached document; without preserving
+    // the flag the picker would show all 96 CommuniKate boards even when the
+    // user is offline.
+    const [hiddenBoard, visibleBoard] = normalizeBoardDocuments('user_123', [
+      {
+        _id: 'board_food',
+        name: 'Food',
+        position: 1,
+        hiddenFromPicker: true,
+      },
+      {
+        _id: 'board_top',
+        name: 'Top',
+        position: 0,
+        hiddenFromPicker: false,
+      },
+    ], 789);
+
+    // Sorted by position so visible (top) comes first.
+    expect(hiddenBoard.id).toBe('board_top');
+    expect(hiddenBoard.hiddenFromPicker).toBe(false);
+    expect(visibleBoard.id).toBe('board_food');
+    expect(visibleBoard.hiddenFromPicker).toBe(true);
+  });
+
   it('normalizes legacy boards (no layoutMode/grid metadata) into free-mode without crashing', () => {
     // Boards created before issue #649 have no layoutMode, no grid dims, no
     // cell metadata on tiles, and may store phrases via the legacy

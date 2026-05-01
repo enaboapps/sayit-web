@@ -485,6 +485,74 @@ describe('boardTiles', () => {
     });
   });
 
+  describe('Open Board import hiddenFromPicker logic', () => {
+    test('boards reachable only via a navigate tile are hidden from the picker', () => {
+      // Mirrors the per-import scan in convex/openBoardImport.ts. A board is
+      // hidden when some other board's navigate tile points at it; root /
+      // entry-point boards stay visible. Drill-downs in CommuniKate (Food,
+      // People, ...) are reached from "CommuniKate Top Page" — only the top
+      // page should show in the picker after import.
+      const importPayload = [
+        {
+          sourceId: 'top',
+          tiles: [
+            { kind: 'navigate' as const, targetSourceId: 'food' },
+            { kind: 'navigate' as const, targetSourceId: 'people' },
+          ],
+        },
+        {
+          sourceId: 'food',
+          tiles: [{ kind: 'phrase' as const, text: 'apple' }],
+        },
+        {
+          sourceId: 'people',
+          tiles: [{ kind: 'phrase' as const, text: 'mom' }],
+        },
+      ];
+
+      const navTargets = new Set<string>();
+      for (const board of importPayload) {
+        for (const tile of board.tiles) {
+          if (tile.kind === 'navigate' && tile.targetSourceId !== board.sourceId) {
+            navTargets.add(tile.targetSourceId);
+          }
+        }
+      }
+
+      const decisions = importPayload.map((board) => ({
+        sourceId: board.sourceId,
+        hiddenFromPicker: navTargets.has(board.sourceId),
+      }));
+
+      expect(decisions).toEqual([
+        { sourceId: 'top', hiddenFromPicker: false },
+        { sourceId: 'food', hiddenFromPicker: true },
+        { sourceId: 'people', hiddenFromPicker: true },
+      ]);
+    });
+
+    test('a self-referencing navigate tile does not hide its own board', () => {
+      // Defensive: an OBF could in theory carry a "back to top" tile pointing
+      // at the same page id (the importer drops it as a self-loop too, but
+      // this test pins down that we don't accidentally hide the only board.)
+      const importPayload = [{
+        sourceId: 'only',
+        tiles: [{ kind: 'navigate' as const, targetSourceId: 'only' }],
+      }];
+
+      const navTargets = new Set<string>();
+      for (const board of importPayload) {
+        for (const tile of board.tiles) {
+          if (tile.kind === 'navigate' && tile.targetSourceId !== board.sourceId) {
+            navTargets.add(tile.targetSourceId);
+          }
+        }
+      }
+
+      expect(navTargets.has('only')).toBe(false);
+    });
+  });
+
   describe('Open Board import invariants', () => {
     test('imported boards create fixed-grid board tiles, not legacy phrase links', async () => {
       const boardId = 'imported-board-1';

@@ -206,7 +206,7 @@ export default function PhrasesInterface() {
         <AACTabs
           phrasesContent={
             <PhrasesTabContent
-              boards={boardData.boards}
+              boards={boardData.visibleBoards}
               tiles={boardData.tiles}
               selectedBoard={boardData.selectedBoard}
               validBoardIndex={boardData.validBoardIndex}
@@ -236,7 +236,8 @@ export default function PhrasesInterface() {
               onImportOpenBoard={isOnline && !!user ? () => setIsOpenBoardImportOpen(true) : undefined}
               onExportOpenBoard={boardData.selectedBoard ? handleExportOpenBoard : undefined}
               onExportAllOpenBoards={
-                // Use the already-loaded board list to gate the menu item.
+                // Use the already-loaded full board list to gate the menu —
+                // including hidden drill-downs since they belong in the .obz.
                 // The actual export query fires at click time inside the handler.
                 boardData.boards.length > 0 ? handleExportAllOpenBoards : undefined
               }
@@ -278,7 +279,7 @@ export default function PhrasesInterface() {
         />
       </div>
       <BoardGridPopup
-        boards={boardData.boards}
+        boards={boardData.visibleBoards}
         selectedBoard={boardData.selectedBoard}
         isEditMode={boardData.isEditMode}
         isOpen={boardData.isBoardPickerOpen}

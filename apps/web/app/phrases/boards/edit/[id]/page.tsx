@@ -15,6 +15,7 @@ import type { Id } from '@/convex/_generated/dataModel';
 export default function EditBoardPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [name, setName] = useState('');
+  const [hiddenFromPicker, setHiddenFromPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     if (board) {
       setName(board.name);
+      setHiddenFromPicker(Boolean(board.hiddenFromPicker));
     }
   }, [board]);
 
@@ -50,6 +52,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
       await updatePhraseBoard({
         id: boardId,
         name,
+        hiddenFromPicker,
       });
       router.back();
     } catch (error) {
@@ -113,6 +116,25 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
             placeholder="Enter board name"
             required
           />
+
+          <label className="mb-4 mt-2 flex items-start gap-3 rounded-2xl border border-border bg-surface-hover/40 p-4">
+            <input
+              id="hiddenFromPicker"
+              type="checkbox"
+              checked={hiddenFromPicker}
+              onChange={(e) => setHiddenFromPicker(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+            />
+            <span className="flex flex-col">
+              <span className="text-sm font-medium text-foreground">
+                Hide from board picker
+              </span>
+              <span className="text-xs text-text-secondary">
+                Use this for drill-down boards reached only through navigation tiles. The
+                board stays usable through links and stays in exports.
+              </span>
+            </span>
+          </label>
 
           {error && (
             <div className="mb-4 text-red-500 text-sm bg-status-error px-4 py-3 rounded-3xl">

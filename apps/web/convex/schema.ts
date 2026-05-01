@@ -50,6 +50,11 @@ export default defineSchema({
     gridColumns: v.optional(v.number()),
     layoutVersion: v.optional(v.number()),
     sourceTemplate: v.optional(v.union(v.literal('sayitCoreV1'), v.literal('custom'))),
+    // Drill-down boards reachable only via a navigate tile from another board
+    // (typical for OBF imports of vocabularies like CommuniKate-20). These
+    // stay fully usable — they just don't clutter the picker. Set during
+    // import; toggleable from the edit-board UI.
+    hiddenFromPicker: v.optional(v.boolean()),
   })
     .index('by_user_id', ['userId'])
     .index('by_client', ['forClientId']),

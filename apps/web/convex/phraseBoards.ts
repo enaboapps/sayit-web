@@ -519,6 +519,10 @@ export const updatePhraseBoard = mutation({
     id: v.id('phraseBoards'),
     name: v.optional(v.string()),
     position: v.optional(v.number()),
+    // User-toggleable: drill-down boards imported from OBF vocabularies are
+    // hidden by default but the user can promote any board to the picker
+    // (or hide a manually-created one) from the edit-board page.
+    hiddenFromPicker: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await getUserIdentity(ctx);

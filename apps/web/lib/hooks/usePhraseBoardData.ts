@@ -163,10 +163,21 @@ export function usePhraseBoardData() {
     gridColumns: board.gridColumns,
     layoutVersion: board.layoutVersion,
     sourceTemplate: board.sourceTemplate,
+    hiddenFromPicker: board.hiddenFromPicker,
   })) || [];
 
+  // `visibleBoards` is what picker UIs walk through — drill-down boards
+  // imported from OBF vocabularies (CommuniKate, etc.) are flagged
+  // `hiddenFromPicker` so they don't clutter the picker, while remaining
+  // fully reachable through navigate tiles. `transformedBoards` (full list)
+  // is still used for `selectedBoard` resolution so navigating to a hidden
+  // board via a nav tile still renders that board.
+  const visibleBoards = transformedBoards.filter((board) => !board.hiddenFromPicker);
+
   const selectedBoard = transformedBoards.find(b => b.id === selectedBoardId) || null;
-  const currentBoardIndex = transformedBoards.findIndex(b => b.id === selectedBoardId);
+  // Carousel/swipe nav cycles through visibleBoards only — falling off the
+  // end onto a hidden drill-down would feel like a bug to the user.
+  const currentBoardIndex = visibleBoards.findIndex(b => b.id === selectedBoardId);
   const validBoardIndex = currentBoardIndex >= 0 ? currentBoardIndex : 0;
   const canEditCurrentBoard = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
 
@@ -177,11 +188,12 @@ export function usePhraseBoardData() {
     updateUIPreference('selectedBoardId', typeof board === 'string' ? board : board.id);
   };
 
-  // Mobile swipe nav also counts as a non-tile board pick.
+  // Mobile swipe nav also counts as a non-tile board pick. Index is into
+  // `visibleBoards` since that's what the swipe carousel renders.
   const handleBoardIndexChange = (index: number) => {
-    if (transformedBoards[index]) {
+    if (visibleBoards[index]) {
       navStack.clear();
-      updateUIPreference('selectedBoardId', transformedBoards[index].id);
+      updateUIPreference('selectedBoardId', visibleBoards[index].id);
     }
   };
 
@@ -283,6 +295,7 @@ export function usePhraseBoardData() {
 
   return {
     boards: transformedBoards,
+    visibleBoards,
     phrases,
     tiles,
     selectedBoard,

@@ -62,6 +62,21 @@ export const importBoards = mutation({
       .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
       .collect();
 
+    // Pre-compute the set of source IDs that some other board navigates to.
+    // Boards in this set are drill-downs (e.g. CommuniKate's "Food", "People"
+    // sub-pages reached from "CommuniKate Top Page"); we hide them from the
+    // picker by default so importing a 96-board AAC vocabulary doesn't
+    // explode the user's board list. They remain reachable via navigate tiles
+    // and toggleable from the edit-board UI.
+    const navTargetSourceIds = new Set<string>();
+    for (const board of args.boards) {
+      for (const tile of board.tiles) {
+        if (tile.kind === 'navigate' && tile.targetSourceId !== board.sourceId) {
+          navTargetSourceIds.add(tile.targetSourceId);
+        }
+      }
+    }
+
     const sourceIdToBoardId = new Map<string, Id<'phraseBoards'>>();
     const importedBoardIds: Id<'phraseBoards'>[] = [];
 
@@ -78,6 +93,7 @@ export const importBoards = mutation({
         gridColumns: board.gridColumns,
         layoutVersion: AAC_LAYOUT_VERSION,
         sourceTemplate: 'custom',
+        hiddenFromPicker: navTargetSourceIds.has(board.sourceId) ? true : undefined,
       });
 
       sourceIdToBoardId.set(board.sourceId, boardId);

@@ -71,4 +71,11 @@ export interface BoardSummary {
   gridColumns?: number;
   layoutVersion?: number;
   sourceTemplate?: 'sayitCoreV1' | 'custom';
+  /**
+   * When true, the board is omitted from picker UIs (sidebar dropdown,
+   * mobile carousel, board grid popup) but remains fully usable through
+   * navigate-tile links. Defaults to false. Set automatically by the OBF
+   * importer for drill-down boards; user-toggleable from the edit-board page.
+   */
+  hiddenFromPicker?: boolean;
 }
