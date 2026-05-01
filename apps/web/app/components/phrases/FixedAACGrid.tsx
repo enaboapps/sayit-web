@@ -115,6 +115,9 @@ export default function FixedAACGrid({
         && isSpeaking;
       const accent = tile.wordClass ? WORD_CLASS_ACCENTS[tile.wordClass] ?? WORD_CLASS_ACCENTS.other : '';
       const isSelected = selectedTileId === tile.id;
+      const handleSelectTile = () => {
+        setSelectedTileId((current) => current === tile.id ? null : tile.id);
+      };
       const tileContent = (
         <BoardTileRenderer
           tile={tile}
@@ -138,11 +141,16 @@ export default function FixedAACGrid({
               role="button"
               tabIndex={0}
               className="block w-full text-left"
-              onClick={() => setSelectedTileId((current) => current === tile.id ? null : tile.id)}
-              onKeyDown={(event) => {
+              onClickCapture={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleSelectTile();
+              }}
+              onKeyDownCapture={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
-                  setSelectedTileId((current) => current === tile.id ? null : tile.id);
+                  event.stopPropagation();
+                  handleSelectTile();
                 }
               }}
               aria-label={`Select tile in row ${row + 1}, column ${column + 1} to move`}

@@ -45,6 +45,10 @@ const baseProps = {
 };
 
 describe('FixedAACGrid', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders exact fixed-grid dimensions without responsive column changes', () => {
     render(<FixedAACGrid {...baseProps} />);
 
@@ -74,5 +78,24 @@ describe('FixedAACGrid', () => {
     await user.click(screen.getByRole('button', { name: 'Move selected tile to row 3, column 4' }));
 
     expect(onMoveTileToCell).toHaveBeenCalledWith('tile-1', 2, 3);
+  });
+
+  it('does not activate tile actions while selecting a tile in edit mode', async () => {
+    const user = userEvent.setup();
+    const onPhrasePress = jest.fn();
+
+    render(
+      <FixedAACGrid
+        {...baseProps}
+        isEditMode
+        canEdit
+        onPhrasePress={onPhrasePress}
+        onMoveTileToCell={jest.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Select tile in row 1, column 1 to move' }));
+
+    expect(onPhrasePress).not.toHaveBeenCalled();
   });
 });

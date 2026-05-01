@@ -36,7 +36,9 @@ export default defineSchema({
     position: v.number(),
     symbolStorageId: v.optional(v.id('_storage')),
     symbolUrl: v.optional(v.string()),
-  }).index('by_user_id', ['userId']),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_symbol_storage', ['symbolStorageId']),
 
   phraseBoards: defineTable({
     userId: v.string(), // Clerk user ID (creator/owner)

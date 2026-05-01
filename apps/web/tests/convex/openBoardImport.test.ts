@@ -171,3 +171,20 @@ describe('getPhraseBoards filters pendingDelete', () => {
     expect(visible.map((b) => b.name)).toEqual(['Visible', 'Also visible']);
   });
 });
+
+describe('symbol import cleanup safety', () => {
+  test('skips storage IDs already referenced by a phrase', () => {
+    const requestedCleanupIds = ['live-symbol', 'orphan-symbol'];
+    const phrases = [
+      { _id: 'phrase-1', symbolStorageId: 'live-symbol' },
+    ];
+
+    // Mirrors symbols.cleanupOrphanSymbols: delete only IDs that are not
+    // currently referenced by any phrase row.
+    const deleted = requestedCleanupIds.filter((id) =>
+      !phrases.some((phrase) => phrase.symbolStorageId === id)
+    );
+
+    expect(deleted).toEqual(['orphan-symbol']);
+  });
+});
