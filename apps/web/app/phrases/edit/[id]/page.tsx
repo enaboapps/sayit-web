@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
@@ -33,6 +33,25 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
     api.phrases.getPhrase,
     shouldLoadPhrase ? { id: phraseId } : 'skip'
   );
+  // Pull the board's tiles so we can detect whether this phrase is wired up
+  // as a locked AAC core tile. Locked-core tiles back the motor-planning
+  // contract: their deletion would leave the board with a "ghost" cell users
+  // expect to find. We disable the delete affordance entirely rather than
+  // pipe `confirmLockedCoreDelete` through the mutation chain.
+  const boardTiles = useQuery(
+    api.boardTiles.listByBoard,
+    shouldLoadPhrase && boardId ? { boardId: boardId as Id<'phraseBoards'> } : 'skip'
+  );
+  const isLockedCoreTile = useMemo(() => {
+    if (!boardTiles) return false;
+    // listByBoard hydrates phrase-kind tiles by inlining the phrase row, so
+    // we compare against `t.phrase?._id` rather than the raw `phraseId` field
+    // (which is stripped from the hydrated shape).
+    const tile = boardTiles.find(
+      (t) => t.kind === 'phrase' && t.phrase?._id === phraseId
+    );
+    return Boolean(tile?.isLocked && tile.tileRole === 'core');
+  }, [boardTiles, phraseId]);
   const updatePhrase = useMutation(api.phrases.updatePhrase);
   const deletePhrase = useMutation(api.phrases.deletePhrase);
   const removePhraseFromBoard = useMutation(api.phraseBoards.removePhraseFromBoard);
@@ -79,6 +98,13 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
 
   const handleDelete = async () => {
     if (!phrase || !boardId) return;
+    // Defense in depth — the button is disabled for locked-core tiles, but if
+    // a stale render slips through we'd rather surface a friendly message
+    // than fail-and-toast at the server boundary.
+    if (isLockedCoreTile) {
+      setError('This phrase is part of the locked AAC core vocabulary. To remove it, delete the entire board.');
+      return;
+    }
 
     try {
       // Remove from board first
@@ -158,15 +184,29 @@ export default function EditPhrasePage({ params }: { params: Promise<{ id: strin
           )}
 
           <div className="flex items-center justify-between mt-6">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleDelete}
-              className="text-red-600 hover:text-red-700"
-            >
-              <TrashIcon className="h-5 w-5 mr-2" />
-              Delete Phrase
-            </Button>
+            {isLockedCoreTile ? (
+              <Button
+                type="button"
+                variant="ghost"
+                disabled
+                className="text-text-tertiary cursor-not-allowed"
+                title="This phrase is part of the locked AAC core vocabulary. To remove it, delete the entire board."
+                aria-label="Delete disabled — locked core vocabulary"
+              >
+                <LockClosedIcon className="h-5 w-5 mr-2" />
+                Locked Core Phrase
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-700"
+              >
+                <TrashIcon className="h-5 w-5 mr-2" />
+                Delete Phrase
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={saving}

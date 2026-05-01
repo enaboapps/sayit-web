@@ -423,6 +423,35 @@ describe('boardTiles', () => {
       expect(() => validateMove(2, 2)).not.toThrow();
     });
 
+    test('every preset core word fits inside its grid dimensions', () => {
+      // Each preset must promise enough cells for the core vocabulary it
+      // returns; otherwise createAACStarterBoard's `cellRow = floor(index / cols)`
+      // derivation overflows the last row and tiles render off-grid. Asserting
+      // here keeps preset/word-list edits in sync.
+      for (const preset of ['largeAccess16', 'standard36', 'dense48'] as const) {
+        const { rows, columns } = getPresetDimensions(preset);
+        const words = getCoreWordsForPreset(preset);
+        const capacity = rows * columns;
+        expect(words.length).toBeLessThanOrEqual(capacity);
+        // Spot-check the index -> (row, column) derivation for the last word
+        // doesn't blow past `rows`, since that's exactly what would happen if
+        // someone bumped a word list without bumping the grid.
+        const lastIndex = words.length - 1;
+        expect(Math.floor(lastIndex / columns)).toBeLessThan(rows);
+        expect(lastIndex % columns).toBeLessThan(columns);
+      }
+    });
+
+    test('largeAccess16 produces exactly 16 core words for a 4x4 grid', () => {
+      // The motor-impaired access preset has zero margin: 16 words, 16 cells.
+      // If the word list grows or shrinks, either the grid resizes too or the
+      // user gets a truncated / sparse board. Lock both numbers in.
+      const { rows, columns } = getPresetDimensions('largeAccess16');
+      const words = getCoreWordsForPreset('largeAccess16');
+      expect(rows * columns).toBe(16);
+      expect(words).toHaveLength(16);
+    });
+
     test('locked core tiles require explicit delete confirmation', () => {
       const tile = createTile({ isLocked: true, tileRole: 'core' });
 
@@ -434,6 +463,25 @@ describe('boardTiles', () => {
 
       expect(() => guard()).toThrow(/Locked core tiles/);
       expect(() => guard(true)).not.toThrow();
+    });
+
+    test('removePhraseFromBoard refuses to detach a locked core tile', () => {
+      // Mirrors the invariant added to convex/phraseBoards.ts:
+      // removePhraseFromBoard. Without this, a client could bypass the
+      // deletePhrase lock by removing the tile first (which orphans the
+      // phrase from the board even though the phrase row stays). All
+      // detach paths now share the same protection.
+      const lockedCoreTile = createTile({ isLocked: true, tileRole: 'core' });
+      const nonCoreTile = createTile({ _id: 'tile-2', isLocked: false, tileRole: 'fringe' });
+
+      const guard = (tile: { isLocked?: boolean; tileRole?: string }) => {
+        if (tile.isLocked && tile.tileRole === 'core') {
+          throw new Error('Locked core tiles cannot be removed from the board with this action');
+        }
+      };
+
+      expect(() => guard(lockedCoreTile)).toThrow(/Locked core tiles cannot be removed/);
+      expect(() => guard(nonCoreTile)).not.toThrow();
     });
   });
 

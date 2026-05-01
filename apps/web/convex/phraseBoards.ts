@@ -762,6 +762,14 @@ export const removePhraseFromBoard = mutation({
       .first();
 
     if (tile) {
+      // Locked AAC core tiles are protected at every entry point — without
+      // this check a client could bypass the lock by calling
+      // removePhraseFromBoard directly (the deletePhrase guard fires too late
+      // because by then the tile is already gone). Sibling mutation
+      // boardTiles.removePhraseTileFromBoard enforces the same invariant.
+      if (tile.isLocked && tile.tileRole === 'core') {
+        throw new Error('Locked core tiles cannot be removed from the board with this action');
+      }
       await ctx.db.delete(tile._id);
     }
   },

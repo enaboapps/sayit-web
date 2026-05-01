@@ -103,18 +103,33 @@ export function normalizeAacProcessorsTree(tree: AacProcessorTree): NormalizedOp
   // For .obz packages the willwade library encodes navigation targets as the
   // ZIP entry path (e.g. "boards/food.obf"), but downstream code keys boards
   // by their page id ("food_board"). Build a path -> id reverse map once so
-  // each navigation tile can be rewritten.
+  // each navigation tile can be rewritten. If two pageIds claim the same
+  // entryPath (malformed manifest) keep the first and warn — overwriting
+  // silently would mean cross-board links land on the wrong destination.
   const pathToPageId = new Map<string, string>();
   const obfPagePaths = tree.metadata?._obfPagePaths;
   if (obfPagePaths) {
     for (const [pageId, entryPath] of Object.entries(obfPagePaths)) {
+      const existing = pathToPageId.get(entryPath);
+      if (existing && existing !== pageId) {
+        warnings.push(
+          `Manifest path "${entryPath}" maps to multiple boards (${existing}, ${pageId}); navigation links to "${pageId}" will resolve to "${existing}".`
+        );
+        continue;
+      }
       pathToPageId.set(entryPath, pageId);
     }
   }
 
+  // The set of page ids the importer will actually create. Used below to
+  // flag navigation tiles that point at a destination not present in this
+  // upload (e.g. a manifest references an external .obf the user didn't
+  // include). Without the warning these links silently disappear at import.
+  const knownPageIds = new Set(Object.keys(tree.pages));
+
   const boards = Object.values(tree.pages)
     .filter((page) => Array.isArray(page.grid))
-    .map((page) => normalizePage(page, warnings, pathToPageId));
+    .map((page) => normalizePage(page, warnings, pathToPageId, knownPageIds));
   const tileCount = boards.reduce((total, board) => total + board.tiles.length, 0);
 
   validateImportLimits(boards.length, tileCount);
@@ -125,13 +140,15 @@ export function normalizeAacProcessorsTree(tree: AacProcessorTree): NormalizedOp
 function normalizePage(
   page: AacProcessorPage,
   warnings: string[],
-  pathToPageId: Map<string, string>
+  pathToPageId: Map<string, string>,
+  knownPageIds: Set<string>
 ): NormalizedOpenBoardBoard {
   const grid = page.grid ?? [];
   const rows = Math.max(1, grid.length);
   const columns = Math.max(1, ...grid.map((row) => row.length));
   const seenCells = new Set<string>();
   const tiles: NormalizedOpenBoardTile[] = [];
+  const boardLabel = page.name?.trim() || page.id;
 
   for (let rowIndex = 0; rowIndex < grid.length; rowIndex += 1) {
     const row = grid[rowIndex];
@@ -150,6 +167,15 @@ function normalizePage(
       // future processor that emits ids directly still works.
       const targetSourceId = rawTarget ? pathToPageId.get(rawTarget) ?? rawTarget : undefined;
       if (targetSourceId) {
+        // The importer drops navigate tiles whose target isn't in the upload.
+        // Surface that as a warning so users know why a link "disappeared"
+        // instead of silently shipping a broken board.
+        if (!knownPageIds.has(targetSourceId)) {
+          warnings.push(
+            `${boardLabel}: dropped navigation tile "${labelForButton(button) || button.id}" — target "${rawTarget}" is not in this upload.`
+          );
+          continue;
+        }
         tiles.push({
           kind: 'navigate',
           label: labelForButton(button) || 'Go to board',
