@@ -4,7 +4,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
-import GuestCommunication from '@/app/components/home/GuestCommunication';
+import GuestLanding from '@/app/components/home/GuestLanding';
 import PhrasesInterface from '@/app/components/home/PhrasesInterface';
 
 export default function Home() {
@@ -23,7 +23,7 @@ export default function Home() {
         ? 'h-full min-h-0 overflow-hidden'
         : 'min-h-screen'
     }`}>
-      {!user ? <GuestCommunication /> : <PhrasesInterface />}
+      {!user ? <GuestLanding /> : <PhrasesInterface />}
     </div>
   );
 }
