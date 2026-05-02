@@ -14,7 +14,11 @@ jest.mock('nanoid', () => {
   };
 });
 
-const mockUpdateSettingsMutation = jest.fn();
+// Return a resolved promise so the debounced `.catch(...)` in useTypingTabs'
+// setTimeout doesn't throw "Cannot read properties of undefined (reading
+// 'catch')" when the timer fires after a test has unmounted. Without this the
+// suite is flaky depending on jest worker scheduling.
+const mockUpdateSettingsMutation = jest.fn(() => Promise.resolve());
 jest.mock('convex/react', () => ({
   useMutation: jest.fn(() => mockUpdateSettingsMutation),
 }));
