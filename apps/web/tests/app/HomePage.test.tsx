@@ -26,9 +26,9 @@ jest.mock('@/app/components/phrases/AnimatedLoading', () => ({
   default: () => <div>Loading Screen</div>,
 }));
 
-jest.mock('@/app/components/home/GuestCommunication', () => ({
+jest.mock('@/app/components/home/GuestLanding', () => ({
   __esModule: true,
-  default: () => <div>Guest Communication</div>,
+  default: () => <div>Guest Landing</div>,
 }));
 
 jest.mock('@/app/components/home/PhrasesInterface', () => ({
@@ -62,13 +62,13 @@ describe('Home', () => {
     expect(screen.getByText('Loading Screen')).toBeInTheDocument();
   });
 
-  it('shows the guest experience when startup data is ready without a user', () => {
+  it('shows the guest landing when startup data is ready without a user', () => {
     mockUseAuth.mockReturnValue({ user: null, loading: false });
     mockUseQuery.mockReturnValue(null);
 
     render(<Home />);
 
-    expect(screen.getByText('Guest Communication')).toBeInTheDocument();
+    expect(screen.getByText('Guest Landing')).toBeInTheDocument();
     expect(screen.queryByText('Phrases Interface')).not.toBeInTheDocument();
   });
 
