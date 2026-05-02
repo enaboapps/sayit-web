@@ -1,212 +1,10 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
-import type { QueryCtx } from './_generated/server';
 import { getUserIdentity } from './users';
 import { nextFixedGridCell } from './aacLayout';
+import { loadHydratedBoardTiles } from './boardTileHydration';
 
-// ---------------------------------------------------------------------------
-// Shared loaders for tile data (read from boardTiles).
-//
-// The `phrase_board_phrases` field on board query results is preserved for
-// backward compatibility — it returns *only phrase-kind tiles* in the legacy
-// shape. New consumers should read the polymorphic `tiles` field instead.
-// ---------------------------------------------------------------------------
-
-type LegacyPhraseLink = {
-  _id: Id<'boardTiles'>;
-  phraseId: Id<'phrases'>;
-  boardId: Id<'phraseBoards'>;
-  position: number;
-  phrase: Doc<'phrases'> | null;
-};
-
-type PolymorphicBoardTile =
-  | {
-      _id: Id<'boardTiles'>;
-      boardId: Id<'phraseBoards'>;
-      position: number;
-      kind: 'phrase';
-      phrase: Doc<'phrases'> | null;
-      cellRow?: number;
-      cellColumn?: number;
-      cellRowSpan?: number;
-      cellColumnSpan?: number;
-      tileRole?: Doc<'boardTiles'>['tileRole'];
-      wordClass?: Doc<'boardTiles'>['wordClass'];
-      isLocked?: boolean;
-    }
-  | {
-      _id: Id<'boardTiles'>;
-      boardId: Id<'phraseBoards'>;
-      position: number;
-      kind: 'navigate';
-      targetBoardId: Id<'phraseBoards'>;
-      targetBoardName: string | null;
-      cellRow?: number;
-      cellColumn?: number;
-      cellRowSpan?: number;
-      cellColumnSpan?: number;
-      tileRole?: Doc<'boardTiles'>['tileRole'];
-      wordClass?: Doc<'boardTiles'>['wordClass'];
-      isLocked?: boolean;
-    }
-  | {
-      _id: Id<'boardTiles'>;
-      boardId: Id<'phraseBoards'>;
-      position: number;
-      kind: 'audio';
-      audioLabel: string;
-      /** null when the underlying storage object is missing/unrecoverable. */
-      audioStorageId: Id<'_storage'> | null;
-      audioUrl: string | null;
-      audioMimeType: string;
-      audioDurationMs: number;
-      audioByteSize: number;
-      cellRow?: number;
-      cellColumn?: number;
-      cellRowSpan?: number;
-      cellColumnSpan?: number;
-      tileRole?: Doc<'boardTiles'>['tileRole'];
-      wordClass?: Doc<'boardTiles'>['wordClass'];
-      isLocked?: boolean;
-    };
-
-function tileLayoutMetadata(row: Doc<'boardTiles'>) {
-  return {
-    cellRow: row.cellRow,
-    cellColumn: row.cellColumn,
-    cellRowSpan: row.cellRowSpan,
-    cellColumnSpan: row.cellColumnSpan,
-    tileRole: row.tileRole,
-    wordClass: row.wordClass,
-    isLocked: row.isLocked,
-  };
-}
-
-function viewerCanReadBoard(
-  board: Doc<'phraseBoards'> | null,
-  viewerSubject: string
-): boolean {
-  if (!board) return false;
-  return board.userId === viewerSubject || board.forClientId === viewerSubject;
-}
-
-async function loadHydratedBoardTiles(
-  ctx: QueryCtx,
-  boardId: Id<'phraseBoards'>,
-  viewerSubject: string,
-  getCachedPhrase: (phraseId: Id<'phrases'>) => Promise<Doc<'phrases'> | null>,
-  getCachedBoard: (boardId: Id<'phraseBoards'>) => Promise<Doc<'phraseBoards'> | null>
-): Promise<{ tiles: PolymorphicBoardTile[]; phraseLinks: LegacyPhraseLink[] }> {
-  const rows = await ctx.db
-    .query('boardTiles')
-    .withIndex('by_board', (q) => q.eq('boardId', boardId))
-    .collect();
-
-  const sorted = [...rows].sort((a, b) => a.position - b.position);
-
-  const tiles: PolymorphicBoardTile[] = [];
-  const phraseLinks: LegacyPhraseLink[] = [];
-
-  for (const row of sorted) {
-    if (row.kind === 'phrase') {
-      const phrase = row.phraseId ? await getCachedPhrase(row.phraseId) : null;
-      tiles.push({
-        _id: row._id,
-        boardId: row.boardId,
-        position: row.position,
-        kind: 'phrase',
-        phrase,
-        ...tileLayoutMetadata(row),
-      });
-      if (row.phraseId) {
-        phraseLinks.push({
-          _id: row._id,
-          phraseId: row.phraseId,
-          boardId: row.boardId,
-          position: row.position,
-          phrase,
-        });
-      }
-      continue;
-    }
-
-    if (row.kind === 'audio') {
-      // Defensive: surface a broken-state tile if the row is missing one or
-      // more required audio fields. Renderer keys on audioUrl===null.
-      if (
-        !row.audioLabel ||
-        !row.audioStorageId ||
-        !row.audioMimeType ||
-        typeof row.audioDurationMs !== 'number' ||
-        typeof row.audioByteSize !== 'number'
-      ) {
-        tiles.push({
-          _id: row._id,
-          boardId: row.boardId,
-          position: row.position,
-          kind: 'audio',
-          audioLabel: row.audioLabel ?? 'Audio tile',
-          audioStorageId: null,
-          audioUrl: null,
-          audioMimeType: row.audioMimeType ?? '',
-          audioDurationMs: row.audioDurationMs ?? 0,
-          audioByteSize: row.audioByteSize ?? 0,
-          ...tileLayoutMetadata(row),
-        });
-        continue;
-      }
-
-      tiles.push({
-        _id: row._id,
-        boardId: row.boardId,
-        position: row.position,
-        kind: 'audio',
-        audioLabel: row.audioLabel,
-        audioStorageId: row.audioStorageId,
-        audioUrl: await ctx.storage.getUrl(row.audioStorageId),
-        audioMimeType: row.audioMimeType,
-        audioDurationMs: row.audioDurationMs,
-        audioByteSize: row.audioByteSize,
-        ...tileLayoutMetadata(row),
-      });
-      continue;
-    }
-
-    // kind === 'navigate'
-    if (!row.targetBoardId) {
-      // Defensive: shouldn't happen, but emit a broken-state tile if it does.
-      tiles.push({
-        _id: row._id,
-        boardId: row.boardId,
-        position: row.position,
-        kind: 'navigate',
-        targetBoardId: row.boardId,
-        targetBoardName: null,
-        ...tileLayoutMetadata(row),
-      });
-      continue;
-    }
-    const target = await getCachedBoard(row.targetBoardId);
-    // Only expose the target name when the viewer can actually read the
-    // target board. Otherwise fall back to the broken-state shape so we
-    // don't leak names of boards the viewer has no access to (e.g. a
-    // caregiver's private board referenced from a client-shared board).
-    const canRead = viewerCanReadBoard(target, viewerSubject);
-    tiles.push({
-      _id: row._id,
-      boardId: row.boardId,
-      position: row.position,
-      kind: 'navigate',
-      targetBoardId: row.targetBoardId,
-      targetBoardName: canRead ? (target?.name ?? null) : null,
-      ...tileLayoutMetadata(row),
-    });
-  }
-
-  return { tiles, phraseLinks };
-}
 
 // Query: Get all phrase boards for current user (owned + assigned to them)
 export const getPhraseBoards = query({
@@ -273,7 +71,10 @@ export const getPhraseBoards = query({
     const ownedBoardsWithInfo = await Promise.all(
       ownedBoards.map(async (board) => {
         const { tiles, phraseLinks } = await loadHydratedBoardTiles(
-          ctx, board._id, identity.subject, getCachedPhrase, getCachedBoard
+          ctx,
+          board._id,
+          identity.subject,
+          { getPhrase: getCachedPhrase, getBoard: getCachedBoard }
         );
 
         // Get client name if this board is for a client
@@ -300,7 +101,10 @@ export const getPhraseBoards = query({
     const assignedBoardsWithInfo = await Promise.all(
       assignedBoards.map(async (board) => {
         const { tiles, phraseLinks } = await loadHydratedBoardTiles(
-          ctx, board._id, identity.subject, getCachedPhrase, getCachedBoard
+          ctx,
+          board._id,
+          identity.subject,
+          { getPhrase: getCachedPhrase, getBoard: getCachedBoard }
         );
 
         // Get caregiver name
@@ -385,7 +189,10 @@ export const getPhraseBoard = query({
     }
 
     const { tiles, phraseLinks } = await loadHydratedBoardTiles(
-      ctx, args.id, identity.subject, getCachedPhrase, getCachedBoard
+      ctx,
+      args.id,
+      identity.subject,
+      { getPhrase: getCachedPhrase, getBoard: getCachedBoard }
     );
 
     // Get caregiver name for assigned clients
