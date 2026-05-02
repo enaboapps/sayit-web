@@ -9,6 +9,7 @@ import { use } from 'react';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import PageHeader from '@/app/components/ui/PageHeader';
+import ConfirmDialog from '@/app/components/ui/ConfirmDialog';
 import { useAuth } from '@/app/contexts/AuthContext';
 import type { Id } from '@/convex/_generated/dataModel';
 
@@ -18,6 +19,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
   const [hiddenFromPicker, setHiddenFromPicker] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -66,10 +68,6 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
   const handleDelete = async () => {
     if (!board) return;
 
-    if (!confirm('Are you sure you want to delete this board? All phrases in this board will be deleted.')) {
-      return;
-    }
-
     setDeleting(true);
     setError(null);
 
@@ -83,6 +81,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
       setError('Failed to delete board');
     } finally {
       setDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -146,7 +145,7 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
             <Button
               type="button"
               variant="ghost"
-              onClick={handleDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="text-red-600 hover:text-red-700"
               disabled={deleting}
             >
@@ -162,6 +161,15 @@ export default function EditBoardPage({ params }: { params: Promise<{ id: string
           </div>
         </form>
       </div>
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Board"
+        description={`Delete "${board.name}"? This removes the board and all phrases in it.`}
+        confirmLabel="Delete Board"
+        isBusy={deleting}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

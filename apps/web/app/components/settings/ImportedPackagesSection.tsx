@@ -6,6 +6,7 @@ import { TrashIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { Button } from '@/app/components/ui/Button';
+import ConfirmDialog from '@/app/components/ui/ConfirmDialog';
 
 type Variant = 'sheet' | 'desktop';
 
@@ -21,22 +22,26 @@ export default function ImportedPackagesSection({ variant }: { variant: Variant 
   const packages = useQuery(api.phraseBoards.listImportedPackages);
   const deletePackage = useMutation(api.openBoardImport.deleteImportedPackage);
   const [deletingId, setDeletingId] = useState<Id<'importedPackages'> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: Id<'importedPackages'>;
+    name: string;
+    boardCount: number;
+  } | null>(null);
 
-  const handleDelete = async (id: Id<'importedPackages'>, name: string, boardCount: number) => {
-    if (!confirm(
-      `Delete "${name}"? This removes all ${boardCount} board${boardCount === 1 ? '' : 's'} from this import. Phrases and symbols are removed in the background.`
-    )) {
-      return;
-    }
-    setDeletingId(id);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    setDeletingId(deleteTarget.id);
     try {
-      await deletePackage({ packageId: id });
+      await deletePackage({ packageId: deleteTarget.id });
+      setDeleteTarget(null);
     } catch (err) {
       // Re-throw to surface in the dev console; user-visible error UX would
       // require a toast system that isn't part of this section's scope.
       console.error('Failed to delete imported package:', err);
     } finally {
       setDeletingId(null);
+      setDeleteTarget(null);
     }
   };
 
@@ -92,7 +97,11 @@ export default function ImportedPackagesSection({ variant }: { variant: Variant 
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => handleDelete(pkg.id, pkg.name, pkg.boardCount)}
+                onClick={() => setDeleteTarget({
+                  id: pkg.id,
+                  name: pkg.name,
+                  boardCount: pkg.boardCount,
+                })}
                 disabled={isDeleting}
                 className="text-red-500 hover:text-red-600"
                 aria-label={`Delete ${pkg.name}`}
@@ -103,6 +112,17 @@ export default function ImportedPackagesSection({ variant }: { variant: Variant 
           );
         })}
       </ul>
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        title="Delete Imported Vocabulary"
+        description={deleteTarget
+          ? `Delete "${deleteTarget.name}"? This removes all ${deleteTarget.boardCount} board${deleteTarget.boardCount === 1 ? '' : 's'} from this import. Phrases and symbols are removed in the background.`
+          : ''}
+        confirmLabel="Delete Vocabulary"
+        isBusy={deletingId !== null}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
