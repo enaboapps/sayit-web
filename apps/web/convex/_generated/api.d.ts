@@ -12,6 +12,7 @@ import type * as aacLayout from "../aacLayout.js";
 import type * as audio from "../audio.js";
 import type * as audioLimits from "../audioLimits.js";
 import type * as boardAccess from "../boardAccess.js";
+import type * as boardTileHydration from "../boardTileHydration.js";
 import type * as boardTiles from "../boardTiles.js";
 import type * as caregiverClients from "../caregiverClients.js";
 import type * as connectionRequests from "../connectionRequests.js";
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   audio: typeof audio;
   audioLimits: typeof audioLimits;
   boardAccess: typeof boardAccess;
+  boardTileHydration: typeof boardTileHydration;
   boardTiles: typeof boardTiles;
   caregiverClients: typeof caregiverClients;
   connectionRequests: typeof connectionRequests;
