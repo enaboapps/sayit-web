@@ -1,3 +1,4 @@
+import { CloudTTSLifecycle } from './cloud-tts-lifecycle';
 import { TextToSpeech as WebSpeechTTS } from './tts';
 import { BaseTTSCallbacks } from './tts-types';
 
@@ -8,32 +9,20 @@ export interface Voice {
   languageCodes?: { bcp47: string; iso639_3: string; display: string }[];
 }
 
-
 /**
- * ElevenLabs Text-to-Speech Provider
+ * ElevenLabs Text-to-Speech Provider.
  *
  * Fetches audio from the server-side proxy route (/api/text-to-speech) and
- * plays it via HTMLAudioElement with Blob URLs. Uses session-based cancellation
- * to safely handle rapid speak/stop sequences.
+ * delegates browser audio/session handling to CloudTTSLifecycle.
  */
 export class ElevenLabsTTS {
   private static instance: ElevenLabsTTS;
   private voices: Voice[] = [];
-  private audio: HTMLAudioElement | null = null;
-  private isSpeaking = false;
   private isAvailableFlag = false;
   private voicesLoaded = false;
   private loadingVoices: Promise<void> | null = null;
-
-  /**
-   * Session ID for cancellation tracking.
-   * Incremented on each speak() or stop() call so stale async operations
-   * exit gracefully rather than triggering callbacks.
-   */
-  private currentSessionId = 0;
-
   private fallbackTTS: WebSpeechTTS;
-  private abortController: AbortController | null = null;
+  private lifecycle = new CloudTTSLifecycle();
   private lastRequestTime = 0;
 
   private callbacks: BaseTTSCallbacks & { onVoicesChanged?: (voices: Voice[]) => void } = {};
@@ -108,21 +97,14 @@ export class ElevenLabsTTS {
     streaming?: boolean;
     modelId?: string;
   }) {
-    this.stop();
-
-    this.currentSessionId++;
-    const sessionId = this.currentSessionId;
-    const isSessionActive = () => sessionId === this.currentSessionId;
-
+    const session = this.lifecycle.beginSession(this.callbacks);
     this.lastRequestTime = Date.now();
-    this.abortController = new AbortController();
 
-    // Load voices if needed
     if (!this.isAvailableFlag) {
       if (!this.voicesLoaded) {
         await this.loadVoices();
       }
-      if (!isSessionActive()) return;
+      if (!session.isActive()) return;
       if (!this.isAvailableFlag) {
         console.warn('ElevenLabs not available, falling back to browser TTS');
         this.fallbackTTS.speak(text);
@@ -130,18 +112,18 @@ export class ElevenLabsTTS {
       }
     }
 
-    // Resolve voice ID
     let voiceId = options?.voiceId;
     const voiceExists = voiceId && this.voices.some(v => v.voice_id === voiceId);
     if (!voiceExists) {
-      voiceId = this.voices[0]?.voice_id ?? '21m00Tcm4TlvDq8ikWAM'; // Rachel fallback
+      voiceId = this.voices[0]?.voice_id ?? '21m00Tcm4TlvDq8ikWAM';
     }
 
     try {
-      this.callbacks.onStart?.();
-      this.isSpeaking = true;
-
-      if (!isSessionActive()) { this.isSpeaking = false; return; }
+      this.lifecycle.markStarted(this.callbacks);
+      if (!session.isActive()) {
+        this.lifecycle.markInactive();
+        return;
+      }
 
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
@@ -154,47 +136,29 @@ export class ElevenLabsTTS {
           streaming: true,
           modelId: options?.modelId,
         }),
-        signal: this.abortController.signal,
+        signal: session.signal,
       });
 
-      if (!isSessionActive()) { this.isSpeaking = false; return; }
+      if (!session.isActive()) {
+        this.lifecycle.markInactive();
+        return;
+      }
       if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
 
-      // Accumulate streaming response into a blob before playing
       const blob = await response.blob();
-      if (!isSessionActive()) { this.isSpeaking = false; return; }
+      if (!session.isActive()) {
+        this.lifecycle.markInactive();
+        return;
+      }
 
-      const audioUrl = URL.createObjectURL(blob);
-      this.audio = new Audio(audioUrl);
-
-      // play() must be called synchronously after Audio() while still in the
-      // microtask chain of the user gesture — Chrome's autoplay policy will
-      // block it if we set up event handlers first and play() fires too late.
-      const playPromise = this.audio.play();
-
-      this.audio.onended = () => {
-        if (!isSessionActive()) return;
-        this.isSpeaking = false;
-        URL.revokeObjectURL(audioUrl);
-        this.callbacks.onEnd?.();
-      };
-
-      this.audio.onerror = () => {
-        if (!isSessionActive()) return;
-        this.isSpeaking = false;
-        const err = this.audio?.error;
-        URL.revokeObjectURL(audioUrl);
-        this.callbacks.onError?.(
-          new Error(err ? `Audio error (${err.code}): ${err.message}` : 'Audio playback error')
-        );
-      };
-
-      await playPromise;
+      await this.lifecycle.playBlob(blob, this.callbacks, session.isActive);
     } catch (error) {
-      this.isSpeaking = false;
-      if (!isSessionActive()) return;
+      this.lifecycle.markInactive();
+      if (!session.isActive()) return;
+
       const err = error as Error & { name?: string };
       if (err?.name === 'AbortError') return;
+
       const isRapid = Date.now() - this.lastRequestTime < 2000;
       console.error('ElevenLabs TTS error:', error);
       if (!isRapid) {
@@ -205,40 +169,15 @@ export class ElevenLabsTTS {
   }
 
   public stop() {
-    this.currentSessionId++;
-
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
-
-    if (this.audio) {
-      this.audio.onended = null;
-      this.audio.onerror = null;
-      this.audio.pause();
-      const src = this.audio.src;
-      const audioEl = this.audio;
-      setTimeout(() => {
-        audioEl.src = '';
-        if (src.startsWith('blob:')) URL.revokeObjectURL(src);
-      }, 100);
-      this.audio = null;
-    }
-
-    const wasSpeaking = this.isSpeaking;
-    this.isSpeaking = false;
-    if (wasSpeaking) this.callbacks.onEnd?.();
+    this.lifecycle.stop(this.callbacks);
   }
 
   public pause() {
-    this.audio?.pause();
+    this.lifecycle.pause();
   }
 
   public resume() {
-    this.audio?.play().catch(err => {
-      console.error('Error resuming audio:', err);
-      this.callbacks.onError?.(err instanceof Error ? err : new Error(String(err)));
-    });
+    this.lifecycle.resume(this.callbacks, 'Error resuming audio:');
   }
 
   public isAvailable(): boolean {

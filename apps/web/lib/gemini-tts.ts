@@ -1,5 +1,6 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
 import { BaseTTSCallbacks } from './tts-types';
+import { CloudTTSLifecycle } from './cloud-tts-lifecycle';
 
 export interface GeminiVoice {
   voice_id: string;
@@ -18,14 +19,11 @@ export interface GeminiVoice {
 export class GeminiTTS {
   private static instance: GeminiTTS;
   private voices: GeminiVoice[] = [];
-  private audio: HTMLAudioElement | null = null;
-  private isSpeaking: boolean = false;
   private isAvailableFlag: boolean = false;
   private voicesLoaded: boolean = false;
   private loadingVoices: Promise<void> | null = null;
-  private currentSessionId: number = 0;
-  private abortController: AbortController | null = null;
   private fallbackTTS: WebSpeechTTS;
+  private lifecycle = new CloudTTSLifecycle();
 
   private callbacks: BaseTTSCallbacks & { onVoicesChanged?: (voices: GeminiVoice[]) => void } = {};
 
@@ -97,20 +95,14 @@ export class GeminiTTS {
   public async speak(text: string, options?: {
     voiceId?: string;
   }) {
-    this.stop();
-
-    this.currentSessionId++;
-    const sessionId = this.currentSessionId;
-    const isSessionActive = () => sessionId === this.currentSessionId;
-
-    this.abortController = new AbortController();
+    const session = this.lifecycle.beginSession(this.callbacks);
 
     if (!this.isAvailableFlag) {
       if (!this.voicesLoaded) {
         await this.loadVoices();
       }
 
-      if (!isSessionActive()) return;
+      if (!session.isActive()) return;
 
       if (!this.isAvailableFlag) {
         console.warn('Gemini TTS is not available, falling back to browser TTS');
@@ -126,11 +118,10 @@ export class GeminiTTS {
     }
 
     try {
-      this.callbacks.onStart?.();
-      this.isSpeaking = true;
+      this.lifecycle.markStarted(this.callbacks);
 
-      if (!isSessionActive()) {
-        this.isSpeaking = false;
+      if (!session.isActive()) {
+        this.lifecycle.markInactive();
         return;
       }
 
@@ -138,11 +129,11 @@ export class GeminiTTS {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voiceId }),
-        signal: this.abortController.signal,
+        signal: session.signal,
       });
 
-      if (!isSessionActive()) {
-        this.isSpeaking = false;
+      if (!session.isActive()) {
+        this.lifecycle.markInactive();
         return;
       }
 
@@ -152,39 +143,16 @@ export class GeminiTTS {
 
       const blob = await response.blob();
 
-      if (!isSessionActive()) {
-        this.isSpeaking = false;
+      if (!session.isActive()) {
+        this.lifecycle.markInactive();
         return;
       }
 
-      const audioUrl = URL.createObjectURL(blob);
-      this.audio = new Audio(audioUrl);
-
-      const playPromise = this.audio.play();
-
-      this.audio.onended = () => {
-        if (!isSessionActive()) return;
-        this.isSpeaking = false;
-        this.callbacks.onEnd?.();
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      this.audio.onerror = () => {
-        if (!isSessionActive()) return;
-        this.isSpeaking = false;
-        const mediaError = this.audio?.error;
-        const message = mediaError
-          ? `Audio playback error (code ${mediaError.code}): ${mediaError.message}`
-          : 'Audio playback error';
-        this.callbacks.onError?.(new Error(message));
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      await playPromise;
+      await this.lifecycle.playBlob(blob, this.callbacks, session.isActive);
     } catch (error) {
-      this.isSpeaking = false;
+      this.lifecycle.markInactive();
 
-      if (!isSessionActive()) return;
+      if (!session.isActive()) return;
 
       const err = error as Error & { name?: string };
       if (err?.name === 'AbortError') return;
@@ -196,51 +164,15 @@ export class GeminiTTS {
   }
 
   public stop() {
-    this.currentSessionId++;
-
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
-
-    if (this.audio) {
-      this.audio.onended = null;
-      this.audio.onerror = null;
-      this.audio.pause();
-
-      const audioToClean = this.audio;
-      setTimeout(() => {
-        const audioSrc = audioToClean.src;
-        audioToClean.src = '';
-        if (audioSrc && audioSrc.startsWith('blob:')) {
-          URL.revokeObjectURL(audioSrc);
-        }
-      }, 100);
-
-      this.audio = null;
-    }
-
-    const wasSpeaking = this.isSpeaking;
-    this.isSpeaking = false;
-
-    if (wasSpeaking) {
-      this.callbacks.onEnd?.();
-    }
+    this.lifecycle.stop(this.callbacks);
   }
 
   public pause() {
-    if (this.audio) {
-      this.audio.pause();
-    }
+    this.lifecycle.pause();
   }
 
   public resume() {
-    if (this.audio) {
-      this.audio.play().catch(error => {
-        console.error('Error resuming Gemini audio:', error);
-        this.callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
-      });
-    }
+    this.lifecycle.resume(this.callbacks, 'Error resuming Gemini audio:');
   }
 
   public isAvailable(): boolean {
