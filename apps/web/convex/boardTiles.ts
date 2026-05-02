@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import type { Doc, Id } from './_generated/dataModel';
+import type { Doc } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { getUserIdentity } from './users';
 import { getBoardAccess } from './boardAccess';
@@ -16,6 +16,10 @@ import {
   normaliseFixedGridSpan,
   tileFixedGridRect,
 } from './aacLayout';
+import {
+  loadHydratedBoardTiles,
+  type HydratedBoardTile,
+} from './boardTileHydration';
 
 const tileRoleValidator = v.union(
   v.literal('core'),
@@ -88,57 +92,7 @@ async function assertFixedGridCellAvailable(
 // Query: list tiles on a board (polymorphic, hydrated)
 // ---------------------------------------------------------------------------
 
-type TileLayoutMetadata = {
-  cellRow?: number;
-  cellColumn?: number;
-  cellRowSpan?: number;
-  cellColumnSpan?: number;
-  tileRole?: Doc<'boardTiles'>['tileRole'];
-  wordClass?: Doc<'boardTiles'>['wordClass'];
-  isLocked?: boolean;
-};
-
-function tileLayoutMetadata(row: Doc<'boardTiles'>): TileLayoutMetadata {
-  return {
-    cellRow: row.cellRow,
-    cellColumn: row.cellColumn,
-    cellRowSpan: row.cellRowSpan,
-    cellColumnSpan: row.cellColumnSpan,
-    tileRole: row.tileRole,
-    wordClass: row.wordClass,
-    isLocked: row.isLocked,
-  };
-}
-
-export type ListedBoardTile =
-  | ({
-      _id: Id<'boardTiles'>;
-      boardId: Id<'phraseBoards'>;
-      position: number;
-      kind: 'phrase';
-      phrase: Doc<'phrases'> | null;
-    } & TileLayoutMetadata)
-  | ({
-      _id: Id<'boardTiles'>;
-      boardId: Id<'phraseBoards'>;
-      position: number;
-      kind: 'navigate';
-      targetBoardId: Id<'phraseBoards'>;
-      targetBoardName: string | null;
-    } & TileLayoutMetadata)
-  | ({
-      _id: Id<'boardTiles'>;
-      boardId: Id<'phraseBoards'>;
-      position: number;
-      kind: 'audio';
-      audioLabel: string;
-      /** null when the underlying storage object is missing/unrecoverable. */
-      audioStorageId: Id<'_storage'> | null;
-      audioUrl: string | null;
-      audioMimeType: string;
-      audioDurationMs: number;
-      audioByteSize: number;
-    } & TileLayoutMetadata);
+export type ListedBoardTile = HydratedBoardTile;
 
 export const listByBoard = query({
   args: { boardId: v.id('phraseBoards') },
@@ -149,103 +103,8 @@ export const listByBoard = query({
     const access = await getBoardAccess(ctx, args.boardId, identity.subject);
     if (!access || !access.canRead) return [];
 
-    const rows = await ctx.db
-      .query('boardTiles')
-      .withIndex('by_board', (q) => q.eq('boardId', args.boardId))
-      .collect();
-
-    const sorted = [...rows].sort((a, b) => a.position - b.position);
-
-    const hydrated: ListedBoardTile[] = await Promise.all(
-      sorted.map(async (row): Promise<ListedBoardTile> => {
-        if (row.kind === 'phrase') {
-          const phrase = row.phraseId ? await ctx.db.get(row.phraseId) : null;
-          return {
-            _id: row._id,
-            boardId: row.boardId,
-            position: row.position,
-            kind: 'phrase',
-            phrase: phrase ?? null,
-            ...tileLayoutMetadata(row),
-          };
-        }
-        if (row.kind === 'audio') {
-          // Defensive: a row could be missing one or more audio fields if it
-          // was written by an older client or partially hydrated. Surface a
-          // broken-state tile (audioUrl=null, audioStorageId=null) — the
-          // renderer keys on audioUrl===null and shows the disabled affordance.
-          if (
-            !row.audioLabel ||
-            !row.audioStorageId ||
-            !row.audioMimeType ||
-            typeof row.audioDurationMs !== 'number' ||
-            typeof row.audioByteSize !== 'number'
-          ) {
-            return {
-              _id: row._id,
-              boardId: row.boardId,
-              position: row.position,
-              kind: 'audio',
-              audioLabel: row.audioLabel ?? 'Audio tile',
-              audioStorageId: null,
-              audioUrl: null,
-              audioMimeType: row.audioMimeType ?? '',
-              audioDurationMs: row.audioDurationMs ?? 0,
-              audioByteSize: row.audioByteSize ?? 0,
-              ...tileLayoutMetadata(row),
-            };
-          }
-
-          const audioUrl = await ctx.storage.getUrl(row.audioStorageId);
-          return {
-            _id: row._id,
-            boardId: row.boardId,
-            position: row.position,
-            kind: 'audio',
-            audioLabel: row.audioLabel,
-            audioStorageId: row.audioStorageId,
-            audioUrl,
-            audioMimeType: row.audioMimeType,
-            audioDurationMs: row.audioDurationMs,
-            audioByteSize: row.audioByteSize,
-            ...tileLayoutMetadata(row),
-          };
-        }
-
-        // kind === 'navigate'
-        const targetBoardId = row.targetBoardId;
-        if (!targetBoardId) {
-          // Defensive: shouldn't happen given mutation guards, but treat as broken.
-          return {
-            _id: row._id,
-            boardId: row.boardId,
-            position: row.position,
-            kind: 'navigate',
-            targetBoardId: row.boardId, // self-ref to satisfy id type; renderer treats null name as broken
-            targetBoardName: null,
-            ...tileLayoutMetadata(row),
-          };
-        }
-        const target = await ctx.db.get(targetBoardId);
-        // Only expose the name when the viewer can actually read the target.
-        // Otherwise return null (renderer shows broken state) so we don't leak
-        // names of boards the viewer has no access to.
-        const canRead = target
-          ? target.userId === identity.subject || target.forClientId === identity.subject
-          : false;
-        return {
-          _id: row._id,
-          boardId: row.boardId,
-          position: row.position,
-          kind: 'navigate',
-          targetBoardId,
-          targetBoardName: canRead ? (target?.name ?? null) : null,
-          ...tileLayoutMetadata(row),
-        };
-      })
-    );
-
-    return hydrated;
+    const { tiles } = await loadHydratedBoardTiles(ctx, args.boardId, identity.subject);
+    return tiles;
   },
 });
 
