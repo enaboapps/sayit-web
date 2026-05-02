@@ -9,6 +9,7 @@ import { Id } from '@/convex/_generated/dataModel';
 import Input from '@/app/components/ui/Input';
 import { Button } from '@/app/components/ui/Button';
 import PageHeader from '@/app/components/ui/PageHeader';
+import ConfirmDialog from '@/app/components/ui/ConfirmDialog';
 import AudioRecorderControl, { RecordedAudio } from '@/app/components/phrases/tiles/AudioRecorderControl';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import { MAX_AUDIO_LABEL_LENGTH } from '@/lib/audio/constants';
@@ -27,6 +28,7 @@ function EditAudioTileForm() {
 
   const [label, setLabel] = useState('');
   const [replacementRecording, setReplacementRecording] = useState<RecordedAudio | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +113,6 @@ function EditAudioTileForm() {
 
   const handleDelete = async () => {
     if (!tileId) return;
-    if (!confirm('Delete this audio tile?')) return;
 
     setDeleting(true);
     setError(null);
@@ -123,6 +124,7 @@ function EditAudioTileForm() {
       setError(err instanceof Error ? err.message : 'Failed to delete audio tile.');
     } finally {
       setDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -187,7 +189,7 @@ function EditAudioTileForm() {
             <Button
               type="button"
               variant="ghost"
-              onClick={handleDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
               disabled={deleting || !isOnline || !existingTile}
             >
               {deleting ? 'Deleting...' : 'Delete'}
@@ -201,6 +203,15 @@ function EditAudioTileForm() {
           </div>
         </form>
       </div>
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Audio Tile"
+        description={`Delete "${existingTile?.audioLabel ?? 'this audio tile'}"? This removes the audio tile and its recording from this board.`}
+        confirmLabel="Delete Tile"
+        isBusy={deleting}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

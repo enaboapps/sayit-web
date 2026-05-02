@@ -8,6 +8,7 @@ import { Id } from '@/convex/_generated/dataModel';
 import { Button } from '@/app/components/ui/Button';
 import PageHeader from '@/app/components/ui/PageHeader';
 import BottomSheet from '@/app/components/ui/BottomSheet';
+import ConfirmDialog from '@/app/components/ui/ConfirmDialog';
 import { ChevronDownIcon, UserGroupIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 function EditNavigateTileForm() {
@@ -18,6 +19,7 @@ function EditNavigateTileForm() {
 
   const [targetBoardId, setTargetBoardId] = useState<string | null>(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +83,7 @@ function EditNavigateTileForm() {
 
   const handleDelete = async () => {
     if (!tileId) return;
-    if (!confirm('Delete this navigate tile?')) return;
+
     setDeleting(true);
     setError(null);
     try {
@@ -92,6 +94,7 @@ function EditNavigateTileForm() {
       setError(err instanceof Error ? err.message : 'Failed to delete tile');
     } finally {
       setDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -139,7 +142,7 @@ function EditNavigateTileForm() {
             <Button
               type="button"
               variant="ghost"
-              onClick={handleDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
               disabled={deleting || !existingTile}
             >
               {deleting ? 'Deleting...' : 'Delete'}
@@ -194,6 +197,15 @@ function EditNavigateTileForm() {
           })}
         </div>
       </BottomSheet>
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Navigate Tile"
+        description={`Delete "${existingTile?.label ?? 'this navigate tile'}"? This removes the navigation link from this board.`}
+        confirmLabel="Delete Tile"
+        isBusy={deleting}
+        onCancel={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
