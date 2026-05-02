@@ -43,7 +43,9 @@ function entrance(index: number) {
 
 function hover() {
   if (prefersReducedMotion()) return undefined;
-  return { y: -2 };
+  // Attach the hover-specific transition to the variant itself so it doesn't
+  // override the entrance transition's per-card delay / reduced-motion handling.
+  return { y: -2, transition: { duration: 0.2 } };
 }
 
 export default function ValueCallouts() {
@@ -57,7 +59,6 @@ export default function ValueCallouts() {
           key={callout.title}
           {...entrance(index)}
           whileHover={hover()}
-          transition={{ duration: 0.2 }}
           className="rounded-3xl border border-border bg-surface p-5 md:p-6 shadow-md hover:shadow-xl"
         >
           <h3 className="text-base md:text-lg font-semibold text-foreground mb-2">
