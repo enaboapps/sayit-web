@@ -85,6 +85,15 @@ export default defineSchema({
   })
     .index('by_user_id', ['userId']),
 
+  stagedSymbolUploads: defineTable({
+    userId: v.string(),
+    createdAt: v.number(),
+    storageId: v.optional(v.id('_storage')),
+  })
+    .index('by_user_id', ['userId'])
+    .index('by_storage', ['storageId'])
+    .index('by_created_at', ['createdAt']),
+
   phraseBoardPhrases: defineTable({
     phraseId: v.id('phrases'),
     boardId: v.id('phraseBoards'),

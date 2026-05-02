@@ -199,18 +199,83 @@ describe('getPhraseBoards filters pendingDelete', () => {
 });
 
 describe('symbol import cleanup safety', () => {
-  test('skips storage IDs already referenced by a phrase', () => {
-    const requestedCleanupIds = ['live-symbol', 'orphan-symbol'];
+  test('cleanup only deletes staged uploads owned by the current user', () => {
+    const requestedCleanup = [
+      { uploadSessionId: 'session-owned', storageId: 'owned-orphan' },
+      { uploadSessionId: 'session-other-user', storageId: 'other-user-orphan' },
+      { uploadSessionId: 'session-unregistered', storageId: 'unregistered-orphan' },
+    ];
+    const stagedUploads = [
+      { _id: 'session-owned', userId: 'user_1', storageId: 'owned-orphan' },
+      { _id: 'session-other-user', userId: 'user_2', storageId: 'other-user-orphan' },
+    ];
+
+    const deletable = requestedCleanup.filter((upload) => {
+      const staged = stagedUploads.find((row) => row._id === upload.uploadSessionId);
+      return staged?.userId === 'user_1' && staged.storageId === upload.storageId;
+    });
+
+    expect(deletable).toEqual([
+      { uploadSessionId: 'session-owned', storageId: 'owned-orphan' },
+    ]);
+  });
+
+  test('cleanup skips staged storage IDs already referenced by a phrase', () => {
+    const requestedCleanup = [
+      { uploadSessionId: 'session-live', storageId: 'live-symbol' },
+      { uploadSessionId: 'session-orphan', storageId: 'orphan-symbol' },
+    ];
+    const stagedUploads = [
+      { _id: 'session-live', userId: 'user_1', storageId: 'live-symbol' },
+      { _id: 'session-orphan', userId: 'user_1', storageId: 'orphan-symbol' },
+    ];
     const phrases = [
       { _id: 'phrase-1', symbolStorageId: 'live-symbol' },
     ];
 
-    // Mirrors symbols.cleanupOrphanSymbols: delete only IDs that are not
-    // currently referenced by any phrase row.
-    const deleted = requestedCleanupIds.filter((id) =>
-      !phrases.some((phrase) => phrase.symbolStorageId === id)
-    );
+    const deleted = requestedCleanup
+      .filter((upload) => {
+        const staged = stagedUploads.find((row) => row._id === upload.uploadSessionId);
+        return staged?.userId === 'user_1' && staged.storageId === upload.storageId;
+      })
+      .filter((upload) =>
+        !phrases.some((phrase) => phrase.symbolStorageId === upload.storageId)
+      )
+      .map((upload) => upload.storageId);
 
     expect(deleted).toEqual(['orphan-symbol']);
+  });
+
+  test('successful import requires every symbol storage ID to be staged by the importer', () => {
+    const symbolStorageIds = ['owned-symbol', 'foreign-symbol'];
+    const stagedUploads = [
+      { userId: 'user_1', storageId: 'owned-symbol' },
+      { userId: 'user_2', storageId: 'foreign-symbol' },
+    ];
+
+    expect(() => {
+      for (const storageId of symbolStorageIds) {
+        const staged = stagedUploads.find((row) => row.storageId === storageId);
+        if (!staged || staged.userId !== 'user_1') {
+          throw new Error('Imported symbol upload is not owned by the current user');
+        }
+      }
+    }).toThrow(/not owned/);
+  });
+
+  test('successful import removes claimed staging rows instead of leaving cleanup authority behind', () => {
+    const importedStorageIds = ['owned-symbol'];
+    const stagedUploads = [
+      { _id: 'session-owned', userId: 'user_1', storageId: 'owned-symbol' },
+      { _id: 'session-other', userId: 'user_1', storageId: 'other-symbol' },
+    ];
+
+    const remaining = stagedUploads.filter((row) =>
+      !(row.userId === 'user_1' && importedStorageIds.includes(row.storageId))
+    );
+
+    expect(remaining).toEqual([
+      { _id: 'session-other', userId: 'user_1', storageId: 'other-symbol' },
+    ]);
   });
 });

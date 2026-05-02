@@ -40,6 +40,11 @@ type ConvexImportBoard = {
   >;
 };
 
+type StagedSymbolUpload = {
+  uploadSessionId: Id<'stagedSymbolUploads'>;
+  storageId: Id<'_storage'>;
+};
+
 interface OpenBoardImportModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -86,9 +91,10 @@ export default function OpenBoardImportModal({
   // never leak storage objects when the import doesn't reach the final
   // `importBoards` mutation.
   const abortRef = useRef<AbortController | null>(null);
-  const uploadedRef = useRef<Id<'_storage'>[]>([]);
+  const uploadedRef = useRef<StagedSymbolUpload[]>([]);
 
-  const generateUploadUrl = useMutation(api.symbols.generateUploadUrl);
+  const startImportSymbolUpload = useMutation(api.symbols.startImportSymbolUpload);
+  const registerImportSymbolUpload = useMutation(api.symbols.registerImportSymbolUpload);
   const cleanupOrphanSymbols = useMutation(api.symbols.cleanupOrphanSymbols);
   const importBoards = useMutation(api.openBoardImport.importBoards);
 
@@ -116,7 +122,7 @@ export default function OpenBoardImportModal({
     uploadedRef.current = [];
     if (ids.length === 0) return;
     try {
-      await cleanupOrphanSymbols({ storageIds: ids });
+      await cleanupOrphanSymbols({ uploads: ids });
     } catch {
       // Swallow — if cleanup fails we don't have a sensible recovery path
       // and the user already has bigger fish to fry.
@@ -177,9 +183,9 @@ export default function OpenBoardImportModal({
 
   // Single symbol upload. Threads the AbortSignal so handleCancel can yank
   // every in-flight fetch when the user clicks Cancel.
-  const uploadSymbol = async (blob: Blob, signal: AbortSignal): Promise<Id<'_storage'>> => {
+  const uploadSymbol = async (blob: Blob, signal: AbortSignal): Promise<StagedSymbolUpload> => {
     if (signal.aborted) throw new ImportCancelledError();
-    const uploadUrl = await generateUploadUrl();
+    const { uploadUrl, uploadSessionId } = await startImportSymbolUpload();
     if (signal.aborted) throw new ImportCancelledError();
     const result = await fetch(uploadUrl, {
       method: 'POST',
@@ -191,7 +197,8 @@ export default function OpenBoardImportModal({
       throw new Error('Could not upload an imported symbol image.');
     }
     const payload = await result.json() as { storageId: Id<'_storage'> };
-    return payload.storageId;
+    await registerImportSymbolUpload({ uploadSessionId, storageId: payload.storageId });
+    return { uploadSessionId, storageId: payload.storageId };
   };
 
   // Pure shape transform — uploads happen in handleImport's parallel pass and
@@ -282,17 +289,17 @@ export default function OpenBoardImportModal({
     setImportStage({ kind: 'uploading', uploaded: 0, total: uploadJobs.length });
 
     try {
-      const symbolIds = uploadJobs.length === 0
+      const symbolUploads = uploadJobs.length === 0
         ? []
         : await runWithConcurrency(
           uploadJobs,
           SYMBOL_UPLOAD_CONCURRENCY,
           async (job) => {
-            const id = await uploadSymbol(job.blob, controller.signal);
+            const upload = await uploadSymbol(job.blob, controller.signal);
             // Track as we go (not after Promise.all settles) so a cancel
             // mid-batch still picks up the in-flight successes for cleanup.
-            uploadedRef.current.push(id);
-            return id;
+            uploadedRef.current.push(upload);
+            return upload;
           },
           (uploaded) => setImportStage({ kind: 'uploading', uploaded, total: uploadJobs.length }),
           controller.signal
@@ -301,7 +308,7 @@ export default function OpenBoardImportModal({
       // Stitch storageIds back onto the tile payloads.
       const symbolByKey = new Map<string, Id<'_storage'>>();
       uploadJobs.forEach((job, index) => {
-        symbolByKey.set(`${job.boardIndex}:${job.tileIndex}`, symbolIds[index]);
+        symbolByKey.set(`${job.boardIndex}:${job.tileIndex}`, symbolUploads[index].storageId);
       });
 
       setImportStage({ kind: 'saving' });
