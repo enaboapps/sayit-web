@@ -5,6 +5,10 @@ import type { Doc, Id } from './_generated/dataModel';
 import { getUserIdentity } from './users';
 import { FIXED_GRID_LAYOUT_VERSION } from './aacLayout';
 import { MAX_IMPORT_BOARDS, MAX_IMPORT_TILES } from './openBoardLimits';
+import {
+  assertStagedSymbolUploadsOwned,
+  removeClaimedSymbolUploads,
+} from './symbols';
 
 // How many boards we cascade-delete per scheduled tick. Convex mutations have
 // a soft transaction-size limit; chunking keeps each tick well below it
@@ -35,6 +39,20 @@ function validateGrid(rows: number, columns: number) {
   }
 }
 
+function importedSymbolStorageIds(
+  boards: Array<{ tiles: Array<{ kind: string; symbolStorageId?: Id<'_storage'> }> }>
+): Id<'_storage'>[] {
+  const ids: Id<'_storage'>[] = [];
+  for (const board of boards) {
+    for (const tile of board.tiles) {
+      if (tile.kind === 'phrase' && tile.symbolStorageId) {
+        ids.push(tile.symbolStorageId);
+      }
+    }
+  }
+  return ids;
+}
+
 export const importBoards = mutation({
   args: {
     packageName: v.string(),
@@ -63,6 +81,8 @@ export const importBoards = mutation({
     if (tileCount > MAX_IMPORT_TILES) {
       throw new Error(`Import package contains more than ${MAX_IMPORT_TILES} tiles`);
     }
+    const symbolStorageIds = importedSymbolStorageIds(args.boards);
+    await assertStagedSymbolUploadsOwned(ctx, identity.subject, symbolStorageIds);
 
     const seenSourceIds = new Set<string>();
     for (const board of args.boards) {
@@ -233,6 +253,8 @@ export const importBoards = mutation({
         });
       }));
     }));
+
+    await removeClaimedSymbolUploads(ctx, identity.subject, symbolStorageIds);
 
     return {
       importedBoardIds,
