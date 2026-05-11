@@ -12,14 +12,17 @@ export function useOfflineTTS() {
     if (!ttsRef.current) {
       ttsRef.current = TTSProvider.getInstance();
       ttsRef.current.setProvider('browser');
-      ttsRef.current.setCallbacks({
-        onStart: () => setIsSpeaking(true),
-        onEnd: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
-      });
     }
 
     setIsAvailable(ttsRef.current.getStatus().browserTTSAvailable);
+
+    const unsubscribe = ttsRef.current.addCallbacks({
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+
+    return unsubscribe;
   }, []);
 
   const speak = useCallback((text: string) => {

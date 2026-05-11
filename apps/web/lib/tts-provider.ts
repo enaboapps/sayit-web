@@ -5,6 +5,14 @@ import { TextToSpeech as WebSpeechTTS } from './tts';
 
 export type TTSProviderType = 'browser' | 'elevenlabs' | 'azure' | 'gemini';
 
+export interface TTSCallbacks {
+  onStart?: () => void;
+  onEnd?: () => void;
+  onError?: (error: Error) => void;
+  onVoicesChanged?: (voices: TTSVoice[]) => void;
+  onWordBoundary?: (word: string, charIndex: number) => void;
+}
+
 export interface TTSVoice {
   id: string;
   name: string;
@@ -34,13 +42,10 @@ export class TTSProvider {
   private webSpeechTTS: WebSpeechTTS;
   private activeProvider: TTSProviderType = 'browser';
   private isSpeaking: boolean = false;
-  private callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: TTSVoice[]) => void;
-    onWordBoundary?: (word: string, charIndex: number) => void;
-  } = {};
+  // Fan-out set so multiple `useTTS()` callers can each receive the same
+  // start/end events. A single-slot callbacks object would let whichever
+  // hook subscribed last silently shadow the others.
+  private callbackSubscribers = new Set<TTSCallbacks>();
 
   private constructor() {
     this.webSpeechTTS = WebSpeechTTS.getInstance();
@@ -62,40 +67,50 @@ export class TTSProvider {
     return TTSProvider.instance;
   }
 
+  private emit<K extends keyof TTSCallbacks>(
+    event: K,
+    ...args: Parameters<NonNullable<TTSCallbacks[K]>>
+  ) {
+    this.callbackSubscribers.forEach((subscriber) => {
+      const handler = subscriber[event] as ((...a: typeof args) => void) | undefined;
+      handler?.(...args);
+    });
+  }
+
   private makeProviderCallbacks(onVoicesChanged?: () => void) {
     return {
-      onStart: () => { this.isSpeaking = true; this.callbacks.onStart?.(); },
-      onEnd: () => { this.isSpeaking = false; this.callbacks.onEnd?.(); },
-      onError: (error: Error) => { this.isSpeaking = false; this.callbacks.onError?.(error); },
+      onStart: () => { this.isSpeaking = true; this.emit('onStart'); },
+      onEnd: () => { this.isSpeaking = false; this.emit('onEnd'); },
+      onError: (error: Error) => { this.isSpeaking = false; this.emit('onError', error); },
       ...(onVoicesChanged ? { onVoicesChanged } : {}),
     };
   }
 
   private setupCallbacks() {
-    const onVoicesChanged = () => this.callbacks.onVoicesChanged?.(this.getAllVoices());
+    const onVoicesChanged = () => this.emit('onVoicesChanged', this.getAllVoices());
 
     this.webSpeechTTS.setCallbacks({
       ...this.makeProviderCallbacks(onVoicesChanged),
-      onWordBoundary: (word, charIndex) => this.callbacks.onWordBoundary?.(word, charIndex),
+      onWordBoundary: (word, charIndex) => this.emit('onWordBoundary', word, charIndex),
     });
     this.elevenlabsTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
     this.azureTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
     this.geminiTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
   }
 
-  public setCallbacks(callbacks: {
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: (error: Error) => void;
-    onVoicesChanged?: (voices: TTSVoice[]) => void;
-    onWordBoundary?: (word: string, charIndex: number) => void;
-  }) {
-    this.callbacks = callbacks;
-    
-    // Immediately notify about available voices
+  public addCallbacks(callbacks: TTSCallbacks): () => void {
+    this.callbackSubscribers.add(callbacks);
+
+    // Match the old setCallbacks behavior of immediately notifying new
+    // subscribers about the current voice list so React state can hydrate
+    // without waiting for a real provider voiceschanged event.
     if (callbacks.onVoicesChanged) {
       callbacks.onVoicesChanged(this.getAllVoices());
     }
+
+    return () => {
+      this.callbackSubscribers.delete(callbacks);
+    };
   }
 
   public setProvider(provider: TTSProviderType) {
@@ -182,22 +197,22 @@ export class TTSProvider {
 
   public refreshVoices() {
     this.webSpeechTTS.refreshVoices();
-    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+    this.emit('onVoicesChanged', this.getAllVoices());
   }
 
   public async loadElevenLabsVoices() {
     await this.elevenlabsTTS.loadVoices();
-    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+    this.emit('onVoicesChanged', this.getAllVoices());
   }
 
   public async loadAzureVoices() {
     await this.azureTTS.loadVoices();
-    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+    this.emit('onVoicesChanged', this.getAllVoices());
   }
 
   public async loadGeminiVoices() {
     await this.geminiTTS.loadVoices();
-    this.callbacks.onVoicesChanged?.(this.getAllVoices());
+    this.emit('onVoicesChanged', this.getAllVoices());
   }
 
   public speak(text: string, options?: {

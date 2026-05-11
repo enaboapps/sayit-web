@@ -49,37 +49,36 @@ export function useTTS() {
   }, [settings.ttsProvider]);
 
   useEffect(() => {
-    // Initialize only once
     if (!ttsRef.current) {
       ttsRef.current = TTSProvider.getInstance();
-      
-      const tts = ttsRef.current;
 
+      const tts = ttsRef.current;
       tts.setProvider(settingsRef.current.ttsProvider);
-      
-      // Set initial state
+
       setIsAvailable(tts.isAvailable());
       setProvider(tts.getCurrentProvider());
       setStatus(tts.getStatus());
       setVoices(tts.getAllVoices());
-  
-      // Set callbacks for updates
-      tts.setCallbacks({
-        onStart: () => setIsSpeaking(true),
-        onEnd: () => setIsSpeaking(false),
-        onError: (error) => {
-          console.error('TTS Error:', error);
-          setIsSpeaking(false);
-        },
-        onVoicesChanged: (newVoices) => {
-          setVoices(newVoices);
-          setStatus(tts.getStatus());
-        },
-        onWordBoundary: (word, charIndex) => {
-          setWordBoundary({ word, charIndex });
-        },
-      });
     }
+
+    const tts = ttsRef.current;
+    const unsubscribe = tts.addCallbacks({
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: (error) => {
+        console.error('TTS Error:', error);
+        setIsSpeaking(false);
+      },
+      onVoicesChanged: (newVoices) => {
+        setVoices(newVoices);
+        setStatus(tts.getStatus());
+      },
+      onWordBoundary: (word, charIndex) => {
+        setWordBoundary({ word, charIndex });
+      },
+    });
+
+    return unsubscribe;
   }, []);
 
   const speak = useCallback((text: string, customOptions?: {
