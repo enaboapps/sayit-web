@@ -30,7 +30,7 @@ const mockTTSProvider = {
     geminiVoicesLoaded: true,
   })),
   getAllVoices: jest.fn(() => []),
-  setCallbacks: jest.fn(),
+  addCallbacks: jest.fn(() => () => {}),
   setProvider: jest.fn((provider: MockProvider) => {
     mockCurrentProvider = provider;
   }),

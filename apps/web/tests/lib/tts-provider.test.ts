@@ -122,3 +122,56 @@ describe('TTSProvider status', () => {
     }));
   });
 });
+
+describe('TTSProvider subscribers', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (TTSProvider as unknown as { instance?: TTSProvider }).instance = undefined;
+    mockElevenLabsAvailable = false;
+    mockAzureAvailable = false;
+    mockGeminiAvailable = false;
+    mockElevenLabsLoaded = false;
+    mockAzureLoaded = false;
+    mockGeminiLoaded = false;
+  });
+
+  it('fans onStart/onEnd out to every subscriber', () => {
+    const provider = TTSProvider.getInstance();
+    const onStartA = jest.fn();
+    const onEndA = jest.fn();
+    const onStartB = jest.fn();
+    const onEndB = jest.fn();
+
+    provider.addCallbacks({ onStart: onStartA, onEnd: onEndA });
+    provider.addCallbacks({ onStart: onStartB, onEnd: onEndB });
+
+    // TTSProvider's constructor wires browserTTS.setCallbacks during setupCallbacks.
+    // Grab the wrapped onStart/onEnd it registered and invoke them as the browser
+    // TTS would when a real utterance fires.
+    const wrapped = mockBrowserTTS.setCallbacks.mock.calls[0][0];
+    wrapped.onStart();
+    wrapped.onEnd();
+
+    expect(onStartA).toHaveBeenCalledTimes(1);
+    expect(onStartB).toHaveBeenCalledTimes(1);
+    expect(onEndA).toHaveBeenCalledTimes(1);
+    expect(onEndB).toHaveBeenCalledTimes(1);
+  });
+
+  it('addCallbacks returns an unsubscribe that detaches that subscriber only', () => {
+    const provider = TTSProvider.getInstance();
+    const onStartA = jest.fn();
+    const onStartB = jest.fn();
+
+    const unsubscribeA = provider.addCallbacks({ onStart: onStartA });
+    provider.addCallbacks({ onStart: onStartB });
+
+    unsubscribeA();
+
+    const wrapped = mockBrowserTTS.setCallbacks.mock.calls[0][0];
+    wrapped.onStart();
+
+    expect(onStartA).not.toHaveBeenCalled();
+    expect(onStartB).toHaveBeenCalledTimes(1);
+  });
+});
