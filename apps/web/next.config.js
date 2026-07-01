@@ -22,23 +22,24 @@ const nextConfig = {
   outputFileTracingRoot: workspaceRoot,
   turbopack: {
     root: workspaceRoot,
-    // @willwade/aac-processors references `adm-zip` from three places in the
+    // @willwade/aac-processors 0.2.20 references Node-only modules from the
     // browser bundle:
     //   - dist/browser/utils/zip.js: dynamic import inside `getZipAdapter`,
-    //     guarded by `isNodeRuntime()` — never runs in the browser.
-    //   - dist/browser/processors/obfProcessor.js (saveModifiedTree): dynamic
-    //     import on the export path — only reachable for OBF export, which
-    //     we don't use through this library.
+    //     guarded by `isNodeRuntime()` and never runs in the browser.
     //   - dist/browser/utilities/analytics/morphology/grid3VerbsParser.js:
-    //     a TOP-LEVEL static `import AdmZip from 'adm-zip'`. Currently dead
-    //     code (not re-exported through index.browser.js), but tree-shaking
-    //     can't drop it after Turbopack has already requested module
-    //     resolution.
-    // Aliasing `adm-zip` to a no-op stub keeps client bundles free of
-    // node:fs/node:path. Re-verify this list after each willwade upgrade —
-    // a new transitive `adm-zip` reference would silently throw at runtime.
+    //     top-level and method-local imports of adm-zip, fs, and path.
+    //   - dist/browser/utilities/analytics/morphology/tdsnapLexiconParser.js:
+    //     reaches better-sqlite3 via Snap metrics exports.
+    // These paths are not used by SayIt's Dot/OPML/OBF importer, but
+    // Turbopack resolves them before tree-shaking can remove them.
+    // Re-verify this list after each willwade upgrade: a newly reachable
+    // aliased module would throw at runtime.
     resolveAlias: {
       'adm-zip': { browser: './lib/stubs/empty-module.js' },
+      'better-sqlite3': { browser: './lib/stubs/empty-module.js' },
+      'bindings': { browser: './lib/stubs/empty-module.js' },
+      'fs': { browser: './lib/stubs/empty-module.js' },
+      'path': { browser: './lib/stubs/path-module.js' },
     },
   },
 };
