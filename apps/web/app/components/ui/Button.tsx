@@ -61,6 +61,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const prefersReducedMotion = typeof window !== 'undefined'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    const motionProps = props as Omit<ButtonAsMotionProps, 'key'>;
+
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
@@ -68,7 +70,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
         transition={{ duration: 0.2 }}
         ref={ref}
-        {...(props as ButtonAsMotionProps)}
+        {...motionProps}
       />
     );
   },
