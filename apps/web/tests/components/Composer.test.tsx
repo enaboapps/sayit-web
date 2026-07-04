@@ -425,6 +425,74 @@ describe('Composer', () => {
     expect(screen.queryByRole('button', { name: 'Live Typing' })).not.toBeInTheDocument();
   });
 
+  it('shows the live typing banner while sharing and ends the session from it', async () => {
+    const user = userEvent.setup();
+    const endSession = jest.fn();
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'user@example.com',
+      },
+      loading: false,
+    });
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: true,
+      isCreating: false,
+      error: null,
+      createSession: jest.fn(),
+      endSession,
+      updateContent: jest.fn(),
+      getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
+    });
+
+    render(
+      <Composer
+        text="Sharing now"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+
+    expect(screen.getByText('Live Typing active')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'End live typing' }));
+
+    expect(endSession).toHaveBeenCalled();
+  });
+
+  it('does not show the live typing banner when not sharing', () => {
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'user@example.com',
+      },
+      loading: false,
+    });
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: false,
+      isCreating: false,
+      error: null,
+      createSession: jest.fn(),
+      endSession: jest.fn(),
+      updateContent: jest.fn(),
+      getShareableLink: jest.fn(() => null),
+    });
+
+    render(
+      <Composer
+        text="Hello"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+
+    expect(screen.queryByText('Live Typing active')).not.toBeInTheDocument();
+  });
+
   it('shows undo banner in dock portal on mobile and suppresses it inline', () => {
     mockUseIsMobile.mockReturnValue(true);
     mockUseOptionalMobileBottom.mockReturnValue({ dockContainer: document.createElement('div') } as never);
