@@ -206,25 +206,6 @@ export default function ComposerSidebar({
     ),
   });
 
-  // Choose Tone — primary tile
-  if (enableToneControl) {
-    wheelItems.push({
-      key: 'tone',
-      label: 'Choose Tone',
-      content: (
-        <button
-          type="button"
-          onClick={runAndClose(() => setShowToneSheet(true))}
-          disabled={speakDisabled}
-          className={`${WHEEL_TILE} bg-primary-400 hover:bg-primary-500 text-white`}
-          aria-label="Choose tone"
-        >
-          <AudioWaveform className="w-5 h-5" />
-        </button>
-      ),
-    });
-  }
-
   return (
     <>
       {/* Top-right trigger + quarter-circle action wheel */}
@@ -258,15 +239,39 @@ export default function ComposerSidebar({
             >
               <XMarkIcon className="w-6 h-6" />
             </button>
-            <button
-              type="button"
-              onClick={onSpeak}
-              disabled={speakDisabled}
-              className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Speak"
-            >
-              <SpeakerWaveIcon className="w-8 h-8" />
-            </button>
+            {enableToneControl ? (
+              // Split pill: small tone segment attached to a dominant Speak segment.
+              <div className="flex rounded-full overflow-hidden shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => setShowToneSheet(true)}
+                  disabled={speakDisabled}
+                  className="w-12 h-16 flex items-center justify-center bg-primary-700 hover:bg-primary-600 text-white border-r border-primary-900/40 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Choose tone"
+                >
+                  <AudioWaveform className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onSpeak}
+                  disabled={speakDisabled}
+                  className="w-16 h-16 flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Speak"
+                >
+                  <SpeakerWaveIcon className="w-8 h-8" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onSpeak}
+                disabled={speakDisabled}
+                className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                aria-label="Speak"
+              >
+                <SpeakerWaveIcon className="w-8 h-8" />
+              </button>
+            )}
           </>
         )}
       </div>
