@@ -16,6 +16,7 @@ import ActionPromptBanner from '../typing/ActionPromptBanner';
 import TabBar from '../typing-tabs/TabBar';
 import TabManagementSheet from '../typing-tabs/TabManagementSheet';
 import LiveTypingBottomSheet from '../live-typing/LiveTypingBottomSheet';
+import LiveTypingBanner from '../live-typing/LiveTypingBanner';
 import CopyPasteBottomSheet from './CopyPasteBottomSheet';
 import type { ComposerProps } from './types';
 
@@ -163,6 +164,14 @@ export default function Composer({
               onManage={() => setShowTabList(true)}
             />
           </div>
+        )}
+
+        {/* Live typing status — always visible while a session is being shared */}
+        {enableLiveTyping && actions.user && actions.isLiveTypingSharing && (
+          <LiveTypingBanner
+            onEnd={() => void actions.endLiveTypingSession()}
+            onOpenDetails={() => setShowLiveTypingSheet(true)}
+          />
         )}
 
         {/* Main body: full-width textarea with floating action overlays.
