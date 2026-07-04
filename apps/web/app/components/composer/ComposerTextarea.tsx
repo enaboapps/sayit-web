@@ -35,7 +35,7 @@ export default function ComposerTextarea({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         placeholder="What do you want to say?"
-        className="absolute inset-0 overflow-y-auto bg-transparent text-foreground placeholder:text-text-tertiary px-6 py-5 resize-none focus:outline-none"
+        className="absolute inset-0 overflow-y-auto bg-transparent text-foreground placeholder:text-text-tertiary pl-6 pr-20 py-5 resize-none focus:outline-none"
         style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
       />
     </div>

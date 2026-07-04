@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import {
   SparklesIcon,
   XMarkIcon,
@@ -15,6 +15,7 @@ import {
 import { AudioWaveform } from 'lucide-react';
 import SubscriptionWrapper from '../SubscriptionWrapper';
 import ToneSheet, { type TonePreset } from '../typing/ToneSheet';
+import RadialFlyout, { type RadialFlyoutItem } from './RadialFlyout';
 
 interface ComposerSidebarProps {
   currentText: string;
@@ -42,9 +43,9 @@ interface ComposerSidebarProps {
   onCopyPasteOpen: () => void;
 }
 
-// Shared base classes — every icon tile fills its grid cell as a square.
-const TILE_BASE =
-  'w-full aspect-square flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed';
+// Shared base classes — round floating tiles used inside the radial wheel.
+const WHEEL_TILE =
+  'w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed';
 
 export default function ComposerSidebar({
   currentText,
@@ -70,32 +71,39 @@ export default function ComposerSidebar({
   onCopyPasteOpen,
 }: ComposerSidebarProps) {
   const [showToneSheet, setShowToneSheet] = useState(false);
+  const [isWheelOpen, setWheelOpen] = useState(false);
   const speakDisabled = !isAvailable || !currentText.trim();
   const clearDisabled = !currentText.trim();
-  const iconButtons: ReactNode[] = [];
+
+  // Close the wheel before firing an action so overlays (bottom sheets etc.)
+  // open on top of a settled composer.
+  const runAndClose = (action: () => void) => () => {
+    setWheelOpen(false);
+    action();
+  };
+
+  const wheelItems: RadialFlyoutItem[] = [];
 
   // Fix Text — purple tile (offline stub or subscription fallback variants)
   if (enableFixText) {
-    if (!isOnline) {
-      iconButtons.push(
+    wheelItems.push({
+      key: 'fix',
+      label: 'Fix Text',
+      content: !isOnline ? (
         <button
-          key="fix"
           type="button"
           disabled
-          className={`${TILE_BASE} bg-surface-hover text-text-tertiary opacity-40 cursor-not-allowed`}
+          className={`${WHEEL_TILE} bg-surface-hover text-text-tertiary opacity-40 cursor-not-allowed`}
           aria-label="Fix Text (offline)"
         >
           <SparklesIcon className="w-5 h-5" />
         </button>
-      );
-    } else {
-      iconButtons.push(
+      ) : (
         <SubscriptionWrapper
-          key="fix"
           fallback={
             <button
-              onClick={() => (window.location.href = '/pricing')}
-              className={`${TILE_BASE} bg-status-warning text-amber-400 hover:bg-warning hover:text-white`}
+              onClick={runAndClose(() => (window.location.href = '/pricing'))}
+              className={`${WHEEL_TILE} bg-status-warning text-amber-400 hover:bg-warning hover:text-white`}
               aria-label="Fix Text (upgrade)"
             >
               <SparklesIcon className="w-5 h-5" />
@@ -103,9 +111,9 @@ export default function ComposerSidebar({
           }
         >
           <button
-            onClick={onFixText}
+            onClick={runAndClose(onFixText)}
             disabled={!currentText.trim() || isFixingText}
-            className={`${TILE_BASE} ${
+            className={`${WHEEL_TILE} ${
               isFixingText
                 ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white'
                 : 'bg-status-purple text-purple-400 hover:bg-purple-600 hover:text-white'
@@ -115,97 +123,126 @@ export default function ComposerSidebar({
             {isFixingText ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
           </button>
         </SubscriptionWrapper>
-      );
-    }
+      ),
+    });
   }
 
   // Live Typing — green tile (with active gradient and offline disabled states)
   if (enableLiveTyping && hasUser) {
-    iconButtons.push(
-      <button
-        key="live"
-        onClick={onShare}
-        disabled={!isOnline}
-        className={`${TILE_BASE} ${
-          !isOnline
-            ? 'bg-surface-hover text-text-tertiary opacity-40'
-            : isLiveTypingButtonActive
-              ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-              : 'bg-status-success text-green-400 hover:bg-success hover:text-white'
-        }`}
-        aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
-      >
-        <ShareIcon className="w-5 h-5" />
-      </button>
-    );
+    wheelItems.push({
+      key: 'live',
+      label: 'Live Typing',
+      content: (
+        <button
+          onClick={runAndClose(onShare)}
+          disabled={!isOnline}
+          className={`${WHEEL_TILE} ${
+            !isOnline
+              ? 'bg-surface-hover text-text-tertiary opacity-40'
+              : isLiveTypingButtonActive
+                ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
+                : 'bg-status-success text-green-400 hover:bg-success hover:text-white'
+          }`}
+          aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
+        >
+          <ShareIcon className="w-5 h-5" />
+        </button>
+      ),
+    });
   }
 
   // Save as Phrase — blue tile
   if (onAddAsPhrase) {
-    iconButtons.push(
-      <button
-        key="save"
-        onClick={() => onAddAsPhrase(currentText)}
-        disabled={!currentText.trim()}
-        className={`${TILE_BASE} bg-status-info text-blue-400 hover:bg-blue-600 hover:text-white`}
-        aria-label="Save as phrase"
-      >
-        <BookmarkIcon className="w-5 h-5" />
-      </button>
-    );
+    wheelItems.push({
+      key: 'save',
+      label: 'Save as Phrase',
+      content: (
+        <button
+          onClick={runAndClose(() => onAddAsPhrase(currentText))}
+          disabled={!currentText.trim()}
+          className={`${WHEEL_TILE} bg-status-info text-blue-400 hover:bg-blue-600 hover:text-white`}
+          aria-label="Save as phrase"
+        >
+          <BookmarkIcon className="w-5 h-5" />
+        </button>
+      ),
+    });
   }
 
   // Suggestions — amber tile (with count badge)
   if (suggestionsEnabled) {
-    iconButtons.push(
-      <button
-        key="suggestions"
-        onClick={onSuggestionsOpen}
-        className={`${TILE_BASE} relative bg-status-warning text-amber-400 hover:bg-warning hover:text-white`}
-        aria-label="Suggestions"
-      >
-        <LightBulbIcon className="w-5 h-5" />
-        {suggestionsCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary-500 text-white text-[10px] font-bold px-1">
-            {suggestionsCount}
-          </span>
-        )}
-      </button>
-    );
+    wheelItems.push({
+      key: 'suggestions',
+      label: 'Suggestions',
+      content: (
+        <button
+          onClick={runAndClose(onSuggestionsOpen)}
+          className={`${WHEEL_TILE} relative bg-status-warning text-amber-400 hover:bg-warning hover:text-white`}
+          aria-label="Suggestions"
+        >
+          <LightBulbIcon className="w-5 h-5" />
+          {suggestionsCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary-500 text-white text-[10px] font-bold px-1">
+              {suggestionsCount}
+            </span>
+          )}
+        </button>
+      ),
+    });
   }
 
   // Copy / Paste — pink tile (a fifth accent so it's distinct from the others)
-  iconButtons.push(
-    <button
-      key="copy-paste"
-      onClick={onCopyPasteOpen}
-      className={`${TILE_BASE} bg-pink-950/40 text-pink-400 hover:bg-pink-600 hover:text-white`}
-      aria-label="Copy and paste"
-    >
-      <ClipboardIcon className="w-5 h-5" />
-    </button>
-  );
+  wheelItems.push({
+    key: 'copy-paste',
+    label: 'Copy & Paste',
+    content: (
+      <button
+        onClick={runAndClose(onCopyPasteOpen)}
+        className={`${WHEEL_TILE} bg-pink-950/40 text-pink-400 hover:bg-pink-600 hover:text-white`}
+        aria-label="Copy and paste"
+      >
+        <ClipboardIcon className="w-5 h-5" />
+      </button>
+    ),
+  });
 
-  // Balance the 2-column grid when an odd number of buttons rendered.
-  if (iconButtons.length % 2 === 1) {
-    iconButtons.push(<div key="placeholder" aria-hidden className="w-full aspect-square" />);
+  // Choose Tone — primary tile
+  if (enableToneControl) {
+    wheelItems.push({
+      key: 'tone',
+      label: 'Choose Tone',
+      content: (
+        <button
+          type="button"
+          onClick={runAndClose(() => setShowToneSheet(true))}
+          disabled={speakDisabled}
+          className={`${WHEEL_TILE} bg-primary-400 hover:bg-primary-500 text-white`}
+          aria-label="Choose tone"
+        >
+          <AudioWaveform className="w-5 h-5" />
+        </button>
+      ),
+    });
   }
 
   return (
-    <div className="flex flex-col border-l border-border shrink-0 h-full w-24">
-      {/* Icon tile grid */}
-      <div className="grid grid-cols-2 auto-rows-min">{iconButtons}</div>
+    <>
+      {/* Top-right trigger + quarter-circle action wheel */}
+      <RadialFlyout
+        items={wheelItems}
+        isOpen={isWheelOpen}
+        onOpen={() => setWheelOpen(true)}
+        onClose={() => setWheelOpen(false)}
+        triggerBadge={suggestionsEnabled ? suggestionsCount : 0}
+      />
 
-      {/* Spacer — pushes Speak to the bottom */}
-      <div className="flex-1" />
-
-      {/* Bottom stack — Clear on top, then Tone + Speak (or just Speak). Stop replaces all while speaking. */}
-      <div className="flex flex-col shrink-0">
+      {/* Bottom-right pinned stack — Clear above Speak. Stop replaces both while speaking. */}
+      <div className="absolute bottom-4 right-3 z-20 flex flex-col items-end gap-3">
         {isSpeaking ? (
           <button
             type="button"
             onClick={onStop}
-            className="w-full aspect-square flex items-center justify-center bg-error hover:bg-error-hover text-white transition-colors"
+            className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center bg-error hover:bg-error-hover text-white transition-colors"
             aria-label="Stop"
           >
             <StopIcon className="w-8 h-8" />
@@ -216,43 +253,20 @@ export default function ComposerSidebar({
               type="button"
               onClick={onClear}
               disabled={clearDisabled}
-              className="w-full aspect-square flex items-center justify-center bg-status-error text-red-400 hover:bg-error hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-status-error text-red-400 border border-border hover:bg-error hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Clear"
             >
-              <XMarkIcon className="w-8 h-8" />
+              <XMarkIcon className="w-6 h-6" />
             </button>
-            {enableToneControl ? (
-              <div className="grid grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setShowToneSheet(true)}
-                  disabled={speakDisabled}
-                  className="w-full aspect-square flex items-center justify-center bg-primary-400 hover:bg-primary-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Choose tone"
-                >
-                  <AudioWaveform className="w-6 h-6" />
-                </button>
-                <button
-                  type="button"
-                  onClick={onSpeak}
-                  disabled={speakDisabled}
-                  className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Speak"
-                >
-                  <SpeakerWaveIcon className="w-6 h-6" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={onSpeak}
-                disabled={speakDisabled}
-                className="w-full aspect-square flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Speak"
-              >
-                <SpeakerWaveIcon className="w-8 h-8" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={onSpeak}
+              disabled={speakDisabled}
+              className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Speak"
+            >
+              <SpeakerWaveIcon className="w-8 h-8" />
+            </button>
           </>
         )}
       </div>
@@ -266,6 +280,6 @@ export default function ComposerSidebar({
           setShowToneSheet(false);
         }}
       />
-    </div>
+    </>
   );
 }

@@ -385,6 +385,9 @@ describe('Composer', () => {
       />
     );
 
+    // Live typing lives inside the radial action wheel — open it first.
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+
     expect(screen.getByRole('button', { name: 'Live Typing Active' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Live Typing' })).not.toBeInTheDocument();
   });
@@ -424,6 +427,8 @@ describe('Composer', () => {
 
     expect(screen.queryByTestId('copy-paste-sheet')).not.toBeInTheDocument();
 
+    // Copy/paste lives inside the radial action wheel — open it first.
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     await user.click(screen.getByRole('button', { name: 'Copy and paste' }));
 
     expect(screen.getByTestId('copy-paste-sheet')).toBeInTheDocument();
@@ -440,6 +445,7 @@ describe('Composer', () => {
     textarea.setSelectionRange(5, 5);
     fireEvent.select(textarea);
 
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     await user.click(screen.getByRole('button', { name: 'Copy and paste' }));
     await user.click(screen.getByRole('button', { name: 'Trigger Paste' }));
 
