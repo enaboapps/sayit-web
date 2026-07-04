@@ -241,6 +241,39 @@ describe('Composer', () => {
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
   });
 
+  it('shows the tone segment attached to Speak when tone control is enabled', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableToneControl={true}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Choose tone' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
+
+    // Tone no longer lives inside the radial wheel — opening it must not add
+    // a second tone button.
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
+    expect(screen.getAllByRole('button', { name: 'Choose tone' })).toHaveLength(1);
+  });
+
+  it('does not render a tone segment when tone control is disabled', () => {
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Choose tone' })).not.toBeInTheDocument();
+  });
+
   it('lets the textarea shrink first while keeping composer controls rendered', () => {
     render(
       <Composer
