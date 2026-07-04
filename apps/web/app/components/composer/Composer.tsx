@@ -165,8 +165,11 @@ export default function Composer({
           </div>
         )}
 
-        {/* Main body: textarea + sidebar */}
-        <div className="flex flex-1 min-h-0">
+        {/* Main body: full-width textarea with floating action overlays.
+            The min height guarantees room for the top-right trigger plus the
+            bottom-right Clear/Speak stack even when the parent gives the
+            composer no height of its own (e.g. /try). */}
+        <div className="relative flex flex-1 min-h-[220px]">
           <ComposerTextarea
             currentText={currentText}
             onTextChange={handleTextChange}
@@ -179,42 +182,39 @@ export default function Composer({
             onBlur={() => captureSnapshot()}
           />
 
-          {/* Sidebar with suggestions popover anchor */}
-          <div className="relative shrink-0">
-            <ComposerSidebar
-              currentText={currentText}
-              onClear={actions.handleClear}
-              onSpeak={() => onSpeak('speak')}
-              onStop={onStop}
-              onToneSelected={actions.handleToneSelected}
-              isSpeaking={isSpeaking}
-              isAvailable={isAvailable}
-              enableFixText={enableFixText}
-              isOnline={actions.isOnline}
-              isFixingText={actions.isFixingText}
-              onFixText={actions.handleFixText}
-              enableLiveTyping={enableLiveTyping}
-              isLiveTypingButtonActive={isLiveTypingButtonActive}
-              onShare={handleShare}
-              hasUser={!!actions.user}
-              onAddAsPhrase={onAddAsPhrase}
-              enableToneControl={enableToneControl}
-              suggestionsCount={suggestionsCount}
-              onSuggestionsOpen={() => setShowSuggestions(true)}
-              suggestionsEnabled={!!replySuggestions && !!actions.user && actions.isOnline}
-              onCopyPasteOpen={() => setCopyPasteOpen(true)}
+          <ComposerSidebar
+            currentText={currentText}
+            onClear={actions.handleClear}
+            onSpeak={() => onSpeak('speak')}
+            onStop={onStop}
+            onToneSelected={actions.handleToneSelected}
+            isSpeaking={isSpeaking}
+            isAvailable={isAvailable}
+            enableFixText={enableFixText}
+            isOnline={actions.isOnline}
+            isFixingText={actions.isFixingText}
+            onFixText={actions.handleFixText}
+            enableLiveTyping={enableLiveTyping}
+            isLiveTypingButtonActive={isLiveTypingButtonActive}
+            onShare={handleShare}
+            hasUser={!!actions.user}
+            onAddAsPhrase={onAddAsPhrase}
+            enableToneControl={enableToneControl}
+            suggestionsCount={suggestionsCount}
+            onSuggestionsOpen={() => setShowSuggestions(true)}
+            suggestionsEnabled={!!replySuggestions && !!actions.user && actions.isOnline}
+            onCopyPasteOpen={() => setCopyPasteOpen(true)}
+          />
+          {replySuggestions && (
+            <SuggestionsPopover
+              isOpen={showSuggestions}
+              onClose={() => setShowSuggestions(false)}
+              history={replySuggestions.history}
+              enabled={replySuggestions.enabled}
+              onSelectSuggestion={(s) => { replySuggestions.onSelect(s); setShowSuggestions(false); }}
+              onCountChange={setSuggestionsCount}
             />
-            {replySuggestions && (
-              <SuggestionsPopover
-                isOpen={showSuggestions}
-                onClose={() => setShowSuggestions(false)}
-                history={replySuggestions.history}
-                enabled={replySuggestions.enabled}
-                onSelectSuggestion={(s) => { replySuggestions.onSelect(s); setShowSuggestions(false); }}
-                onCountChange={setSuggestionsCount}
-              />
-            )}
-          </div>
+          )}
         </div>
 
         {/* Banners only */}
