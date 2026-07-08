@@ -9,7 +9,7 @@ export interface ReplySuggestionsConfig {
 export interface ComposerProps {
   text: string;
   onChange: (text: string) => void;
-  onSpeak: (source?: 'speak' | 'speakAndClear') => void;
+  onSpeak: (source?: 'speak' | 'speakAndClear', text?: string) => void;
   onSpeakWithTone?: (toneTag: string, options?: { modelId?: string }) => void;
   onMessageCompleted?: (payload: { text: string; source: 'clear'; tabId?: string | null }) => void;
   onStop?: () => void;

@@ -85,6 +85,11 @@ export function useComposerActions({
     && entry?.tabId === (activeTabId || 'default')
     && currentText.trim().length === 0;
 
+  const handleSpeak = useCallback((source: 'speak' | 'speakAndClear' = 'speak') => {
+    if (!currentText.trim()) return;
+    onSpeak(source, currentText);
+  }, [currentText, onSpeak]);
+
   const clearTextWithUndo = useCallback((textToClear: string, source: 'clear' | 'skip' = 'clear') => {
     if (source === 'clear' && textToClear.trim()) {
       onMessageCompleted?.({
@@ -119,14 +124,14 @@ export function useComposerActions({
   const runEnterAction = useCallback((action: EnterKeyBehavior) => {
     switch (action) {
     case 'speak':
-      if (currentText.trim()) onSpeak('speak');
+      handleSpeak('speak');
       break;
     case 'clear':
       clearTextWithUndo(currentText, 'clear');
       break;
     case 'speakAndClear':
       if (currentText.trim()) {
-        onSpeak('speakAndClear');
+        handleSpeak('speakAndClear');
         const textSnapshot = currentText;
         setTimeout(() => clearTextWithUndo(textSnapshot, 'skip'), 100);
       }
@@ -136,7 +141,7 @@ export function useComposerActions({
       onChange(currentText + '\n');
       break;
     }
-  }, [clearTextWithUndo, currentText, onChange, onSpeak]);
+  }, [clearTextWithUndo, currentText, handleSpeak, onChange]);
 
   const { handleEnter, isPending: isDoubleEnterPending, remainingMs: doubleEnterRemainingMs } = useDoubleEnter({
     enabled: settings.doubleEnterEnabled,
@@ -225,6 +230,7 @@ export function useComposerActions({
   return {
     // clear/undo
     handleClear,
+    handleSpeak,
     showUndoHint,
     undoRemainingMs,
     undo,

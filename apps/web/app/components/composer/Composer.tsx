@@ -194,7 +194,7 @@ export default function Composer({
           <ComposerSidebar
             currentText={currentText}
             onClear={actions.handleClear}
-            onSpeak={() => onSpeak('speak')}
+            onSpeak={() => actions.handleSpeak('speak')}
             onStop={onStop}
             onToneSelected={actions.handleToneSelected}
             isSpeaking={isSpeaking}

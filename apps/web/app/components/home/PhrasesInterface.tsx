@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useQuery, useConvex } from 'convex/react';
+import { useMutation, useQuery, useConvex } from 'convex/react';
+import { nanoid } from 'nanoid';
 import { api } from '@/convex/_generated/api';
 import Composer from '../composer';
 import AACTabs from './AACTabs';
@@ -15,6 +16,11 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
+import { STORAGE_KEY } from '@/lib/hooks/useLiveTyping';
+import {
+  cleanLiveTypingSpeechSettings,
+  type LiveTypingSpeechSettings,
+} from '@/lib/live-typing-speech';
 import {
   createOpenBoardBlob,
   createOpenBoardZipBlob,
@@ -75,6 +81,7 @@ export default function PhrasesInterface() {
   // of subscribing at mount — keeping a thousands-of-tiles snapshot in
   // memory for users who never click "Export All Boards" was wasteful.
   const convex = useConvex();
+  const publishTypingSessionSpeechCommand = useMutation(api.typingSessions.publishTypingSessionSpeechCommand);
 
   const handlePhrasePress = (phrase: PhraseSummary) => {
     if (settings.usePhraseBar) {
@@ -95,12 +102,6 @@ export default function PhrasesInterface() {
   const handlePhraseStop = () => {
     tts.stop();
     setActivePhraseId(null);
-  };
-
-  const handleSpeakFromDock = (source: 'speak' | 'speakAndClear' = 'speak') => {
-    if (!typingText.trim()) return;
-    tts.speak(typingText);
-    void handleCaptureCompletedMessage({ text: typingText, source, tabId: activeTabId });
   };
 
   const handleInsertSuggestion = (suggestion: string) => {
@@ -199,6 +200,100 @@ export default function PhrasesInterface() {
     && settings.ttsModelPreference === 'high_quality'
     && tts.status.elevenLabsAvailable;
 
+  const liveTypingSpeechSettings = useMemo<LiveTypingSpeechSettings>(() => {
+    const modelId = settings.ttsModelPreference === 'high_quality'
+      ? 'eleven_v3'
+      : 'eleven_flash_v2_5';
+    const selectedVoice = settings.ttsVoiceId
+      ? tts.voices.find(voice => voice.id === settings.ttsVoiceId)
+      : undefined;
+    const selectedProvider = selectedVoice?.provider ?? settings.ttsProvider;
+    const usingPremium = selectedProvider === 'elevenlabs'
+      || selectedProvider === 'azure'
+      || selectedProvider === 'gemini';
+
+    if (usingPremium && !tts.hasSubscription) {
+      return {
+        provider: 'browser',
+        voiceId: tts.voices.find(voice => voice.provider === 'browser')?.id,
+        rate: settings.speechRate,
+        pitch: settings.speechPitch,
+        volume: settings.speechVolume,
+        stability: settings.ttsStability,
+        similarityBoost: settings.ttsSimilarityBoost,
+        modelId,
+      };
+    }
+
+    return {
+      provider: selectedProvider,
+      voiceId: settings.ttsVoiceId || undefined,
+      rate: settings.speechRate,
+      pitch: settings.speechPitch,
+      volume: settings.speechVolume,
+      stability: settings.ttsStability,
+      similarityBoost: settings.ttsSimilarityBoost,
+      modelId,
+    };
+  }, [
+    settings.speechPitch,
+    settings.speechRate,
+    settings.speechVolume,
+    settings.ttsModelPreference,
+    settings.ttsProvider,
+    settings.ttsSimilarityBoost,
+    settings.ttsStability,
+    settings.ttsVoiceId,
+    tts.hasSubscription,
+    tts.voices,
+  ]);
+
+  const publishLiveTypingSpeech = async (
+    action: 'speak' | 'stop',
+    text?: string,
+    settingsOverride?: Partial<LiveTypingSpeechSettings>
+  ) => {
+    if (!user || typeof window === 'undefined') return;
+    const sessionKey = window.localStorage.getItem(STORAGE_KEY);
+    if (!sessionKey) return;
+
+    const settingsSnapshot = {
+      ...liveTypingSpeechSettings,
+      ...settingsOverride,
+    };
+    const cleanedSettings = action === 'speak'
+      ? cleanLiveTypingSpeechSettings(settingsSnapshot)
+      : undefined;
+
+    try {
+      await publishTypingSessionSpeechCommand({
+        sessionKey,
+        commandId: nanoid(),
+        action,
+        ...(text !== undefined ? { text } : {}),
+        ...(cleanedSettings ? { settings: cleanedSettings } : {}),
+      });
+    } catch (error) {
+      console.error('Error publishing live typing speech command:', error);
+    }
+  };
+
+  const handleSpeakFromDock = (
+    source: 'speak' | 'speakAndClear' = 'speak',
+    textOverride?: string
+  ) => {
+    const textToSpeak = textOverride ?? typingText;
+    if (!textToSpeak.trim()) return;
+    void publishLiveTypingSpeech('speak', textToSpeak);
+    tts.speak(textToSpeak);
+    void handleCaptureCompletedMessage({ text: textToSpeak, source, tabId: activeTabId });
+  };
+
+  const handleStopFromDock = () => {
+    void publishLiveTypingSpeech('stop');
+    tts.stop();
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="shrink-0">
@@ -277,11 +372,12 @@ export default function PhrasesInterface() {
               onChange={setTypingText}
               onSpeak={handleSpeakFromDock}
               onSpeakWithTone={(taggedText: string, options?: { modelId?: string }) => {
+                void publishLiveTypingSpeech('speak', taggedText, options);
                 tts.speak(taggedText, options);
                 void handleCaptureCompletedMessage({ text: typingText, source: 'speak', tabId: activeTabId });
               }}
               onMessageCompleted={(payload: { text: string; source: 'clear'; tabId?: string | null }) => void handleCaptureCompletedMessage(payload)}
-              onStop={tts.stop}
+              onStop={handleStopFromDock}
               isSpeaking={tts.isSpeaking}
               isAvailable={tts.isAvailable}
               enableTabs={true}

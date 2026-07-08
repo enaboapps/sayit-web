@@ -4,8 +4,9 @@ import { use } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useSettings } from '@/app/contexts/SettingsContext';
+import { useTypingShareSpeech } from '@/lib/hooks/useTypingShareSpeech';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
-import { ExclamationTriangleIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, MinusIcon, PlusIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 
 export default function TypingShareViewPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
@@ -14,6 +15,12 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
   const loading = session === undefined;
   const sessionMissing = session === null;
   const fontSize = uiPreferences.typingShareFontSize;
+  const {
+    audioEnabled,
+    enableAudio,
+    isSpeaking,
+    error: speechError,
+  } = useTypingShareSpeech(session);
 
   const increaseFontSize = () => {
     updateUIPreference('typingShareFontSize', Math.min(fontSize + 4, 64));
@@ -54,6 +61,28 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
             <p className="text-text-secondary mt-2">
               You are viewing a live typing session. Updates appear in real-time.
             </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {!audioEnabled ? (
+                <button
+                  type="button"
+                  onClick={enableAudio}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-primary-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-600"
+                >
+                  <SpeakerWaveIcon className="h-5 w-5" />
+                  <span>Enable Audio</span>
+                </button>
+              ) : (
+                <div className="inline-flex min-h-[36px] items-center gap-2 rounded-full bg-status-info px-4 py-2 text-sm font-semibold text-blue-400">
+                  <SpeakerWaveIcon className="h-5 w-5" />
+                  <span>{isSpeaking ? 'Speaking' : 'Audio enabled'}</span>
+                </div>
+              )}
+              {speechError && (
+                <p className="text-sm font-medium text-red-400" role="status">
+                  {speechError}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="px-6 sm:px-8 pb-6 sm:pb-8">
