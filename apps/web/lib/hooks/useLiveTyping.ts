@@ -3,9 +3,14 @@ import { nanoid } from 'nanoid';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import type { LiveTypingSpeechAction, LiveTypingSpeechCommand, LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
+import {
+  cleanLiveTypingSpeechSettings,
+  type LiveTypingSpeechAction,
+  type LiveTypingSpeechCommand,
+  type LiveTypingSpeechSettings,
+} from '@/lib/live-typing-speech';
 
-const STORAGE_KEY = 'typing-share-session-key';
+export const STORAGE_KEY = 'typing-share-session-key';
 const SESSION_KEY_LENGTH = 32;
 
 type TypingSession = {
@@ -157,18 +162,7 @@ export function useLiveTyping() {
     if (!sessionKey) return;
 
     try {
-      const cleanedSettings = settings
-        ? {
-          provider: settings.provider,
-          ...(settings.voiceId ? { voiceId: settings.voiceId } : {}),
-          rate: settings.rate,
-          pitch: settings.pitch,
-          volume: settings.volume,
-          stability: settings.stability,
-          similarityBoost: settings.similarityBoost,
-          ...(settings.modelId ? { modelId: settings.modelId } : {}),
-        }
-        : undefined;
+      const cleanedSettings = settings ? cleanLiveTypingSpeechSettings(settings) : undefined;
 
       await publishTypingSessionSpeechCommand({
         sessionKey,

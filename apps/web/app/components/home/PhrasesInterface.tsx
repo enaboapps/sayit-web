@@ -16,7 +16,11 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import type { LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
+import { STORAGE_KEY } from '@/lib/hooks/useLiveTyping';
+import {
+  cleanLiveTypingSpeechSettings,
+  type LiveTypingSpeechSettings,
+} from '@/lib/live-typing-speech';
 import {
   createOpenBoardBlob,
   createOpenBoardZipBlob,
@@ -250,7 +254,7 @@ export default function PhrasesInterface() {
     settingsOverride?: Partial<LiveTypingSpeechSettings>
   ) => {
     if (!user || typeof window === 'undefined') return;
-    const sessionKey = window.localStorage.getItem('typing-share-session-key');
+    const sessionKey = window.localStorage.getItem(STORAGE_KEY);
     if (!sessionKey) return;
 
     const settingsSnapshot = {
@@ -258,16 +262,7 @@ export default function PhrasesInterface() {
       ...settingsOverride,
     };
     const cleanedSettings = action === 'speak'
-      ? {
-        provider: settingsSnapshot.provider,
-        ...(settingsSnapshot.voiceId ? { voiceId: settingsSnapshot.voiceId } : {}),
-        rate: settingsSnapshot.rate,
-        pitch: settingsSnapshot.pitch,
-        volume: settingsSnapshot.volume,
-        stability: settingsSnapshot.stability,
-        similarityBoost: settingsSnapshot.similarityBoost,
-        ...(settingsSnapshot.modelId ? { modelId: settingsSnapshot.modelId } : {}),
-      }
+      ? cleanLiveTypingSpeechSettings(settingsSnapshot)
       : undefined;
 
     try {

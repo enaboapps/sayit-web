@@ -1,4 +1,5 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import { publishTypingSessionSpeechCommand } from '@/convex/typingSessions';
 
 const mockDb = {
   query: jest.fn(),
@@ -13,7 +14,7 @@ const mockCtx = {
 };
 
 const speechSettings = {
-  provider: 'browser',
+  provider: 'browser' as const,
   voiceId: 'browser-voice',
   rate: 1,
   pitch: 1,
@@ -31,40 +32,45 @@ function mockSessionLookup(session: unknown) {
   });
 }
 
+function publish(args: {
+  sessionKey?: string;
+  commandId?: string;
+  action?: 'speak' | 'stop';
+  text?: string;
+  settings?: typeof speechSettings;
+}) {
+  return publishTypingSessionSpeechCommand._handler(mockCtx as never, {
+    sessionKey: 'session-key',
+    commandId: 'command-1',
+    action: 'speak',
+    ...args,
+  });
+}
+
 describe('typingSessions speech commands', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   test('stores a speak command for the session owner', async () => {
-    const session = {
+    mockCtx.auth.getUserIdentity.mockResolvedValue({ subject: 'user-1' });
+    mockSessionLookup({
       _id: 'session-1',
       userId: 'user-1',
       expiresAt: Date.now() + 60_000,
-    };
-    mockCtx.auth.getUserIdentity.mockResolvedValue({ subject: 'user-1' });
-    mockSessionLookup(session);
+    });
 
-    const identity = await mockCtx.auth.getUserIdentity();
-    const found = await mockDb.query('typingSessions').withIndex('by_session_key').first();
-    if (!found || found.userId !== identity?.subject || found.expiresAt <= Date.now()) {
-      throw new Error('Unauthorized');
-    }
-
-    await mockDb.patch(found._id, {
-      speechCommand: {
-        id: 'command-1',
-        action: 'speak',
-        text: 'Hello',
-        createdAt: 123,
-        settings: speechSettings,
-      },
+    await publish({
+      text: 'Hello',
+      settings: speechSettings,
     });
 
     expect(mockDb.patch).toHaveBeenCalledWith('session-1', {
       speechCommand: expect.objectContaining({
+        id: 'command-1',
         action: 'speak',
         text: 'Hello',
+        createdAt: expect.any(Number),
         settings: speechSettings,
       }),
     });
@@ -78,26 +84,28 @@ describe('typingSessions speech commands', () => {
       expiresAt: Date.now() + 60_000,
     });
 
-    const identity = await mockCtx.auth.getUserIdentity();
-    const found = await mockDb.query('typingSessions').withIndex('by_session_key').first();
-
-    const publish = () => {
-      if (!found || found.userId !== identity?.subject || found.expiresAt <= Date.now()) {
-        throw new Error('Unauthorized');
-      }
-    };
-
-    expect(publish).toThrow('Unauthorized');
+    await expect(publish({
+      text: 'Hello',
+      settings: speechSettings,
+    })).rejects.toThrow('Unauthorized');
     expect(mockDb.patch).not.toHaveBeenCalled();
   });
 
-  test('rejects speak commands without text or settings', () => {
-    const publish = (text?: string, settings?: unknown) => {
-      if (!text?.trim()) throw new Error('Text is required for speech commands');
-      if (!settings) throw new Error('Speech settings are required for speech commands');
-    };
+  test('rejects speak commands without text or settings', async () => {
+    mockCtx.auth.getUserIdentity.mockResolvedValue({ subject: 'user-1' });
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      expiresAt: Date.now() + 60_000,
+    });
 
-    expect(() => publish('', speechSettings)).toThrow('Text is required');
-    expect(() => publish('Hello')).toThrow('Speech settings are required');
+    await expect(publish({
+      text: '',
+      settings: speechSettings,
+    })).rejects.toThrow('Text is required');
+    await expect(publish({
+      text: 'Hello',
+    })).rejects.toThrow('Speech settings are required');
+    expect(mockDb.patch).not.toHaveBeenCalled();
   });
 });
