@@ -53,6 +53,7 @@ jest.mock('@/lib/hooks/useLiveTyping', () => ({
     createSession: jest.fn(),
     endSession: jest.fn(),
     updateContent: jest.fn(),
+    publishSpeechCommand: jest.fn(),
     getShareableLink: jest.fn(() => null),
   })),
 }));
@@ -406,6 +407,7 @@ describe('Composer', () => {
       createSession: jest.fn(),
       endSession: jest.fn(),
       updateContent: jest.fn(),
+      publishSpeechCommand: jest.fn(),
       getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
     });
 
@@ -443,6 +445,7 @@ describe('Composer', () => {
       createSession: jest.fn(),
       endSession,
       updateContent: jest.fn(),
+      publishSpeechCommand: jest.fn(),
       getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
     });
 
@@ -462,6 +465,58 @@ describe('Composer', () => {
     expect(endSession).toHaveBeenCalled();
   });
 
+  it('delegates speak and stop actions to the parent while sharing', async () => {
+    const user = userEvent.setup();
+    const onSpeak = jest.fn();
+    const onStop = jest.fn();
+
+    mockUseAuth.mockReturnValue({
+      user: {
+        id: 'user-1',
+        email: 'user@example.com',
+      },
+      loading: false,
+    });
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: true,
+      isCreating: false,
+      error: null,
+      createSession: jest.fn(),
+      endSession: jest.fn(),
+      updateContent: jest.fn(),
+      getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
+    });
+
+    const { rerender } = render(
+      <Composer
+        text="Sharing now"
+        onChange={jest.fn()}
+        onSpeak={onSpeak}
+        onStop={onStop}
+        enableLiveTyping={true}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Speak' }));
+    expect(onSpeak).toHaveBeenCalledWith('speak', 'Sharing now');
+
+    rerender(
+      <Composer
+        text="Sharing now"
+        onChange={jest.fn()}
+        onSpeak={onSpeak}
+        onStop={onStop}
+        isSpeaking={true}
+        enableLiveTyping={true}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Stop' }));
+
+    expect(onStop).toHaveBeenCalled();
+  });
+
   it('does not show the live typing banner when not sharing', () => {
     mockUseAuth.mockReturnValue({
       user: {
@@ -478,6 +533,7 @@ describe('Composer', () => {
       createSession: jest.fn(),
       endSession: jest.fn(),
       updateContent: jest.fn(),
+      publishSpeechCommand: jest.fn(),
       getShareableLink: jest.fn(() => null),
     });
 

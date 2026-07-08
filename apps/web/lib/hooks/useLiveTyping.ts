@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import type { LiveTypingSpeechAction, LiveTypingSpeechCommand, LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
 
 const STORAGE_KEY = 'typing-share-session-key';
 const SESSION_KEY_LENGTH = 32;
@@ -12,6 +13,7 @@ type TypingSession = {
   userId: string;
   sessionKey: string;
   content: string;
+  speechCommand?: LiveTypingSpeechCommand;
   expiresAt: number;
   _creationTime: number;
 } | null;
@@ -25,6 +27,7 @@ export function useLiveTyping() {
 
   const createTypingSession = useMutation(api.typingSessions.createTypingSession);
   const updateTypingSessionContent = useMutation(api.typingSessions.updateTypingSessionContent);
+  const publishTypingSessionSpeechCommand = useMutation(api.typingSessions.publishTypingSessionSpeechCommand);
   const deleteTypingSession = useMutation(api.typingSessions.deleteTypingSession);
 
   const sessionFromConvex = useQuery(
@@ -67,6 +70,7 @@ export function useLiveTyping() {
         userId: sessionFromConvex.userId,
         sessionKey: sessionFromConvex.sessionKey,
         content: sessionFromConvex.content,
+        speechCommand: sessionFromConvex.speechCommand,
         expiresAt: sessionFromConvex.expiresAt,
         _creationTime: sessionFromConvex._creationTime,
       });
@@ -96,6 +100,7 @@ export function useLiveTyping() {
         userId: created.userId,
         sessionKey: created.sessionKey,
         content: created.content,
+        speechCommand: created.speechCommand,
         expiresAt: created.expiresAt,
         _creationTime: created._creationTime,
       });
@@ -144,6 +149,39 @@ export function useLiveTyping() {
     }
   }, [sessionKey, deleteTypingSession]);
 
+  const publishSpeechCommand = useCallback(async (
+    action: LiveTypingSpeechAction,
+    text?: string,
+    settings?: LiveTypingSpeechSettings
+  ) => {
+    if (!sessionKey) return;
+
+    try {
+      const cleanedSettings = settings
+        ? {
+          provider: settings.provider,
+          ...(settings.voiceId ? { voiceId: settings.voiceId } : {}),
+          rate: settings.rate,
+          pitch: settings.pitch,
+          volume: settings.volume,
+          stability: settings.stability,
+          similarityBoost: settings.similarityBoost,
+          ...(settings.modelId ? { modelId: settings.modelId } : {}),
+        }
+        : undefined;
+
+      await publishTypingSessionSpeechCommand({
+        sessionKey,
+        commandId: nanoid(),
+        action,
+        ...(text !== undefined ? { text } : {}),
+        ...(cleanedSettings ? { settings: cleanedSettings } : {}),
+      });
+    } catch (err) {
+      console.error('Error publishing live typing speech command:', err);
+    }
+  }, [publishTypingSessionSpeechCommand, sessionKey]);
+
   const getShareableLink = useCallback(() => {
     if (typeof window === 'undefined') return null;
     const key = session?.sessionKey ?? sessionKey;
@@ -167,6 +205,7 @@ export function useLiveTyping() {
     error,
     createSession,
     updateContent,
+    publishSpeechCommand,
     endSession,
     getShareableLink,
   };

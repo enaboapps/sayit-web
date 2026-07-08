@@ -157,6 +157,22 @@ export default defineSchema({
     userId: v.string(), // Clerk user ID
     sessionKey: v.string(),
     content: v.string(),
+    speechCommand: v.optional(v.object({
+      id: v.string(),
+      action: v.union(v.literal('speak'), v.literal('stop')),
+      text: v.optional(v.string()),
+      createdAt: v.number(),
+      settings: v.optional(v.object({
+        provider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini')),
+        voiceId: v.optional(v.string()),
+        rate: v.number(),
+        pitch: v.number(),
+        volume: v.number(),
+        stability: v.number(),
+        similarityBoost: v.number(),
+        modelId: v.optional(v.string()),
+      })),
+    })),
     expiresAt: v.number(), // Unix timestamp
   })
     .index('by_user_id', ['userId'])
