@@ -209,6 +209,12 @@ describe('Composer', () => {
     );
 
     expect(screen.getByRole('textbox')).toHaveValue('Hello world');
+    expect(screen.getByTestId('composer-canvas')).toHaveClass(
+      'rounded-[var(--radius-card)]',
+      'border',
+      'bg-surface',
+      'focus-within:border-primary-500',
+    );
   });
 
   it('calls onChange when user types', async () => {
@@ -287,7 +293,7 @@ describe('Composer', () => {
     const textarea = screen.getByRole('textbox');
     // textarea is inside ComposerTextarea wrapper → flex row → outer flex-col (overflow-hidden)
     expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-0', 'overflow-hidden', 'md:min-h-[120px]');
-    expect(textarea).toHaveClass('absolute', 'inset-0', 'overflow-y-auto', 'resize-none');
+    expect(textarea).toHaveClass('absolute', 'inset-0', 'overflow-y-auto', 'resize-none', 'pb-24');
     expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
   });

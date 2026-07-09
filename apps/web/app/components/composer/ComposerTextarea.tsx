@@ -24,7 +24,7 @@ export default function ComposerTextarea({
   onBlur,
 }: ComposerTextareaProps) {
   return (
-    <div className="relative flex-1 min-h-0 overflow-hidden md:min-h-[120px]">
+    <div className="relative min-h-0 flex-1 overflow-hidden bg-surface md:min-h-[120px]">
       <textarea
         ref={textareaRef}
         value={currentText}
@@ -35,7 +35,7 @@ export default function ComposerTextarea({
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         placeholder="What do you want to say?"
-        className="absolute inset-0 overflow-y-auto bg-transparent text-foreground placeholder:text-text-tertiary pl-6 pr-20 py-5 resize-none focus:outline-none"
+        className="absolute inset-0 resize-none overflow-y-auto bg-transparent px-6 pb-24 pt-5 text-foreground placeholder:font-medium placeholder:text-text-tertiary focus:outline-none"
         style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
       />
     </div>
