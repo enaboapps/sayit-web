@@ -107,7 +107,7 @@ function SidebarItem({ href, icon, title, isActive, compact = false }: SidebarIt
       href={href}
       className={`relative flex min-h-[60px] w-full flex-col items-center justify-center gap-1 rounded-[var(--radius-control)] px-1 py-2 text-center transition-colors duration-[var(--motion-duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
         isActive
-          ? 'bg-primary-950 text-primary-300'
+          ? 'bg-[var(--accent-surface)] text-[var(--accent-foreground)]'
           : 'text-text-secondary hover:bg-surface-hover hover:text-foreground'
       } ${compact ? 'min-w-[72px]' : ''}`}
       aria-current={isActive ? 'page' : undefined}

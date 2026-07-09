@@ -22,6 +22,19 @@
   --background-gradient-2: #232220;
   --background-gradient-3: #2d2b29;
   --background-gradient-4: #1a1917;
+  --overlay: #0a0a0a;
+  --accent-surface: #042f2e;
+  --accent-foreground: #99f6e4;
+  --status-error: #2a1215;
+  --status-error-foreground: #fca5a5;
+  --status-warning: #2a1f0a;
+  --status-warning-foreground: #fcd34d;
+  --status-success: #0a2a1a;
+  --status-success-foreground: #86efac;
+  --status-info: #0a1a2a;
+  --status-info-foreground: #93c5fd;
+  --status-purple: #1a0a2a;
+  --status-purple-foreground: #d8b4fe;
 
   /* Version 5 visual system */
   --radius-card: 1rem;
@@ -35,6 +48,36 @@
   --motion-duration-standard: 200ms;
 }
 
+:root[data-theme='light'] {
+  --background: #f7f7f5;
+  --foreground: #1f2421;
+  --surface: #ffffff;
+  --surface-hover: #eef2ef;
+  --border: #c7d0ca;
+  --text-primary: #1f2421;
+  --text-secondary: #46514b;
+  --text-tertiary: #68756e;
+  --background-gradient-1: #f7f7f5;
+  --background-gradient-2: #ffffff;
+  --background-gradient-3: #eef2ef;
+  --background-gradient-4: #f7f7f5;
+  --overlay: #101412;
+  --accent-surface: #ccfbf1;
+  --accent-foreground: #115e59;
+  --status-error: #fee2e2;
+  --status-error-foreground: #991b1b;
+  --status-warning: #fff4cc;
+  --status-warning-foreground: #854d0e;
+  --status-success: #dcfce7;
+  --status-success-foreground: #166534;
+  --status-info: #dbeafe;
+  --status-info-foreground: #1e40af;
+  --status-purple: #f3e8ff;
+  --status-purple-foreground: #6b21a8;
+  --shadow-control: 0 1px 2px rgb(15 23 42 / 0.1);
+  --shadow-card: 0 8px 24px rgb(15 23 42 / 0.08);
+}
+
 /* Fixed color tokens */
 @theme {
   /* v3 primary: deep teal */
@@ -43,11 +86,11 @@
   --color-primary-200: #99f6e4;
   --color-primary-300: #5eead4;
   --color-primary-400: #2dd4bf;
-  --color-primary-500: #14b8a6;
-  --color-primary-600: #0d9488;
-  --color-primary-700: #0f766e;
-  --color-primary-800: #115e59;
-  --color-primary-900: #134e4a;
+  --color-primary-500: #0f766e;
+  --color-primary-600: #115e59;
+  --color-primary-700: #134e4a;
+  --color-primary-800: #0f4742;
+  --color-primary-900: #0b3935;
   --color-primary-950: #042f2e;
 
   /* Status */
@@ -58,14 +101,6 @@
   --color-error: #ef4444;
   --color-error-hover: #dc2626;
 
-  /* Solid status backgrounds */
-  --color-status-error: #2a1215;
-  --color-status-warning: #2a1f0a;
-  --color-status-success: #0a2a1a;
-  --color-status-info: #0a1a2a;
-  --color-status-purple: #1a0a2a;
-
-  --color-overlay: #0a0a0a;
 }
 
 /* Semantic tokens — reference CSS variables so they update with theme changes */
@@ -78,6 +113,17 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
+  --color-status-error: var(--status-error);
+  --color-status-error-foreground: var(--status-error-foreground);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-foreground: var(--status-warning-foreground);
+  --color-status-success: var(--status-success);
+  --color-status-success-foreground: var(--status-success-foreground);
+  --color-status-info: var(--status-info);
+  --color-status-info-foreground: var(--status-info-foreground);
+  --color-status-purple: var(--status-purple);
+  --color-status-purple-foreground: var(--status-purple-foreground);
+  --color-overlay: var(--overlay);
   --font-sans: var(--font-inter);
 }
 

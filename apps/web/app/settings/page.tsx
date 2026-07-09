@@ -13,6 +13,7 @@ import {
   ChevronRightIcon,
   RectangleStackIcon,
   ArrowDownTrayIcon,
+  ComputerDesktopIcon,
 } from '@heroicons/react/24/outline';
 import RoleChangeSection from '@/app/components/settings/RoleChangeSection';
 import ImportedPackagesSection from '@/app/components/settings/ImportedPackagesSection';
@@ -23,10 +24,18 @@ import { Slider } from '@/app/components/ui/Slider';
 import { Switch } from '@/app/components/ui/Switch';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { UserButton } from '@clerk/nextjs';
+import AppearanceSettings from '@/app/components/settings/AppearanceSettings';
+import { useAppearance } from '@/app/contexts/AppearanceContext';
 
 // Import types from SettingsContext
 type EnterKeyBehavior = 'newline' | 'speak' | 'clear' | 'speakAndClear';
 type MessageCaptureMode = 'disabled' | 'clearOnly' | 'speakOnly' | 'speakAndClearOnly' | 'speakAny';
+
+const THEME_LABELS = {
+  system: 'System',
+  light: 'Light',
+  dark: 'Dark',
+} as const;
 
 // Import TTSSettings dynamically with SSR disabled
 const TTSSettings = dynamic(() => import('../components/TTSSettings'), {
@@ -72,6 +81,7 @@ function SettingsCategory({ icon, title, description, onClick, value }: Settings
 export default function SettingsPage() {
   const { settings, updateSetting } = useSettings();
   const { user } = useAuth();
+  const { theme } = useAppearance();
   const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
 
@@ -124,6 +134,14 @@ export default function SettingsPage() {
 
           {/* Categories */}
           <div className="space-y-3">
+            <SettingsCategory
+              icon={<ComputerDesktopIcon className="w-6 h-6" />}
+              title="Appearance"
+              description="Light, dark, or device theme"
+              onClick={() => setActiveSheet('appearance')}
+              value={THEME_LABELS[theme]}
+            />
+
             {/* Voice & Speech */}
             <SettingsCategory
               icon={<SpeakerWaveIcon className="w-6 h-6" />}
@@ -188,6 +206,17 @@ export default function SettingsPage() {
         </div>
 
         {/* Voice & Speech Sheet */}
+        <BottomSheet
+          isOpen={activeSheet === 'appearance'}
+          onClose={() => setActiveSheet(null)}
+          title="Appearance"
+          snapPoints={[55, 80]}
+        >
+          <div className="p-4">
+            <AppearanceSettings />
+          </div>
+        </BottomSheet>
+
         <BottomSheet
           isOpen={activeSheet === 'voice'}
           onClose={() => setActiveSheet(null)}
@@ -385,6 +414,16 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-8">
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">Appearance</h2>
+              <p className="mt-1 text-sm text-text-secondary">Choose an accessible theme for this device</p>
+            </div>
+            <div className="rounded-[var(--radius-card)] border border-border bg-surface p-6 shadow-[var(--shadow-card)]">
+              <AppearanceSettings />
+            </div>
+          </section>
+
           {/* Text & Behavior Settings */}
           <section className="space-y-6">
             <div>

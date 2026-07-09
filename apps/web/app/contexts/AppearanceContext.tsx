@@ -41,6 +41,10 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.style.colorScheme = resolvedTheme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      'content',
+      resolvedTheme === 'dark' ? '#1a1917' : '#f7f7f5',
+    );
   }, [resolvedTheme]);
 
   useEffect(() => {

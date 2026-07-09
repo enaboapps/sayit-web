@@ -35,6 +35,7 @@ export const APPEARANCE_INIT_SCRIPT = `(() => {
       : preference;
     document.documentElement.dataset.theme = resolved;
     document.documentElement.style.colorScheme = resolved;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#1a1917' : '#f7f7f5');
   } catch {
     document.documentElement.dataset.theme = 'dark';
     document.documentElement.style.colorScheme = 'dark';
