@@ -78,6 +78,26 @@
   --shadow-card: 0 8px 24px rgb(15 23 42 / 0.08);
 }
 
+:root[data-theme='dark'][data-contrast='high'] {
+  --foreground: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #e3e3e0;
+  --text-tertiary: #c6c6c1;
+  --border: #8f918d;
+  --shadow-control: none;
+  --shadow-card: none;
+}
+
+:root[data-theme='light'][data-contrast='high'] {
+  --foreground: #111411;
+  --text-primary: #111411;
+  --text-secondary: #252d28;
+  --text-tertiary: #3e4942;
+  --border: #4b5750;
+  --shadow-control: none;
+  --shadow-card: none;
+}
+
 /* Fixed color tokens */
 @theme {
   /* v3 primary: deep teal */
@@ -213,6 +233,15 @@ body {
   }
 }
 
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}
+
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   :root {
@@ -226,6 +255,11 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-primary-500, #14b8a6);
   outline-offset: 2px;
+}
+
+:root[data-contrast='high'] :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
 }
 
 /* Remove focus rings for textareas (global) */
