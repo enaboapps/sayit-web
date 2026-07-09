@@ -15,13 +15,13 @@ export default function Input({ label, error, className = '', ...props }: InputP
       )}
       <input
         {...props}
-        className={`block w-full px-6 py-3 bg-surface border border-border rounded-3xl text-foreground text-base placeholder:text-text-tertiary shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:shadow-xl hover:shadow-lg transition-all duration-300 ${className}`}
+        className={`block min-h-[var(--control-height)] w-full rounded-[var(--radius-control)] border border-border bg-surface px-4 py-2.5 text-base text-foreground shadow-[var(--shadow-control)] placeholder:text-text-tertiary transition-[background-color,border-color,box-shadow] duration-[var(--motion-duration-standard)] hover:border-text-tertiary focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 ${className}`}
       />
       {error && (
-        <div className="mt-2 text-red-500 text-sm bg-status-error px-4 py-2 rounded-3xl">
+        <div className="mt-2 rounded-[var(--radius-small)] bg-status-error px-4 py-2 text-sm text-red-500">
           {error}
         </div>
       )}
     </div>
   );
-} 
+}

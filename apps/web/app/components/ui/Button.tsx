@@ -5,7 +5,7 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-3xl text-sm font-medium transition-all duration-300 shadow-md hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-control)] text-sm font-medium shadow-[var(--shadow-control)] transition-[background-color,border-color,color,box-shadow,transform] duration-[var(--motion-duration-standard)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
@@ -22,10 +22,10 @@ const buttonVariants = cva(
       },
       size: {
         // All sizes meet minimum 44px touch target requirement
-        default: 'h-11 min-h-[44px] px-6 py-2',
-        sm: 'h-10 min-h-[44px] rounded-3xl px-4 text-xs',
-        lg: 'h-12 min-h-[48px] rounded-3xl px-10',
-        icon: 'h-11 w-11 min-h-[44px] min-w-[44px]',
+        default: 'h-[var(--control-height)] min-h-[44px] px-6 py-2',
+        sm: 'h-[var(--control-height)] min-h-[44px] px-4 text-xs',
+        lg: 'h-[var(--control-height-large)] min-h-[48px] px-10',
+        icon: 'h-[var(--control-height)] w-[var(--control-height)] min-h-[44px] min-w-[44px]',
       },
     },
     defaultVariants: {
@@ -66,7 +66,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
-        whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
         whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
         transition={{ duration: 0.2 }}
         ref={ref}

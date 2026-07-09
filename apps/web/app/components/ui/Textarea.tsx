@@ -17,16 +17,16 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         <textarea
           className={cn(
-            'flex min-h-[120px] w-full rounded-3xl border border-border',
-            'bg-surface shadow-md hover:shadow-lg focus:shadow-xl',
-            'px-6 py-3 text-base',
+            'flex min-h-[120px] w-full rounded-[var(--radius-control)] border border-border',
+            'bg-surface shadow-[var(--shadow-control)] hover:border-text-tertiary',
+            'px-4 py-3 text-base',
             'text-foreground',
             'placeholder:text-text-tertiary',
             'ring-offset-surface',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
             'focus-visible:border-primary-500 focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            'transition-all duration-300',
+            'transition-[background-color,border-color,box-shadow] duration-[var(--motion-duration-standard)]',
             className,
           )}
           ref={ref}

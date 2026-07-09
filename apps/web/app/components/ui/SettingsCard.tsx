@@ -16,11 +16,11 @@ export function SettingsCard({
   className = ''
 }: SettingsCardProps) {
   return (
-    <div className={`bg-surface rounded-3xl shadow-2xl hover:shadow-3xl overflow-hidden transition-all duration-300 ${className}`}>
+    <section aria-label={title} className={`overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface shadow-[var(--shadow-card)] ${className}`}>
       <div className="px-8 py-6">
         <div className="flex items-center space-x-4 mb-6">
           {icon && (
-            <div className="flex-shrink-0 text-primary-500 bg-surface-hover p-3 rounded-3xl">
+            <div className="flex-shrink-0 rounded-[var(--radius-control)] bg-surface-hover p-3 text-primary-500">
               {icon}
             </div>
           )}
@@ -39,6 +39,6 @@ export function SettingsCard({
           {children}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
