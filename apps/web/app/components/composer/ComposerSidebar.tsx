@@ -20,6 +20,7 @@ import BottomSheet from '../ui/BottomSheet';
 import { UI_COPY } from '@/lib/ui-copy';
 
 interface ComposerSidebarProps {
+  children: ReactNode;
   currentText: string;
   onClear: () => void;
   onSpeak: () => void;
@@ -52,6 +53,7 @@ const ACTION_BUTTON =
   'flex min-h-12 w-full items-center gap-3 rounded-[var(--radius-control)] border border-border px-4 py-3 text-left font-medium shadow-[var(--shadow-control)] transition-colors disabled:cursor-not-allowed disabled:opacity-40';
 
 export default function ComposerSidebar({
+  children,
   currentText,
   onClear,
   onSpeak,
@@ -175,52 +177,60 @@ export default function ComposerSidebar({
 
   return (
     <>
-      <button
-        ref={actionsTriggerRef}
-        type="button"
-        onClick={() => setShowActions(true)}
-        aria-haspopup="dialog"
-        aria-expanded={showActions}
-        aria-label={UI_COPY.moreActions}
-        className="absolute right-4 top-4 z-20 flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm font-medium text-text-secondary shadow-[var(--shadow-control)] transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-      >
-        <Squares2X2Icon className="h-5 w-5" />
-        <span>{UI_COPY.moreActions}</span>
-        {suggestionsEnabled && suggestionsCount > 0 && (
-          <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{suggestionsCount}</span>
-        )}
-      </button>
-
-      <div className="absolute bottom-4 right-4 z-20 flex items-end gap-3">
-        {isSpeaking ? (
-          <button type="button" onClick={onStop} className="flex h-16 min-w-16 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-error px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-error-hover" aria-label={UI_COPY.stop}>
-            <StopIcon className="h-7 w-7" />
-            <span className="font-semibold">{UI_COPY.stop}</span>
+      <div data-testid="composer-layout" className="flex min-h-[220px] flex-1 flex-col bg-surface">
+        <div data-testid="composer-action-header" className="flex shrink-0 justify-end border-b border-border bg-surface px-3 py-2">
+          <button
+            ref={actionsTriggerRef}
+            type="button"
+            onClick={() => setShowActions(true)}
+            aria-haspopup="dialog"
+            aria-expanded={showActions}
+            aria-label={UI_COPY.moreActions}
+            className="flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm font-medium text-text-secondary shadow-[var(--shadow-control)] transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          >
+            <Squares2X2Icon className="h-5 w-5" />
+            <span>{UI_COPY.moreActions}</span>
+            {suggestionsEnabled && suggestionsCount > 0 && (
+              <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{suggestionsCount}</span>
+            )}
           </button>
-        ) : (
-          <>
-            <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-20 items-center justify-center gap-1.5 rounded-[var(--radius-control)] border border-border bg-status-error px-3 text-status-error-foreground shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.clear}>
-              <XMarkIcon className="h-6 w-6" />
-              <span className="text-sm font-semibold">{UI_COPY.clear}</span>
+        </div>
+
+        <div data-testid="composer-message-region" className="relative flex min-h-0 flex-1 bg-surface">
+          {children}
+        </div>
+
+        <div data-testid="composer-action-footer" className="flex shrink-0 items-center justify-end gap-3 border-t border-border bg-surface px-3 py-3">
+          {isSpeaking ? (
+            <button type="button" onClick={onStop} className="flex h-16 min-w-16 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-error px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-error-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface" aria-label={UI_COPY.stop}>
+              <StopIcon className="h-7 w-7" />
+              <span className="font-semibold">{UI_COPY.stop}</span>
             </button>
-            {enableToneControl ? (
-              <div className="flex overflow-hidden rounded-[var(--radius-control)] shadow-[var(--shadow-card)]">
-                <button type="button" onClick={() => setShowToneSheet(true)} disabled={speakDisabled} className="flex h-16 w-12 items-center justify-center border-r border-primary-900/40 bg-primary-700 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Choose tone">
-                  <AudioWaveform className="h-5 w-5" />
-                </button>
-                <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 bg-primary-500 px-4 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.speak}>
+          ) : (
+            <>
+              <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-20 items-center justify-center gap-1.5 rounded-[var(--radius-control)] border border-border bg-status-error px-3 text-status-error-foreground shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.clear}>
+                <XMarkIcon className="h-6 w-6" />
+                <span className="text-sm font-semibold">{UI_COPY.clear}</span>
+              </button>
+              {enableToneControl ? (
+                <div className="flex overflow-hidden rounded-[var(--radius-control)] shadow-[var(--shadow-card)] focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2 focus-within:ring-offset-surface">
+                  <button type="button" onClick={() => setShowToneSheet(true)} disabled={speakDisabled} className="flex h-16 w-12 items-center justify-center border-r border-primary-900/40 bg-primary-700 text-white transition-colors hover:bg-primary-600 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30" aria-label="Choose tone">
+                    <AudioWaveform className="h-5 w-5" />
+                  </button>
+                  <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 bg-primary-500 px-4 text-white transition-colors hover:bg-primary-600 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.speak}>
+                    <SpeakerWaveIcon className="h-7 w-7" />
+                    <span className="font-semibold">{UI_COPY.speak}</span>
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-primary-500 px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.speak}>
                   <SpeakerWaveIcon className="h-7 w-7" />
                   <span className="font-semibold">{UI_COPY.speak}</span>
                 </button>
-              </div>
-            ) : (
-              <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-primary-500 px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.speak}>
-                <SpeakerWaveIcon className="h-7 w-7" />
-                <span className="font-semibold">{UI_COPY.speak}</span>
-              </button>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <BottomSheet isOpen={showActions} onClose={closeActions} title={UI_COPY.moreActions} snapPoints={[55, 90]}>
