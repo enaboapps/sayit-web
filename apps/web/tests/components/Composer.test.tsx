@@ -103,7 +103,22 @@ jest.mock('@/app/components/typing-tabs/TabManagementSheet', () => ({
 
 jest.mock('@/app/components/ui/BottomSheet', () => ({
   __esModule: true,
-  default: () => null,
+  default: ({
+    isOpen,
+    onClose,
+    title,
+    children,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    title?: string;
+    children: React.ReactNode;
+  }) => isOpen ? (
+    <div role="dialog" aria-label={title}>
+      <button type="button" aria-label="Close" onClick={onClose}>Close</button>
+      {children}
+    </div>
+  ) : null,
 }));
 
 // Stub the copy/paste sheet so we can observe when it opens and trigger paste
@@ -246,6 +261,24 @@ describe('Composer', () => {
 
     expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
+  });
+
+  it('opens More Actions and returns focus to its trigger when closed', async () => {
+    const user = userEvent.setup();
+    render(
+      <Composer
+        text="Some text"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    const trigger = screen.getByRole('button', { name: 'More actions' });
+    await user.click(trigger);
+    expect(screen.getByRole('dialog', { name: 'More Actions' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   it('shows the tone segment attached to Speak when tone control is enabled', async () => {
