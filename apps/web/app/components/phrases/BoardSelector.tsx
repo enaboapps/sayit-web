@@ -57,7 +57,7 @@ export default function BoardSelector({
       <span className="min-w-0 text-left">
         <span className="block truncate text-base font-semibold text-foreground">{selectedBoard?.name}</span>
         {subtitle && (
-          <span className="mt-0.5 flex items-center gap-1 text-xs text-primary-300">
+          <span className="mt-0.5 flex items-center gap-1 text-xs text-[var(--accent-foreground)]">
             <UserGroupIcon className="h-3.5 w-3.5" />
             {subtitle}
           </span>
@@ -92,8 +92,8 @@ export default function BoardSelector({
           )}
 
           {isEditMode && canEditSelected && onEdit && (
-            <div className="flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-blue-400/60 bg-blue-950/40 px-3" role="status">
-              <span className="text-sm font-medium text-blue-200">Edit mode</span>
+            <div className="flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-blue-400/60 bg-status-info px-3" role="status">
+              <span className="text-sm font-medium text-status-info-foreground">Edit mode</span>
               <button type="button" onClick={onEdit} className="flex min-h-9 items-center gap-1 rounded-[var(--radius-small)] bg-blue-500 px-3 text-sm font-semibold text-white hover:bg-blue-600" aria-label="Done editing">
                 <CheckIcon className="h-4 w-4" />
                 Done

@@ -110,7 +110,7 @@ export default function ComposerSidebar({
             </button>
           }
         >
-          <button onClick={runAndClose(onFixText)} disabled={!currentText.trim() || isFixingText} className={`${ACTION_BUTTON} bg-status-purple text-purple-300 hover:bg-purple-950`} aria-label="Fix Text">
+          <button onClick={runAndClose(onFixText)} disabled={!currentText.trim() || isFixingText} className={`${ACTION_BUTTON} bg-status-purple text-status-purple-foreground hover:brightness-95`} aria-label="Fix Text">
             {isFixingText ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
             <span>{isFixingText ? 'Fixing Text…' : 'Fix Text'}</span>
           </button>
@@ -126,7 +126,7 @@ export default function ComposerSidebar({
         <button
           onClick={runAndClose(onShare)}
           disabled={!isOnline}
-          className={`${ACTION_BUTTON} ${isLiveTypingButtonActive ? 'bg-status-success text-green-300' : 'bg-surface-hover text-foreground hover:bg-status-success'}`}
+          className={`${ACTION_BUTTON} ${isLiveTypingButtonActive ? 'bg-status-success text-status-success-foreground' : 'bg-surface-hover text-foreground hover:bg-status-success'}`}
           aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
         >
           <ShareIcon className="h-5 w-5" />
@@ -141,7 +141,7 @@ export default function ComposerSidebar({
     actionItems.push({
       key: 'save',
       content: (
-        <button onClick={runAndClose(() => onAddAsPhrase(currentText))} disabled={!currentText.trim()} className={`${ACTION_BUTTON} bg-status-info text-blue-300 hover:bg-blue-950`} aria-label="Save as Phrase">
+        <button onClick={runAndClose(() => onAddAsPhrase(currentText))} disabled={!currentText.trim()} className={`${ACTION_BUTTON} bg-status-info text-status-info-foreground hover:brightness-95`} aria-label="Save as Phrase">
           <BookmarkIcon className="h-5 w-5" />
           <span>Save as Phrase</span>
         </button>
@@ -153,7 +153,7 @@ export default function ComposerSidebar({
     actionItems.push({
       key: 'suggestions',
       content: (
-        <button onClick={runAndClose(onSuggestionsOpen)} className={`${ACTION_BUTTON} bg-status-warning text-amber-300 hover:bg-amber-950`} aria-label="Suggestions">
+        <button onClick={runAndClose(onSuggestionsOpen)} className={`${ACTION_BUTTON} bg-status-warning text-status-warning-foreground hover:brightness-95`} aria-label="Suggestions">
           <LightBulbIcon className="h-5 w-5" />
           <span>Suggestions</span>
           {suggestionsCount > 0 && <span className="ml-auto rounded-full bg-primary-500 px-2 py-0.5 text-xs text-white">{suggestionsCount}</span>}
@@ -198,7 +198,7 @@ export default function ComposerSidebar({
           </button>
         ) : (
           <>
-            <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-12 items-center justify-center rounded-[var(--radius-control)] border border-border bg-status-error text-red-300 shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label="Clear">
+            <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-12 items-center justify-center rounded-[var(--radius-control)] border border-border bg-status-error text-status-error-foreground shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label="Clear">
               <XMarkIcon className="h-6 w-6" />
             </button>
             {enableToneControl ? (

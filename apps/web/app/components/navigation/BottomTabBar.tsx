@@ -113,7 +113,7 @@ export default function BottomTabBar() {
               aria-current={active ? 'page' : undefined}
               className={`flex min-h-[56px] min-w-[64px] flex-col items-center justify-center rounded-[var(--radius-control)] px-3 py-2 transition-colors duration-[var(--motion-duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
                 active
-                  ? 'bg-primary-950 text-primary-300'
+                  ? 'bg-[var(--accent-surface)] text-[var(--accent-foreground)]'
                   : 'text-text-tertiary hover:bg-surface-hover hover:text-text-secondary'
               }`}
             >
