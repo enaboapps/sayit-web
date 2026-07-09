@@ -63,7 +63,7 @@ export default function TabBar({
 
   if (isMobile) {
     return (
-      <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
+      <div className="grid grid-cols-[1fr_auto] gap-2 rounded-t-[var(--radius-card)] border-b border-border bg-surface-hover p-2">
         {/* Active tab — full width, tapping label opens list */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-primary-500 text-white min-w-0">
           <button
@@ -95,7 +95,7 @@ export default function TabBar({
   const visibleTabs = getVisibleTabs(tabs, activeTabId);
 
   return (
-    <div className="grid grid-cols-[1fr_auto] gap-2 p-2 bg-surface-hover rounded-t-3xl">
+    <div className="grid grid-cols-[1fr_auto] gap-2 rounded-t-[var(--radius-card)] border-b border-border bg-surface-hover p-2">
       <div className="flex gap-1 items-center min-w-0">
         {visibleTabs.map((tab) => (
           <Tab

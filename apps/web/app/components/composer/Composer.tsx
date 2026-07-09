@@ -150,7 +150,10 @@ export default function Composer({
 
   return (
     <>
-      <div className={`flex flex-col flex-1 min-h-0 h-full overflow-hidden ${className}`}>
+      <div
+        data-testid="composer-canvas"
+        className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface shadow-[var(--shadow-card)] transition-[border-color,box-shadow] duration-[var(--motion-duration-standard)] focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/30 ${className}`}
+      >
         {/* Tab bar */}
         {enableTabs && (
           <div className="sticky top-0 z-10 shrink-0">
@@ -178,7 +181,7 @@ export default function Composer({
             The min height guarantees room for the top-right trigger plus the
             bottom-right Clear/Speak stack even when the parent gives the
             composer no height of its own (e.g. /try). */}
-        <div className="relative flex flex-1 min-h-[220px]">
+        <div className="relative flex min-h-[220px] flex-1 bg-surface">
           <ComposerTextarea
             currentText={currentText}
             onTextChange={handleTextChange}
