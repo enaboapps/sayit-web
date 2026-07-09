@@ -16,7 +16,7 @@ describe('BoardActionButtons', () => {
       />
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Add tile' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Add Tile' }));
     await userEvent.click(screen.getByRole('button', { name: 'Recorded audio' }));
 
     expect(onAddAudioTile).toHaveBeenCalledTimes(1);

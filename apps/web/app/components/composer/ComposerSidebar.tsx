@@ -17,6 +17,7 @@ import { AudioWaveform } from 'lucide-react';
 import SubscriptionWrapper from '../SubscriptionWrapper';
 import ToneSheet, { type TonePreset } from '../typing/ToneSheet';
 import BottomSheet from '../ui/BottomSheet';
+import { UI_COPY } from '@/lib/ui-copy';
 
 interface ComposerSidebarProps {
   currentText: string;
@@ -95,24 +96,24 @@ export default function ComposerSidebar({
     actionItems.push({
       key: 'fix',
       content: !isOnline ? (
-        <button type="button" disabled className={`${ACTION_BUTTON} bg-surface-hover text-text-tertiary`} aria-label="Fix Text (offline)">
+        <button type="button" disabled className={`${ACTION_BUTTON} bg-surface-hover text-text-tertiary`} aria-label={`${UI_COPY.fixText} (offline)`}>
           <SparklesIcon className="h-5 w-5" />
-          <span>Fix Text</span>
+          <span>{UI_COPY.fixText}</span>
           <span className="ml-auto text-xs font-normal">Offline</span>
         </button>
       ) : (
         <SubscriptionWrapper
           fallback={
-            <button onClick={runAndClose(() => { window.location.href = '/pricing'; })} className={`${ACTION_BUTTON} bg-status-warning text-amber-300`} aria-label="Fix Text (upgrade)">
+            <button onClick={runAndClose(() => { window.location.href = '/pricing'; })} className={`${ACTION_BUTTON} bg-status-warning text-amber-300`} aria-label={`${UI_COPY.fixText} (upgrade)`}>
               <SparklesIcon className="h-5 w-5" />
-              <span>Fix Text</span>
+              <span>{UI_COPY.fixText}</span>
               <span className="ml-auto text-xs font-normal">Pro</span>
             </button>
           }
         >
-          <button onClick={runAndClose(onFixText)} disabled={!currentText.trim() || isFixingText} className={`${ACTION_BUTTON} bg-status-purple text-status-purple-foreground hover:brightness-95`} aria-label="Fix Text">
+          <button onClick={runAndClose(onFixText)} disabled={!currentText.trim() || isFixingText} className={`${ACTION_BUTTON} bg-status-purple text-status-purple-foreground hover:brightness-95`} aria-label={UI_COPY.fixText}>
             {isFixingText ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
-            <span>{isFixingText ? 'Fixing Text…' : 'Fix Text'}</span>
+            <span>{isFixingText ? 'Fixing text…' : UI_COPY.fixText}</span>
           </button>
         </SubscriptionWrapper>
       ),
@@ -127,10 +128,10 @@ export default function ComposerSidebar({
           onClick={runAndClose(onShare)}
           disabled={!isOnline}
           className={`${ACTION_BUTTON} ${isLiveTypingButtonActive ? 'bg-status-success text-status-success-foreground' : 'bg-surface-hover text-foreground hover:bg-status-success'}`}
-          aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
+          aria-label={isLiveTypingButtonActive ? `${UI_COPY.liveTyping} active` : UI_COPY.liveTyping}
         >
           <ShareIcon className="h-5 w-5" />
-          <span>Live Typing</span>
+          <span>{UI_COPY.liveTyping}</span>
           {isLiveTypingButtonActive && <span className="ml-auto text-xs font-normal">Active</span>}
         </button>
       ),
@@ -141,9 +142,9 @@ export default function ComposerSidebar({
     actionItems.push({
       key: 'save',
       content: (
-        <button onClick={runAndClose(() => onAddAsPhrase(currentText))} disabled={!currentText.trim()} className={`${ACTION_BUTTON} bg-status-info text-status-info-foreground hover:brightness-95`} aria-label="Save as Phrase">
+        <button onClick={runAndClose(() => onAddAsPhrase(currentText))} disabled={!currentText.trim()} className={`${ACTION_BUTTON} bg-status-info text-status-info-foreground hover:brightness-95`} aria-label={UI_COPY.saveAsPhrase}>
           <BookmarkIcon className="h-5 w-5" />
-          <span>Save as Phrase</span>
+          <span>{UI_COPY.saveAsPhrase}</span>
         </button>
       ),
     });
@@ -180,11 +181,11 @@ export default function ComposerSidebar({
         onClick={() => setShowActions(true)}
         aria-haspopup="dialog"
         aria-expanded={showActions}
-        aria-label="More actions"
+        aria-label={UI_COPY.moreActions}
         className="absolute right-4 top-4 z-20 flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm font-medium text-text-secondary shadow-[var(--shadow-control)] transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
       >
         <Squares2X2Icon className="h-5 w-5" />
-        <span className="hidden sm:inline">More Actions</span>
+        <span>{UI_COPY.moreActions}</span>
         {suggestionsEnabled && suggestionsCount > 0 && (
           <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{suggestionsCount}</span>
         )}
@@ -192,36 +193,37 @@ export default function ComposerSidebar({
 
       <div className="absolute bottom-4 right-4 z-20 flex items-end gap-3">
         {isSpeaking ? (
-          <button type="button" onClick={onStop} className="flex h-16 min-w-16 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-error px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-error-hover" aria-label="Stop">
+          <button type="button" onClick={onStop} className="flex h-16 min-w-16 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-error px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-error-hover" aria-label={UI_COPY.stop}>
             <StopIcon className="h-7 w-7" />
-            <span className="font-semibold">Stop</span>
+            <span className="font-semibold">{UI_COPY.stop}</span>
           </button>
         ) : (
           <>
-            <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-12 items-center justify-center rounded-[var(--radius-control)] border border-border bg-status-error text-status-error-foreground shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label="Clear">
+            <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-20 items-center justify-center gap-1.5 rounded-[var(--radius-control)] border border-border bg-status-error px-3 text-status-error-foreground shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.clear}>
               <XMarkIcon className="h-6 w-6" />
+              <span className="text-sm font-semibold">{UI_COPY.clear}</span>
             </button>
             {enableToneControl ? (
               <div className="flex overflow-hidden rounded-[var(--radius-control)] shadow-[var(--shadow-card)]">
                 <button type="button" onClick={() => setShowToneSheet(true)} disabled={speakDisabled} className="flex h-16 w-12 items-center justify-center border-r border-primary-900/40 bg-primary-700 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Choose tone">
                   <AudioWaveform className="h-5 w-5" />
                 </button>
-                <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 bg-primary-500 px-4 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Speak">
+                <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 bg-primary-500 px-4 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.speak}>
                   <SpeakerWaveIcon className="h-7 w-7" />
-                  <span className="font-semibold">Speak</span>
+                  <span className="font-semibold">{UI_COPY.speak}</span>
                 </button>
               </div>
             ) : (
-              <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-primary-500 px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Speak">
+              <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-primary-500 px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label={UI_COPY.speak}>
                 <SpeakerWaveIcon className="h-7 w-7" />
-                <span className="font-semibold">Speak</span>
+                <span className="font-semibold">{UI_COPY.speak}</span>
               </button>
             )}
           </>
         )}
       </div>
 
-      <BottomSheet isOpen={showActions} onClose={closeActions} title="More Actions" snapPoints={[55, 90]}>
+      <BottomSheet isOpen={showActions} onClose={closeActions} title={UI_COPY.moreActions} snapPoints={[55, 90]}>
         <div className="grid gap-3 p-4 sm:grid-cols-2" role="group" aria-label="Composer actions">
           {actionItems.map((item) => <div key={item.key}>{item.content}</div>)}
         </div>

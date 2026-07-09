@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/outline';
 import { Squares2X2Icon } from '@heroicons/react/24/solid';
+import { UI_COPY } from '@/lib/ui-copy';
 
 interface AACTabsProps {
   phrasesContent: React.ReactNode;
@@ -48,7 +49,7 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
           >
             <Squares2X2Icon className={`w-4 h-4 ${activeTab === 'phrases' ? 'text-white' : 'text-text-tertiary'}`} />
             <span className={activeTab === 'phrases' ? 'text-white' : 'text-text-secondary'}>
-              Phrases
+              {UI_COPY.phrases}
             </span>
           </button>
 
@@ -62,7 +63,7 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
           >
             <ChatBubbleBottomCenterTextIcon className={`w-4 h-4 ${activeTab === 'type' ? 'text-white' : 'text-text-tertiary'}`} />
             <span className={activeTab === 'type' ? 'text-white' : 'text-text-secondary'}>
-              Type
+              {UI_COPY.type}
             </span>
           </button>
         </div>
