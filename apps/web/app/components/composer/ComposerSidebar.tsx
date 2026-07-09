@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   SparklesIcon,
   XMarkIcon,
@@ -11,11 +11,12 @@ import {
   LightBulbIcon,
   SpeakerWaveIcon,
   StopIcon,
+  Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import { AudioWaveform } from 'lucide-react';
 import SubscriptionWrapper from '../SubscriptionWrapper';
 import ToneSheet, { type TonePreset } from '../typing/ToneSheet';
-import RadialFlyout, { type RadialFlyoutItem } from './RadialFlyout';
+import BottomSheet from '../ui/BottomSheet';
 
 interface ComposerSidebarProps {
   currentText: string;
@@ -35,17 +36,19 @@ interface ComposerSidebarProps {
   hasUser: boolean;
   onAddAsPhrase?: (text: string) => void;
   enableToneControl: boolean;
-  // Suggestions
   suggestionsCount: number;
   onSuggestionsOpen: () => void;
   suggestionsEnabled: boolean;
-  // Copy / Paste
   onCopyPasteOpen: () => void;
 }
 
-// Shared base classes — round floating tiles used inside the radial wheel.
-const WHEEL_TILE =
-  'w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed';
+interface ActionItem {
+  key: string;
+  content: ReactNode;
+}
+
+const ACTION_BUTTON =
+  'flex min-h-12 w-full items-center gap-3 rounded-[var(--radius-control)] border border-border px-4 py-3 text-left font-medium shadow-[var(--shadow-control)] transition-colors disabled:cursor-not-allowed disabled:opacity-40';
 
 export default function ComposerSidebar({
   currentText,
@@ -71,210 +74,158 @@ export default function ComposerSidebar({
   onCopyPasteOpen,
 }: ComposerSidebarProps) {
   const [showToneSheet, setShowToneSheet] = useState(false);
-  const [isWheelOpen, setWheelOpen] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const actionsTriggerRef = useRef<HTMLButtonElement>(null);
   const speakDisabled = !isAvailable || !currentText.trim();
   const clearDisabled = !currentText.trim();
 
-  // Close the wheel before firing an action so overlays (bottom sheets etc.)
-  // open on top of a settled composer.
+  const closeActions = () => {
+    setShowActions(false);
+    requestAnimationFrame(() => actionsTriggerRef.current?.focus());
+  };
+
   const runAndClose = (action: () => void) => () => {
-    setWheelOpen(false);
+    closeActions();
     action();
   };
 
-  const wheelItems: RadialFlyoutItem[] = [];
+  const actionItems: ActionItem[] = [];
 
-  // Fix Text — purple tile (offline stub or subscription fallback variants)
   if (enableFixText) {
-    wheelItems.push({
+    actionItems.push({
       key: 'fix',
-      label: 'Fix Text',
       content: !isOnline ? (
-        <button
-          type="button"
-          disabled
-          className={`${WHEEL_TILE} bg-surface-hover text-text-tertiary opacity-40 cursor-not-allowed`}
-          aria-label="Fix Text (offline)"
-        >
-          <SparklesIcon className="w-5 h-5" />
+        <button type="button" disabled className={`${ACTION_BUTTON} bg-surface-hover text-text-tertiary`} aria-label="Fix Text (offline)">
+          <SparklesIcon className="h-5 w-5" />
+          <span>Fix Text</span>
+          <span className="ml-auto text-xs font-normal">Offline</span>
         </button>
       ) : (
         <SubscriptionWrapper
           fallback={
-            <button
-              onClick={runAndClose(() => (window.location.href = '/pricing'))}
-              className={`${WHEEL_TILE} bg-status-warning text-amber-400 hover:bg-warning hover:text-white`}
-              aria-label="Fix Text (upgrade)"
-            >
-              <SparklesIcon className="w-5 h-5" />
+            <button onClick={runAndClose(() => { window.location.href = '/pricing'; })} className={`${ACTION_BUTTON} bg-status-warning text-amber-300`} aria-label="Fix Text (upgrade)">
+              <SparklesIcon className="h-5 w-5" />
+              <span>Fix Text</span>
+              <span className="ml-auto text-xs font-normal">Pro</span>
             </button>
           }
         >
-          <button
-            onClick={runAndClose(onFixText)}
-            disabled={!currentText.trim() || isFixingText}
-            className={`${WHEEL_TILE} ${
-              isFixingText
-                ? 'bg-gradient-to-br from-purple-500 to-purple-600 text-white'
-                : 'bg-status-purple text-purple-400 hover:bg-purple-600 hover:text-white'
-            }`}
-            aria-label="Fix Text"
-          >
-            {isFixingText ? <ArrowPathIcon className="w-5 h-5 animate-spin" /> : <SparklesIcon className="w-5 h-5" />}
+          <button onClick={runAndClose(onFixText)} disabled={!currentText.trim() || isFixingText} className={`${ACTION_BUTTON} bg-status-purple text-purple-300 hover:bg-purple-950`} aria-label="Fix Text">
+            {isFixingText ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <SparklesIcon className="h-5 w-5" />}
+            <span>{isFixingText ? 'Fixing Text…' : 'Fix Text'}</span>
           </button>
         </SubscriptionWrapper>
       ),
     });
   }
 
-  // Live Typing — green tile (with active gradient and offline disabled states)
   if (enableLiveTyping && hasUser) {
-    wheelItems.push({
+    actionItems.push({
       key: 'live',
-      label: 'Live Typing',
       content: (
         <button
           onClick={runAndClose(onShare)}
           disabled={!isOnline}
-          className={`${WHEEL_TILE} ${
-            !isOnline
-              ? 'bg-surface-hover text-text-tertiary opacity-40'
-              : isLiveTypingButtonActive
-                ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
-                : 'bg-status-success text-green-400 hover:bg-success hover:text-white'
-          }`}
+          className={`${ACTION_BUTTON} ${isLiveTypingButtonActive ? 'bg-status-success text-green-300' : 'bg-surface-hover text-foreground hover:bg-status-success'}`}
           aria-label={isLiveTypingButtonActive ? 'Live Typing Active' : 'Live Typing'}
         >
-          <ShareIcon className="w-5 h-5" />
+          <ShareIcon className="h-5 w-5" />
+          <span>Live Typing</span>
+          {isLiveTypingButtonActive && <span className="ml-auto text-xs font-normal">Active</span>}
         </button>
       ),
     });
   }
 
-  // Save as Phrase — blue tile
   if (onAddAsPhrase) {
-    wheelItems.push({
+    actionItems.push({
       key: 'save',
-      label: 'Save as Phrase',
       content: (
-        <button
-          onClick={runAndClose(() => onAddAsPhrase(currentText))}
-          disabled={!currentText.trim()}
-          className={`${WHEEL_TILE} bg-status-info text-blue-400 hover:bg-blue-600 hover:text-white`}
-          aria-label="Save as phrase"
-        >
-          <BookmarkIcon className="w-5 h-5" />
+        <button onClick={runAndClose(() => onAddAsPhrase(currentText))} disabled={!currentText.trim()} className={`${ACTION_BUTTON} bg-status-info text-blue-300 hover:bg-blue-950`} aria-label="Save as Phrase">
+          <BookmarkIcon className="h-5 w-5" />
+          <span>Save as Phrase</span>
         </button>
       ),
     });
   }
 
-  // Suggestions — amber tile (with count badge)
   if (suggestionsEnabled) {
-    wheelItems.push({
+    actionItems.push({
       key: 'suggestions',
-      label: 'Suggestions',
       content: (
-        <button
-          onClick={runAndClose(onSuggestionsOpen)}
-          className={`${WHEEL_TILE} relative bg-status-warning text-amber-400 hover:bg-warning hover:text-white`}
-          aria-label="Suggestions"
-        >
-          <LightBulbIcon className="w-5 h-5" />
-          {suggestionsCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-primary-500 text-white text-[10px] font-bold px-1">
-              {suggestionsCount}
-            </span>
-          )}
+        <button onClick={runAndClose(onSuggestionsOpen)} className={`${ACTION_BUTTON} bg-status-warning text-amber-300 hover:bg-amber-950`} aria-label="Suggestions">
+          <LightBulbIcon className="h-5 w-5" />
+          <span>Suggestions</span>
+          {suggestionsCount > 0 && <span className="ml-auto rounded-full bg-primary-500 px-2 py-0.5 text-xs text-white">{suggestionsCount}</span>}
         </button>
       ),
     });
   }
 
-  // Copy / Paste — pink tile (a fifth accent so it's distinct from the others)
-  wheelItems.push({
+  actionItems.push({
     key: 'copy-paste',
-    label: 'Copy & Paste',
     content: (
-      <button
-        onClick={runAndClose(onCopyPasteOpen)}
-        className={`${WHEEL_TILE} bg-pink-950/40 text-pink-400 hover:bg-pink-600 hover:text-white`}
-        aria-label="Copy and paste"
-      >
-        <ClipboardIcon className="w-5 h-5" />
+      <button onClick={runAndClose(onCopyPasteOpen)} className={`${ACTION_BUTTON} bg-surface-hover text-foreground hover:bg-surface`} aria-label="Copy and paste">
+        <ClipboardIcon className="h-5 w-5" />
+        <span>Copy and Paste</span>
       </button>
     ),
   });
 
   return (
     <>
-      {/* Top-right trigger + quarter-circle action wheel */}
-      <RadialFlyout
-        items={wheelItems}
-        isOpen={isWheelOpen}
-        onOpen={() => setWheelOpen(true)}
-        onClose={() => setWheelOpen(false)}
-        triggerBadge={suggestionsEnabled ? suggestionsCount : 0}
-      />
+      <button
+        ref={actionsTriggerRef}
+        type="button"
+        onClick={() => setShowActions(true)}
+        aria-haspopup="dialog"
+        aria-expanded={showActions}
+        aria-label="More actions"
+        className="absolute right-4 top-4 z-20 flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm font-medium text-text-secondary shadow-[var(--shadow-control)] transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      >
+        <Squares2X2Icon className="h-5 w-5" />
+        <span className="hidden sm:inline">More Actions</span>
+        {suggestionsEnabled && suggestionsCount > 0 && (
+          <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{suggestionsCount}</span>
+        )}
+      </button>
 
-      {/* Bottom-right pinned stack — Clear above Speak. Stop replaces both while speaking. */}
-      <div className="absolute bottom-4 right-3 z-20 flex flex-col items-end gap-3">
+      <div className="absolute bottom-4 right-4 z-20 flex items-end gap-3">
         {isSpeaking ? (
-          <button
-            type="button"
-            onClick={onStop}
-            className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center bg-error hover:bg-error-hover text-white transition-colors"
-            aria-label="Stop"
-          >
-            <StopIcon className="w-8 h-8" />
+          <button type="button" onClick={onStop} className="flex h-16 min-w-16 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-error px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-error-hover" aria-label="Stop">
+            <StopIcon className="h-7 w-7" />
+            <span className="font-semibold">Stop</span>
           </button>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={onClear}
-              disabled={clearDisabled}
-              className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-status-error text-red-400 border border-border hover:bg-error hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Clear"
-            >
-              <XMarkIcon className="w-6 h-6" />
+            <button type="button" onClick={onClear} disabled={clearDisabled} className="flex h-12 min-w-12 items-center justify-center rounded-[var(--radius-control)] border border-border bg-status-error text-red-300 shadow-[var(--shadow-control)] transition-colors hover:bg-error hover:text-white disabled:cursor-not-allowed disabled:opacity-30" aria-label="Clear">
+              <XMarkIcon className="h-6 w-6" />
             </button>
             {enableToneControl ? (
-              // Split pill: small tone segment attached to a dominant Speak segment.
-              <div className="flex rounded-full overflow-hidden shadow-lg">
-                <button
-                  type="button"
-                  onClick={() => setShowToneSheet(true)}
-                  disabled={speakDisabled}
-                  className="w-12 h-16 flex items-center justify-center bg-primary-700 hover:bg-primary-600 text-white border-r border-primary-900/40 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Choose tone"
-                >
-                  <AudioWaveform className="w-5 h-5" />
+              <div className="flex overflow-hidden rounded-[var(--radius-control)] shadow-[var(--shadow-card)]">
+                <button type="button" onClick={() => setShowToneSheet(true)} disabled={speakDisabled} className="flex h-16 w-12 items-center justify-center border-r border-primary-900/40 bg-primary-700 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Choose tone">
+                  <AudioWaveform className="h-5 w-5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={onSpeak}
-                  disabled={speakDisabled}
-                  className="w-16 h-16 flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  aria-label="Speak"
-                >
-                  <SpeakerWaveIcon className="w-8 h-8" />
+                <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 bg-primary-500 px-4 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Speak">
+                  <SpeakerWaveIcon className="h-7 w-7" />
+                  <span className="font-semibold">Speak</span>
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={onSpeak}
-                disabled={speakDisabled}
-                className="w-16 h-16 rounded-full shadow-lg flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-label="Speak"
-              >
-                <SpeakerWaveIcon className="w-8 h-8" />
+              <button type="button" onClick={onSpeak} disabled={speakDisabled} className="flex h-16 min-w-20 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-primary-500 px-4 text-white shadow-[var(--shadow-card)] transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Speak">
+                <SpeakerWaveIcon className="h-7 w-7" />
+                <span className="font-semibold">Speak</span>
               </button>
             )}
           </>
         )}
       </div>
+
+      <BottomSheet isOpen={showActions} onClose={closeActions} title="More Actions" snapPoints={[55, 90]}>
+        <div className="grid gap-3 p-4 sm:grid-cols-2" role="group" aria-label="Composer actions">
+          {actionItems.map((item) => <div key={item.key}>{item.content}</div>)}
+        </div>
+      </BottomSheet>
 
       <ToneSheet
         isOpen={showToneSheet}
