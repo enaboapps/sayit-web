@@ -28,6 +28,7 @@ import {
   filenameForBoard,
 } from '@/lib/open-board-format/export';
 import type { BoardSummary, BoardTileSummary, PhraseSummary } from '../phrases/types';
+import StatusBanner from '../ui/StatusBanner';
 
 export default function PhrasesInterface() {
   const tts = useTTS();
@@ -300,22 +301,14 @@ export default function PhrasesInterface() {
         <ConnectionRequestsBanner />
       </div>
       {captureError && (
-        <div
-          className="sticky top-0 z-40 shrink-0 border-b border-red-900 bg-surface px-4 py-3 text-sm text-red-300"
-          role="status"
-          aria-live="polite"
-        >
-          Couldn&apos;t save message to history. It will be retried next time.
-        </div>
+        <StatusBanner variant="error" title="Message history unavailable" className="sticky top-0 z-40">
+          Couldn&apos;t save this message. SayIt! will retry next time.
+        </StatusBanner>
       )}
       {openBoardExportError && (
-        <div
-          className="sticky top-0 z-40 shrink-0 border-b border-red-900 bg-surface px-4 py-3 text-sm text-red-300"
-          role="status"
-          aria-live="polite"
-        >
+        <StatusBanner variant="error" title="Board export failed" className="sticky top-0 z-40">
           {openBoardExportError}
-        </div>
+        </StatusBanner>
       )}
       <div className="flex min-h-0 flex-1 flex-col">
         <AACTabs
