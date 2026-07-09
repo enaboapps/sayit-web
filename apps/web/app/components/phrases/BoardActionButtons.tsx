@@ -14,6 +14,7 @@ import {
   ArrowUpTrayIcon,
 } from '@heroicons/react/24/outline';
 import BottomSheet from '@/app/components/ui/BottomSheet';
+import { UI_COPY } from '@/lib/ui-copy';
 
 interface BoardActionButtonsProps {
   onAddPhrase?: () => void;
@@ -68,7 +69,7 @@ export default function BoardActionButtons({
           className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] bg-primary-500 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-600"
           aria-haspopup="dialog"
           aria-expanded={addMenuOpen}
-          aria-label="Add tile"
+          aria-label="Add Tile"
         >
           <PlusIcon className="w-4 h-4" />
           <span>Add Tile</span>
@@ -77,10 +78,10 @@ export default function BoardActionButtons({
         <button
           onClick={onAddPhrase}
           className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] bg-primary-500 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-600"
-          aria-label="Add phrase"
+          aria-label={`Add ${UI_COPY.phrase}`}
         >
           <PlusIcon className="w-4 h-4" />
-          <span>Add Phrase</span>
+          <span>Add {UI_COPY.phrase}</span>
         </button>
       ) : showAddNavigate ? (
         <button
@@ -106,10 +107,10 @@ export default function BoardActionButtons({
         <button
           onClick={onAddBoard}
           className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] px-3 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
-          aria-label="Add board"
+          aria-label={`Add ${UI_COPY.board}`}
         >
           <Squares2X2Icon className="w-4 h-4" />
-          <span>Add Board</span>
+          <span>Add {UI_COPY.board}</span>
         </button>
       )}
 
@@ -119,7 +120,7 @@ export default function BoardActionButtons({
           className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-control)] text-text-secondary transition-colors hover:bg-surface-hover"
           aria-haspopup="dialog"
           aria-expanded={menuOpen}
-          aria-label="More options"
+          aria-label="More Options"
         >
           <EllipsisHorizontalIcon className="w-5 h-5" />
         </button>
