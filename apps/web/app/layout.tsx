@@ -3,6 +3,8 @@ import './globals.css';
 import ClientLayout from './ClientLayout';
 import { Metadata, Viewport } from 'next';
 import RegisterPWA from './register-pwa';
+import { AppearanceProvider } from './contexts/AppearanceContext';
+import { APPEARANCE_INIT_SCRIPT } from '@/lib/appearance';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -40,12 +42,15 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#1a1a1a" />
         <link rel="manifest" href="/manifest.json" />
+        <script id="sayit-appearance-init" dangerouslySetInnerHTML={{ __html: APPEARANCE_INIT_SCRIPT }} />
       </head>
       <body className={`${inter.variable} font-sans bg-surface text-foreground`} suppressHydrationWarning>
-        <RegisterPWA />
-        <ClientLayout>
-          {children}
-        </ClientLayout>
+        <AppearanceProvider>
+          <RegisterPWA />
+          <ClientLayout>
+            {children}
+          </ClientLayout>
+        </AppearanceProvider>
       </body>
     </html>
   );
