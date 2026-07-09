@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useSubscription } from '@/app/hooks/useSubscription';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   HomeIcon as HomeOutline,
   PlusCircleIcon as PlusOutline,
@@ -70,10 +69,6 @@ export default function BottomTabBar() {
   const { user } = useAuth();
   const profile = useQuery(api.profiles.getProfile);
   const { isActive: hasSubscription } = useSubscription();
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollYRef = useRef(0);
-  const isVisibleRef = useRef(true);
-
   const isCaregiver = profile?.role === 'caregiver';
 
   // Build tabs dynamically based on user state
@@ -95,24 +90,6 @@ export default function BottomTabBar() {
     ...(!user ? [profileTab] : []),
   ];
 
-  // Hide on scroll down, show on scroll up
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const nextIsVisible = !(currentScrollY > lastScrollYRef.current && currentScrollY > 100);
-
-      if (nextIsVisible !== isVisibleRef.current) {
-        isVisibleRef.current = nextIsVisible;
-        setIsVisible(nextIsVisible);
-      }
-
-      lastScrollYRef.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const isActive = (tab: TabItem) => {
     if (tab.matchPaths) {
       return tab.matchPaths.some(path =>
@@ -123,58 +100,41 @@ export default function BottomTabBar() {
   };
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.nav
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          exit={{ y: 100 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="border-t border-border shadow-2xl bg-surface">
-            {/* Safe area padding for notched devices */}
-            <div className="flex justify-around items-center px-2 pb-safe">
-              {tabs.map((tab) => {
-                const active = isActive(tab);
+    <nav aria-label="Bottom navigation" className="border-t border-border bg-surface shadow-[var(--shadow-card)]">
+      {/* Safe area padding for notched devices */}
+      <div className="flex justify-around items-center px-2 pb-safe">
+        {tabs.map((tab) => {
+          const active = isActive(tab);
 
-                return (
-                  <Link
-                    key={tab.label}
-                    href={tab.href}
-                    className={`flex flex-col items-center justify-center min-w-[64px] min-h-[56px] py-2 px-3 rounded-2xl transition-all duration-200 ${
-                      active
-                        ? 'text-primary-500'
-                        : 'text-text-tertiary hover:text-text-secondary'
-                    }`}
-                  >
-                    <motion.div
-                      whileTap={{ scale: 0.9 }}
-                      className="relative"
-                    >
-                      {active ? tab.iconSolid : tab.iconOutline}
-                      {tab.showLock && (
-                        <LockClosedIcon className="w-3 h-3 absolute -top-1 -right-1 text-text-tertiary" />
-                      )}
-                      {active && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute -inset-2 bg-surface-hover rounded-2xl -z-10"
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        />
-                      )}
-                    </motion.div>
-                    <span className={`text-xs mt-1 font-medium ${
-                      active ? 'opacity-100' : 'opacity-70'
-                    }`}>
-                      {tab.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </motion.nav>
-      )}
-    </AnimatePresence>
+          return (
+            <Link
+              key={tab.label}
+              href={tab.href}
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-h-[56px] min-w-[64px] flex-col items-center justify-center rounded-[var(--radius-control)] px-3 py-2 transition-colors duration-[var(--motion-duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+                active
+                  ? 'bg-primary-950 text-primary-300'
+                  : 'text-text-tertiary hover:bg-surface-hover hover:text-text-secondary'
+              }`}
+            >
+              <motion.div
+                whileTap={{ scale: 0.9 }}
+                className="relative"
+              >
+                {active ? tab.iconSolid : tab.iconOutline}
+                {tab.showLock && (
+                  <LockClosedIcon className="w-3 h-3 absolute -top-1 -right-1 text-text-tertiary" />
+                )}
+              </motion.div>
+              <span className={`text-xs mt-1 font-medium ${
+                active ? 'opacity-100' : 'opacity-70'
+              }`}>
+                {tab.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
