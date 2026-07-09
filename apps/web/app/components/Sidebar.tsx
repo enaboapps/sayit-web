@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useQuery } from 'convex/react';
@@ -14,9 +13,8 @@ import {
   Cog6ToothIcon,
   ArrowRightStartOnRectangleIcon,
   UsersIcon,
-  LockClosedIcon
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
-import { Tooltip } from 'react-tooltip';
 import { UserButton } from '@clerk/nextjs';
 
 export default function Sidebar() {
@@ -24,107 +22,71 @@ export default function Sidebar() {
   const pathname = usePathname();
   const profile = useQuery(api.profiles.getProfile);
   const { isActive: hasSubscription } = useSubscription();
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const isCaregiver = profile?.role === 'caregiver';
 
   return (
-    <aside
-      className={`fixed left-0 top-0 h-full z-50 shadow-2xl hidden md:flex flex-col transition-all duration-300 ${
-        isExpanded ? 'w-48' : 'w-16'
-      } bg-surface`}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-      onFocusCapture={() => setIsExpanded(true)}
-      onBlurCapture={(event) => {
-        const nextTarget = event.relatedTarget as Node | null;
-        if (!event.currentTarget.contains(nextTarget)) {
-          setIsExpanded(false);
-        }
-      }}
-    >
-      <div className="p-4 flex justify-center items-center">
-        <div className="rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
-          <Image
-            src="/icons/app-icon.png"
-            alt="Logo"
-            width={32}
-            height={32}
-          />
-        </div>
-      </div>
+    <aside className="fixed inset-y-0 left-0 z-50 hidden w-24 flex-col border-r border-border bg-surface md:flex">
+      <Link href="/" aria-label="SayIt! home" className="flex h-20 items-center justify-center">
+        <Image src="/icons/app-icon.png" alt="" width={36} height={36} priority />
+      </Link>
 
-      <nav className="flex-1 p-3 space-y-3">
+      <nav aria-label="Primary navigation" className="flex-1 space-y-2 px-2 py-2">
         <SidebarItem
           href="/"
-          icon={<HomeIcon className="w-6 h-6 flex-shrink-0" />}
+          icon={<HomeIcon className="h-6 w-6" />}
           title="Home"
           isActive={pathname === '/'}
-          isExpanded={isExpanded}
         />
 
         {user && isCaregiver && (
           <SidebarItem
             href="/dashboard"
             icon={
-              hasSubscription ? (
-                <UsersIcon className="w-6 h-6 flex-shrink-0" />
-              ) : (
-                <div className="relative flex-shrink-0">
-                  <UsersIcon className="w-6 h-6" />
-                  <LockClosedIcon className="w-3 h-3 absolute -bottom-1 -right-1 text-text-tertiary" />
-                </div>
-              )
+              <span className="relative">
+                <UsersIcon className="h-6 w-6" />
+                {!hasSubscription && (
+                  <LockClosedIcon className="absolute -bottom-1 -right-1 h-3 w-3 text-text-tertiary" />
+                )}
+              </span>
             }
             title={hasSubscription ? 'Clients' : 'Clients (Pro)'}
             isActive={pathname?.startsWith('/dashboard') ?? false}
-            isExpanded={isExpanded}
           />
         )}
 
         {user && (
           <SidebarItem
             href="/settings"
-            icon={<Cog6ToothIcon className="w-6 h-6 flex-shrink-0" />}
+            icon={<Cog6ToothIcon className="h-6 w-6" />}
             title="Settings"
             isActive={pathname === '/settings'}
-            isExpanded={isExpanded}
           />
         )}
 
         <SidebarItem
           href="/support"
-          icon={<QuestionMarkCircleIcon className="w-6 h-6 flex-shrink-0" />}
+          icon={<QuestionMarkCircleIcon className="h-6 w-6" />}
           title="Support"
           isActive={pathname === '/support'}
-          isExpanded={isExpanded}
         />
       </nav>
 
-      <div className="p-3 flex items-center justify-center">
+      <div className="flex min-h-20 flex-col items-center justify-center gap-1 px-2 py-3 text-xs text-text-secondary">
         {user ? (
-          <UserButton
-            appearance={{
-              elements: {
-                avatarBox: 'w-10 h-10 rounded-full hover:scale-110 transition-transform duration-300'
-              }
-            }}
-          />
-        ) : (
-          <Link
-            href="/sign-in"
-            className="flex items-center justify-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl hover:scale-110 bg-surface-hover text-text-secondary hover:bg-primary-950 hover:text-primary-500"
-            data-tooltip-id="sidebar-tooltip-sign-in"
-            data-tooltip-content="Sign In"
-            aria-label="Sign in"
-          >
-            <ArrowRightStartOnRectangleIcon className="w-6 h-6" />
-            <Tooltip
-              id="sidebar-tooltip-sign-in"
-              place="right"
-              className="z-50"
+          <>
+            <UserButton
+              appearance={{ elements: { avatarBox: 'h-9 w-9 rounded-full' } }}
             />
-          </Link>
+            <span>Account</span>
+          </>
+        ) : (
+          <SidebarItem
+            href="/sign-in"
+            icon={<ArrowRightStartOnRectangleIcon className="h-6 w-6" />}
+            title="Sign in"
+            isActive={pathname?.startsWith('/sign-in') ?? false}
+            compact
+          />
         )}
       </div>
     </aside>
@@ -136,38 +98,23 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   title: string;
   isActive: boolean;
-  isExpanded: boolean;
+  compact?: boolean;
 }
 
-function SidebarItem({ href, icon, title, isActive, isExpanded }: SidebarItemProps) {
+function SidebarItem({ href, icon, title, isActive, compact = false }: SidebarItemProps) {
   return (
     <Link
       href={href}
-      className={`flex items-center p-2 rounded-3xl transition-all duration-300 shadow-md hover:shadow-xl ${
-        isExpanded ? 'justify-start gap-3 px-3' : 'justify-center hover:scale-110'
-      } ${
+      className={`relative flex min-h-[60px] w-full flex-col items-center justify-center gap-1 rounded-[var(--radius-control)] px-1 py-2 text-center transition-colors duration-[var(--motion-duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
         isActive
-          ? 'bg-primary-500 text-white shadow-lg'
-          : 'bg-surface-hover text-text-secondary hover:bg-primary-950 hover:text-primary-500'
-      }`}
-      data-tooltip-id={!isExpanded ? `sidebar-tooltip-${title}` : undefined}
-      data-tooltip-content={!isExpanded ? title : undefined}
-      aria-label={title}
+          ? 'bg-primary-950 text-primary-300'
+          : 'text-text-secondary hover:bg-surface-hover hover:text-foreground'
+      } ${compact ? 'min-w-[72px]' : ''}`}
       aria-current={isActive ? 'page' : undefined}
     >
-      {icon}
-      {isExpanded && (
-        <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
-          {title}
-        </span>
-      )}
-      {!isExpanded && (
-        <Tooltip
-          id={`sidebar-tooltip-${title}`}
-          place="right"
-          className="z-50"
-        />
-      )}
+      {isActive && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-primary-500" />}
+      <span aria-hidden="true">{icon}</span>
+      <span className="max-w-full text-[11px] font-medium leading-tight">{title}</span>
     </Link>
   );
 }
