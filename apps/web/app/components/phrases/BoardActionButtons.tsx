@@ -61,11 +61,11 @@ export default function BoardActionButtons({
   if (!showAddPhrase && !showAddNavigate && !showAddAudio && !showAddBoard && !showMenu) return null;
 
   return (
-    <div className="flex items-center justify-center gap-2 py-2 bg-surface">
+    <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
       {showAddTileMenu ? (
         <button
           onClick={() => setAddMenuOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
+          className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] bg-primary-500 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-600"
           aria-haspopup="dialog"
           aria-expanded={addMenuOpen}
           aria-label="Add tile"
@@ -76,7 +76,7 @@ export default function BoardActionButtons({
       ) : showAddPhrase ? (
         <button
           onClick={onAddPhrase}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
+          className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] bg-primary-500 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-600"
           aria-label="Add phrase"
         >
           <PlusIcon className="w-4 h-4" />
@@ -85,7 +85,7 @@ export default function BoardActionButtons({
       ) : showAddNavigate ? (
         <button
           onClick={onAddNavigateTile}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
+          className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] bg-primary-500 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-600"
           aria-label="Add navigate tile"
         >
           <PlusIcon className="w-4 h-4" />
@@ -94,7 +94,7 @@ export default function BoardActionButtons({
       ) : showAddAudio ? (
         <button
           onClick={onAddAudioTile}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary-500 hover:bg-primary-600 text-white transition-colors font-medium"
+          className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] bg-primary-500 px-3 text-sm font-medium text-white transition-colors hover:bg-primary-600"
           aria-label="Add audio tile"
         >
           <PlusIcon className="w-4 h-4" />
@@ -105,7 +105,7 @@ export default function BoardActionButtons({
       {showAddBoard && (
         <button
           onClick={onAddBoard}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm hover:bg-surface-hover text-text-secondary transition-colors"
+          className="flex min-h-11 items-center gap-1.5 rounded-[var(--radius-control)] px-3 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
           aria-label="Add board"
         >
           <Squares2X2Icon className="w-4 h-4" />
@@ -116,7 +116,7 @@ export default function BoardActionButtons({
       {showMenu && (
         <button
           onClick={() => setMenuOpen(true)}
-          className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-surface-hover text-text-secondary transition-colors"
+          className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-control)] text-text-secondary transition-colors hover:bg-surface-hover"
           aria-haspopup="dialog"
           aria-expanded={menuOpen}
           aria-label="More options"
