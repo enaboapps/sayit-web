@@ -128,7 +128,13 @@ export default function ClientLayout({
   }
 
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          fontFamily: 'var(--font-inter), system-ui, sans-serif',
+        },
+      }}
+    >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <AuthProvider>
           <SettingsProvider>
