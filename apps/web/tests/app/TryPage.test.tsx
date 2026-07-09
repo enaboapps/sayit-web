@@ -80,6 +80,9 @@ describe('TryPage', () => {
     ).toBeInTheDocument();
     const cta = screen.getByRole('link', { name: /create account/i });
     expect(cta).toHaveAttribute('href', '/sign-up');
+    expect(cta).toHaveClass('w-full', 'sm:w-auto');
+    expect(screen.getByTestId('try-layout')).toHaveClass('h-full', 'min-h-0', 'overflow-hidden');
+    expect(screen.getByTestId('try-composer-region')).toHaveClass('flex-1', 'min-h-0');
     expect(replace).not.toHaveBeenCalled();
   });
 
