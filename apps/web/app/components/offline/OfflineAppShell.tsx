@@ -12,6 +12,7 @@ import type { BoardSummary, BoardTileSummary, PhraseSummary, TileLayoutSummary }
 import type { TileRole, WordClass } from '@/lib/aacLayout';
 import { useLocalMessageHistory } from '@/lib/hooks/useLocalMessageHistory';
 import { useOfflineTTS } from '@/lib/hooks/useOfflineTTS';
+import EmptyState from '@/app/components/ui/EmptyState';
 import {
   readLastCachedBoards,
   readOfflineBootstrap,
@@ -244,13 +245,11 @@ export default function OfflineAppShell({
       Loading your offline boards...
     </div>
   ) : boards.length === 0 ? (
-    <div className="flex h-full items-center justify-center px-6">
-      <div className="max-w-md text-center">
-        <p className="text-lg font-medium text-foreground">No boards prepared for offline use</p>
-        <p className="mt-2 text-sm text-text-secondary">
-          Text communication still works. Open SayIt! online to sync boards to this device for offline browsing.
-        </p>
-      </div>
+    <div className="flex h-full items-center justify-center">
+      <EmptyState
+        title="No boards prepared for offline use"
+        description="Text communication still works. Open SayIt! online to sync boards to this device for offline browsing."
+      />
     </div>
   ) : (
     <div className="flex h-full min-h-0 flex-col">

@@ -8,6 +8,8 @@ import AnimatedLoading from '../phrases/AnimatedLoading';
 import PhraseBar from '../phrase-bar/PhraseBar';
 import { ArrowUturnLeftIcon } from '@heroicons/react/24/outline';
 import type { BoardSummary, BoardTileSummary, PhraseSummary } from '../phrases/types';
+import EmptyState from '../ui/EmptyState';
+import { Button } from '../ui/Button';
 
 interface PhrasesTabContentProps {
   boards: BoardSummary[];
@@ -177,10 +179,7 @@ export default function PhrasesTabContent({
   if (showAuthPrompt) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-medium text-foreground mb-4">Sign in to view boards</h2>
-          <p className="text-text-secondary mb-6">Your saved boards appear after logging in.</p>
-        </div>
+        <EmptyState title="Sign in to view boards" description="Your saved boards appear after signing in." />
       </div>
     );
   }
@@ -188,7 +187,7 @@ export default function PhrasesTabContent({
   if (showOfflineBoardsState) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-text-secondary">Boards are unavailable offline.</p>
+        <EmptyState title="Boards unavailable offline" description="Type still works. Reconnect to load boards that have not been prepared for offline use." />
       </div>
     );
   }
@@ -204,18 +203,11 @@ export default function PhrasesTabContent({
   if (boards.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-medium text-foreground mb-4">No boards yet</h2>
-          <p className="text-text-secondary mb-6">Create your first board to start adding phrases</p>
-          {isOnline && (
-            <button
-              onClick={onAddBoard}
-              className="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold transition-colors"
-            >
-              Create board
-            </button>
-          )}
-        </div>
+        <EmptyState
+          title="No boards yet"
+          description="Create your first board to start adding phrases."
+          action={isOnline ? <Button onClick={onAddBoard}>Create board</Button> : undefined}
+        />
       </div>
     );
   }
