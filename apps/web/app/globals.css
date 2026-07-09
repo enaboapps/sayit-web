@@ -22,6 +22,17 @@
   --background-gradient-2: #232220;
   --background-gradient-3: #2d2b29;
   --background-gradient-4: #1a1917;
+
+  /* Version 5 visual system */
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
+  --radius-small: 0.5rem;
+  --control-height: 2.75rem;
+  --control-height-large: 3rem;
+  --shadow-control: 0 1px 2px rgb(0 0 0 / 0.24);
+  --shadow-card: 0 8px 24px rgb(0 0 0 / 0.18);
+  --motion-duration-fast: 150ms;
+  --motion-duration-standard: 200ms;
 }
 
 /* Fixed color tokens */
