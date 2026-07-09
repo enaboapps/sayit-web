@@ -34,22 +34,22 @@ export default function TryPage() {
   }
 
   return (
-    <div className="flex flex-col bg-background min-h-screen">
-      <section className="w-full max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-4 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl md:text-2xl font-semibold text-foreground">
+    <div data-testid="try-layout" className="mx-auto flex h-full min-h-0 w-full max-w-4xl flex-col overflow-hidden bg-background">
+      <section className="flex w-full shrink-0 flex-col gap-4 px-4 pb-4 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-6 sm:pt-8">
+        <div className="min-w-0 sm:flex-1">
+          <h1 className="text-xl font-semibold text-foreground md:text-2xl">
             Try without signing in
           </h1>
           <p className="mt-1 text-sm text-text-secondary max-w-xl">
             Saved boards, writing help, and premium voices need an account.
           </p>
         </div>
-        <Button asChild size="default" className="shrink-0">
+        <Button asChild size="default" className="w-full shrink-0 sm:w-auto">
           <Link href="/sign-up">Create account</Link>
         </Button>
       </section>
 
-      <section className="w-full max-w-3xl mx-auto px-4 sm:px-6 pb-8 flex-1">
+      <section data-testid="try-composer-region" className="flex min-h-0 w-full flex-1 px-3 pb-3 sm:px-6 sm:pb-6">
         <Composer
           text={text}
           onChange={setText}
@@ -60,6 +60,7 @@ export default function TryPage() {
           onStop={tts.stop}
           isSpeaking={tts.isSpeaking}
           isAvailable={tts.isAvailable}
+          className="min-h-0 flex-1"
         />
       </section>
     </div>
