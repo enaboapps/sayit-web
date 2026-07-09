@@ -4,7 +4,7 @@ import ClientLayout from './ClientLayout';
 import { Metadata, Viewport } from 'next';
 import RegisterPWA from './register-pwa';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -41,7 +41,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#1a1a1a" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.className} bg-surface text-foreground`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans bg-surface text-foreground`} suppressHydrationWarning>
         <RegisterPWA />
         <ClientLayout>
           {children}
