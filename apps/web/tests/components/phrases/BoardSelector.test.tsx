@@ -51,21 +51,23 @@ describe('BoardSelector', () => {
       expect(screen.getByText('My Board')).toBeInTheDocument();
     });
 
-    it('shows edit icon in edit mode', () => {
+    it('shows a persistent edit-mode status and Done action', () => {
       const board = createBoard();
+      const onEdit = jest.fn();
 
-      const { container } = render(
+      render(
         <BoardSelector
           boards={[board]}
           selectedBoard={board}
           isEditMode={true}
           onSelectBoard={mockOnSelectBoard}
           onEditBoard={mockOnEditBoard}
+          onEdit={onEdit}
         />
       );
 
-      // Look for pencil icon (svg)
-      expect(container.querySelector('svg')).toBeInTheDocument();
+      expect(screen.getByRole('status')).toHaveTextContent('Edit mode');
+      expect(screen.getByRole('button', { name: 'Done editing' })).toBeInTheDocument();
     });
 
     it('hides edit icon for view-only shared board', () => {
@@ -75,19 +77,19 @@ describe('BoardSelector', () => {
         sharedBy: 'Caregiver',
       });
 
-      const { container } = render(
+      render(
         <BoardSelector
           boards={[board]}
           selectedBoard={board}
           isEditMode={true}
           onSelectBoard={mockOnSelectBoard}
           onEditBoard={mockOnEditBoard}
+          onEdit={jest.fn()}
         />
       );
 
-      // Pencil icon should not be present for view-only
-      const pencilIcons = container.querySelectorAll('svg[class*="pencil"]');
-      expect(pencilIcons.length).toBe(0);
+      expect(screen.queryByRole('button', { name: 'Done editing' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Edit Phrases')).not.toBeInTheDocument();
     });
 
     it('shows edit icon for edit-access shared board', () => {
@@ -189,8 +191,7 @@ describe('BoardSelector', () => {
         />
       );
 
-      // Should show dropdown arrow
-      expect(screen.getByText('▼')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /choose board/i })).toBeInTheDocument();
     });
 
     it('opens popup when clicked', async () => {
@@ -209,8 +210,7 @@ describe('BoardSelector', () => {
         />
       );
 
-      // Click the dropdown trigger area
-      await userEvent.click(screen.getByText('▼'));
+      await userEvent.click(screen.getByRole('button', { name: /choose board/i }));
 
       // Popup should show with "Select a Board" title
       expect(screen.getByText('Select a Board')).toBeInTheDocument();
@@ -233,7 +233,7 @@ describe('BoardSelector', () => {
         />
       );
 
-      await userEvent.click(screen.getByText('▼'));
+      await userEvent.click(screen.getByRole('button', { name: /choose board/i }));
 
       // All board names should be visible in popup
       expect(screen.getAllByText('Board 1')).toHaveLength(2); // In selector and popup
@@ -257,7 +257,7 @@ describe('BoardSelector', () => {
         />
       );
 
-      await userEvent.click(screen.getByText('▼'));
+      await userEvent.click(screen.getByRole('button', { name: /choose board/i }));
       await userEvent.click(screen.getByText('Board 2'));
 
       expect(mockOnSelectBoard).toHaveBeenCalledWith(boards[1]);

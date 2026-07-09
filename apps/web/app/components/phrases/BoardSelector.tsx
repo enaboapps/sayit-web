@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChevronDownIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import BoardGridPopup from './BoardGridPopup';
 import BoardActionButtons from './BoardActionButtons';
-import { Button } from '@/app/components/ui/Button';
 import type { BoardSummary } from './types';
 
 interface BoardSelectorProps {
@@ -40,115 +39,82 @@ export default function BoardSelector({
 }: BoardSelectorProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  if (boards.length === 0) {
-    return null;
-  }
+  if (boards.length === 0) return null;
 
   const canEditSelected = !selectedBoard?.isShared || selectedBoard?.accessLevel === 'edit';
   const editSelectedBoard = selectedBoard && canEditSelected && onEditBoard
     ? () => onEditBoard(selectedBoard.id)
     : undefined;
 
-  const renderBoardSubtitle = (board: BoardSummary | null) => {
-    if (!board) {
-      return null;
-    }
+  const subtitle = selectedBoard?.isShared && selectedBoard.sharedBy
+    ? `Shared by ${selectedBoard.sharedBy}`
+    : selectedBoard?.isOwner && selectedBoard.forClientName
+      ? `For ${selectedBoard.forClientName}`
+      : null;
 
-    if (board.isShared && board.sharedBy) {
-      return (
-        <div className="mt-0.5 flex items-center gap-1">
-          <UserGroupIcon className="h-3 w-3 text-primary-400" />
-          <span className="text-xs text-primary-400">
-            Shared by {board.sharedBy}
+  const boardIdentity = (
+    <>
+      <span className="min-w-0 text-left">
+        <span className="block truncate text-base font-semibold text-foreground">{selectedBoard?.name}</span>
+        {subtitle && (
+          <span className="mt-0.5 flex items-center gap-1 text-xs text-primary-300">
+            <UserGroupIcon className="h-3.5 w-3.5" />
+            {subtitle}
           </span>
-        </div>
-      );
-    }
-
-    if (board.isOwner && board.forClientName) {
-      return (
-        <div className="mt-0.5 flex items-center gap-1">
-          <UserGroupIcon className="h-3 w-3 text-blue-400" />
-          <span className="text-xs text-blue-400">
-            For {board.forClientName}
-          </span>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  const cardClass = embedded
-    ? ''
-    : 'bg-surface rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300';
-  const wrapperClass = embedded ? '' : 'mb-4';
-
-  if (boards.length === 1) {
-    return (
-      <div className={wrapperClass}>
-        <div className={`flex items-center ${cardClass}`}>
-          <div className="flex flex-1 items-center justify-between px-6 py-4">
-            <div className="flex flex-col">
-              <h2 className="text-base font-semibold text-foreground">{selectedBoard?.name}</h2>
-              {renderBoardSubtitle(selectedBoard)}
-            </div>
-          </div>
-        </div>
-        <BoardActionButtons
-          onAddPhrase={onAddPhrase}
-          onAddNavigateTile={onAddNavigateTile}
-          onAddAudioTile={onAddAudioTile}
-          onAddBoard={onAddBoard}
-          onEdit={onEdit}
-          onEditBoard={editSelectedBoard}
-          onImportOpenBoard={onImportOpenBoard}
-          onExportOpenBoard={onExportOpenBoard}
-          onExportAllOpenBoards={onExportAllOpenBoards}
-          isEditMode={isEditMode}
-          canEditBoard={canEditSelected}
-        />
-      </div>
-    );
-  }
+        )}
+      </span>
+      {boards.length > 1 && <ChevronDownIcon className="h-5 w-5 shrink-0 text-text-secondary" />}
+    </>
+  );
 
   return (
     <>
-      <div className={wrapperClass}>
-        <div className={`flex items-center ${cardClass}`}>
-          <div
-            className="flex flex-1 cursor-pointer items-center justify-between px-6 py-4"
-            onClick={() => setIsPopupOpen(true)}
-          >
-            <div className="flex flex-col">
-              <h2 className="text-base font-semibold text-foreground">{selectedBoard?.name}</h2>
-              {renderBoardSubtitle(selectedBoard)}
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(event: React.MouseEvent) => {
-                event.stopPropagation();
-                setIsPopupOpen(true);
-              }}
+      <div className={embedded ? '' : 'mb-4'}>
+        <section
+          aria-label="Board workspace"
+          className={`flex flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2 ${embedded ? '' : 'rounded-[var(--radius-card)] border shadow-[var(--shadow-card)]'}`}
+        >
+          {boards.length > 1 ? (
+            <button
+              type="button"
+              onClick={() => setIsPopupOpen(true)}
+              className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-3 rounded-[var(--radius-control)] px-3 py-2 transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 sm:max-w-sm"
+              aria-label={`Choose board. Current board: ${selectedBoard?.name ?? 'None'}`}
+              aria-haspopup="dialog"
+              aria-expanded={isPopupOpen}
             >
-              <span className="text-lg text-text-secondary transition-colors duration-200 hover:text-foreground">▼</span>
-            </Button>
-          </div>
-        </div>
-        <BoardActionButtons
-          onAddPhrase={onAddPhrase}
-          onAddNavigateTile={onAddNavigateTile}
-          onAddAudioTile={onAddAudioTile}
-          onAddBoard={onAddBoard}
-          onEdit={onEdit}
-          onEditBoard={editSelectedBoard}
-          onImportOpenBoard={onImportOpenBoard}
-          onExportOpenBoard={onExportOpenBoard}
-          onExportAllOpenBoards={onExportAllOpenBoards}
-          isEditMode={isEditMode}
-          canEditBoard={canEditSelected}
-        />
+              {boardIdentity}
+            </button>
+          ) : (
+            <div className="flex min-h-11 min-w-0 flex-1 items-center gap-3 px-3 py-2 sm:max-w-sm">
+              {boardIdentity}
+            </div>
+          )}
+
+          {isEditMode && canEditSelected && onEdit && (
+            <div className="flex min-h-11 items-center gap-2 rounded-[var(--radius-control)] border border-blue-400/60 bg-blue-950/40 px-3" role="status">
+              <span className="text-sm font-medium text-blue-200">Edit mode</span>
+              <button type="button" onClick={onEdit} className="flex min-h-9 items-center gap-1 rounded-[var(--radius-small)] bg-blue-500 px-3 text-sm font-semibold text-white hover:bg-blue-600" aria-label="Done editing">
+                <CheckIcon className="h-4 w-4" />
+                Done
+              </button>
+            </div>
+          )}
+
+          <BoardActionButtons
+            onAddPhrase={onAddPhrase}
+            onAddNavigateTile={onAddNavigateTile}
+            onAddAudioTile={onAddAudioTile}
+            onAddBoard={onAddBoard}
+            onEdit={!isEditMode && canEditSelected ? onEdit : undefined}
+            onEditBoard={editSelectedBoard}
+            onImportOpenBoard={onImportOpenBoard}
+            onExportOpenBoard={onExportOpenBoard}
+            onExportAllOpenBoards={onExportAllOpenBoards}
+            isEditMode={isEditMode}
+            canEditBoard={canEditSelected}
+          />
+        </section>
       </div>
 
       <BoardGridPopup
