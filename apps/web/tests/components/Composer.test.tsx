@@ -324,9 +324,17 @@ describe('Composer', () => {
     );
 
     const textarea = screen.getByRole('textbox');
-    // textarea is inside ComposerTextarea wrapper → flex row → outer flex-col (overflow-hidden)
+    const layout = screen.getByTestId('composer-layout');
+    const header = screen.getByTestId('composer-action-header');
+    const messageRegion = screen.getByTestId('composer-message-region');
+    const footer = screen.getByTestId('composer-action-footer');
+
+    expect(Array.from(layout.children)).toEqual([header, messageRegion, footer]);
+    expect(header).not.toHaveClass('absolute');
+    expect(footer).not.toHaveClass('absolute');
     expect(textarea.parentElement).toHaveClass('flex-1', 'min-h-0', 'overflow-hidden', 'md:min-h-[120px]');
-    expect(textarea).toHaveClass('absolute', 'inset-0', 'overflow-y-auto', 'resize-none', 'pb-24');
+    expect(textarea).toHaveClass('absolute', 'inset-0', 'overflow-y-auto', 'resize-none', 'py-5');
+    expect(textarea).not.toHaveClass('pb-24');
     expect(screen.getByRole('button', { name: 'Clear' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Speak' })).toBeInTheDocument();
   });

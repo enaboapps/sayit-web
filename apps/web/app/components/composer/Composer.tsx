@@ -177,11 +177,30 @@ export default function Composer({
           />
         )}
 
-        {/* Main body: full-width textarea with floating action overlays.
-            The min height guarantees room for the top-right trigger plus the
-            bottom-right Clear/Speak stack even when the parent gives the
-            composer no height of its own (e.g. /try). */}
-        <div className="relative flex min-h-[220px] flex-1 bg-surface">
+        {/* Controls use dedicated rows around an unobstructed message canvas. */}
+        <ComposerSidebar
+          currentText={currentText}
+          onClear={actions.handleClear}
+          onSpeak={() => actions.handleSpeak('speak')}
+          onStop={onStop}
+          onToneSelected={actions.handleToneSelected}
+          isSpeaking={isSpeaking}
+          isAvailable={isAvailable}
+          enableFixText={enableFixText}
+          isOnline={actions.isOnline}
+          isFixingText={actions.isFixingText}
+          onFixText={actions.handleFixText}
+          enableLiveTyping={enableLiveTyping}
+          isLiveTypingButtonActive={isLiveTypingButtonActive}
+          onShare={handleShare}
+          hasUser={!!actions.user}
+          onAddAsPhrase={onAddAsPhrase}
+          enableToneControl={enableToneControl}
+          suggestionsCount={suggestionsCount}
+          onSuggestionsOpen={() => setShowSuggestions(true)}
+          suggestionsEnabled={!!replySuggestions && !!actions.user && actions.isOnline}
+          onCopyPasteOpen={() => setCopyPasteOpen(true)}
+        >
           <ComposerTextarea
             currentText={currentText}
             onTextChange={handleTextChange}
@@ -193,30 +212,6 @@ export default function Composer({
             onKeyUp={() => captureSnapshot()}
             onBlur={() => captureSnapshot()}
           />
-
-          <ComposerSidebar
-            currentText={currentText}
-            onClear={actions.handleClear}
-            onSpeak={() => actions.handleSpeak('speak')}
-            onStop={onStop}
-            onToneSelected={actions.handleToneSelected}
-            isSpeaking={isSpeaking}
-            isAvailable={isAvailable}
-            enableFixText={enableFixText}
-            isOnline={actions.isOnline}
-            isFixingText={actions.isFixingText}
-            onFixText={actions.handleFixText}
-            enableLiveTyping={enableLiveTyping}
-            isLiveTypingButtonActive={isLiveTypingButtonActive}
-            onShare={handleShare}
-            hasUser={!!actions.user}
-            onAddAsPhrase={onAddAsPhrase}
-            enableToneControl={enableToneControl}
-            suggestionsCount={suggestionsCount}
-            onSuggestionsOpen={() => setShowSuggestions(true)}
-            suggestionsEnabled={!!replySuggestions && !!actions.user && actions.isOnline}
-            onCopyPasteOpen={() => setCopyPasteOpen(true)}
-          />
           {replySuggestions && (
             <SuggestionsPopover
               isOpen={showSuggestions}
@@ -227,7 +222,7 @@ export default function Composer({
               onCountChange={setSuggestionsCount}
             />
           )}
-        </div>
+        </ComposerSidebar>
 
         {/* Banners only */}
         <ComposerFooter shouldPortal={shouldPortalBanners}>
