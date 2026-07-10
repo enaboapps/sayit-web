@@ -2,6 +2,80 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import type { ReactNode } from 'react';
+
+type FaqItem = {
+  question: string;
+  answer: ReactNode;
+};
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    question: 'How do I get started with SayIt!?',
+    answer: (
+      <>
+        Open <Link href="/try" className="text-primary-500 hover:text-primary-600 hover:underline">Try SayIt!</Link> to use <strong>Type</strong> and <strong>Speak</strong> without an account. Create an account or sign in when you want to save <strong>Boards</strong> and <strong>Phrases</strong>, sync communication settings, or use account features.
+      </>
+    ),
+  },
+  {
+    question: 'How do I create and customize a Board?',
+    answer: (
+      <>
+        Open <strong>Phrases</strong> and choose <strong>Add Board</strong>. On a Board, use <strong>Add Tile</strong> to add a Phrase, a link to another Board, or recorded audio. Open the Board options to rename or edit the Board, rearrange tiles, or import and export Board files.
+      </>
+    ),
+  },
+  {
+    question: 'Can I use SayIt! offline?',
+    answer: (
+      <>
+        Yes. After you open SayIt! online, signed-in Boards are prepared on that device for read-only offline use. <strong>Type</strong> and browser speech continue to work offline. <strong>Fix Text</strong>, reply suggestions, <strong>Live Typing</strong>, premium cloud voices, account changes, and cloud sync require an internet connection.
+      </>
+    ),
+  },
+  {
+    question: 'How do I change the voice and speech settings?',
+    answer: (
+      <>
+        Go to <strong>Settings</strong>, then open <strong>Voice &amp; Speech</strong>. You can choose an available voice and adjust speech rate, pitch, and volume. Browser voices are available without Pro; premium cloud voices require an active Pro subscription and an internet connection.
+      </>
+    ),
+  },
+  {
+    question: 'What is included with SayIt! Pro?',
+    answer: (
+      <>
+        Pro includes <strong>Fix Text</strong>, reply suggestions, premium cloud voices, and supporter tools for managing communicators and their Boards. Visit the <Link href="/pricing" className="text-primary-500 hover:text-primary-600 hover:underline">pricing page</Link> for the current plan and availability.
+      </>
+    ),
+  },
+  {
+    question: 'How do I manage or cancel my subscription?',
+    answer: (
+      <>
+        Go to <strong>Settings</strong>, open <strong>Account</strong>, and select your avatar to open the account controls. From there, you can manage billing details or cancel your subscription.
+      </>
+    ),
+  },
+  {
+    question: 'How can a supporter manage a communicator’s Boards?',
+    answer: (
+      <>
+        With Pro, a supporter can open <strong>Clients</strong>, send a connection request to a communicator, and create or assign Boards after the request is accepted. Each shared Board can be set to view-only or allow editing, and updates appear on the communicator’s devices.
+      </>
+    ),
+  },
+  {
+    question: 'Can I import or export Boards?',
+    answer: (
+      <>
+        Yes. Open the Board options in <strong>Phrases</strong> to import an Open Board file, export the current Board as an <code>.obf</code> file, or export all Boards as an <code>.obz</code> bundle. These formats can help move compatible AAC Boards between tools.
+      </>
+    ),
+  },
+];
 
 export default function SupportPage() {
   return (
@@ -41,51 +115,28 @@ export default function SupportPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300 p-8"
+          className="rounded-[var(--radius-card)] border border-border bg-surface p-5 shadow-[var(--shadow-card)] sm:p-8"
         >
           <h2 className="text-2xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
 
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">How do I create a phrase board?</h3>
-              <p className="text-text-secondary">
-                You can create a new board by clicking the "New Board" button at the bottom of the screen
-                when viewing your phrases. Give your board a name and optionally add some phrases to get started.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">Can I use SayIt! offline?</h3>
-              <p className="text-text-secondary">
-                Yes. If you install SayIt! as a PWA, the app shell can open offline and you can continue typing
-                and using browser text-to-speech. Saved boards, Fix Text, reply suggestions, Live Typing,
-                ElevenLabs voices, account management, and cloud sync still require an internet connection.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">How do I customize the voice settings?</h3>
-              <p className="text-text-secondary">
-                Go to the Settings page by clicking the gear icon in the sidebar. There you can adjust the
-                speech rate, pitch, volume, and select from available voices on your device.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">What is included in the Pro subscription?</h3>
-              <p className="text-text-secondary">
-                The Pro subscription gives you access to premium features like AI-powered phrase generation,
-                unlimited phrase boards, and priority support.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">How do I cancel my subscription?</h3>
-              <p className="text-text-secondary">
-                Go to the Account page and click "Manage Subscription." From there, you can update your
-                billing information or cancel your subscription.
-              </p>
-            </div>
+          <div className="space-y-3">
+            {FAQ_ITEMS.map((item) => (
+              <details
+                key={item.question}
+                className="group overflow-hidden rounded-[var(--radius-control)] border border-border bg-background shadow-[var(--shadow-control)]"
+              >
+                <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-left text-base font-semibold text-foreground transition-colors duration-[var(--motion-duration-fast)] hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500 [&::-webkit-details-marker]:hidden sm:px-5">
+                  <span>{item.question}</span>
+                  <ChevronDownIcon
+                    aria-hidden="true"
+                    className="h-5 w-5 shrink-0 text-text-secondary transition-transform duration-[var(--motion-duration-fast)] group-open:rotate-180"
+                  />
+                </summary>
+                <div className="border-t border-border px-4 py-4 text-sm leading-6 text-text-secondary sm:px-5 sm:text-base">
+                  {item.answer}
+                </div>
+              </details>
+            ))}
           </div>
         </motion.div>
       </div>
