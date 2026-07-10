@@ -1,5 +1,6 @@
 const CACHE_NAME = 'sayit-shell-v__SW_CACHE_VERSION__';
 const OFFLINE_URL = '/offline';
+const IS_LOCALHOST = ['localhost', '127.0.0.1', '::1'].includes(self.location.hostname);
 const APP_SHELL = [
   '/',
   OFFLINE_URL,
@@ -50,6 +51,24 @@ async function cacheFirst(request) {
   }
 
   return response;
+}
+
+async function networkFirstAsset(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    throw new Error('No cached static asset available');
+  }
 }
 
 async function staleWhileRevalidate(request) {
@@ -139,7 +158,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isStaticAsset(request, requestUrl)) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(IS_LOCALHOST ? networkFirstAsset(request) : cacheFirst(request));
     return;
   }
 

@@ -90,7 +90,7 @@ export default function AACTabs({ phrasesContent, typeContent }: AACTabsProps) {
               key="type"
               id="aac-tab-type"
               role="tabpanel"
-              className="absolute inset-0 flex flex-col"
+              className="absolute inset-0 flex flex-col px-3 pb-3 sm:px-4 sm:pb-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
