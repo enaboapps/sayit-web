@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '../contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useQuery } from 'convex/react';
@@ -16,6 +15,7 @@ import {
   LockClosedIcon,
 } from '@heroicons/react/24/outline';
 import { UserButton } from '@clerk/nextjs';
+import BrandMark from './BrandMark';
 
 export default function Sidebar() {
   const { user } = useAuth();
@@ -27,7 +27,7 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-50 hidden w-24 flex-col border-r border-border bg-surface md:flex">
       <Link href="/" aria-label="SayIt! home" className="flex h-20 items-center justify-center">
-        <Image src="/icons/app-icon.png" alt="" width={36} height={36} priority />
+        <BrandMark data-testid="brand-mark" className="h-9 w-9 text-foreground" />
       </Link>
 
       <nav aria-label="Primary navigation" className="flex-1 space-y-2 px-2 py-2">

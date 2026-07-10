@@ -9,13 +9,16 @@ const appUrl = import.meta.env.PUBLIC_APP_URL ?? 'https://app.sayitaac.com';
     class="mx-auto flex max-w-[var(--container-wide)] flex-col gap-3 px-6 py-4 md:flex-row md:items-center md:justify-between md:gap-6 md:px-12 lg:px-16"
   >
     <a href="/" class="flex items-center gap-3 text-ink no-underline">
-      <img
-        src="/app-icon.png"
-        alt=""
-        width="32"
-        height="32"
-        class="h-8 w-8 rounded-md"
-      />
+      <svg
+        viewBox="0 0 1024 1024"
+        fill="currentColor"
+        aria-hidden="true"
+        focusable="false"
+        class="h-8 w-8 text-ink"
+      >
+        <path d="M366 190 405 238C319 308 267 404 267 506s52 198 138 269l-39 48C263 738 205 629 205 506s58-232 161-316Z"></path>
+        <path d="M592 296c114 0 206 93 206 207s-92 207-206 207c-32 0-63-7-93-22l-76 27c-9 3-17-5-15-15l18-75c-26-35-41-77-41-122 0-114 93-207 207-207Z"></path>
+      </svg>
       <span class="text-base font-bold tracking-tight">SayIt!</span>
     </a>
     <nav

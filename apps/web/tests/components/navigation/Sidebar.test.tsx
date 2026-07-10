@@ -17,5 +17,9 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Support' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Sign in' })).toBeInTheDocument();
     expect(screen.getByRole('complementary')).toHaveClass('w-24');
+
+    const homeLink = screen.getByRole('link', { name: 'SayIt! home' });
+    expect(homeLink.querySelector('[data-testid="brand-mark"]')).toHaveClass('text-foreground');
+    expect(homeLink.querySelector('img')).not.toBeInTheDocument();
   });
 });
