@@ -389,15 +389,18 @@ export default function TTSSettings() {
       {/* Voice Quality Card (ElevenLabs only) */}
       {displayProvider === 'elevenlabs' && hasSubscription && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-foreground">Voice Quality</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <h3 id="voice-quality-label" className="text-sm font-medium text-foreground">Voice Quality</h3>
+          <div role="radiogroup" aria-labelledby="voice-quality-label" className="grid grid-cols-2 gap-3">
             <button
               type="button"
+              role="radio"
+              aria-checked={settings.ttsModelPreference === 'fast'}
+              aria-label="Fast — Low latency"
               onClick={() => updateSetting('ttsModelPreference', 'fast')}
-              className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+              className={`relative min-h-[72px] rounded-2xl border-2 p-4 text-left transition-colors duration-[var(--motion-duration-fast)] ${
                 settings.ttsModelPreference === 'fast'
-                  ? 'border-primary-500 bg-primary-900'
-                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+                  ? 'border-primary-500 bg-[var(--accent-surface)] text-[var(--accent-foreground)]'
+                  : 'border-border bg-surface text-foreground hover:border-border hover:bg-surface-hover'
               }`}
             >
               <div className="flex items-start gap-3">
@@ -413,19 +416,22 @@ export default function TTSSettings() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <span className="block font-medium text-foreground text-sm">Fast</span>
-                  <span className="block text-xs text-text-secondary mt-0.5">Low latency</span>
+                  <span className={`block text-sm font-medium ${settings.ttsModelPreference === 'fast' ? 'text-[var(--accent-foreground)]' : 'text-foreground'}`}>Fast</span>
+                  <span className={`mt-0.5 block text-xs ${settings.ttsModelPreference === 'fast' ? 'text-[var(--accent-foreground)]' : 'text-text-secondary'}`}>Low latency</span>
                 </div>
               </div>
             </button>
 
             <button
               type="button"
+              role="radio"
+              aria-checked={settings.ttsModelPreference === 'high_quality'}
+              aria-label="High Quality — More expressive"
               onClick={() => updateSetting('ttsModelPreference', 'high_quality')}
-              className={`relative p-4 rounded-2xl border-2 text-left transition-all min-h-[72px] ${
+              className={`relative min-h-[72px] rounded-2xl border-2 p-4 text-left transition-colors duration-[var(--motion-duration-fast)] ${
                 settings.ttsModelPreference === 'high_quality'
-                  ? 'border-primary-500 bg-primary-900'
-                  : 'border-border bg-surface hover:border-border hover:bg-surface-hover'
+                  ? 'border-primary-500 bg-[var(--accent-surface)] text-[var(--accent-foreground)]'
+                  : 'border-border bg-surface text-foreground hover:border-border hover:bg-surface-hover'
               }`}
             >
               <div className="flex items-start gap-3">
@@ -441,8 +447,8 @@ export default function TTSSettings() {
                   )}
                 </div>
                 <div className="min-w-0">
-                  <span className="block font-medium text-foreground text-sm">High Quality</span>
-                  <span className="block text-xs text-text-secondary mt-0.5">More expressive</span>
+                  <span className={`block text-sm font-medium ${settings.ttsModelPreference === 'high_quality' ? 'text-[var(--accent-foreground)]' : 'text-foreground'}`}>High Quality</span>
+                  <span className={`mt-0.5 block text-xs ${settings.ttsModelPreference === 'high_quality' ? 'text-[var(--accent-foreground)]' : 'text-text-secondary'}`}>More expressive</span>
                 </div>
               </div>
             </button>

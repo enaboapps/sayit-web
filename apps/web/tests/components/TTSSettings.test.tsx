@@ -307,4 +307,44 @@ describe('TTSSettings provider dropdown', () => {
     expect(screen.getByRole('button', { name: 'Browser TTS' })).toBeInTheDocument();
     expect(mockUpdateSetting).not.toHaveBeenCalledWith('ttsProvider', 'browser');
   });
+
+  it('uses theme-aware accent colors and radio semantics for the selected Fast quality', () => {
+    renderTTSSettings({
+      settings: { ttsProvider: 'elevenlabs', ttsVoiceId: 'eleven-voice-1', ttsModelPreference: 'fast' },
+    });
+
+    const group = screen.getByRole('radiogroup', { name: 'Voice Quality' });
+    const fast = within(group).getByRole('radio', { name: 'Fast — Low latency' });
+    const highQuality = within(group).getByRole('radio', { name: 'High Quality — More expressive' });
+
+    expect(fast).toHaveAttribute('aria-checked', 'true');
+    expect(fast).toHaveClass('bg-[var(--accent-surface)]', 'text-[var(--accent-foreground)]');
+    expect(screen.getByText('Fast')).toHaveClass('text-[var(--accent-foreground)]');
+    expect(screen.getByText('Low latency')).toHaveClass('text-[var(--accent-foreground)]');
+    expect(highQuality).toHaveAttribute('aria-checked', 'false');
+    expect(highQuality).toHaveClass('bg-surface', 'text-foreground');
+  });
+
+  it('uses theme-aware accent colors for High Quality and preserves both setting callbacks', async () => {
+    const user = userEvent.setup();
+    renderTTSSettings({
+      settings: { ttsProvider: 'elevenlabs', ttsVoiceId: 'eleven-voice-1', ttsModelPreference: 'high_quality' },
+    });
+
+    const group = screen.getByRole('radiogroup', { name: 'Voice Quality' });
+    const fast = within(group).getByRole('radio', { name: 'Fast — Low latency' });
+    const highQuality = within(group).getByRole('radio', { name: 'High Quality — More expressive' });
+
+    expect(highQuality).toHaveAttribute('aria-checked', 'true');
+    expect(highQuality).toHaveClass('bg-[var(--accent-surface)]', 'text-[var(--accent-foreground)]');
+    expect(screen.getByText('High Quality')).toHaveClass('text-[var(--accent-foreground)]');
+    expect(screen.getByText('More expressive')).toHaveClass('text-[var(--accent-foreground)]');
+    expect(fast).toHaveAttribute('aria-checked', 'false');
+
+    await user.click(fast);
+    await user.click(highQuality);
+
+    expect(mockUpdateSetting).toHaveBeenCalledWith('ttsModelPreference', 'fast');
+    expect(mockUpdateSetting).toHaveBeenCalledWith('ttsModelPreference', 'high_quality');
+  });
 });
