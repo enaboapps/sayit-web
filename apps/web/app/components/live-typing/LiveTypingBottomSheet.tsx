@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ClipboardIcon, CheckIcon, ArrowPathIcon, ShareIcon, StopIcon } from '@heroicons/react/24/outline';
+import { QRCodeSVG } from 'qrcode.react';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 
 interface LiveTypingBottomSheetProps {
@@ -63,8 +64,8 @@ export default function LiveTypingBottomSheet({
       isOpen={isOpen}
       onClose={onClose}
       title="Live Typing Session"
-      snapPoints={[40]}
-      initialSnap={0}
+      snapPoints={isSharing ? [75, 90] : [40]}
+      initialSnap={isSharing ? 1 : 0}
     >
       <div className="p-4 space-y-4">
         {!isSharing ? (
@@ -110,22 +111,52 @@ export default function LiveTypingBottomSheet({
               Share this link with others to let them see what you're typing in real-time.
             </p>
 
+            {shareableLink ? (
+              <figure className="flex flex-col items-center gap-2">
+                <div className="w-full max-w-[14rem] rounded-[var(--radius-card)] border border-border bg-white p-3 shadow-[var(--shadow-control)]">
+                  <QRCodeSVG
+                    value={shareableLink}
+                    size={224}
+                    level="M"
+                    marginSize={4}
+                    bgColor="#FFFFFF"
+                    fgColor="#000000"
+                    title="QR code for Live Typing share link"
+                    className="h-auto w-full"
+                  />
+                </div>
+                <figcaption className="text-center text-sm text-text-secondary">
+                  Scan to open this Live Typing session on another device.
+                </figcaption>
+              </figure>
+            ) : (
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-[var(--radius-control)] border border-border bg-surface-hover px-4 py-3 text-center text-sm text-text-secondary"
+              >
+                Preparing share link…
+              </div>
+            )}
+
             {/* Link display with copy button */}
             <div className="flex gap-2">
               <input
                 type="text"
                 value={shareableLink || ''}
                 readOnly
+                aria-label="Live Typing share link"
                 className="flex-1 px-4 py-3 bg-background border border-border rounded-xl text-foreground text-sm"
               />
               <button
                 onClick={handleCopy}
+                disabled={!shareableLink}
                 className={`min-w-[48px] min-h-[48px] px-4 rounded-xl transition-colors flex items-center justify-center ${
                   copied
                     ? 'bg-green-500 text-white'
                     : 'bg-primary-500 hover:bg-primary-600 text-white'
-                }`}
-                aria-label="Copy link"
+                } disabled:cursor-not-allowed disabled:opacity-50`}
+                aria-label={copied ? 'Live Typing link copied' : 'Copy Live Typing link'}
               >
                 {copied ? (
                   <CheckIcon className="w-5 h-5" />
