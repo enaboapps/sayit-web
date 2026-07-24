@@ -5,6 +5,7 @@ import { TTSProvider } from '@/lib/tts-provider';
 import type { LiveTypingSpeechCommand, LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
 
 interface TypingShareSpeechSession {
+  isPaused?: boolean;
   speechCommand?: LiveTypingSpeechCommand;
 }
 
@@ -70,7 +71,17 @@ export function useTypingShareSpeech(session: TypingShareSpeechSession | null | 
     const command = session?.speechCommand;
     const tts = ttsRef.current;
 
-    if (!command || !tts || !audioEnabled) {
+    if (!tts || !audioEnabled) {
+      return;
+    }
+
+    if (session?.isPaused) {
+      tts.stop();
+      setIsSpeaking(false);
+      return;
+    }
+
+    if (!command) {
       return;
     }
 
@@ -120,7 +131,7 @@ export function useTypingShareSpeech(session: TypingShareSpeechSession | null | 
     return () => {
       cancelled = true;
     };
-  }, [audioEnabled, session?.speechCommand]);
+  }, [audioEnabled, session?.isPaused, session?.speechCommand]);
 
   return {
     audioEnabled,

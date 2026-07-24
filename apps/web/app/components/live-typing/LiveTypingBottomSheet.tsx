@@ -1,7 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { ClipboardIcon, CheckIcon, ArrowPathIcon, ShareIcon, StopIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  ClipboardIcon,
+  PauseIcon,
+  PlayIcon,
+  ShareIcon,
+  StopIcon,
+} from '@heroicons/react/24/outline';
 import { QRCodeSVG } from 'qrcode.react';
 import BottomSheet from '@/app/components/ui/BottomSheet';
 
@@ -10,8 +18,13 @@ interface LiveTypingBottomSheetProps {
   onClose: () => void;
   isSharing: boolean;
   isCreating: boolean;
+  isPaused: boolean;
+  isTransitioning: boolean;
+  error: string | null;
   shareableLink: string | null;
   onStartSharing: () => Promise<void>;
+  onPauseSession: () => Promise<void>;
+  onResumeSession: () => Promise<void>;
   onEndSession: () => Promise<void>;
 }
 
@@ -20,8 +33,13 @@ export default function LiveTypingBottomSheet({
   onClose,
   isSharing,
   isCreating,
+  isPaused,
+  isTransitioning,
+  error,
   shareableLink,
   onStartSharing,
+  onPauseSession,
+  onResumeSession,
   onEndSession,
 }: LiveTypingBottomSheetProps) {
   const [copied, setCopied] = useState(false);
@@ -102,14 +120,39 @@ export default function LiveTypingBottomSheet({
         ) : (
           /* Currently active - show link and controls */
           <div className="space-y-4">
-            <div className="bg-status-success p-3 rounded-xl flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-green-400 text-sm font-medium">Live Typing Active</span>
+            <div
+              role="status"
+              aria-live="polite"
+              className={`flex items-center gap-2 rounded-[var(--radius-control)] border p-3 ${
+                isPaused
+                  ? 'border-amber-500/50 bg-status-warning text-status-warning-foreground'
+                  : 'border-green-500/50 bg-status-success text-status-success-foreground'
+              }`}
+            >
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  isPaused ? 'bg-amber-500' : 'bg-green-500 motion-safe:animate-pulse'
+                }`}
+              />
+              <span className="text-sm font-medium">
+                Live Typing {isPaused ? 'Paused' : 'Active'}
+              </span>
             </div>
 
             <p className="text-text-secondary text-sm">
-              Share this link with others to let them see what you're typing in real-time.
+              {isPaused
+                ? 'The last shared message remains visible. Your typing is private until you resume.'
+                : 'Share this link with others to let them see what you’re typing in real-time.'}
             </p>
+
+            {error && (
+              <div
+                role="alert"
+                className="rounded-[var(--radius-control)] border border-red-500/50 bg-status-error px-4 py-3 text-sm text-status-error-foreground"
+              >
+                {error}
+              </div>
+            )}
 
             {shareableLink ? (
               <figure className="flex flex-col items-center gap-2">
@@ -166,10 +209,30 @@ export default function LiveTypingBottomSheet({
               </button>
             </div>
 
+            <button
+              type="button"
+              onClick={isPaused ? onResumeSession : onPauseSession}
+              disabled={isTransitioning || isEnding}
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface-hover px-6 py-3 font-semibold text-foreground transition-colors hover:border-primary-500 hover:bg-primary-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-wait disabled:opacity-50"
+            >
+              {isTransitioning ? (
+                <ArrowPathIcon className="h-5 w-5 motion-safe:animate-spin" aria-hidden="true" />
+              ) : isPaused ? (
+                <PlayIcon className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <PauseIcon className="h-5 w-5" aria-hidden="true" />
+              )}
+              <span>
+                {isTransitioning
+                  ? (isPaused ? 'Resuming…' : 'Pausing…')
+                  : (isPaused ? 'Resume Live Typing' : 'Pause Live Typing')}
+              </span>
+            </button>
+
             {/* End session button */}
             <button
               onClick={handleEndSession}
-              disabled={isEnding}
+              disabled={isEnding || isTransitioning}
               className="w-full min-h-[48px] px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white disabled:opacity-50"
             >
               {isEnding ? (

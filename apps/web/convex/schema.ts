@@ -157,6 +157,8 @@ export default defineSchema({
     userId: v.string(), // Clerk user ID
     sessionKey: v.string(),
     content: v.string(),
+    // Optional for backwards compatibility with sessions created before v5.0.4.
+    isPaused: v.optional(v.boolean()),
     speechCommand: v.optional(v.object({
       id: v.string(),
       action: v.union(v.literal('speak'), v.literal('stop')),

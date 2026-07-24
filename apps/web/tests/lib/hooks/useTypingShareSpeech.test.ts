@@ -112,6 +112,27 @@ describe('useTypingShareSpeech', () => {
     });
   });
 
+  it('stops current speech and ignores commands while sharing is paused', async () => {
+    const command = speakCommand('private-command', 'Private message');
+    const { result, rerender } = renderHook(
+      ({ isPaused, speechCommand }: { isPaused: boolean; speechCommand?: LiveTypingSpeechCommand }) =>
+        useTypingShareSpeech({ isPaused, speechCommand }),
+      { initialProps: { isPaused: false, speechCommand: undefined as LiveTypingSpeechCommand | undefined } }
+    );
+
+    act(() => {
+      result.current.enableAudio();
+    });
+
+    rerender({ isPaused: true, speechCommand: command });
+
+    await waitFor(() => {
+      expect(mockTTSProvider.stop).toHaveBeenCalledTimes(1);
+    });
+    expect(mockTTSProvider.speak).not.toHaveBeenCalled();
+    expect(result.current.isSpeaking).toBe(false);
+  });
+
   it('ignores expected browser interruption errors', () => {
     const { result } = renderHook(() => useTypingShareSpeech({}));
 

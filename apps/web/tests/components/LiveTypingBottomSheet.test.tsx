@@ -69,8 +69,13 @@ function renderSheet(
     onClose: jest.fn(),
     isSharing: true,
     isCreating: false,
+    isPaused: false,
+    isTransitioning: false,
+    error: null,
     shareableLink,
     onStartSharing: jest.fn().mockResolvedValue(undefined),
+    onPauseSession: jest.fn().mockResolvedValue(undefined),
+    onResumeSession: jest.fn().mockResolvedValue(undefined),
     onEndSession: jest.fn().mockResolvedValue(undefined),
     ...overrides,
   };
@@ -147,7 +152,7 @@ describe('LiveTypingBottomSheet', () => {
   it('shows a preparation state and disables copy while the URL is unavailable', () => {
     renderSheet({ shareableLink: null });
 
-    expect(screen.getByRole('status')).toHaveTextContent('Preparing share link…');
+    expect(screen.getByText('Preparing share link…')).toBeInTheDocument();
     expect(screen.queryByTestId('live-typing-qr')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Copy Live Typing link' })).toBeDisabled();
   });
@@ -162,5 +167,45 @@ describe('LiveTypingBottomSheet', () => {
       expect(props.onEndSession).toHaveBeenCalledTimes(1);
     });
     expect(props.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('pauses an active session while keeping the share link available', async () => {
+    const user = userEvent.setup();
+    const { props } = renderSheet();
+
+    expect(screen.getByText('Live Typing Active')).toBeInTheDocument();
+    expect(screen.getByTestId('live-typing-qr')).toHaveAttribute('data-value', shareableLink);
+
+    await user.click(screen.getByRole('button', { name: 'Pause Live Typing' }));
+
+    expect(props.onPauseSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('explains privacy and resumes a paused session', async () => {
+    const user = userEvent.setup();
+    const { props } = renderSheet({ isPaused: true });
+
+    expect(screen.getByText('Live Typing Paused')).toBeInTheDocument();
+    expect(
+      screen.getByText('The last shared message remains visible. Your typing is private until you resume.')
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Resume Live Typing' }));
+
+    expect(props.onResumeSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables session controls while pause state is changing', () => {
+    renderSheet({ isTransitioning: true });
+
+    expect(screen.getByRole('button', { name: 'Pausing…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'End Live Typing' })).toBeDisabled();
+  });
+
+  it('shows a session transition error without removing sharing controls', () => {
+    renderSheet({ error: 'Could not pause session' });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not pause session');
+    expect(screen.getByRole('button', { name: 'Pause Live Typing' })).toBeEnabled();
   });
 });

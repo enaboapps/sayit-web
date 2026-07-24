@@ -54,8 +54,13 @@ export function useComposerActions({
   const {
     isSharing: isLiveTypingSharing,
     isCreating: isLiveTypingCreating,
+    isPaused: isLiveTypingPaused,
+    isTransitioning: isLiveTypingTransitioning,
+    error: liveTypingError,
     updateContent: updateLiveTypingContent,
     createSession: createLiveTypingSession,
+    pauseSession: pauseLiveTypingSession,
+    resumeSession: resumeLiveTypingSession,
     endSession: endLiveTypingSession,
     getShareableLink,
   } = useLiveTyping();
@@ -172,10 +177,10 @@ export function useComposerActions({
 
   // Live typing content sync
   useEffect(() => {
-    if (enableLiveTyping && user && isLiveTypingSharing) {
+    if (enableLiveTyping && user && isLiveTypingSharing && !isLiveTypingPaused) {
       updateLiveTypingContent(currentText);
     }
-  }, [currentText, enableLiveTyping, isLiveTypingSharing, updateLiveTypingContent, user]);
+  }, [currentText, enableLiveTyping, isLiveTypingPaused, isLiveTypingSharing, updateLiveTypingContent, user]);
 
   const handleStartLiveTyping = useCallback(async () => {
     const created = await createLiveTypingSession();
@@ -183,6 +188,14 @@ export function useComposerActions({
       updateLiveTypingContent(currentText);
     }
   }, [createLiveTypingSession, currentText, updateLiveTypingContent]);
+
+  const handlePauseLiveTyping = useCallback(async () => {
+    await pauseLiveTypingSession();
+  }, [pauseLiveTypingSession]);
+
+  const handleResumeLiveTyping = useCallback(async () => {
+    await resumeLiveTypingSession(currentText);
+  }, [currentText, resumeLiveTypingSession]);
 
   // Fix text
   const handleFixText = useCallback(async () => {
@@ -254,8 +267,13 @@ export function useComposerActions({
     isLiveTypingButtonActive,
     isLiveTypingSharing,
     isLiveTypingCreating,
+    isLiveTypingPaused,
+    isLiveTypingTransitioning,
+    liveTypingError,
     shareableLink,
     handleStartLiveTyping,
+    handlePauseLiveTyping,
+    handleResumeLiveTyping,
     endLiveTypingSession,
     // context
     isOnline,
