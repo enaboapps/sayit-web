@@ -50,7 +50,12 @@ jest.mock('@/lib/hooks/useLiveTyping', () => ({
   useLiveTyping: jest.fn(() => ({
     isSharing: false,
     isCreating: false,
+    isPaused: false,
+    isTransitioning: false,
+    error: null,
     createSession: jest.fn(),
+    pauseSession: jest.fn(),
+    resumeSession: jest.fn(),
     endSession: jest.fn(),
     updateContent: jest.fn(),
     publishSpeechCommand: jest.fn(),
@@ -450,8 +455,12 @@ describe('Composer', () => {
       session: null,
       isSharing: true,
       isCreating: false,
+      isPaused: false,
+      isTransitioning: false,
       error: null,
       createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession: jest.fn(),
       endSession: jest.fn(),
       updateContent: jest.fn(),
       publishSpeechCommand: jest.fn(),
@@ -488,8 +497,12 @@ describe('Composer', () => {
       session: null,
       isSharing: true,
       isCreating: false,
+      isPaused: false,
+      isTransitioning: false,
       error: null,
       createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession: jest.fn(),
       endSession,
       updateContent: jest.fn(),
       publishSpeechCommand: jest.fn(),
@@ -512,6 +525,84 @@ describe('Composer', () => {
     expect(endSession).toHaveBeenCalled();
   });
 
+  it('pauses an active Live Typing session from the banner', async () => {
+    const user = userEvent.setup();
+    const pauseSession = jest.fn().mockResolvedValue(true);
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'user@example.com' },
+      loading: false,
+    });
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: true,
+      isCreating: false,
+      isPaused: false,
+      isTransitioning: false,
+      error: null,
+      createSession: jest.fn(),
+      pauseSession,
+      resumeSession: jest.fn(),
+      endSession: jest.fn(),
+      updateContent: jest.fn(),
+      publishSpeechCommand: jest.fn(),
+      getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
+    });
+
+    render(
+      <Composer
+        text="Sharing now"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Pause Live Typing' }));
+
+    expect(pauseSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps paused edits private and publishes the current draft when resuming', async () => {
+    const user = userEvent.setup();
+    const updateContent = jest.fn();
+    const resumeSession = jest.fn().mockResolvedValue(true);
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'user@example.com' },
+      loading: false,
+    });
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: true,
+      isCreating: false,
+      isPaused: true,
+      isTransitioning: false,
+      error: null,
+      createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession,
+      endSession: jest.fn(),
+      updateContent,
+      publishSpeechCommand: jest.fn(),
+      getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
+    });
+
+    render(
+      <Composer
+        text="Private paused draft"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+
+    expect(screen.getByText('Live Typing paused')).toBeInTheDocument();
+    expect(updateContent).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Resume Live Typing' }));
+
+    expect(resumeSession).toHaveBeenCalledWith('Private paused draft');
+  });
+
   it('delegates speak and stop actions to the parent while sharing', async () => {
     const user = userEvent.setup();
     const onSpeak = jest.fn();
@@ -528,8 +619,12 @@ describe('Composer', () => {
       session: null,
       isSharing: true,
       isCreating: false,
+      isPaused: false,
+      isTransitioning: false,
       error: null,
       createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession: jest.fn(),
       endSession: jest.fn(),
       updateContent: jest.fn(),
       getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
@@ -576,8 +671,12 @@ describe('Composer', () => {
       session: null,
       isSharing: false,
       isCreating: false,
+      isPaused: false,
+      isTransitioning: false,
       error: null,
       createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession: jest.fn(),
       endSession: jest.fn(),
       updateContent: jest.fn(),
       publishSpeechCommand: jest.fn(),

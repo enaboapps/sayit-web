@@ -172,6 +172,10 @@ export default function Composer({
         {/* Live typing status — always visible while a session is being shared */}
         {enableLiveTyping && actions.user && actions.isLiveTypingSharing && (
           <LiveTypingBanner
+            isPaused={actions.isLiveTypingPaused}
+            isTransitioning={actions.isLiveTypingTransitioning}
+            onPause={() => void actions.handlePauseLiveTyping()}
+            onResume={() => void actions.handleResumeLiveTyping()}
             onEnd={() => void actions.endLiveTypingSession()}
             onOpenDetails={() => setShowLiveTypingSheet(true)}
           />
@@ -252,8 +256,13 @@ export default function Composer({
           onClose={() => setShowLiveTypingSheet(false)}
           isSharing={actions.isLiveTypingSharing}
           isCreating={actions.isLiveTypingCreating}
+          isPaused={actions.isLiveTypingPaused}
+          isTransitioning={actions.isLiveTypingTransitioning}
+          error={actions.liveTypingError}
           shareableLink={actions.shareableLink}
           onStartSharing={actions.handleStartLiveTyping}
+          onPauseSession={actions.handlePauseLiveTyping}
+          onResumeSession={actions.handleResumeLiveTyping}
           onEndSession={async () => { await actions.endLiveTypingSession(); }}
         />
       )}

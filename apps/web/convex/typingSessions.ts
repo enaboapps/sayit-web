@@ -65,6 +65,7 @@ export const createTypingSession = mutation({
       userId: identity.subject,
       sessionKey: args.sessionKey,
       content: '',
+      isPaused: false,
       expiresAt,
     });
 
@@ -93,9 +94,52 @@ export const updateTypingSessionContent = mutation({
       throw new Error('Unauthorized');
     }
 
+    if (session.isPaused) {
+      return false;
+    }
+
     await ctx.db.patch(session._id, {
       content: args.content,
     });
+
+    return true;
+  },
+});
+
+// Mutation: Pause or resume a typing session without changing its share URL.
+export const setTypingSessionPaused = mutation({
+  args: {
+    sessionKey: v.string(),
+    isPaused: v.boolean(),
+    content: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Unauthenticated');
+    }
+
+    const session = await ctx.db
+      .query('typingSessions')
+      .withIndex('by_session_key', (q) => q.eq('sessionKey', args.sessionKey))
+      .first();
+
+    if (!session || session.userId !== identity.subject || session.expiresAt <= Date.now()) {
+      throw new Error('Unauthorized');
+    }
+
+    if (!args.isPaused && args.content === undefined) {
+      throw new Error('Current content is required when resuming');
+    }
+
+    await ctx.db.patch(session._id, args.isPaused
+      ? { isPaused: true }
+      : {
+        isPaused: false,
+        content: args.content,
+      });
+
+    return true;
   },
 });
 
@@ -132,6 +176,10 @@ export const publishTypingSessionSpeechCommand = mutation({
       throw new Error('Unauthorized');
     }
 
+    if (session.isPaused) {
+      return false;
+    }
+
     if (args.action === 'speak') {
       if (!args.text?.trim()) {
         throw new Error('Text is required for speech commands');
@@ -156,6 +204,8 @@ export const publishTypingSessionSpeechCommand = mutation({
           createdAt: Date.now(),
         },
     });
+
+    return true;
   },
 });
 

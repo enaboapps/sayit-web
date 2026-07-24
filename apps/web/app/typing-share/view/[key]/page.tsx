@@ -14,6 +14,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
   const { uiPreferences, updateUIPreference } = useSettings();
   const loading = session === undefined;
   const sessionMissing = session === null;
+  const isPaused = Boolean(session?.isPaused);
   const fontSize = uiPreferences.typingShareFontSize;
   const {
     audioEnabled,
@@ -58,8 +59,10 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
         <div className="bg-surface rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-300">
           <div className="p-6 sm:p-8">
             <h1 className="text-3xl font-bold text-foreground">Live Typing</h1>
-            <p className="text-text-secondary mt-2">
-              You are viewing a live typing session. Updates appear in real-time.
+            <p className="mt-2 text-text-secondary" aria-live="polite">
+              {isPaused
+                ? 'The communicator has paused sharing. The last shared message remains visible.'
+                : 'You are viewing a live typing session. Updates appear in real-time.'}
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {!audioEnabled ? (
@@ -74,7 +77,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
               ) : (
                 <div className="inline-flex min-h-[36px] items-center gap-2 rounded-full bg-status-info px-4 py-2 text-sm font-semibold text-blue-400">
                   <SpeakerWaveIcon className="h-5 w-5" />
-                  <span>{isSpeaking ? 'Speaking' : 'Audio enabled'}</span>
+                  <span>{isPaused ? 'Audio paused' : (isSpeaking ? 'Speaking' : 'Audio enabled')}</span>
                 </div>
               )}
               {speechError && (
@@ -104,9 +107,21 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
             </div>
 
             <div className="mt-6 flex items-center justify-between">
-              <div className="flex items-center gap-3 bg-status-success px-4 py-2 rounded-3xl">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-semibold text-green-500">Connected</span>
+              <div
+                role="status"
+                aria-live="polite"
+                className={`flex min-h-11 items-center gap-3 rounded-[var(--radius-control)] border px-4 py-2 ${
+                  isPaused
+                    ? 'border-amber-500/50 bg-status-warning text-status-warning-foreground'
+                    : 'border-green-500/50 bg-status-success text-status-success-foreground'
+                }`}
+              >
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    isPaused ? 'bg-amber-500' : 'bg-green-500 motion-safe:animate-pulse'
+                  }`}
+                />
+                <span className="text-sm font-semibold">{isPaused ? 'Paused' : 'Connected'}</span>
               </div>
 
               <div className="flex items-center gap-3">

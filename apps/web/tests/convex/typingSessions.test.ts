@@ -1,5 +1,9 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
-import { publishTypingSessionSpeechCommand } from '@/convex/typingSessions';
+import {
+  publishTypingSessionSpeechCommand,
+  setTypingSessionPaused,
+  updateTypingSessionContent,
+} from '@/convex/typingSessions';
 
 const mockDb = {
   query: jest.fn(),
@@ -107,5 +111,112 @@ describe('typingSessions speech commands', () => {
       text: 'Hello',
     })).rejects.toThrow('Speech settings are required');
     expect(mockDb.patch).not.toHaveBeenCalled();
+  });
+
+  test('suppresses speech commands while the session is paused', async () => {
+    mockCtx.auth.getUserIdentity.mockResolvedValue({ subject: 'user-1' });
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      isPaused: true,
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await expect(publish({
+      text: 'Private text',
+      settings: speechSettings,
+    })).resolves.toBe(false);
+    expect(mockDb.patch).not.toHaveBeenCalled();
+  });
+});
+
+describe('typingSessions pause state', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockCtx.auth.getUserIdentity.mockResolvedValue({ subject: 'user-1' });
+  });
+
+  test('pauses a session without changing its content', async () => {
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      content: 'Last shared text',
+      isPaused: false,
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await setTypingSessionPaused._handler(mockCtx as never, {
+      sessionKey: 'session-key',
+      isPaused: true,
+    });
+
+    expect(mockDb.patch).toHaveBeenCalledWith('session-1', { isPaused: true });
+  });
+
+  test('atomically publishes the current draft when resuming', async () => {
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      content: 'Last shared text',
+      isPaused: true,
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await setTypingSessionPaused._handler(mockCtx as never, {
+      sessionKey: 'session-key',
+      isPaused: false,
+      content: 'Complete private draft',
+    });
+
+    expect(mockDb.patch).toHaveBeenCalledWith('session-1', {
+      isPaused: false,
+      content: 'Complete private draft',
+    });
+  });
+
+  test('requires the current draft when resuming', async () => {
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      isPaused: true,
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await expect(setTypingSessionPaused._handler(mockCtx as never, {
+      sessionKey: 'session-key',
+      isPaused: false,
+    })).rejects.toThrow('Current content is required');
+    expect(mockDb.patch).not.toHaveBeenCalled();
+  });
+
+  test('suppresses content updates while paused, including queued updates', async () => {
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      isPaused: true,
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await expect(updateTypingSessionContent._handler(mockCtx as never, {
+      sessionKey: 'session-key',
+      content: 'Should remain private',
+    })).resolves.toBe(false);
+    expect(mockDb.patch).not.toHaveBeenCalled();
+  });
+
+  test('treats a legacy session without a pause flag as active', async () => {
+    mockSessionLookup({
+      _id: 'session-1',
+      userId: 'user-1',
+      expiresAt: Date.now() + 60_000,
+    });
+
+    await expect(updateTypingSessionContent._handler(mockCtx as never, {
+      sessionKey: 'session-key',
+      content: 'Visible update',
+    })).resolves.toBe(true);
+    expect(mockDb.patch).toHaveBeenCalledWith('session-1', {
+      content: 'Visible update',
+    });
   });
 });
