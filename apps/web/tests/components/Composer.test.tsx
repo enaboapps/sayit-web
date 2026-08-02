@@ -228,12 +228,31 @@ describe('Composer', () => {
       />
     );
 
-    expect(screen.getByRole('textbox')).toHaveValue('Hello world');
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveValue('Hello world');
     expect(screen.getByTestId('composer-canvas')).toHaveClass(
       'rounded-[var(--radius-card)]',
       'border',
       'bg-surface',
       'focus-within:border-primary-500',
+    );
+  });
+
+  it('uses a clear, visually secondary empty-message prompt', () => {
+    render(
+      <Composer
+        text=""
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+      />
+    );
+
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveAttribute(
+      'placeholder',
+      'Type your message here…'
+    );
+    expect(screen.getByRole('textbox', { name: 'Message' })).toHaveClass(
+      'placeholder:font-normal',
+      'placeholder:text-text-secondary/80'
     );
   });
 

@@ -34,8 +34,9 @@ export default function ComposerTextarea({
         onKeyUp={onKeyUp}
         onBlur={onBlur}
         onKeyDown={onKeyDown}
-        placeholder="What do you want to say?"
-        className="absolute inset-0 resize-none overflow-y-auto bg-transparent px-4 py-5 text-foreground placeholder:font-medium placeholder:text-text-tertiary focus:outline-none sm:px-6"
+        aria-label="Message"
+        placeholder="Type your message here…"
+        className="absolute inset-0 resize-none overflow-y-auto bg-transparent px-4 py-5 text-foreground placeholder:font-normal placeholder:text-text-secondary/80 focus:outline-none sm:px-6"
         style={{ fontSize: `${textSizePx}px`, lineHeight: '1.6' }}
       />
     </div>
