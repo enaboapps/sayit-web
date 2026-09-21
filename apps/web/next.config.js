@@ -22,9 +22,9 @@ const nextConfig = {
   outputFileTracingRoot: workspaceRoot,
   turbopack: {
     root: workspaceRoot,
-    // @willwade/aac-processors 0.2.20 references Node-only modules from the
+    // @willwade/aac-processors 0.3.4 references Node-only modules from the
     // browser bundle:
-    //   - dist/browser/utils/zip.js: dynamic import inside `getZipAdapter`,
+    //   - dist/browser/utils/zip.js: Node require inside `getZipAdapter`,
     //     guarded by `isNodeRuntime()` and never runs in the browser.
     //   - dist/browser/utilities/analytics/morphology/grid3VerbsParser.js:
     //     top-level and method-local imports of adm-zip, fs, and path.

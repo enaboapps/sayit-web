@@ -1,2 +1,20 @@
 packages:
   - "apps/*"
+allowBuilds:
+  '@parcel/watcher': true
+  better-sqlite3: false
+  esbuild: true
+  unrs-resolver: true
+# Security fixes constrained to the affected dependency family/parent.
+overrides:
+  'undici@>=5 <5.29.0': 5.29.0
+  'path-to-regexp@>=6 <6.3.0': 6.3.0
+  'path-to-regexp@>=8 <8.4.2': 8.4.2
+  'tar@>=7 <7.5.22': 7.5.22
+  'minimatch@>=10 <10.2.6': 10.2.6
+  '@vercel/static-config>ajv': 8.20.0
+  'smol-toml@>=1 <1.8.0': 1.8.0
+  '@tootallnate/once@2.0.0': 2.0.1
+  '@vercel/python-analysis>js-yaml': 4.3.2
+  '@willwade/aac-processors>adm-zip': 0.6.1
+  'tsx@4.21.0': 4.23.15
