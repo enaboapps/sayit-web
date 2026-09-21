@@ -35,4 +35,14 @@ const customJestConfig = {
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig);
+module.exports = async () => {
+  const config = await createJestConfig(customJestConfig)();
+  // Svix 2 is ESM-only. Compile its real verifier for Jest on our Node 22
+  // runtime instead of mocking signature verification in webhook tests.
+  config.transformIgnorePatterns = config.transformIgnorePatterns.map((pattern) =>
+    pattern.includes('node_modules')
+      ? `^(?!.*[/\\\\]node_modules[/\\\\]svix[/\\\\])${pattern}`
+      : pattern
+  );
+  return config;
+};

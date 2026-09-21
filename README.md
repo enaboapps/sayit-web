@@ -38,8 +38,10 @@ The SayIt! name, logos, icons, domain names, and other brand assets are reserved
 
 ## Development Setup
 
+Use Node 22.19 or later in the Node 22 line and the pinned pnpm 12.5.1. Install pnpm with `npm install --global pnpm@12.5.1` (older Corepack versions cannot launch pnpm 12).
+
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 cp .env.example apps/web/.env.local
 pnpm dev:web
 pnpm dev:landing
@@ -83,6 +85,7 @@ Before opening a pull request, run:
 
 ```bash
 pnpm lint
+pnpm typecheck
 pnpm test
 pnpm build
 ```

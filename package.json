@@ -4,7 +4,7 @@
   "private": true,
   "license": "AGPL-3.0-only",
   "type": "module",
-  "packageManager": "pnpm@10.30.1",
+  "packageManager": "pnpm@12.5.1",
   "scripts": {
     "dev": "pnpm --filter @sayit/web dev",
     "dev:web": "pnpm --filter @sayit/web dev",
@@ -18,6 +18,10 @@
     "lint:landing": "pnpm --filter @sayit/landing lint",
     "test": "pnpm --filter @sayit/web test",
     "test:watch": "pnpm --filter @sayit/web test:watch",
-    "test:coverage": "pnpm --filter @sayit/web test:coverage"
+    "test:coverage": "pnpm --filter @sayit/web test:coverage",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": {
+    "node": ">=22.19.0 <23"
   }
 }
