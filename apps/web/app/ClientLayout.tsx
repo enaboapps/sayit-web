@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import CustomVoiceFeedback from './components/CustomVoiceFeedback';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
@@ -152,6 +153,7 @@ export default function ClientLayout({
                         </div>
                         <main className="min-h-0 flex-1 overflow-y-auto pb-bottom-stack md:overflow-visible">
                           {children}
+                          <CustomVoiceFeedback />
                         </main>
                       </div>
                       <MobileBottomStack />

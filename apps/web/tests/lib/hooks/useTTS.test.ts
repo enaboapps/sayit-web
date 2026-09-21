@@ -1,7 +1,8 @@
+import { useSubscription } from '@/app/hooks/useSubscription';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useTTS } from '@/lib/hooks/useTTS';
 
-type MockProvider = 'browser' | 'elevenlabs' | 'azure' | 'gemini';
+type MockProvider = 'browser' | 'elevenlabs' | 'azure' | 'gemini' | 'custom';
 
 let mockSettings = {
   ttsProvider: 'elevenlabs',
@@ -102,4 +103,15 @@ describe('useTTS', () => {
       expect(result.current.status.activeProvider).toBe('gemini');
     });
   });
+});
+
+
+test('custom voices work without a SayIt subscription', async () => {
+  (useSubscription as jest.Mock).mockReturnValue({ isActive: false });
+  mockSettings = { ...mockSettings, ttsProvider: 'custom', ttsVoiceId: 'custom:stored' };
+  const { result } = renderHook(() => useTTS());
+  await waitFor(() => expect(result.current.provider).toBe('custom'));
+  result.current.speak('Hello');
+  expect(mockTTSProvider.speak).toHaveBeenLastCalledWith('Hello', expect.objectContaining({ voiceId: 'custom:stored' }));
+  expect(result.current.isProviderAvailable('custom')).toBe(true);
 });

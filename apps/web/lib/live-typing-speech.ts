@@ -21,7 +21,10 @@ export interface LiveTypingSpeechCommand {
   settings?: LiveTypingSpeechSettings;
 }
 
-export function cleanLiveTypingSpeechSettings(settings: LiveTypingSpeechSettings): LiveTypingSpeechSettings {
+export function cleanLiveTypingSpeechSettings(settings: LiveTypingSpeechSettings): Omit<LiveTypingSpeechSettings, 'provider'> & { provider: Exclude<TTSProviderType, 'custom'> } {
+  if (settings.provider === 'custom' || settings.voiceId?.startsWith('custom:')) {
+    return { provider: 'browser', rate: 1, pitch: 1, volume: settings.volume, stability: 0.5, similarityBoost: 0.5 };
+  }
   return {
     provider: settings.provider,
     ...(settings.voiceId ? { voiceId: settings.voiceId } : {}),

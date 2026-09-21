@@ -1,7 +1,7 @@
 require('@testing-library/jest-dom');
 
 // Mock window.matchMedia for components using media queries (e.g., prefers-reduced-motion)
-Object.defineProperty(window, 'matchMedia', {
+if (typeof window !== 'undefined') Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
     matches: false,

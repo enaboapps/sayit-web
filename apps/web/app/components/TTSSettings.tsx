@@ -1,5 +1,6 @@
 'use client';
 
+import CustomProviderSettings from './CustomProviderSettings';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
@@ -14,6 +15,7 @@ import { PlayCircleIcon, StopCircleIcon } from '@heroicons/react/24/solid';
 const SAMPLE_TEXT = 'This is how I sound.';
 
 const providerDetails: Record<TTSProviderType, { name: string; description: string }> = {
+  custom: { name: 'Custom provider', description: 'Your own voice service' },
   browser: { name: 'Browser TTS', description: 'System voices' },
   elevenlabs: { name: 'ElevenLabs', description: 'AI voices' },
   azure: { name: 'Azure', description: 'Neural voices' },
@@ -128,6 +130,7 @@ export default function TTSSettings() {
 
   const showVoiceFilters = displayProvider !== 'browser'
     && displayProvider !== 'gemini'
+    && displayProvider !== 'custom'
     && providerVoices.length > 0;
 
   const filteredVoices = useMemo(() => {
@@ -157,7 +160,7 @@ export default function TTSSettings() {
 
   // Auto-select first voice if current voice doesn't exist in filtered list
   useEffect(() => {
-    if (isTemporaryFallback) return;
+    if (isTemporaryFallback || displayProvider === 'custom') return;
 
     if (filteredVoices.length > 0) {
       const currentVoiceExists = filteredVoices.some(v => v.id === settings.ttsVoiceId);
@@ -165,7 +168,7 @@ export default function TTSSettings() {
         updateSetting('ttsVoiceId', filteredVoices[0].id);
       }
     }
-  }, [filteredVoices, isTemporaryFallback, settings.ttsVoiceId, updateSetting]);
+  }, [displayProvider, filteredVoices, isTemporaryFallback, settings.ttsVoiceId, updateSetting]);
 
   const handleProviderChange = useCallback((newProvider: TTSProviderType) => {
     if (isCloudProvider(newProvider) && (!isOnline || !providerAvailability[newProvider])) return;
@@ -202,7 +205,7 @@ export default function TTSSettings() {
 
   const selectedVoiceName = filteredVoices.find(v => v.id === selectedDisplayVoiceId)?.name;
 
-  const providerLabel = displayProvider === 'elevenlabs'
+  const providerLabel = displayProvider === 'custom' ? 'Custom provider' : displayProvider === 'elevenlabs'
     ? 'ElevenLabs'
     : displayProvider === 'azure'
       ? 'Azure'
@@ -255,6 +258,7 @@ export default function TTSSettings() {
       });
     }
 
+    options.push({ value: 'custom', label: 'Custom provider', name: 'Custom provider', description: 'Your own voice service — no subscription needed', disabled: false, showProBadge: false });
     return options;
   }, [hasSubscription, isOnline, status.azureAvailable, status.elevenLabsAvailable, status.geminiAvailable]);
 
@@ -316,6 +320,7 @@ export default function TTSSettings() {
 
       </div>
 
+      {displayProvider === 'custom' && <CustomProviderSettings />}
       {/* Voice Selection Card */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice</h3>
@@ -353,7 +358,7 @@ export default function TTSSettings() {
                 }))}
                 value={selectedDisplayVoiceId}
                 onChange={handleVoiceChange}
-                placeholder={providerVoices.length === 0 ? 'Loading voices...' : 'Select a voice'}
+                placeholder={providerVoices.length === 0 ? (displayProvider === 'custom' ? 'Load voices from a connection' : 'Loading voices...') : 'Select a voice'}
                 disabled={providerVoices.length === 0}
                 searchable
                 searchPlaceholder="Search voices..."
@@ -462,7 +467,7 @@ export default function TTSSettings() {
       )}
 
       {/* Voice Settings Card */}
-      <div className="space-y-3">
+      {displayProvider !== 'custom' && <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice Settings</h3>
         <div className="bg-surface-hover rounded-2xl p-4 space-y-5">
           {/* Browser TTS settings */}
@@ -533,7 +538,7 @@ export default function TTSSettings() {
             </p>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

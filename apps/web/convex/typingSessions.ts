@@ -1,3 +1,4 @@
+import { cleanLiveTypingSpeechSettings } from '../lib/live-typing-speech';
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { getUserIdentity } from './users';
@@ -196,7 +197,7 @@ export const publishTypingSessionSpeechCommand = mutation({
           action: args.action,
           text: args.text,
           createdAt: Date.now(),
-          settings: args.settings,
+          settings: args.settings ? cleanLiveTypingSpeechSettings(args.settings) : undefined,
         }
         : {
           id: args.commandId,
