@@ -1,4 +1,4 @@
-import type { TTSProviderType } from './tts-provider';
+import type { TTSProviderType } from './tts-types';
 
 export type LiveTypingSpeechAction = 'speak' | 'stop';
 

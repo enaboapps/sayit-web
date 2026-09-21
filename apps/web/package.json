@@ -12,7 +12,7 @@
     "test": "jest --config jest.config.cjs",
     "test:watch": "jest --config jest.config.cjs --watch",
     "test:coverage": "jest --config jest.config.cjs --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p convex/tsconfig.json"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.71",

@@ -4,7 +4,8 @@ import { AzureTTS } from './azure-tts';
 import { GeminiTTS } from './gemini-tts';
 import { TextToSpeech as WebSpeechTTS } from './tts';
 
-export type TTSProviderType = 'browser' | 'elevenlabs' | 'azure' | 'gemini' | 'custom';
+import type { TTSProviderType } from './tts-types';
+export type { TTSProviderType } from './tts-types';
 
 export interface TTSCallbacks {
   onStart?: () => void;

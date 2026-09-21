@@ -7,3 +7,6 @@ export interface BaseTTSCallbacks {
   onEnd?: () => void;
   onError?: (error: Error) => void;
 }
+
+// Shared with Convex: keep this module free of browser implementation imports.
+export type TTSProviderType = 'browser' | 'elevenlabs' | 'azure' | 'gemini' | 'custom';
