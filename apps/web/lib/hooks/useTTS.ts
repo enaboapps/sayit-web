@@ -90,7 +90,7 @@ export function useTTS() {
     similarityBoost?: number;
     modelId?: string;
   }) => {
-    if (!ttsRef.current || !isAvailable) {
+    if (!ttsRef.current || (!isAvailable && settingsRef.current.ttsProvider !== 'custom')) {
       console.warn('TTS is not available');
       return;
     }
@@ -118,10 +118,10 @@ export function useTTS() {
 
     const isPremiumVoice = voice?.provider === 'elevenlabs' || voice?.provider === 'azure' || voice?.provider === 'gemini';
     const currentProvider = ttsRef.current.getCurrentProvider();
-    const usingPremium = isPremiumVoice
+    const usingPremium = currentProvider !== 'custom' && (isPremiumVoice
       || currentProvider === 'elevenlabs'
       || currentProvider === 'azure'
-      || currentProvider === 'gemini';
+      || currentProvider === 'gemini');
 
     // If trying to use a premium provider without a subscription, force browser TTS
     if (usingPremium && !hasSubscription) {
@@ -220,7 +220,7 @@ export function useTTS() {
 
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
-    if (providerType === 'browser') return true;
+    if (providerType === 'browser' || providerType === 'custom') return true;
     if (providerType === 'elevenlabs') return hasSubscription && status.elevenLabsAvailable;
     if (providerType === 'azure') return hasSubscription && status.azureAvailable;
     if (providerType === 'gemini') return hasSubscription && status.geminiAvailable;
@@ -228,7 +228,7 @@ export function useTTS() {
   }, [hasSubscription, status]);
 
   return {
-    isAvailable,
+    isAvailable: settings.ttsProvider === 'custom' || isAvailable,
     isSpeaking,
     voices,
     speak,

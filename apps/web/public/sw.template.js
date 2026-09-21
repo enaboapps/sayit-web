@@ -148,6 +148,9 @@ self.addEventListener('fetch', (event) => {
 
   const requestUrl = new URL(request.url);
 
+  // Account-private connection metadata must never enter shared browser caches.
+  if (requestUrl.pathname.startsWith('/api/custom-providers/')) return;
+
   if (request.mode === 'navigate') {
     event.respondWith(networkFirstNavigation(request));
     return;

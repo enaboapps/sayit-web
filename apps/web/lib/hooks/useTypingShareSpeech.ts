@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TTSProvider } from '@/lib/tts-provider';
-import type { LiveTypingSpeechCommand, LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
+import { cleanLiveTypingSpeechSettings, type LiveTypingSpeechCommand, type LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
 
 interface TypingShareSpeechSession {
   isPaused?: boolean;
@@ -105,17 +105,18 @@ export function useTypingShareSpeech(session: TypingShareSpeechSession | null | 
 
     const speak = async () => {
       try {
-        await prepareProvider(tts, command.settings!);
+        const safeSettings = cleanLiveTypingSpeechSettings(command.settings!);
+        await prepareProvider(tts, safeSettings);
         if (cancelled) return;
 
         tts.speak(command.text!, {
-          voiceId: command.settings!.voiceId,
-          rate: command.settings!.rate,
-          pitch: command.settings!.pitch,
-          volume: command.settings!.volume,
-          stability: command.settings!.stability,
-          similarityBoost: command.settings!.similarityBoost,
-          modelId: command.settings!.modelId,
+          voiceId: safeSettings.voiceId,
+          rate: safeSettings.rate,
+          pitch: safeSettings.pitch,
+          volume: safeSettings.volume,
+          stability: safeSettings.stability,
+          similarityBoost: safeSettings.similarityBoost,
+          modelId: safeSettings.modelId,
         });
         setError(null);
       } catch (err) {

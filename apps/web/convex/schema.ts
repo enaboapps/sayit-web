@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
+  customProviders: defineTable({ userId: v.string(), name: v.string(), baseUrl: v.string(), encryptedKey: v.string() }).index('by_user', ['userId']),
   profiles: defineTable({
     userId: v.string(), // Clerk user ID
     email: v.string(),
@@ -200,7 +201,7 @@ export default defineSchema({
     doubleEnterEnabled: v.optional(v.boolean()),
     doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
     doubleEnterTimeoutMs: v.optional(v.number()),
-    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini')),
+    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom')),
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),
