@@ -47,3 +47,16 @@ test('supports keyboard navigation through labelled fields and actions', async (
   await user.tab(); expect(screen.getByLabelText('API key')).toHaveFocus();
   await user.tab(); expect(screen.getByRole('button', { name: 'Test connection' })).toHaveFocus();
 });
+
+test('cancels pending voice discovery when leaving settings', async () => {
+  const { unmount } = render(<CustomProviderSettings />); await screen.findByText('Personal');
+  fireEvent.change(screen.getByLabelText('Connection'), { target: { value: 'saved' } });
+  let finish!: (value: { ok: boolean; json: () => Promise<object> }) => void;
+  (fetch as jest.Mock).mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  fireEvent.click(screen.getByRole('button', { name: 'Load voices' }));
+  const signal = (fetch as jest.Mock).mock.calls.at(-1)[1].signal;
+  unmount(); expect(signal.aborted).toBe(true);
+  finish({ ok: true, json: async () => ({ voices: [{ voice_id: 'private', name: 'Previous account' }] }) });
+  await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+  expect(CustomTTS.getInstance().getVoices()).toEqual([]);
+});

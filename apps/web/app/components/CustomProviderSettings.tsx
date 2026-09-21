@@ -1,4 +1,5 @@
 'use client';
+import { useUser } from '@clerk/nextjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CustomTTS, customApi, type CustomConnection } from '@/lib/custom-tts';
 import { useSettings } from '../contexts/SettingsContext';
@@ -6,6 +7,8 @@ import { useSettings } from '../contexts/SettingsContext';
 const control = 'block w-full rounded-xl border border-border bg-surface p-3 text-foreground focus-visible:outline-2';
 export default function CustomProviderSettings() {
   const { settings } = useSettings();
+  const { user } = useUser();
+  const controller = useRef<AbortController | null>(null);
   const [connections, setConnections] = useState<CustomConnection[]>([]);
   const [id, setId] = useState('');
   const [name, setName] = useState('');
@@ -14,8 +17,18 @@ export default function CustomProviderSettings() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const working = useRef(false);
-  const refresh = useCallback(async () => { const data = await (await customApi('connections')).json(); setConnections(data); }, []);
-  useEffect(() => { void refresh().catch(error => setMessage(error.message)); }, [refresh]);
+  const refresh = useCallback(async () => {
+    const signal = controller.current?.signal;
+    const data = await (await customApi('connections', undefined, signal)).json();
+    if (!signal?.aborted) setConnections(data);
+  }, []);
+  useEffect(() => {
+    const current = new AbortController(); controller.current = current;
+    setConnections([]); setId(''); setName(''); setBaseUrl(''); setApiKey('');
+    setMessage(''); setBusy(false); working.current = false;
+    void refresh().catch(error => { if (!current.signal.aborted) setMessage(error.message); });
+    return () => current.abort();
+  }, [refresh, user?.id]);
   function choose(value: string) {
     setId(value); setApiKey(''); setMessage('');
     const connection = connections.find(c => c.id === value);
@@ -23,10 +36,12 @@ export default function CustomProviderSettings() {
   }
   async function run(action: 'save' | 'test' | 'remove' | 'voices') {
     if (working.current) return;
+    const signal = controller.current?.signal;
     working.current = true; setBusy(true); setMessage('');
     try {
-      const response = await customApi(action, action === 'remove' || action === 'voices' ? { id } : { id: id || undefined, name, baseUrl, apiKey: apiKey || undefined });
+      const response = await customApi(action, action === 'remove' || action === 'voices' ? { id } : { id: id || undefined, name, baseUrl, apiKey: apiKey || undefined }, signal);
       const data = await response.json();
+      if (signal?.aborted) return;
       if (action === 'save') {
         setId(data.id); setApiKey(''); await refresh(); setMessage('Connection saved. Load voices to choose one.');
       } else if (action === 'remove') {
@@ -37,8 +52,8 @@ export default function CustomProviderSettings() {
         setMessage(data.voices.length ? `Connected. Found ${data.voices.length} voice${data.voices.length === 1 ? '' : 's'}.` : 'Connected, but this server returned no voices.');
         if (action === 'voices') CustomTTS.getInstance().setVoices(connections.find(c => c.id === id)!, data.voices);
       }
-    } catch (error) { setMessage(error instanceof Error ? error.message : 'Connection failed. Try again.'); }
-    finally { working.current = false; setBusy(false); }
+    } catch (error) { if (!signal?.aborted) setMessage(error instanceof Error ? error.message : 'Connection failed. Try again.'); }
+    finally { if (!signal?.aborted) { working.current = false; setBusy(false); } }
   }
   return <section aria-label="Custom provider connections" className="space-y-3 rounded-xl border border-border p-4">
     <p>Connect your own voice service. No SayIt subscription is needed; your provider may charge for usage. Keys sync securely with your account. Shared viewers use browser speech.</p>
