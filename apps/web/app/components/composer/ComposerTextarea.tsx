@@ -1,6 +1,8 @@
 'use client';
 
 interface ComposerTextareaProps {
+  onCompositionStart?: () => void;
+  onCompositionEnd?: () => void;
   currentText: string;
   onTextChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -13,6 +15,8 @@ interface ComposerTextareaProps {
 }
 
 export default function ComposerTextarea({
+  onCompositionStart,
+  onCompositionEnd,
   currentText,
   onTextChange,
   onKeyDown,
@@ -26,6 +30,8 @@ export default function ComposerTextarea({
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden bg-surface md:min-h-[120px]">
       <textarea
+        onCompositionStart={onCompositionStart}
+        onCompositionEnd={onCompositionEnd}
         ref={textareaRef}
         value={currentText}
         onChange={(e) => onTextChange(e.target.value)}

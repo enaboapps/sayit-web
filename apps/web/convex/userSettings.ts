@@ -40,6 +40,7 @@ export const initializeSettings = mutation({
     aiReplySuggestionsEnabled: v.boolean(),
     messageCaptureMode: v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny')),
     usePhraseBar: v.optional(v.boolean()),
+    prepareSpeechWhileTyping: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
     typingAreaVisible: v.boolean(),
     typingAreaExpanded: v.boolean(),
@@ -111,6 +112,7 @@ export const initializeSettings = mutation({
       aiReplySuggestionsEnabled: args.aiReplySuggestionsEnabled,
       messageCaptureMode: args.messageCaptureMode,
       usePhraseBar: args.usePhraseBar,
+      prepareSpeechWhileTyping: args.prepareSpeechWhileTyping ?? false,
       speakPhrasesOnTap: args.speakPhrasesOnTap,
       typingAreaVisible: args.typingAreaVisible,
       typingAreaExpanded: args.typingAreaExpanded,
@@ -145,6 +147,7 @@ export const updateSettings = mutation({
     aiReplySuggestionsEnabled: v.optional(v.boolean()),
     messageCaptureMode: v.optional(v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny'))),
     usePhraseBar: v.optional(v.boolean()),
+    prepareSpeechWhileTyping: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
     typingAreaVisible: v.optional(v.boolean()),
     typingAreaExpanded: v.optional(v.boolean()),
@@ -243,6 +246,7 @@ export const updateSettings = mutation({
     if (updates.aiReplySuggestionsEnabled !== undefined) updateData.aiReplySuggestionsEnabled = updates.aiReplySuggestionsEnabled;
     if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
     if (updates.usePhraseBar !== undefined) updateData.usePhraseBar = updates.usePhraseBar;
+    if (updates.prepareSpeechWhileTyping !== undefined) updateData.prepareSpeechWhileTyping = updates.prepareSpeechWhileTyping;
     if (updates.speakPhrasesOnTap !== undefined) updateData.speakPhrasesOnTap = updates.speakPhrasesOnTap;
     if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;
     if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;

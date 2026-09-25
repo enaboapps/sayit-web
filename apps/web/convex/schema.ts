@@ -217,6 +217,7 @@ export default defineSchema({
       )
     ),
     usePhraseBar: v.optional(v.boolean()),
+    prepareSpeechWhileTyping: v.optional(v.boolean()),
     speakPhrasesOnTap: v.optional(v.boolean()),
 
     // UI Preferences (consolidated from various components)

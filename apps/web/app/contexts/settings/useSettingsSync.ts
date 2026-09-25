@@ -36,6 +36,7 @@ type ConvexSettings = {
   doubleEnterAction?: EnterKeyBehavior;
   doubleEnterTimeoutMs?: number;
   ttsProvider: Settings['ttsProvider'];
+  prepareSpeechWhileTyping?: boolean;
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
@@ -69,6 +70,7 @@ function buildInitializeSettingsPayload(localSettings: AllSettings) {
     doubleEnterAction: localSettings.doubleEnterAction,
     doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(localSettings.doubleEnterTimeoutMs),
     ttsProvider: localSettings.ttsProvider,
+    prepareSpeechWhileTyping: localSettings.prepareSpeechWhileTyping,
     ttsVoiceId: localSettings.ttsVoiceId,
     ttsStability: localSettings.ttsStability,
     ttsSimilarityBoost: localSettings.ttsSimilarityBoost,
@@ -100,6 +102,7 @@ function mergeConvexSettings(convexSettings: ConvexSettings): AllSettings {
       convexSettings.doubleEnterTimeoutMs ?? defaultSettings.doubleEnterTimeoutMs
     ),
     ttsProvider: convexSettings.ttsProvider,
+    prepareSpeechWhileTyping: convexSettings.prepareSpeechWhileTyping ?? false,
     ttsVoiceId: convexSettings.ttsVoiceId,
     ttsStability: convexSettings.ttsStability,
     ttsSimilarityBoost: convexSettings.ttsSimilarityBoost,

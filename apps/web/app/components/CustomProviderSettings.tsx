@@ -43,6 +43,7 @@ export default function CustomProviderSettings() {
       const data = await response.json();
       if (signal?.aborted) return;
       if (action === 'save') {
+        CustomTTS.getInstance().invalidatePreparation();
         setId(data.id); setApiKey(''); await refresh(); setMessage('Connection saved. Load voices to choose one.');
       } else if (action === 'remove') {
         CustomTTS.getInstance().removeVoices(id);

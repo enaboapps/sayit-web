@@ -320,7 +320,16 @@ export default function TTSSettings() {
 
       </div>
 
-      {displayProvider === 'custom' && <CustomProviderSettings />}
+      {displayProvider === 'custom' && <>
+        <CustomProviderSettings />
+        <label className="flex items-start gap-3 py-4">
+          <input type="checkbox" checked={settings.prepareSpeechWhileTyping ?? false}
+            onChange={e => updateSetting('prepareSpeechWhileTyping', e.target.checked)} />
+          <span>Prepare speech while typing
+            <span className="block text-sm text-text-secondary">After a two-second pause, send your unfinished draft to your provider to prepare audio. This can use your provider allowance. Nothing plays until you press Speak.</span>
+          </span>
+        </label>
+      </>}
       {/* Voice Selection Card */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-foreground">Voice</h3>
