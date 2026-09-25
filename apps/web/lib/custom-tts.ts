@@ -34,6 +34,54 @@ export class CustomTTS {
   private audio?: HTMLAudioElement;
   private url?: string;
   private sequence = 0;
+  private context = '';
+  private timer?: ReturnType<typeof setTimeout>;
+  private connectionRevision = 0;
+  private revision = 0;
+  private prepared?: { key: string; blob: Blob };
+  private flight?: { key: string; result: Promise<Blob> };
+  setPreparationContext(context: string) {
+    if (context === this.context) return;
+    this.stop();
+    this.context = context;
+  }
+  private clearPreparation() {
+    this.revision++;
+    clearTimeout(this.timer);
+    this.prepared = undefined;
+  }
+  prepareDraft(text: string, voiceId: string, allowed: boolean) {
+    this.clearPreparation();
+    if (!allowed || !this.context || !text.trim() || text.length > 500) return;
+    const key = JSON.stringify([this.context, this.connectionRevision, voiceId, text]);
+    const revision = this.revision;
+    this.timer = setTimeout(() => { void this.prepare(key, text, voiceId, revision); }, 2000);
+  }
+  private async prepare(key: string, text: string, voiceId: string, revision: number) {
+    // A superseded request drains before the newest draft can start. Never queue every edit.
+    let blob: Blob | undefined;
+    while (this.flight) {
+      const flight = this.flight;
+      try { const result = await flight.result; if (flight.key === key) blob = result; }
+      catch { /* quiet background failure */ }
+      if (this.revision !== revision || this.state.busy) return;
+    }
+    if (this.revision !== revision || this.state.busy) return;
+    try {
+      blob ??= await this.generate(key, text, voiceId);
+      if (this.revision === revision && !this.state.busy) this.prepared = { key, blob };
+    } catch { /* Explicit Speak retries; background failures never loop. */ }
+  }
+  private generate(key: string, text: string, selected?: string): Promise<Blob> {
+    if (this.flight?.key === key) return this.flight.result;
+    const [id, voiceId] = parseCustomVoice(selected);
+    this.controller = new AbortController();
+    const result = customApi('speech', { id, voiceId, text }, this.controller.signal).then(r => r.blob());
+    const flight = { key, result };
+    this.flight = flight;
+    void result.finally(() => { if (this.flight === flight) this.flight = undefined; }).catch(() => {});
+    return result;
+  }
   private listeners = new Set<() => void>();
   private state = { busy: false, blocked: false, error: '' };
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; };
@@ -46,23 +94,33 @@ export class CustomTTS {
     this.voices.push(...voices.map(v => ({ id: customVoiceId(connection.id, v.voice_id), name: `${v.name} (${connection.name})`, provider: 'custom' as const })));
     this.callbacks.onVoicesChanged?.();
   }
+  invalidatePreparation() { this.connectionRevision++; this.clearPreparation(); }
   removeVoices(id: string) {
+    this.invalidatePreparation();
     this.voices = this.voices.filter(v => parseCustomVoice(v.id)[0] !== id);
     this.callbacks.onVoicesChanged?.();
   }
   reset() { this.stop(); this.update({ error: '' }); this.voices = []; this.callbacks.onVoicesChanged?.(); }
   async speak(text: string, options?: { voiceId?: string }) {
     if (this.state.busy) return;
-    this.stop();
-    const sequence = this.sequence;
-    this.controller = new AbortController();
+    const sequence = ++this.sequence;
+    const key = JSON.stringify([this.context, this.connectionRevision, options?.voiceId, text]);
+    const cached = this.prepared?.key === key ? this.prepared.blob : undefined;
+    this.clearPreparation();
     this.update({ busy: true, error: '', blocked: false });
     this.callbacks.onStart?.();
     try {
       if (!text.trim() || text.length > 500) throw new Error('Custom voices accept between 1 and 500 characters. Your message has been kept.');
-      const [id, voiceId] = parseCustomVoice(options?.voiceId);
-      const response = await customApi('speech', { id, voiceId, text }, this.controller.signal);
-      const blob = await response.blob();
+      let blob = cached;
+      if (!blob) {
+        const flight = this.flight;
+        if (flight) {
+          try { const result = await flight.result; if (flight.key === key) blob = result; }
+          catch (error) { if (flight.key === key) throw error; }
+        }
+        if (sequence !== this.sequence) return;
+        blob ??= await this.generate(key, text, options?.voiceId);
+      }
       if (sequence !== this.sequence) return;
       this.url = URL.createObjectURL(blob);
       this.audio = new Audio(this.url);
@@ -87,7 +145,9 @@ export class CustomTTS {
   dismiss = () => this.update({ error: '' });
   stop() {
     this.sequence++;
-    this.controller?.abort(); this.controller = undefined;
+    this.clearPreparation();
+    // Keep the network request draining: aborting it cannot cancel remote generation.
+    this.controller = undefined;
     if (this.audio) { this.audio.onended = null; this.audio.onerror = null; this.audio.pause(); this.audio.src = ''; this.audio = undefined; }
     if (this.url) URL.revokeObjectURL(this.url); this.url = undefined;
     const busy = this.state.busy;

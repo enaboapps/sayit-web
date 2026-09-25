@@ -774,3 +774,30 @@ describe('Composer', () => {
     expect(textarea).toHaveValue('HelloPASTED world');
   });
 });
+
+describe('speech preparation eligibility', () => {
+  it('gates preparation by account, composition, and page visibility', () => {
+    const { useSettings } = jest.requireMock('@/app/contexts/SettingsContext');
+    const { CustomTTS } = jest.requireActual('@/lib/custom-tts');
+    const original = useSettings.getMockImplementation();
+    useSettings.mockImplementation(() => ({ ...original(), settings: {
+      ...original().settings, ttsProvider: 'custom', ttsVoiceId: 'voice', prepareSpeechWhileTyping: true,
+    } }));
+    mockUseAuth.mockReturnValue({ user: { id: 'owner', email: null }, loading: false });
+    const prepare = jest.spyOn(CustomTTS.getInstance(), 'prepareDraft').mockImplementation(() => {});
+    const view = render(<ControlledComposer initialValue="Draft" />);
+    expect(prepare).toHaveBeenLastCalledWith('Draft', 'voice', true);
+    fireEvent.compositionStart(screen.getByRole('textbox'));
+    expect(prepare).toHaveBeenLastCalledWith('Draft', 'voice', false);
+    fireEvent.compositionEnd(screen.getByRole('textbox'));
+    expect(prepare).toHaveBeenLastCalledWith('Draft', 'voice', true);
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    fireEvent(document, new Event('visibilitychange'));
+    expect(prepare).toHaveBeenLastCalledWith('Draft', 'voice', false);
+    mockUseAuth.mockReturnValue({ user: null, loading: false });
+    view.rerender(<ControlledComposer initialValue="Draft" />);
+    expect(prepare).toHaveBeenLastCalledWith('Draft', 'voice', false);
+    view.unmount(); prepare.mockRestore(); useSettings.mockImplementation(original);
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+  });
+});

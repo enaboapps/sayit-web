@@ -20,6 +20,7 @@ export interface Settings {
   doubleEnterAction: EnterKeyBehavior;
   doubleEnterTimeoutMs: number;
   ttsProvider: TTSProviderType;
+  prepareSpeechWhileTyping: boolean;
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
@@ -61,6 +62,7 @@ export const defaultSettings: Settings = {
   doubleEnterAction: 'speak',
   doubleEnterTimeoutMs: 1000,
   ttsProvider: 'browser',
+  prepareSpeechWhileTyping: false,
   ttsVoiceId: '',
   ttsStability: 0.5,
   ttsSimilarityBoost: 0.5,
@@ -127,6 +129,7 @@ export function pickSettings(allSettings: AllSettings): Settings {
     doubleEnterAction: allSettings.doubleEnterAction,
     doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(allSettings.doubleEnterTimeoutMs),
     ttsProvider: allSettings.ttsProvider,
+    prepareSpeechWhileTyping: allSettings.prepareSpeechWhileTyping,
     ttsVoiceId: allSettings.ttsVoiceId,
     ttsStability: allSettings.ttsStability,
     ttsSimilarityBoost: allSettings.ttsSimilarityBoost,

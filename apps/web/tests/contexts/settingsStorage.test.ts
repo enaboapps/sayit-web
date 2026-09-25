@@ -91,3 +91,10 @@ describe('settings storage helpers', () => {
     expect(storage.setItem).toHaveBeenCalledWith('typingDockMode', 'minimized');
   });
 });
+
+it('defaults preparation off and preserves an explicit opt-in', () => {
+  const storage = createStorage();
+  expect(loadSettingsFromLocalStorage(storage).prepareSpeechWhileTyping).toBe(false);
+  saveSettingsToLocalStorage({ ...defaultAllSettings, prepareSpeechWhileTyping: true }, storage);
+  expect(loadSettingsFromLocalStorage(storage).prepareSpeechWhileTyping).toBe(true);
+});
