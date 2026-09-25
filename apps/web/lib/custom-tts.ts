@@ -35,6 +35,8 @@ export class CustomTTS {
   private url?: string;
   private sequence = 0;
   private context = '';
+  private lastDraftKey?: string;
+  private stoppedDraftKey?: string;
   private timer?: ReturnType<typeof setTimeout>;
   private connectionRevision = 0;
   private revision = 0;
@@ -45,6 +47,8 @@ export class CustomTTS {
     if (context === this.context) return;
     this.stop();
     this.context = context;
+    this.lastDraftKey = undefined;
+    this.stoppedDraftKey = undefined;
   }
   private clearPreparation() {
     this.revision++;
@@ -54,9 +58,12 @@ export class CustomTTS {
   }
   prepareDraft(text: string, voiceId: string, allowed: boolean) {
     this.clearPreparation();
+    const key = JSON.stringify([this.context, this.connectionRevision, voiceId, text]);
+    this.lastDraftKey = key;
+    if (this.stoppedDraftKey === key) return;
+    this.stoppedDraftKey = undefined;
     if (!allowed || !this.context || !text.trim() || text.length > 500) return;
     this.nextDraft = { text, voiceId };
-    const key = JSON.stringify([this.context, this.connectionRevision, voiceId, text]);
     const revision = this.revision;
     this.timer = setTimeout(() => { void this.prepare(key, text, voiceId, revision); }, 2000);
   }
@@ -130,6 +137,7 @@ export class CustomTTS {
       this.audio.onended = () => {
         const next = this.nextDraft;
         this.stop();
+        this.stoppedDraftKey = undefined;
         if (next) this.prepareDraft(next.text, next.voiceId, true);
       };
       this.audio.onerror = () => this.fail('Audio could not play. Check your device and try again.');
@@ -151,6 +159,7 @@ export class CustomTTS {
   retryPlayback = () => { void this.play(this.sequence); };
   dismiss = () => this.update({ error: '' });
   stop() {
+    this.stoppedDraftKey = this.lastDraftKey;
     this.sequence++;
     this.clearPreparation();
     // Keep the network request draining: aborting it cannot cancel remote generation.

@@ -150,3 +150,13 @@ test('a next draft waits for playback to end naturally before preparing', async 
   expect(fetch).toHaveBeenCalledTimes(2); expect(audio.play).toHaveBeenCalledTimes(1);
   jest.useRealTimers();
 });
+
+test('visibility or connectivity restoration cannot restart a stopped unchanged draft', async () => {
+  jest.useFakeTimers(); player.setPreparationContext('owner/tab');
+  player.prepareDraft('Stopped', voice, true); player.stop();
+  player.prepareDraft('Stopped', voice, false);
+  player.prepareDraft('Stopped', voice, true);
+  jest.advanceTimersByTime(2000); await drain(); expect(fetch).not.toHaveBeenCalled();
+  player.prepareDraft('Edited', voice, true); jest.advanceTimersByTime(2000); await drain();
+  expect(fetch).toHaveBeenCalledTimes(1); jest.useRealTimers();
+});
