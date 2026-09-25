@@ -140,3 +140,13 @@ test('sign-out during preparation discards the response and never starts queued 
   expect(fetch).toHaveBeenCalledTimes(1); expect(audio.play).not.toHaveBeenCalled();
   expect(URL.createObjectURL).not.toHaveBeenCalled(); jest.useRealTimers();
 });
+
+test('a next draft waits for playback to end naturally before preparing', async () => {
+  jest.useFakeTimers(); player.setPreparationContext('owner/tab');
+  await player.speak('First', { voiceId: voice });
+  player.prepareDraft('Next', voice, true); jest.advanceTimersByTime(2000); await drain();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  audio.onended?.(); jest.advanceTimersByTime(2000); await drain();
+  expect(fetch).toHaveBeenCalledTimes(2); expect(audio.play).toHaveBeenCalledTimes(1);
+  jest.useRealTimers();
+});

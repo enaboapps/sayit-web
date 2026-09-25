@@ -38,6 +38,7 @@ export class CustomTTS {
   private timer?: ReturnType<typeof setTimeout>;
   private connectionRevision = 0;
   private revision = 0;
+  private nextDraft?: { text: string; voiceId: string };
   private prepared?: { key: string; blob: Blob };
   private flight?: { key: string; result: Promise<Blob> };
   setPreparationContext(context: string) {
@@ -49,10 +50,12 @@ export class CustomTTS {
     this.revision++;
     clearTimeout(this.timer);
     this.prepared = undefined;
+    this.nextDraft = undefined;
   }
   prepareDraft(text: string, voiceId: string, allowed: boolean) {
     this.clearPreparation();
     if (!allowed || !this.context || !text.trim() || text.length > 500) return;
+    this.nextDraft = { text, voiceId };
     const key = JSON.stringify([this.context, this.connectionRevision, voiceId, text]);
     const revision = this.revision;
     this.timer = setTimeout(() => { void this.prepare(key, text, voiceId, revision); }, 2000);
@@ -124,7 +127,11 @@ export class CustomTTS {
       if (sequence !== this.sequence) return;
       this.url = URL.createObjectURL(blob);
       this.audio = new Audio(this.url);
-      this.audio.onended = () => this.stop();
+      this.audio.onended = () => {
+        const next = this.nextDraft;
+        this.stop();
+        if (next) this.prepareDraft(next.text, next.voiceId, true);
+      };
       this.audio.onerror = () => this.fail('Audio could not play. Check your device and try again.');
       await this.play(sequence);
     } catch (error) {
