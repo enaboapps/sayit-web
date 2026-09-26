@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 interface MobileBottomContextType {
@@ -13,12 +13,10 @@ const MobileBottomContext = createContext<MobileBottomContextType | null>(null);
 export function MobileBottomProvider({ children }: { children: ReactNode }) {
   const [dockContainer, setDockContainer] = useState<HTMLDivElement | null>(null);
 
-  const registerDockContainer = (element: HTMLDivElement | null) => {
-    setDockContainer(element);
-  };
+  const value = useMemo(() => ({ dockContainer, registerDockContainer: setDockContainer }), [dockContainer]);
 
   return (
-    <MobileBottomContext.Provider value={{ dockContainer, registerDockContainer }}>
+    <MobileBottomContext.Provider value={value}>
       {children}
     </MobileBottomContext.Provider>
   );

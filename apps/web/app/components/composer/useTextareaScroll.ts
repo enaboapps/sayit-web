@@ -1,127 +1,60 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import type { TextareaScrollIntent, TextareaScrollSnapshot } from './types';
+import { useCallback, useEffect, useRef } from 'react';
 
 export function useTextareaScroll(
   textareaRef: React.RefObject<HTMLTextAreaElement | null>,
   currentText: string,
+  composing = false,
 ) {
-  const pendingRef = useRef<TextareaScrollIntent | null>(null);
-  const previousTextRef = useRef('');
-  const snapshotRef = useRef<TextareaScrollSnapshot | null>(null);
-  const needsScrollRef = useRef(false);
+  const previousText = useRef(currentText);
+  const nativeEdit = useRef(false);
+  const followEnd = useRef(false);
+  const explicitEnd = useRef(false);
+  const frame = useRef<number | null>(null);
 
-  const captureSnapshot = useCallback((value?: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const currentValue = value ?? textarea.value;
-    const selectionStart = textarea.selectionStart ?? currentValue.length;
-    const selectionEnd = textarea.selectionEnd ?? selectionStart;
-    const distanceFromBottom = textarea.scrollHeight - textarea.scrollTop - textarea.clientHeight;
-    const wasNearBottom = distanceFromBottom <= 24;
-
-    snapshotRef.current = {
-      selectionStart,
-      selectionEnd,
-      wasAtEnd: selectionStart >= currentValue.length,
-      wasNearBottom,
-    };
+  // Input/selection handlers must not measure layout or reset the native IME caret.
+  const captureSnapshot = useCallback(() => {
+    const area = textareaRef.current;
+    if (area) followEnd.current = area.selectionStart === area.value.length
+      && area.selectionEnd === area.value.length;
   }, [textareaRef]);
 
   const captureScrollIntent = useCallback((nextValue: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea || document.activeElement !== textarea) {
-      pendingRef.current = null;
-      return;
-    }
-
-    const selectionStart = textarea.selectionStart ?? nextValue.length;
-    const selectionEnd = textarea.selectionEnd ?? selectionStart;
-    const distanceFromBottom = textarea.scrollHeight - textarea.scrollTop - textarea.clientHeight;
-    const isNearBottom = distanceFromBottom <= 24;
-    const isCaretAtEnd = selectionStart >= nextValue.length;
-    const previousSnapshot = snapshotRef.current;
-    const wasEditingEarlier = !!previousSnapshot
-      && !previousSnapshot.wasAtEnd
-      && !previousSnapshot.wasNearBottom;
-    const shouldScrollToEnd = !wasEditingEarlier
-      && (isCaretAtEnd || isNearBottom || !!previousSnapshot?.wasAtEnd || !!previousSnapshot?.wasNearBottom);
-
-    pendingRef.current = {
-      selectionStart,
-      selectionEnd,
-      shouldScrollToEnd,
-    };
-    snapshotRef.current = {
-      selectionStart,
-      selectionEnd,
-      wasAtEnd: isCaretAtEnd,
-      wasNearBottom: isNearBottom,
-    };
+    nativeEdit.current = true;
+    const area = textareaRef.current;
+    followEnd.current = !!area && document.activeElement === area
+      && area.selectionStart === nextValue.length && area.selectionEnd === nextValue.length;
   }, [textareaRef]);
 
-  useLayoutEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) {
-      previousTextRef.current = currentText;
-      pendingRef.current = null;
-      return;
-    }
-
-    const pending = pendingRef.current;
-    const previousText = previousTextRef.current;
-    const snapshot = snapshotRef.current;
-    const wasExternalAppend = currentText.length > previousText.length
-      && !!snapshot
-      && (snapshot.wasAtEnd || snapshot.wasNearBottom);
-
-    let didScroll = false;
-
-    if (pending && document.activeElement === textarea) {
-      const selectionStart = Math.min(pending.selectionStart, currentText.length);
-      const selectionEnd = Math.min(pending.selectionEnd, currentText.length);
-      textarea.setSelectionRange(selectionStart, selectionEnd);
-
-      if (pending.shouldScrollToEnd) {
-        textarea.scrollTop = textarea.scrollHeight;
-        didScroll = true;
-      }
-    } else if (wasExternalAppend) {
-      textarea.setSelectionRange(currentText.length, currentText.length);
-      textarea.scrollTop = textarea.scrollHeight;
-      didScroll = true;
-    }
-
-    needsScrollRef.current = didScroll;
-    previousTextRef.current = currentText;
-    pendingRef.current = null;
-    captureSnapshot(currentText);
-  }, [captureSnapshot, currentText, textareaRef]);
-
-  // Re-apply scroll after paint for mobile browsers where scrollHeight
-  // isn't fully resolved during useLayoutEffect
   useEffect(() => {
-    if (!needsScrollRef.current) return;
-    needsScrollRef.current = false;
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const id = requestAnimationFrame(() => {
-      textarea.scrollTop = textarea.scrollHeight;
+    const changed = currentText !== previousText.current;
+    const externalAppend = !nativeEdit.current && changed
+      && currentText.startsWith(previousText.current) && followEnd.current;
+    const moveCaret = explicitEnd.current || externalAppend;
+    const shouldScroll = moveCaret || (nativeEdit.current && followEnd.current);
+    previousText.current = currentText;
+    nativeEdit.current = false;
+    explicitEnd.current = false;
+    if (composing || !shouldScroll) return;
+
+    frame.current = requestAnimationFrame(() => {
+      frame.current = null;
+      const area = textareaRef.current;
+      if (!area) return;
+      // A selection made since scheduling wins over automatic scrolling.
+      if (!moveCaret && (area.selectionStart !== area.value.length || area.selectionEnd !== area.value.length)) return;
+      if (moveCaret && (area.selectionStart !== area.value.length || area.selectionEnd !== area.value.length)) {
+        area.setSelectionRange(area.value.length, area.value.length);
+      }
+      const bottom = Math.max(0, area.scrollHeight - area.clientHeight);
+      if (area.scrollTop !== bottom) area.scrollTop = bottom;
+      captureSnapshot();
     });
-    return () => cancelAnimationFrame(id);
-  }, [currentText, textareaRef]);
-
-  const scrollToEnd = useCallback(() => {
-    pendingRef.current = {
-      selectionStart: Number.MAX_SAFE_INTEGER,
-      selectionEnd: Number.MAX_SAFE_INTEGER,
-      shouldScrollToEnd: true,
+    return () => {
+      if (frame.current !== null) cancelAnimationFrame(frame.current);
+      frame.current = null;
     };
-  }, []);
+  }, [captureSnapshot, composing, currentText, textareaRef]);
 
-  return {
-    captureSnapshot,
-    captureScrollIntent,
-    scrollToEnd,
-  };
+  const scrollToEnd = useCallback(() => { explicitEnd.current = true; }, []);
+  return { captureSnapshot, captureScrollIntent, scrollToEnd };
 }
