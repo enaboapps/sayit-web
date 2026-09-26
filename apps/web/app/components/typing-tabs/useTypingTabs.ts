@@ -21,8 +21,18 @@ function createInitialTabsState(initialText?: string): TypingTabsState {
 export function useTypingTabs(initialText?: string) {
   const { uiPreferences, updateUIPreference } = useSettings();
   const { user } = useAuth();
+  const userId = user?.id;
   const updateSettingsMutation = useMutation(api.userSettings.updateSettings);
   const persistTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingPersistRef = useRef<TypingTabsState | null>(null);
+  useEffect(() => () => {
+    // Preserve the last keystrokes on navigation without sending a late account request.
+    if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current);
+    if (pendingPersistRef.current) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingPersistRef.current));
+      pendingPersistRef.current = null;
+    }
+  }, []);
 
   // Initialize tabs state
   const [tabsState, setTabsState] = useState<TypingTabsState>(() => createInitialTabsState(initialText));
@@ -90,24 +100,28 @@ export function useTypingTabs(initialText?: string) {
       clearTimeout(persistTimeoutRef.current);
     }
 
+    pendingPersistRef.current = state;
     // Debounce the persistence
     persistTimeoutRef.current = setTimeout(() => {
-      // Save to localStorage immediately
+      pendingPersistRef.current = null;
+      persistTimeoutRef.current = null;
+      const serialized = JSON.stringify(state);
+      // Save to localStorage after typing settles
       if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        localStorage.setItem(STORAGE_KEY, serialized);
       }
 
       // Sync to Convex for authenticated users
-      if (user) {
+      if (userId) {
         updateSettingsMutation({
-          typingTabs: JSON.stringify(state),
+          typingTabs: serialized,
           lastSyncedAt: Date.now(),
         }).catch(error => {
           console.error('Failed to sync tabs to Convex:', error);
         });
       }
     }, DEBOUNCE_DELAY);
-  }, [user, updateSettingsMutation]);
+  }, [userId, updateSettingsMutation]);
 
   // Sync active tab ID to UIPreferences
   useEffect(() => {
@@ -127,6 +141,7 @@ export function useTypingTabs(initialText?: string) {
     }
 
     persistTabs(tabsState);
+    return () => { if (persistTimeoutRef.current) clearTimeout(persistTimeoutRef.current); };
   }, [hasHydratedStorage, tabsState, persistTabs]);
 
   // Create a new tab
@@ -141,7 +156,7 @@ export function useTypingTabs(initialText?: string) {
 
   // Switch to a different tab
   const switchTab = useCallback((tabId: string) => {
-    setTabsState(prev => ({
+    setTabsState(prev => prev.activeTabId === tabId ? prev : ({
       ...prev,
       activeTabId: tabId,
     }));
@@ -203,7 +218,7 @@ export function useTypingTabs(initialText?: string) {
       const activeTabIndex = prev.tabs.findIndex(t => t.id === prev.activeTabId);
       const activeTab = prev.tabs[activeTabIndex];
 
-      if (!activeTab) return prev;
+      if (!activeTab || activeTab.text === text) return prev;
 
       // Auto-update label from text if user hasn't manually renamed the tab
       const newLabel = activeTab.isCustomLabel

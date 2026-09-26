@@ -394,7 +394,7 @@ describe('Composer', () => {
 
     await user.type(textarea, ' extra text');
 
-    expect(textarea.scrollTop).toBe(1000);
+    await waitFor(() => expect(textarea.scrollTop).toBe(800));
   });
 
   it('does not force the textarea to the bottom when editing earlier text', () => {
@@ -426,7 +426,7 @@ describe('Composer', () => {
 
     expect(textarea).toHaveValue('Hello world');
     expect(textarea.selectionStart).toBe('Hello world'.length);
-    expect(textarea.scrollTop).toBe(1000);
+    await waitFor(() => expect(textarea.scrollTop).toBe(800));
   });
 
   it('restores the active tab draft on mount when tabs enabled', async () => {

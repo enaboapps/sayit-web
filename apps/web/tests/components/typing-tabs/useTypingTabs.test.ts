@@ -515,3 +515,35 @@ describe('useTypingTabs', () => {
     });
   });
 });
+
+
+it('does not persist unchanged drafts again when auth objects refresh', () => {
+  jest.useFakeTimers();
+  const { useAuth } = jest.requireMock('@/app/contexts/AuthContext');
+  const original = useAuth.getMockImplementation();
+  useAuth.mockImplementation(() => ({ user: { id: 'owner' } }));
+  mockUpdateSettingsMutation.mockResolvedValue(undefined);
+  const view = renderHook(() => useTypingTabs());
+  act(() => jest.advanceTimersByTime(300));
+  mockUpdateSettingsMutation.mockClear();
+  const tabs = view.result.current.tabs;
+  act(() => view.result.current.updateActiveTabText(view.result.current.activeTab.text));
+  expect(view.result.current.tabs).toBe(tabs);
+  view.rerender(); act(() => jest.advanceTimersByTime(300));
+  expect(mockUpdateSettingsMutation).not.toHaveBeenCalled();
+  act(() => view.result.current.updateActiveTabText('A new draft'));
+  act(() => jest.advanceTimersByTime(300));
+  expect(mockUpdateSettingsMutation).toHaveBeenCalledTimes(1);
+  view.unmount(); useAuth.mockImplementation(original); jest.useRealTimers();
+});
+
+
+it('preserves the final draft when navigating before the save debounce', () => {
+  jest.useFakeTimers();
+  const view = renderHook(() => useTypingTabs());
+  act(() => view.result.current.updateActiveTabText('Last keystrokes'));
+  view.unmount();
+  const stored = JSON.parse(localStorageMock.getItem('typingTabs')!);
+  expect(stored.tabs.find((tab: { id: string }) => tab.id === stored.activeTabId).text).toBe('Last keystrokes');
+  act(() => jest.runOnlyPendingTimers()); jest.useRealTimers();
+});

@@ -66,8 +66,10 @@ export default function Composer({
     updateActiveTabText,
   } = useComposerTabs(text, onChange, enableTabs);
 
+  const [composing, setComposing] = useState(false);
+
   // Textarea scroll management
-  const { captureSnapshot, captureScrollIntent, scrollToEnd } = useTextareaScroll(inputRef, currentText);
+  const { captureSnapshot, captureScrollIntent, scrollToEnd } = useTextareaScroll(inputRef, currentText, composing);
 
   // Actions (clear, speak, fix text, enter handling, live typing, errors)
   const actions = useComposerActions({
@@ -84,7 +86,6 @@ export default function Composer({
     enableLiveTyping,
   });
 
-  const [composing, setComposing] = useState(false);
   const [visible, setVisible] = useState(true);
   useEffect(() => {
     const update = () => setVisible(document.visibilityState !== 'hidden');
