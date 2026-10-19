@@ -162,6 +162,41 @@ export const migrateNullRole = mutation({
   },
 });
 
+// Mutation: Ensure the current user has a profile with a role
+// Self-heals users whose Clerk webhook never created a profile, or whose role is null
+export const ensureProfile = mutation({
+  handler: async (ctx) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) {
+      throw new Error('Not authenticated');
+    }
+
+    const profile = await ctx.db
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .first();
+
+    if (!profile) {
+      await ctx.db.insert('profiles', {
+        userId: identity.subject,
+        email: (identity.email ?? '').toLowerCase(),
+        fullName: identity.name ?? undefined,
+        role: 'communicator',
+      });
+      return { created: true, migrated: false };
+    }
+
+    if (!profile.role) {
+      await ctx.db.patch(profile._id, {
+        role: 'communicator',
+      });
+      return { created: false, migrated: true };
+    }
+
+    return { created: false, migrated: false };
+  },
+});
+
 // Mutation: Set user role (caregiver or communicator)
 // Creates profile if it doesn't exist (handles case where webhook hasn't fired yet)
 export const setRole = mutation({
@@ -217,7 +252,13 @@ export const changeRole = mutation({
       .first();
 
     if (!profile) {
-      throw new Error('Profile not found');
+      // No profile means no relationships to clean up; create it with the new role
+      return await ctx.db.insert('profiles', {
+        userId: identity.subject,
+        email: (identity.email ?? '').toLowerCase(),
+        fullName: identity.name ?? undefined,
+        role: args.newRole,
+      });
     }
 
     if (profile.role === args.newRole) {
