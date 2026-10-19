@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 
 interface AuthContextType {
@@ -39,9 +39,10 @@ export function StaticAuthProvider({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { user: clerkUser, isLoaded } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(api.profiles.getProfile);
-  const migrateNullRole = useMutation(api.profiles.migrateNullRole);
-  const migrationAttemptedRef = useRef(false);
+  const ensureProfile = useMutation(api.profiles.ensureProfile);
+  const ensureAttemptedRef = useRef(false);
 
   // Transform Clerk user to our simplified format
   const user = clerkUser
@@ -51,16 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     : null;
 
-  // Migrate existing users with null roles to 'communicator' (only once)
+  // Create a missing profile (e.g. the Clerk webhook never fired) or fill a null role (only once)
+  const needsProfile = isAuthenticated && profile !== undefined && !profile?.role;
   useEffect(() => {
-    if (profile && !profile.role && !migrationAttemptedRef.current) {
-      migrationAttemptedRef.current = true;
-      migrateNullRole({}).catch((error) => {
-        console.error('Failed to migrate null role:', error);
-        migrationAttemptedRef.current = false; // Allow retry on error
+    if (needsProfile && !ensureAttemptedRef.current) {
+      ensureAttemptedRef.current = true;
+      ensureProfile({}).catch((error) => {
+        console.error('Failed to ensure profile:', error);
+        ensureAttemptedRef.current = false; // Allow retry on error
       });
     }
-  }, [profile, migrateNullRole]);
+  }, [needsProfile, ensureProfile]);
 
   return (
     <AuthContext.Provider value={{ user, loading: !isLoaded }}>

@@ -10,9 +10,13 @@ export default function RoleChangeSection() {
   const [showModal, setShowModal] = useState(false);
   const profile = useQuery(api.profiles.getProfile);
 
-  if (!profile?.role) {
+  // Still loading
+  if (profile === undefined) {
     return null;
   }
+
+  // A missing profile or role defaults to communicator; AuthProvider backfills it via profiles.ensureProfile
+  const role = profile?.role ?? 'communicator';
 
   const handleSuccess = () => {
     setShowModal(false);
@@ -25,9 +29,9 @@ export default function RoleChangeSection() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className={`p-3 rounded-full ${
-            profile.role === 'caregiver' ? 'bg-primary-950' : 'bg-status-info'
+            role === 'caregiver' ? 'bg-primary-950' : 'bg-status-info'
           }`}>
-            {profile.role === 'caregiver' ? (
+            {role === 'caregiver' ? (
               <HeartIcon className="w-6 h-6 text-primary-500" />
             ) : (
               <UserIcon className="w-6 h-6 text-blue-500" />
@@ -35,10 +39,10 @@ export default function RoleChangeSection() {
           </div>
           <div>
             <p className="text-foreground font-medium">
-              {profile.role === 'caregiver' ? 'Caregiver' : 'Communicator'}
+              {role === 'caregiver' ? 'Caregiver' : 'Communicator'}
             </p>
             <p className="text-text-secondary text-sm">
-              {profile.role === 'caregiver'
+              {role === 'caregiver'
                 ? 'You create and manage boards for others'
                 : 'You use boards to communicate'
               }
@@ -55,7 +59,7 @@ export default function RoleChangeSection() {
 
       {showModal && (
         <RoleChangeModal
-          currentRole={profile.role}
+          currentRole={role}
           onClose={() => setShowModal(false)}
           onSuccess={handleSuccess}
         />
