@@ -18,7 +18,7 @@ export default function CreateBoardButton({ communicatorId }: CreateBoardButtonP
         className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-colors"
       >
         <PlusIcon className="w-5 h-5" />
-        Create Board
+        Add Board
       </button>
 
       {isModalOpen && (

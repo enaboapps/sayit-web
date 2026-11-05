@@ -99,7 +99,7 @@ export default function ClientDetailPage({ params }: PageProps) {
                 <FolderPlusIcon className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
                 <p className="text-text-secondary mb-2">No boards yet</p>
                 <p className="text-text-tertiary text-sm">
-                  Create a board to help {clientName} communicate
+                  Create a board or share a saved board to help {clientName} communicate
                 </p>
               </div>
             ) : (

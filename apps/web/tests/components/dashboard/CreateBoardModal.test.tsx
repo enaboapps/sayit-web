@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useQuery, useMutation } from 'convex/react';
 import CreateBoardModal from '@/app/components/dashboard/CreateBoardModal';
+import { getFunctionName } from 'convex/server';
 
 jest.mock('convex/react', () => ({
   useQuery: jest.fn(),
@@ -11,18 +12,21 @@ jest.mock('convex/react', () => ({
 
 const mockOnClose = jest.fn();
 const mockAddBoard = jest.fn();
+const mockAssignBoard = jest.fn();
 
 describe('CreateBoardModal', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     (useQuery as jest.Mock).mockReturnValue([]);
-    (useMutation as jest.Mock).mockReturnValue(mockAddBoard);
+    (useMutation as jest.Mock).mockImplementation((mutation) =>
+      getFunctionName(mutation) === 'phraseBoards:assignBoardToClient' ? mockAssignBoard : mockAddBoard
+    );
   });
 
   it('renders modal with board name input', () => {
     render(<CreateBoardModal communicatorId="client-1" onClose={mockOnClose} />);
 
-    expect(screen.getByText('Create Board for Client')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Add Board for Client' })).toBeInTheDocument();
     expect(screen.getByLabelText(/board name/i)).toBeInTheDocument();
     expect(screen.getByText(/permission level/i)).toBeInTheDocument();
   });
@@ -150,10 +154,8 @@ describe('CreateBoardModal', () => {
   });
 
   it('shows loading state while creating', async () => {
-    // Make the mutation take time
-    mockAddBoard.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 1000))
-    );
+    // Keep the request pending without a timer leaking into later tests.
+    mockAddBoard.mockImplementation(() => new Promise(() => {}));
 
     render(<CreateBoardModal communicatorId="client-1" onClose={mockOnClose} />);
 
@@ -182,5 +184,48 @@ describe('CreateBoardModal', () => {
         })
       );
     });
+  });
+
+  it('shares an owned personal board with the selected permission', async () => {
+    (useQuery as jest.Mock).mockReturnValue([
+      { _id: 'saved-1', name: 'Daily phrases', isOwner: true },
+      { _id: 'assigned-1', name: 'Assigned board', isOwner: true, forClientId: 'other-client' },
+      { _id: 'shared-1', name: 'Someone else’s board', isOwner: false },
+      { _id: 'deleted-1', name: 'Deleting board', isOwner: true, pendingDelete: true },
+    ]);
+    mockAssignBoard.mockResolvedValue(undefined);
+    render(<CreateBoardModal communicatorId="client-1" onClose={mockOnClose} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Share a saved board' }));
+    expect(screen.queryByLabelText(/board name/i)).not.toBeInTheDocument();
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Share Board' })).toBeDisabled();
+    await userEvent.selectOptions(screen.getByLabelText('Saved board'), 'saved-1');
+    await userEvent.click(screen.getByRole('button', { name: /can edit/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Share Board' }));
+    await waitFor(() => expect(mockOnClose).toHaveBeenCalledTimes(1));
+    expect(mockAssignBoard).toHaveBeenCalledWith({ boardId: 'saved-1', clientId: 'client-1', accessLevel: 'edit' });
+    expect(mockAddBoard).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, []])('disables sharing while boards are loading or unavailable: %s', async (boards) => {
+    (useQuery as jest.Mock).mockReturnValue(boards);
+    render(<CreateBoardModal communicatorId="client-1" onClose={mockOnClose} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Share a saved board' }));
+    expect(screen.getByRole('button', { name: 'Share Board' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent(boards ? /no saved boards/i : /loading saved boards/i);
+  });
+
+  it('keeps the dialog open and allows retrying after sharing fails', async () => {
+    (useQuery as jest.Mock).mockReturnValue([{ _id: 'saved-1', name: 'Daily phrases', isOwner: true }]);
+    mockAssignBoard.mockRejectedValueOnce(new Error('Client relationship not found')).mockResolvedValueOnce(undefined);
+    render(<CreateBoardModal communicatorId="client-1" onClose={mockOnClose} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Share a saved board' }));
+    await userEvent.selectOptions(screen.getByLabelText('Saved board'), 'saved-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Share Board' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Client relationship not found');
+    expect(mockOnClose).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Share Board' }));
+    await waitFor(() => expect(mockOnClose).toHaveBeenCalledTimes(1));
+    expect(mockAssignBoard).toHaveBeenLastCalledWith({ boardId: 'saved-1', clientId: 'client-1', accessLevel: 'view' });
   });
 });

@@ -63,7 +63,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'How can a supporter manage a communicator’s Boards?',
     answer: (
       <>
-        With Pro, a supporter can open <strong>Clients</strong>, send a connection request to a communicator, and create or assign Boards after the request is accepted. Each shared Board can be set to view-only or allow editing, and updates appear on the communicator’s devices.
+        With Pro, a supporter can open <strong>Clients</strong> and send a connection request to a communicator. After the request is accepted, open the client and choose <strong>Add Board</strong> to create a blank Board or <strong>Share a saved board</strong>. Choose one of your Boards that is not assigned to a client, then select view-only or editing permission. Updates appear on the communicator’s devices. Linked Boards must be shared separately.
       </>
     ),
   },
