@@ -503,6 +503,37 @@ export const getBoardsForClient = query({
   },
 });
 
+// Share an existing personal board without rebuilding its tiles or phrases.
+export const assignBoardToClient = mutation({
+  args: {
+    boardId: v.id('phraseBoards'),
+    clientId: v.string(),
+    accessLevel: v.union(v.literal('view'), v.literal('edit')),
+  },
+  handler: async (ctx, args) => {
+    const identity = await getUserIdentity(ctx);
+    if (!identity) throw new Error('Unauthenticated');
+
+    const board = await ctx.db.get(args.boardId);
+    if (!board || board.userId !== identity.subject) throw new Error('Unauthorized');
+    if (board.pendingDelete) throw new Error('This board is being deleted');
+    if (board.forClientId) throw new Error('This board is already assigned to a client');
+
+    const relationships = await ctx.db
+      .query('caregiverClients')
+      .withIndex('by_caregiver', (q) => q.eq('caregiverId', identity.subject))
+      .collect();
+    if (!relationships.some((relationship) => relationship.communicatorId === args.clientId)) {
+      throw new Error('Client relationship not found');
+    }
+
+    await ctx.db.patch(args.boardId, {
+      forClientId: args.clientId,
+      clientAccessLevel: args.accessLevel,
+    });
+  },
+});
+
 // Mutation: Update board client access level
 export const updateBoardClientAccess = mutation({
   args: {
