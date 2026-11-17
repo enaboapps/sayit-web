@@ -2,6 +2,8 @@ import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
+  // Legacy: custom voice providers were removed. Kept so existing rows still
+  // validate; drop after the stored connections are deleted.
   customProviders: defineTable({ userId: v.string(), name: v.string(), baseUrl: v.string(), encryptedKey: v.string() }).index('by_user', ['userId']),
   profiles: defineTable({
     userId: v.string(), // Clerk user ID
@@ -201,6 +203,7 @@ export default defineSchema({
     doubleEnterEnabled: v.optional(v.boolean()),
     doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
     doubleEnterTimeoutMs: v.optional(v.number()),
+    // 'custom' is legacy (removed custom voice providers); clients read it as 'browser'.
     ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom')),
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
@@ -217,7 +220,7 @@ export default defineSchema({
       )
     ),
     usePhraseBar: v.optional(v.boolean()),
-    prepareSpeechWhileTyping: v.optional(v.boolean()),
+    prepareSpeechWhileTyping: v.optional(v.boolean()), // Legacy: unused since custom voice providers were removed.
     speakPhrasesOnTap: v.optional(v.boolean()),
 
     // UI Preferences (consolidated from various components)

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { CustomTTS } from '@/lib/custom-tts';
+import { useState, useRef, useCallback } from 'react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOptionalMobileBottom } from '../../contexts/MobileBottomContext';
@@ -85,24 +84,6 @@ export default function Composer({
     inputRef,
     enableLiveTyping,
   });
-
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const update = () => setVisible(document.visibilityState !== 'hidden');
-    update(); document.addEventListener('visibilitychange', update);
-    return () => document.removeEventListener('visibilitychange', update);
-  }, []);
-  useEffect(() => {
-    const player = CustomTTS.getInstance();
-    player.setPreparationContext(JSON.stringify([actions.user?.id, activeTabId, settings.ttsProvider, settings.ttsVoiceId]));
-    return () => player.setPreparationContext('');
-  }, [actions.user?.id, activeTabId, settings.ttsProvider, settings.ttsVoiceId]);
-  useEffect(() => {
-    CustomTTS.getInstance().prepareDraft(currentText, settings.ttsVoiceId,
-      !!actions.user?.id && settings.prepareSpeechWhileTyping && settings.ttsProvider === 'custom'
-      && actions.isOnline && visible && !composing);
-  }, [currentText, settings.ttsVoiceId, settings.ttsProvider, settings.prepareSpeechWhileTyping,
-    actions.user?.id, actions.isOnline, visible, composing]);
 
   // Wrap text change to include scroll intent capture and undo reset
   const handleTextChange = useCallback((value: string) => {

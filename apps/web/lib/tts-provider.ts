@@ -1,4 +1,3 @@
-import { CustomTTS } from './custom-tts';
 import { ElevenLabsTTS } from './elevenlabs-tts';
 import { AzureTTS } from './azure-tts';
 import { GeminiTTS } from './gemini-tts';
@@ -39,7 +38,6 @@ export interface TTSStatus {
 export class TTSProvider {
   private static instance: TTSProvider;
   private elevenlabsTTS: ElevenLabsTTS;
-  private customTTS = CustomTTS.getInstance();
   private azureTTS: AzureTTS;
   private geminiTTS: GeminiTTS;
   private webSpeechTTS: WebSpeechTTS;
@@ -99,7 +97,6 @@ export class TTSProvider {
     this.elevenlabsTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
     this.azureTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
     this.geminiTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
-    this.customTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
   }
 
   public addCallbacks(callbacks: TTSCallbacks): () => void {
@@ -188,7 +185,7 @@ export class TTSProvider {
       languageCodes: voice.languageCodes,
     }));
 
-    return [...browserVoices, ...elevenLabsVoices, ...azureVoices, ...geminiVoices, ...this.customTTS.getVoices()];
+    return [...browserVoices, ...elevenLabsVoices, ...azureVoices, ...geminiVoices];
   }
 
   public getVoicesByProvider(provider: TTSProviderType): TTSVoice[] {
@@ -231,16 +228,14 @@ export class TTSProvider {
     // Determine which provider to use based on the selected voice
     let provider = this.activeProvider;
 
-    if (options?.voiceId && provider !== 'custom') {
+    if (options?.voiceId) {
       const voice = this.getVoiceById(options.voiceId);
       if (voice) {
         provider = voice.provider;
       }
     }
 
-    if (provider === 'custom') {
-      void this.customTTS.speak(text, options);
-    } else if (provider === 'elevenlabs') {
+    if (provider === 'elevenlabs') {
       this.elevenlabsTTS.speak(text, {
         voiceId: options?.voiceId,
         stability: options?.stability,
@@ -266,13 +261,10 @@ export class TTSProvider {
     this.elevenlabsTTS.stop();
     this.azureTTS.stop();
     this.geminiTTS.stop();
-    this.customTTS.stop();
   }
 
   public pause() {
-    if (this.activeProvider === 'custom') {
-      this.customTTS.pause();
-    } else if (this.activeProvider === 'elevenlabs') {
+    if (this.activeProvider === 'elevenlabs') {
       this.elevenlabsTTS.pause();
     } else if (this.activeProvider === 'azure') {
       this.azureTTS.pause();
@@ -284,9 +276,7 @@ export class TTSProvider {
   }
 
   public resume() {
-    if (this.activeProvider === 'custom') {
-      this.customTTS.resume();
-    } else if (this.activeProvider === 'elevenlabs') {
+    if (this.activeProvider === 'elevenlabs') {
       this.elevenlabsTTS.resume();
     } else if (this.activeProvider === 'azure') {
       this.azureTTS.resume();
@@ -298,7 +288,7 @@ export class TTSProvider {
   }
 
   public isAvailable(): boolean {
-    return this.activeProvider === 'custom' || this.webSpeechTTS.isAvailable()
+    return this.webSpeechTTS.isAvailable()
       || this.elevenlabsTTS.isAvailable()
       || this.azureTTS.isAvailable()
       || this.geminiTTS.isAvailable();
