@@ -3,9 +3,10 @@ import { v } from 'convex/values';
 import { getUserIdentity } from './users';
 import { withoutRemovedTTSProvider } from '../lib/tts-types';
 
-// 'custom' and prepareSpeechWhileTyping belonged to the removed custom voice
-// providers. They are still accepted so clients cached before the removal can
-// save settings; 'custom' is stored as browser speech and the flag is ignored.
+// 'custom' and prepareSpeechWhileTyping belonged to the custom voice providers
+// removed in v5.4.0. Clients cached before then may still send them, so they're
+// accepted here; 'custom' is stored as browser speech and the flag is ignored.
+// The schema no longer allows either.
 const ttsProviderArg = v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom'));
 
 // Query to get user settings

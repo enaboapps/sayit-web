@@ -11,8 +11,9 @@ export interface BaseTTSCallbacks {
 // Shared with Convex: keep this module free of browser implementation imports.
 export type TTSProviderType = 'browser' | 'elevenlabs' | 'azure' | 'gemini';
 
-// Custom voice providers were removed. Saved settings may still hold 'custom'
-// with a 'custom:' voice ID; treat those as browser speech with the default voice.
+// Custom voice providers were removed in v5.4.0. Settings saved on a device, or
+// sent by a client cached before then, may still hold 'custom' with a 'custom:'
+// voice ID; treat those as browser speech with the default voice.
 export const REMOVED_CUSTOM_TTS_PROVIDER = 'custom';
 
 export function withoutRemovedTTSProvider<T extends { ttsProvider?: unknown; ttsVoiceId?: unknown }>(
