@@ -1,0 +1,827 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`synced settings fields table and mutation validators match the snapshot 1`] = `
+{
+  "initializeArgs": {
+    "activeTypingTabId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "aiReplySuggestionsEnabled": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": false,
+    },
+    "doubleEnterAction": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "newline",
+          },
+          {
+            "type": "literal",
+            "value": "speak",
+          },
+          {
+            "type": "literal",
+            "value": "clear",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClear",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "doubleEnterEnabled": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": false,
+    },
+    "doubleEnterTimeoutMs": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "enterKeyBehavior": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "newline",
+          },
+          {
+            "type": "literal",
+            "value": "speak",
+          },
+          {
+            "type": "literal",
+            "value": "clear",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClear",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "messageCaptureMode": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "disabled",
+          },
+          {
+            "type": "literal",
+            "value": "clearOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClearOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakAny",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "prepareSpeechWhileTyping": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "selectedBoardId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "speakPhrasesOnTap": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "speechPitch": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "speechRate": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "speechVoice": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": false,
+    },
+    "speechVolume": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "textSize": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "ttsModelPreference": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "fast",
+          },
+          {
+            "type": "literal",
+            "value": "high_quality",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "ttsProvider": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "browser",
+          },
+          {
+            "type": "literal",
+            "value": "elevenlabs",
+          },
+          {
+            "type": "literal",
+            "value": "azure",
+          },
+          {
+            "type": "literal",
+            "value": "gemini",
+          },
+          {
+            "type": "literal",
+            "value": "custom",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "ttsSimilarityBoost": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "ttsStability": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "ttsVoiceId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": false,
+    },
+    "typingAreaExpanded": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": false,
+    },
+    "typingAreaVisible": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": false,
+    },
+    "typingDockMode": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "expanded",
+          },
+          {
+            "type": "literal",
+            "value": "fullscreen",
+          },
+          {
+            "type": "literal",
+            "value": "minimized",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "typingShareFontSize": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "typingTabs": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "usePhraseBar": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+  },
+  "table": {
+    "activeTypingTabId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "aiReplySuggestionsEnabled": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "doubleEnterAction": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "newline",
+          },
+          {
+            "type": "literal",
+            "value": "speak",
+          },
+          {
+            "type": "literal",
+            "value": "clear",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClear",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "doubleEnterEnabled": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "doubleEnterTimeoutMs": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "enterKeyBehavior": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "newline",
+          },
+          {
+            "type": "literal",
+            "value": "speak",
+          },
+          {
+            "type": "literal",
+            "value": "clear",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClear",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "lastSyncedAt": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "messageCaptureMode": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "disabled",
+          },
+          {
+            "type": "literal",
+            "value": "clearOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClearOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakAny",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "selectedBoardId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "speakPhrasesOnTap": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "speechPitch": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "speechRate": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "speechVoice": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": false,
+    },
+    "speechVolume": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "textSize": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "number",
+          },
+          {
+            "type": "literal",
+            "value": "small",
+          },
+          {
+            "type": "literal",
+            "value": "medium",
+          },
+          {
+            "type": "literal",
+            "value": "large",
+          },
+          {
+            "type": "literal",
+            "value": "xlarge",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "ttsModelPreference": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "fast",
+          },
+          {
+            "type": "literal",
+            "value": "high_quality",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "ttsProvider": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "browser",
+          },
+          {
+            "type": "literal",
+            "value": "elevenlabs",
+          },
+          {
+            "type": "literal",
+            "value": "azure",
+          },
+          {
+            "type": "literal",
+            "value": "gemini",
+          },
+        ],
+      },
+      "optional": false,
+    },
+    "ttsSimilarityBoost": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "ttsStability": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "ttsVoiceId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": false,
+    },
+    "typingAreaExpanded": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": false,
+    },
+    "typingAreaVisible": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": false,
+    },
+    "typingDockMode": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "expanded",
+          },
+          {
+            "type": "literal",
+            "value": "fullscreen",
+          },
+          {
+            "type": "literal",
+            "value": "minimized",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "typingShareFontSize": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "typingTabs": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "updatedAt": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "usePhraseBar": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "userId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": false,
+    },
+  },
+  "updateArgs": {
+    "activeTypingTabId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "aiReplySuggestionsEnabled": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "doubleEnterAction": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "newline",
+          },
+          {
+            "type": "literal",
+            "value": "speak",
+          },
+          {
+            "type": "literal",
+            "value": "clear",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClear",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "doubleEnterEnabled": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "doubleEnterTimeoutMs": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "enterKeyBehavior": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "newline",
+          },
+          {
+            "type": "literal",
+            "value": "speak",
+          },
+          {
+            "type": "literal",
+            "value": "clear",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClear",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "lastSyncedAt": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": false,
+    },
+    "messageCaptureMode": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "disabled",
+          },
+          {
+            "type": "literal",
+            "value": "clearOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakAndClearOnly",
+          },
+          {
+            "type": "literal",
+            "value": "speakAny",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "prepareSpeechWhileTyping": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "selectedBoardId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "speakPhrasesOnTap": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "speechPitch": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "speechRate": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "speechVoice": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "speechVolume": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "textSize": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "ttsModelPreference": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "fast",
+          },
+          {
+            "type": "literal",
+            "value": "high_quality",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "ttsProvider": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "browser",
+          },
+          {
+            "type": "literal",
+            "value": "elevenlabs",
+          },
+          {
+            "type": "literal",
+            "value": "azure",
+          },
+          {
+            "type": "literal",
+            "value": "gemini",
+          },
+          {
+            "type": "literal",
+            "value": "custom",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "ttsSimilarityBoost": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "ttsStability": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "ttsVoiceId": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "typingAreaExpanded": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "typingAreaVisible": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+    "typingDockMode": {
+      "fieldType": {
+        "type": "union",
+        "value": [
+          {
+            "type": "literal",
+            "value": "expanded",
+          },
+          {
+            "type": "literal",
+            "value": "fullscreen",
+          },
+          {
+            "type": "literal",
+            "value": "minimized",
+          },
+        ],
+      },
+      "optional": true,
+    },
+    "typingShareFontSize": {
+      "fieldType": {
+        "type": "number",
+      },
+      "optional": true,
+    },
+    "typingTabs": {
+      "fieldType": {
+        "type": "string",
+      },
+      "optional": true,
+    },
+    "usePhraseBar": {
+      "fieldType": {
+        "type": "boolean",
+      },
+      "optional": true,
+    },
+  },
+}
+`;

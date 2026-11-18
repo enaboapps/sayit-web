@@ -20,6 +20,16 @@ const TABLE_ONLY = ['userId', 'updatedAt'];
 const ARGS_ONLY = ['prepareSpeechWhileTyping']; // removed setting old clients still send
 
 describe('synced settings fields', () => {
+  // Pins the validators themselves, not just the field names. Update the
+  // snapshot only for an intended schema or args change.
+  test('table and mutation validators match the snapshot', () => {
+    expect({
+      table: tableFields(),
+      initializeArgs: argFields(initializeSettings),
+      updateArgs: argFields(updateSettings),
+    }).toMatchSnapshot();
+  });
+
   test('both mutations accept every stored setting, and nothing else new', () => {
     const stored = Object.keys(tableFields()).filter((name) => !TABLE_ONLY.includes(name)).sort();
     const update = Object.keys(argFields(updateSettings)).filter((name) => !ARGS_ONLY.includes(name)).sort();

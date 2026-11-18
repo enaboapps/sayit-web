@@ -133,8 +133,9 @@ export const updateSettings = mutation({
       updatedAt: Date.now(),
       lastSyncedAt,
     };
-    for (const [name, value] of Object.entries(updates)) {
-      if (value !== undefined) updateData[name] = value;
+    const provided = updates as Record<string, unknown>;
+    for (const name of Object.keys(settingsArgs)) {
+      if (provided[name] !== undefined) updateData[name] = provided[name];
     }
 
     await ctx.db.patch(settings._id, updateData);
