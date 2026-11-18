@@ -214,6 +214,9 @@ describe('TTSSettings provider dropdown', () => {
     await openProviderDropdown(user);
 
     expect(screen.getAllByText('PRO')).toHaveLength(3);
+    expect(screen.getByText('AI voices - Pro')).toBeInTheDocument();
+    expect(screen.getByText('Neural voices - Pro')).toBeInTheDocument();
+    expect(screen.getByText('Expressive AI voices - Pro')).toBeInTheDocument();
 
     await user.click(screen.getByText('Azure'));
     expect(mockUpdateSetting).toHaveBeenCalledWith('ttsProvider', 'azure');

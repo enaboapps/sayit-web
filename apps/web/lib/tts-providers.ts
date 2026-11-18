@@ -1,6 +1,7 @@
 import { AzureTTS } from './azure-tts';
 import { ElevenLabsTTS } from './elevenlabs-tts';
 import { GeminiTTS } from './gemini-tts';
+import { isCloudProvider } from './tts-types';
 import type { CloudTTSClient, CloudTTSProviderType, TTSProviderType } from './tts-types';
 
 export interface TTSProviderInfo {
@@ -44,6 +45,7 @@ export const CLOUD_TTS_PROVIDER_INFO: Record<CloudTTSProviderType, CloudTTSProvi
   },
 };
 
+// Anything that isn't a known cloud provider (including stale saved values) is browser speech.
 export function getTTSProviderInfo(provider: TTSProviderType): TTSProviderInfo {
-  return provider === 'browser' ? BROWSER_TTS_INFO : CLOUD_TTS_PROVIDER_INFO[provider];
+  return isCloudProvider(provider) ? CLOUD_TTS_PROVIDER_INFO[provider] : BROWSER_TTS_INFO;
 }

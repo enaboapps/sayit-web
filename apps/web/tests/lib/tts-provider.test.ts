@@ -162,9 +162,13 @@ describe('TTSProvider routing', () => {
 
     provider.speak('Hello', { liveTyping: { sessionKey: 'k', commandId: 'c' } });
 
-    expect(mockGeminiTTS.speak).toHaveBeenCalledWith('Hello', expect.objectContaining({
+    expect(mockGeminiTTS.speak).toHaveBeenCalledWith('Hello', {
+      voiceId: undefined,
+      stability: undefined,
+      similarityBoost: undefined,
+      modelId: undefined,
       liveTyping: { sessionKey: 'k', commandId: 'c' },
-    }));
+    });
     expect(mockBrowserTTS.speak).not.toHaveBeenCalled();
   });
 

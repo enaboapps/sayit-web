@@ -95,7 +95,8 @@ describe('GeminiTTS', () => {
       });
 
     const tts = GeminiTTS.getInstance();
-    await tts.speak('Hello', { voiceId: 'Puck' });
+    // ElevenLabs-only options are left out of the request.
+    await tts.speak('Hello', { voiceId: 'Puck', stability: 0.2, similarityBoost: 0.9, modelId: 'eleven_v3' });
 
     expect(global.fetch).toHaveBeenNthCalledWith(2, '/api/gemini/tts', expect.objectContaining({
       method: 'POST',

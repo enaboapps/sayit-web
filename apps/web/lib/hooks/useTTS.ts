@@ -2,7 +2,17 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { emptyCloudTTSStatus, TTSProvider, TTSVoice, TTSProviderType, TTSStatus } from '../tts-provider';
-import { isCloudProvider, type CloudTTSProviderType } from '../tts-types';
+import { CLOUD_TTS_PROVIDERS, isCloudProvider, type CloudTTSProviderType } from '../tts-types';
+
+function sameStatus(a: TTSStatus, b: TTSStatus) {
+  return a.isSpeaking === b.isSpeaking
+    && a.activeProvider === b.activeProvider
+    && a.browserTTSAvailable === b.browserTTSAvailable
+    && CLOUD_TTS_PROVIDERS.every((provider) => (
+      a.cloud[provider].available === b.cloud[provider].available
+      && a.cloud[provider].voicesLoaded === b.cloud[provider].voicesLoaded
+    ));
+}
 import { useSubscription } from '@/app/hooks/useSubscription';
 import { useSettings } from '@/app/contexts/SettingsContext';
 
@@ -19,6 +29,11 @@ export function useTTS() {
     cloud: emptyCloudTTSStatus(),
   });
   
+  // Keeps the previous object when nothing changed, so status.cloud is stable.
+  const updateStatus = useCallback((next: TTSStatus) => {
+    setStatus((previous) => (sameStatus(previous, next) ? previous : next));
+  }, []);
+
   // Use ref to avoid dependency issues in callbacks
   const ttsRef = useRef<TTSProvider | null>(null);
   
@@ -41,8 +56,8 @@ export function useTTS() {
 
     ttsRef.current.setProvider(settings.ttsProvider);
     setProvider(ttsRef.current.getCurrentProvider());
-    setStatus(ttsRef.current.getStatus());
-  }, [settings.ttsProvider]);
+    updateStatus(ttsRef.current.getStatus());
+  }, [settings.ttsProvider, updateStatus]);
 
   useEffect(() => {
     if (!ttsRef.current) {
@@ -53,7 +68,7 @@ export function useTTS() {
 
       setIsAvailable(tts.isAvailable());
       setProvider(tts.getCurrentProvider());
-      setStatus(tts.getStatus());
+      updateStatus(tts.getStatus());
       setVoices(tts.getAllVoices());
     }
 
@@ -67,7 +82,7 @@ export function useTTS() {
       },
       onVoicesChanged: (newVoices) => {
         setVoices(newVoices);
-        setStatus(tts.getStatus());
+        updateStatus(tts.getStatus());
       },
       onWordBoundary: (word, charIndex) => {
         setWordBoundary({ word, charIndex });
@@ -75,7 +90,7 @@ export function useTTS() {
     });
 
     return unsubscribe;
-  }, []);
+  }, [updateStatus]);
 
   const speak = useCallback((text: string, customOptions?: {
     voiceId?: string;
@@ -173,8 +188,8 @@ export function useTTS() {
     // but actual speak calls will be redirected to browser TTS
     ttsRef.current.setProvider(newProvider);
     setProvider(newProvider);
-    setStatus(ttsRef.current.getStatus());
-  }, []);
+    updateStatus(ttsRef.current.getStatus());
+  }, [updateStatus]);
 
   const getVoicesByProvider = useCallback((providerType: TTSProviderType) => {
     if (!ttsRef.current) return [];
@@ -185,15 +200,15 @@ export function useTTS() {
     if (!ttsRef.current) return;
     ttsRef.current.refreshVoices();
     setVoices(ttsRef.current.getAllVoices());
-    setStatus(ttsRef.current.getStatus());
-  }, []);
+    updateStatus(ttsRef.current.getStatus());
+  }, [updateStatus]);
 
   const loadCloudVoices = useCallback(async (providerType: CloudTTSProviderType) => {
     if (!ttsRef.current) return;
     await ttsRef.current.loadCloudVoices(providerType);
     setVoices(ttsRef.current.getAllVoices());
-    setStatus(ttsRef.current.getStatus());
-  }, []);
+    updateStatus(ttsRef.current.getStatus());
+  }, [updateStatus]);
 
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {

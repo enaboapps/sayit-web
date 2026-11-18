@@ -66,11 +66,6 @@ export class TTSProvider {
       CLOUD_TTS_PROVIDERS.map((provider) => [provider, CLOUD_TTS_PROVIDER_INFO[provider].client()]),
     ) as Record<CloudTTSProviderType, CloudTTSClient>;
     this.setupCallbacks();
-
-    // Default to ElevenLabs if available
-    if (this.cloudClients.elevenlabs.isAvailable()) {
-      this.activeProvider = 'elevenlabs';
-    }
   }
 
   public static getInstance(): TTSProvider {

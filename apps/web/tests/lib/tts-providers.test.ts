@@ -24,6 +24,7 @@ describe('cloud provider list', () => {
   test('getTTSProviderInfo names browser speech and cloud providers', () => {
     expect(getTTSProviderInfo('browser').name).toBe('Browser TTS');
     expect(getTTSProviderInfo('azure').name).toBe('Azure');
+    expect(getTTSProviderInfo('custom' as never).name).toBe('Browser TTS');
   });
 });
 
