@@ -4,6 +4,7 @@ import { GeminiTTS } from './gemini-tts';
 import { TextToSpeech as WebSpeechTTS } from './tts';
 
 import type { TTSProviderType } from './tts-types';
+import type { LiveTypingSpeechAccess } from './live-typing-speech';
 export type { TTSProviderType } from './tts-types';
 
 export interface TTSCallbacks {
@@ -224,6 +225,7 @@ export class TTSProvider {
     stability?: number;
     similarityBoost?: number;
     modelId?: string;
+    liveTyping?: LiveTypingSpeechAccess;
   }) {
     // Determine which provider to use based on the selected voice
     let provider = this.activeProvider;
@@ -241,11 +243,12 @@ export class TTSProvider {
         stability: options?.stability,
         similarityBoost: options?.similarityBoost,
         modelId: options?.modelId,
+        liveTyping: options?.liveTyping,
       });
     } else if (provider === 'azure') {
-      this.azureTTS.speak(text, { voiceId: options?.voiceId });
+      this.azureTTS.speak(text, { voiceId: options?.voiceId, liveTyping: options?.liveTyping });
     } else if (provider === 'gemini') {
-      this.geminiTTS.speak(text, { voiceId: options?.voiceId });
+      this.geminiTTS.speak(text, { voiceId: options?.voiceId, liveTyping: options?.liveTyping });
     } else {
       this.webSpeechTTS.speak(text, {
         voiceURI: options?.voiceId,

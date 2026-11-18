@@ -5,6 +5,7 @@ import { TTSProvider } from '@/lib/tts-provider';
 import { cleanLiveTypingSpeechSettings, type LiveTypingSpeechCommand, type LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
 
 interface TypingShareSpeechSession {
+  sessionKey?: string;
   isPaused?: boolean;
   speechCommand?: LiveTypingSpeechCommand;
 }
@@ -117,6 +118,7 @@ export function useTypingShareSpeech(session: TypingShareSpeechSession | null | 
           stability: safeSettings.stability,
           similarityBoost: safeSettings.similarityBoost,
           modelId: safeSettings.modelId,
+          ...(session?.sessionKey ? { liveTyping: { sessionKey: session.sessionKey, commandId: command.id } } : {}),
         });
         setError(null);
       } catch (err) {
@@ -132,7 +134,7 @@ export function useTypingShareSpeech(session: TypingShareSpeechSession | null | 
     return () => {
       cancelled = true;
     };
-  }, [audioEnabled, session?.isPaused, session?.speechCommand]);
+  }, [audioEnabled, session?.isPaused, session?.sessionKey, session?.speechCommand]);
 
   return {
     audioEnabled,

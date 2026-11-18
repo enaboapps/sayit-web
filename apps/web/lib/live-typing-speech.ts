@@ -21,6 +21,13 @@ export interface LiveTypingSpeechCommand {
   settings?: LiveTypingSpeechSettings;
 }
 
+// Sent with a viewer's cloud voice request so the server can allow it without
+// a signed-in Pro user (see lib/server/live-typing-access.ts).
+export interface LiveTypingSpeechAccess {
+  sessionKey: string;
+  commandId: string;
+}
+
 export function cleanLiveTypingSpeechSettings(settings: LiveTypingSpeechSettings): LiveTypingSpeechSettings {
   return {
     provider: settings.provider,

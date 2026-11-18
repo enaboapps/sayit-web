@@ -1,5 +1,6 @@
 import { GeminiTTSClient } from 'js-tts-wrapper';
 import { NextResponse } from 'next/server';
+import { serverEnv } from '@/lib/server/api-route';
 import { GEMINI_FLASH_TTS_MODEL } from '@/lib/gemini-voices';
 
 export const runtime = 'nodejs';
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const apiKey = process.env.GEMINI_API_KEY?.replace(/^﻿/, '').trim();
+    const apiKey = serverEnv('GEMINI_API_KEY');
 
     if (!apiKey) {
       return NextResponse.json({ voices: [], available: false });

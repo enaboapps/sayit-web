@@ -1,6 +1,7 @@
 import { CloudTTSLifecycle } from './cloud-tts-lifecycle';
 import { TextToSpeech as WebSpeechTTS } from './tts';
 import { BaseTTSCallbacks } from './tts-types';
+import type { LiveTypingSpeechAccess } from './live-typing-speech';
 
 export interface Voice {
   voice_id: string;
@@ -96,6 +97,7 @@ export class ElevenLabsTTS {
     similarityBoost?: number;
     streaming?: boolean;
     modelId?: string;
+    liveTyping?: LiveTypingSpeechAccess;
   }) {
     const session = this.lifecycle.beginSession(this.callbacks);
     this.lastRequestTime = Date.now();
@@ -135,6 +137,7 @@ export class ElevenLabsTTS {
           similarityBoost: options?.similarityBoost ?? 0.5,
           streaming: true,
           modelId: options?.modelId,
+          ...(options?.liveTyping ? { liveTyping: options.liveTyping } : {}),
         }),
         signal: session.signal,
       });

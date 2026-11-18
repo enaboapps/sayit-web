@@ -1,51 +1,39 @@
 import { GeminiTTSClient } from 'js-tts-wrapper';
-import { NextResponse } from 'next/server';
 import { DEFAULT_GEMINI_VOICE_ID, GEMINI_FLASH_TTS_MODEL, GEMINI_VOICES } from '@/lib/gemini-voices';
+import { apiRoute, ApiError, requireServerEnv } from '@/lib/server/api-route';
+import { isLiveTypingSpeechRequest } from '@/lib/server/live-typing-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
-  try {
-    const apiKey = process.env.GEMINI_API_KEY?.replace(/^\uFEFF/, '').trim();
+export const POST = apiRoute<{ text?: string; voiceId?: string }>({
+  name: 'Gemini TTS API',
+  access: 'pro',
+  allow: ({ body }) => isLiveTypingSpeechRequest(body, 'gemini'),
+}, async ({ body }) => {
+  const { GEMINI_API_KEY: apiKey } = requireServerEnv('GEMINI_API_KEY');
+  const { text, voiceId } = body;
 
-    if (!apiKey) {
-      console.error('GEMINI_API_KEY is not set');
-      return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
-    }
+  if (!text) throw new ApiError(400, 'Text is required');
 
-    const body = await request.json();
-    const { text, voiceId } = body;
+  const resolvedVoiceId = GEMINI_VOICES.some(voice => voice.voice_id === voiceId)
+    ? voiceId
+    : DEFAULT_GEMINI_VOICE_ID;
 
-    if (!text) {
-      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
-    }
+  const client = new GeminiTTSClient({
+    apiKey,
+    model: GEMINI_FLASH_TTS_MODEL,
+    voice: resolvedVoiceId,
+  });
 
-    const resolvedVoiceId = GEMINI_VOICES.some(voice => voice.voice_id === voiceId)
-      ? voiceId
-      : DEFAULT_GEMINI_VOICE_ID;
+  const audioBytes = await client.synthToBytes(text);
 
-    const client = new GeminiTTSClient({
-      apiKey,
-      model: GEMINI_FLASH_TTS_MODEL,
-      voice: resolvedVoiceId,
-    });
-
-    const audioBytes = await client.synthToBytes(text);
-
-    return new Response(Buffer.from(audioBytes), {
-      status: 200,
-      headers: {
-        'Content-Type': 'audio/wav',
-        'Content-Length': audioBytes.length.toString(),
-        'Cache-Control': 'no-cache',
-      },
-    });
-  } catch (error) {
-    console.error('Error in Gemini TTS API:', error);
-    return NextResponse.json(
-      { error: 'Server error', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 },
-    );
-  }
-}
+  return new Response(Buffer.from(audioBytes), {
+    status: 200,
+    headers: {
+      'Content-Type': 'audio/wav',
+      'Content-Length': audioBytes.length.toString(),
+      'Cache-Control': 'no-cache',
+    },
+  });
+});

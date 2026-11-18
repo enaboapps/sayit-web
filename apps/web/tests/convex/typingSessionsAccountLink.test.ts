@@ -1,8 +1,9 @@
-import { describe, expect, test, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, test, jest } from '@jest/globals';
 import {
   deleteTypingSession,
   getMyTypingSession,
   getTypingSession,
+  getTypingSessionForServer,
   resetTypingSessionLink,
   startTypingSession,
   stopTypingSession,
@@ -235,6 +236,34 @@ describe('typingSessions account link', () => {
     ctx.auth.getUserIdentity.mockResolvedValue(null);
 
     await expect(getMyTypingSession._handler(ctx as never, {})).resolves.toBeNull();
+  });
+});
+
+describe('getTypingSessionForServer', () => {
+  const secret = 's'.repeat(40);
+  const saved = process.env.CONVEX_WEBHOOK_SECRET;
+  beforeEach(() => { process.env.CONVEX_WEBHOOK_SECRET = secret; });
+  afterEach(() => { process.env.CONVEX_WEBHOOK_SECRET = saved; });
+
+  test('returns the session with its owner for trusted server code', async () => {
+    const ctx = mockTable([{ _id: 'account', userId: 'user-1', sessionKey: 'key-1', content: 'hi', isActive: true }]);
+
+    await expect(getTypingSessionForServer._handler(ctx as never, { serverSecret: secret, sessionKey: 'key-1' }))
+      .resolves.toEqual(expect.objectContaining({ sessionKey: 'key-1', userId: 'user-1' }));
+  });
+
+  test('refuses a wrong secret', async () => {
+    const ctx = mockTable([{ _id: 'account', userId: 'user-1', sessionKey: 'key-1', isActive: true }]);
+
+    await expect(getTypingSessionForServer._handler(ctx as never, { serverSecret: 'wrong', sessionKey: 'key-1' }))
+      .rejects.toThrow('Unauthorized');
+  });
+
+  test('hides expired 24-hour sessions like the viewer query', async () => {
+    const ctx = mockTable([{ _id: 'old', userId: 'user-1', sessionKey: 'key-1', expiresAt: Date.now() - 1000 }]);
+
+    await expect(getTypingSessionForServer._handler(ctx as never, { serverSecret: secret, sessionKey: 'key-1' }))
+      .resolves.toBeNull();
   });
 });
 
