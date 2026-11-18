@@ -62,6 +62,8 @@ export function useComposerActions({
     pauseSession: pauseLiveTypingSession,
     resumeSession: resumeLiveTypingSession,
     endSession: endLiveTypingSession,
+    resetLink: resetLiveTypingLink,
+    isResettingLink: isLiveTypingResettingLink,
     getShareableLink,
   } = useLiveTyping();
 
@@ -275,6 +277,8 @@ export function useComposerActions({
     handlePauseLiveTyping,
     handleResumeLiveTyping,
     endLiveTypingSession,
+    resetLiveTypingLink,
+    isLiveTypingResettingLink,
     // context
     isOnline,
     user,

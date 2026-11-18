@@ -502,7 +502,7 @@ describe('Composer', () => {
     expect(screen.queryByRole('button', { name: 'Live Typing' })).not.toBeInTheDocument();
   });
 
-  it('shows the live typing banner while sharing and ends the session from it', async () => {
+  it('shows the live typing banner while sharing and stops sharing from it', async () => {
     const user = userEvent.setup();
     const endSession = jest.fn();
     mockUseAuth.mockReturnValue({
@@ -539,7 +539,7 @@ describe('Composer', () => {
 
     expect(screen.getByText('Live Typing active')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'End live typing' }));
+    await user.click(screen.getByRole('button', { name: 'Stop live typing' }));
 
     expect(endSession).toHaveBeenCalled();
   });

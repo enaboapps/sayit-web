@@ -268,6 +268,8 @@ export default function Composer({
           onPauseSession={actions.handlePauseLiveTyping}
           onResumeSession={actions.handleResumeLiveTyping}
           onEndSession={async () => { await actions.endLiveTypingSession(); }}
+          isResettingLink={actions.isLiveTypingResettingLink}
+          onResetLink={actions.resetLiveTypingLink}
         />
       )}
 

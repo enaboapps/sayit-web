@@ -16,7 +16,6 @@ import { useSettings } from '../../contexts/SettingsContext';
 import { usePhraseBar } from '../../contexts/PhraseBarContext';
 import { useIsMobile } from '@/lib/hooks/useIsMobile';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import { STORAGE_KEY } from '@/lib/hooks/useLiveTyping';
 import {
   cleanLiveTypingSpeechSettings,
   type LiveTypingSpeechSettings,
@@ -83,6 +82,8 @@ export default function PhrasesInterface() {
   // memory for users who never click "Export All Boards" was wasteful.
   const convex = useConvex();
   const publishTypingSessionSpeechCommand = useMutation(api.typingSessions.publishTypingSessionSpeechCommand);
+  const liveTypingSession = useQuery(api.typingSessions.getMyTypingSession, user ? {} : 'skip');
+  const liveTypingSessionKey = liveTypingSession?.isActive ? liveTypingSession.sessionKey : null;
 
   const handlePhrasePress = (phrase: PhraseSummary) => {
     if (settings.usePhraseBar) {
@@ -254,9 +255,8 @@ export default function PhrasesInterface() {
     text?: string,
     settingsOverride?: Partial<LiveTypingSpeechSettings>
   ) => {
-    if (!user || typeof window === 'undefined') return;
-    const sessionKey = window.localStorage.getItem(STORAGE_KEY);
-    if (!sessionKey) return;
+    const sessionKey = liveTypingSessionKey;
+    if (!user || !sessionKey) return;
 
     const settingsSnapshot = {
       ...liveTypingSpeechSettings,

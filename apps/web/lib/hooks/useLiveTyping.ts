@@ -10,7 +10,8 @@ import {
   type LiveTypingSpeechSettings,
 } from '@/lib/live-typing-speech';
 
-export const STORAGE_KEY = 'typing-share-session-key';
+// Where older clients kept a per-device session key. Only read to clean up.
+export const LEGACY_STORAGE_KEY = 'typing-share-session-key';
 const SESSION_KEY_LENGTH = 32;
 
 type TypingSession = {
@@ -19,118 +20,86 @@ type TypingSession = {
   sessionKey: string;
   content: string;
   isPaused?: boolean;
+  isActive?: boolean;
   speechCommand?: LiveTypingSpeechCommand;
-  expiresAt: number;
   _creationTime: number;
 } | null;
 
+type TimeoutRef = { current: NodeJS.Timeout | null };
+
+function clearPendingUpdate(ref: TimeoutRef) {
+  if (ref.current) {
+    clearTimeout(ref.current);
+    ref.current = null;
+  }
+}
+
+/**
+ * The signed-in account's permanent Live Typing link. Every device signed in to
+ * the account shares the same link and sharing state.
+ */
 export function useLiveTyping() {
-  const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isResettingLink, setIsResettingLink] = useState(false);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [session, setSession] = useState<TypingSession>(null);
 
-  const createTypingSession = useMutation(api.typingSessions.createTypingSession);
+  const startTypingSession = useMutation(api.typingSessions.startTypingSession);
   const updateTypingSessionContent = useMutation(api.typingSessions.updateTypingSessionContent);
   const setTypingSessionPaused = useMutation(api.typingSessions.setTypingSessionPaused);
   const publishTypingSessionSpeechCommand = useMutation(api.typingSessions.publishTypingSessionSpeechCommand);
+  const stopTypingSession = useMutation(api.typingSessions.stopTypingSession);
+  const resetTypingSessionLink = useMutation(api.typingSessions.resetTypingSessionLink);
   const deleteTypingSession = useMutation(api.typingSessions.deleteTypingSession);
 
-  const sessionFromConvex = useQuery(
-    api.typingSessions.getTypingSession,
-    sessionKey ? { sessionKey } : 'skip'
-  );
+  const accountSession = useQuery(api.typingSessions.getMyTypingSession);
+  const session: TypingSession = accountSession ?? null;
+  const isSharing = session?.isActive === true;
+  const sessionKey = isSharing ? session.sessionKey : null;
+  const isPaused = isSharing && Boolean(session.isPaused);
 
-  // Restore session from localStorage on mount
+  // End any per-device session left by an older version of the app once the
+  // account query has resolved (so auth is ready).
   useEffect(() => {
-    const restoreSession = async () => {
-      if (typeof window === 'undefined') return;
-      const savedKey = window.localStorage.getItem(STORAGE_KEY);
-      if (!savedKey) return;
+    if (accountSession === undefined || typeof window === 'undefined') return;
+    const legacyKey = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!legacyKey) return;
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    if (legacyKey !== accountSession?.sessionKey) {
+      deleteTypingSession({ sessionKey: legacyKey }).catch(() => {});
+    }
+  }, [accountSession, deleteTypingSession]);
 
-      setSessionKey(savedKey);
-    };
-
-    restoreSession();
-  }, []);
-
-  // Synchronize convex session data to local state for backwards compatibility
+  // Another device can stop sharing; drop any queued update when that happens.
   useEffect(() => {
-    if (sessionFromConvex === undefined) {
-      return;
-    }
-
-    if (sessionFromConvex === null && sessionKey) {
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
-      setSessionKey(null);
-      setSession(null);
-      setError('This live typing session has expired.');
-      return;
-    }
-
-    if (sessionFromConvex) {
-      setSession({
-        _id: sessionFromConvex._id,
-        userId: sessionFromConvex.userId,
-        sessionKey: sessionFromConvex.sessionKey,
-        content: sessionFromConvex.content,
-        isPaused: sessionFromConvex.isPaused,
-        speechCommand: sessionFromConvex.speechCommand,
-        expiresAt: sessionFromConvex.expiresAt,
-        _creationTime: sessionFromConvex._creationTime,
-      });
-      setError(null);
-    }
-  }, [sessionFromConvex, sessionKey]);
+    if (!isSharing) clearPendingUpdate(updateTimeoutRef);
+  }, [isSharing]);
 
   const createSession = useCallback(async (): Promise<boolean> => {
     setIsCreating(true);
     setError(null);
 
     try {
-      const newKey = nanoid(SESSION_KEY_LENGTH);
-      const created = await createTypingSession({ sessionKey: newKey });
-
-      if (!created) {
-        throw new Error('Failed to create live typing session');
+      const started = await startTypingSession({ sessionKey: nanoid(SESSION_KEY_LENGTH) });
+      if (!started) {
+        throw new Error('Failed to start Live Typing');
       }
-
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_KEY, newKey);
-      }
-
-      setSessionKey(newKey);
-      setSession({
-        _id: created._id,
-        userId: created.userId,
-        sessionKey: created.sessionKey,
-        content: created.content,
-        isPaused: created.isPaused,
-        speechCommand: created.speechCommand,
-        expiresAt: created.expiresAt,
-        _creationTime: created._creationTime,
-      });
       return true;
     } catch (err) {
-      console.error('Error creating live typing session:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create session');
+      console.error('Error starting live typing session:', err);
+      setError(err instanceof Error ? err.message : 'Failed to start Live Typing');
       return false;
     } finally {
       setIsCreating(false);
     }
-  }, [createTypingSession]);
+  }, [startTypingSession]);
 
   const updateContent = useCallback(async (content: string) => {
-    if (!sessionKey || session?.isPaused) return;
+    if (!sessionKey || isPaused) return;
 
     // Debounce updates to avoid hammering the server
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
+    clearPendingUpdate(updateTimeoutRef);
 
     updateTimeoutRef.current = setTimeout(async () => {
       try {
@@ -139,21 +108,17 @@ export function useLiveTyping() {
         console.error('Error updating live typing session:', err);
       }
     }, 300); // 300ms debounce
-  }, [session?.isPaused, sessionKey, updateTypingSessionContent]);
+  }, [isPaused, sessionKey, updateTypingSessionContent]);
 
   const pauseSession = useCallback(async (): Promise<boolean> => {
-    if (!sessionKey || session?.isPaused) return Boolean(sessionKey);
+    if (!sessionKey || isPaused) return Boolean(sessionKey);
 
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-      updateTimeoutRef.current = null;
-    }
+    clearPendingUpdate(updateTimeoutRef);
 
     setIsTransitioning(true);
     setError(null);
     try {
       await setTypingSessionPaused({ sessionKey, isPaused: true });
-      setSession((current) => current ? { ...current, isPaused: true } : current);
       return true;
     } catch (err) {
       console.error('Error pausing live typing session:', err);
@@ -162,16 +127,15 @@ export function useLiveTyping() {
     } finally {
       setIsTransitioning(false);
     }
-  }, [session?.isPaused, sessionKey, setTypingSessionPaused]);
+  }, [isPaused, sessionKey, setTypingSessionPaused]);
 
   const resumeSession = useCallback(async (content: string): Promise<boolean> => {
-    if (!sessionKey || !session?.isPaused) return Boolean(sessionKey);
+    if (!sessionKey || !isPaused) return Boolean(sessionKey);
 
     setIsTransitioning(true);
     setError(null);
     try {
       await setTypingSessionPaused({ sessionKey, isPaused: false, content });
-      setSession((current) => current ? { ...current, content, isPaused: false } : current);
       return true;
     } catch (err) {
       console.error('Error resuming live typing session:', err);
@@ -180,36 +144,44 @@ export function useLiveTyping() {
     } finally {
       setIsTransitioning(false);
     }
-  }, [session?.isPaused, sessionKey, setTypingSessionPaused]);
+  }, [isPaused, sessionKey, setTypingSessionPaused]);
 
   const endSession = useCallback(async () => {
     if (!sessionKey) return;
 
     try {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-        updateTimeoutRef.current = null;
-      }
-      await deleteTypingSession({ sessionKey });
-      setSessionKey(null);
-      setSession(null);
-
-      // Remove from localStorage
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
+      clearPendingUpdate(updateTimeoutRef);
+      await stopTypingSession({ sessionKey });
     } catch (err) {
-      console.error('Error ending live typing session:', err);
-      setError(err instanceof Error ? err.message : 'Failed to end session');
+      console.error('Error stopping live typing session:', err);
+      setError(err instanceof Error ? err.message : 'Failed to stop Live Typing');
     }
-  }, [sessionKey, deleteTypingSession]);
+  }, [sessionKey, stopTypingSession]);
+
+  const resetLink = useCallback(async (): Promise<boolean> => {
+    if (!session) return false;
+
+    clearPendingUpdate(updateTimeoutRef);
+    setIsResettingLink(true);
+    setError(null);
+    try {
+      await resetTypingSessionLink({ sessionKey: nanoid(SESSION_KEY_LENGTH) });
+      return true;
+    } catch (err) {
+      console.error('Error resetting live typing link:', err);
+      setError('Could not reset the link. Check your connection and try again.');
+      return false;
+    } finally {
+      setIsResettingLink(false);
+    }
+  }, [resetTypingSessionLink, session]);
 
   const publishSpeechCommand = useCallback(async (
     action: LiveTypingSpeechAction,
     text?: string,
     settings?: LiveTypingSpeechSettings
   ) => {
-    if (!sessionKey || session?.isPaused) return;
+    if (!sessionKey || isPaused) return;
 
     try {
       const cleanedSettings = settings ? cleanLiveTypingSpeechSettings(settings) : undefined;
@@ -224,30 +196,23 @@ export function useLiveTyping() {
     } catch (err) {
       console.error('Error publishing live typing speech command:', err);
     }
-  }, [publishTypingSessionSpeechCommand, session?.isPaused, sessionKey]);
+  }, [isPaused, publishTypingSessionSpeechCommand, sessionKey]);
 
   const getShareableLink = useCallback(() => {
-    if (typeof window === 'undefined') return null;
-    const key = session?.sessionKey ?? sessionKey;
-    if (!key) return null;
-    return `${window.location.origin}/typing-share/view/${key}`;
-  }, [session, sessionKey]);
+    if (typeof window === 'undefined' || !session) return null;
+    return `${window.location.origin}/typing-share/view/${session.sessionKey}`;
+  }, [session]);
 
   // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
+  useEffect(() => () => clearPendingUpdate(updateTimeoutRef), []);
 
   return {
     session,
-    isSharing: Boolean(sessionKey),
+    isSharing,
     isCreating,
-    isPaused: Boolean(session?.isPaused),
+    isPaused,
     isTransitioning,
+    isResettingLink,
     error,
     createSession,
     updateContent,
@@ -255,6 +220,7 @@ export function useLiveTyping() {
     pauseSession,
     resumeSession,
     endSession,
+    resetLink,
     getShareableLink,
   };
 }

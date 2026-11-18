@@ -146,7 +146,7 @@ export default function PrivacyPolicyPage() {
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li><strong>Account data:</strong> Retained until you delete your account</li>
               <li><strong>Phrases and boards:</strong> Retained until you manually delete them</li>
-              <li><strong>Typing sessions:</strong> Shared sessions expire after 24 hours of inactivity</li>
+              <li><strong>Typing sessions:</strong> Your Live Typing link is kept with your account until you delete your account. Shared text is cleared when you stop sharing or reset the link</li>
               <li><strong>Completed message history:</strong> Retained to power reply suggestions until deleted or trimmed by retention limits</li>
               <li><strong>AI processing data:</strong> Not retained after response generation (processed in real-time)</li>
               <li><strong>TTS audio:</strong> Not stored (generated in real-time)</li>
@@ -162,8 +162,9 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc ml-6 my-4 text-text-secondary">
               <li>Anyone with the link can view your typing session in real-time</li>
-              <li>Sessions expire 24 hours after the last activity</li>
-              <li>You control when sharing starts and stops</li>
+              <li>Your account has one link, shared by every device you sign in to</li>
+              <li>You control when sharing starts and stops. When you stop, the link shows nothing until you start again</li>
+              <li>You can reset the link at any time so the old link stops working</li>
               <li>Share links at your own discretion and understand the privacy implications</li>
             </ul>
 
