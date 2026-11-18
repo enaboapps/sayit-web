@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { TTSProvider, TTSVoice, TTSProviderType, TTSStatus } from '../tts-provider';
+import { emptyCloudTTSStatus, TTSProvider, TTSVoice, TTSProviderType, TTSStatus } from '../tts-provider';
+import { isCloudProvider, type CloudTTSProviderType } from '../tts-types';
 import { useSubscription } from '@/app/hooks/useSubscription';
 import { useSettings } from '@/app/contexts/SettingsContext';
 
@@ -14,13 +15,8 @@ export function useTTS() {
   const [status, setStatus] = useState<TTSStatus>({
     isSpeaking: false,
     activeProvider: 'browser',
-    elevenLabsAvailable: false,
-    azureAvailable: false,
-    geminiAvailable: false,
     browserTTSAvailable: false,
-    elevenLabsVoicesLoaded: false,
-    azureVoicesLoaded: false,
-    geminiVoicesLoaded: false,
+    cloud: emptyCloudTTSStatus(),
   });
   
   // Use ref to avoid dependency issues in callbacks
@@ -116,12 +112,7 @@ export function useTTS() {
       ? voices.find(v => v.id === options.voiceId)
       : null;
 
-    const isPremiumVoice = voice?.provider === 'elevenlabs' || voice?.provider === 'azure' || voice?.provider === 'gemini';
-    const currentProvider = ttsRef.current.getCurrentProvider();
-    const usingPremium = isPremiumVoice
-      || currentProvider === 'elevenlabs'
-      || currentProvider === 'azure'
-      || currentProvider === 'gemini';
+    const usingPremium = isCloudProvider(voice?.provider) || isCloudProvider(ttsRef.current.getCurrentProvider());
 
     // If trying to use a premium provider without a subscription, force browser TTS
     if (usingPremium && !hasSubscription) {
@@ -133,7 +124,7 @@ export function useTTS() {
 
       // Temporarily switch to browser provider if needed
       const originalProvider = ttsRef.current.getCurrentProvider();
-      if (originalProvider === 'elevenlabs' || originalProvider === 'azure' || originalProvider === 'gemini') {
+      if (isCloudProvider(originalProvider)) {
         ttsRef.current.setProvider('browser');
       }
       
@@ -146,7 +137,7 @@ export function useTTS() {
       });
       
       // Update local state to reflect the temporary provider change
-      if (originalProvider === 'elevenlabs' || originalProvider === 'azure' || originalProvider === 'gemini') {
+      if (isCloudProvider(originalProvider)) {
         setStatus({
           ...status,
           activeProvider: 'browser'
@@ -197,34 +188,17 @@ export function useTTS() {
     setStatus(ttsRef.current.getStatus());
   }, []);
 
-  const loadElevenLabsVoices = useCallback(async () => {
+  const loadCloudVoices = useCallback(async (providerType: CloudTTSProviderType) => {
     if (!ttsRef.current) return;
-    await ttsRef.current.loadElevenLabsVoices();
-    setVoices(ttsRef.current.getAllVoices());
-    setStatus(ttsRef.current.getStatus());
-  }, []);
-
-  const loadAzureVoices = useCallback(async () => {
-    if (!ttsRef.current) return;
-    await ttsRef.current.loadAzureVoices();
-    setVoices(ttsRef.current.getAllVoices());
-    setStatus(ttsRef.current.getStatus());
-  }, []);
-
-  const loadGeminiVoices = useCallback(async () => {
-    if (!ttsRef.current) return;
-    await ttsRef.current.loadGeminiVoices();
+    await ttsRef.current.loadCloudVoices(providerType);
     setVoices(ttsRef.current.getAllVoices());
     setStatus(ttsRef.current.getStatus());
   }, []);
 
   // Helper to check if a provider is actually available (considering subscription)
   const isProviderAvailable = useCallback((providerType: TTSProviderType) => {
-    if (providerType === 'browser') return true;
-    if (providerType === 'elevenlabs') return hasSubscription && status.elevenLabsAvailable;
-    if (providerType === 'azure') return hasSubscription && status.azureAvailable;
-    if (providerType === 'gemini') return hasSubscription && status.geminiAvailable;
-    return false;
+    if (!isCloudProvider(providerType)) return true;
+    return hasSubscription && status.cloud[providerType].available;
   }, [hasSubscription, status]);
 
   return {
@@ -239,9 +213,7 @@ export function useTTS() {
     switchProvider,
     getVoicesByProvider,
     refreshVoices,
-    loadElevenLabsVoices,
-    loadAzureVoices,
-    loadGeminiVoices,
+    loadCloudVoices,
     status,
     hasSubscription,
     isProviderAvailable,
