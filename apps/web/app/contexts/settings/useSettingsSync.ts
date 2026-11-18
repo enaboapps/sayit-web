@@ -20,7 +20,6 @@ import {
   loadSettingsFromLocalStorage,
   saveSettingsToLocalStorage,
 } from './storage';
-import { REMOVED_CUSTOM_TTS_PROVIDER, withoutRemovedTTSProvider } from '@/lib/tts-types';
 
 type AuthUser = {
   id?: string;
@@ -36,7 +35,7 @@ type ConvexSettings = {
   doubleEnterEnabled?: boolean;
   doubleEnterAction?: EnterKeyBehavior;
   doubleEnterTimeoutMs?: number;
-  ttsProvider: Settings['ttsProvider'] | typeof REMOVED_CUSTOM_TTS_PROVIDER;
+  ttsProvider: Settings['ttsProvider'];
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
@@ -87,8 +86,7 @@ function buildInitializeSettingsPayload(localSettings: AllSettings) {
   };
 }
 
-function mergeConvexSettings(storedSettings: ConvexSettings): AllSettings {
-  const convexSettings = withoutRemovedTTSProvider(storedSettings) as Omit<ConvexSettings, 'ttsProvider'> & { ttsProvider: Settings['ttsProvider'] };
+function mergeConvexSettings(convexSettings: ConvexSettings): AllSettings {
   return {
     textSize: normalizeTextSize(convexSettings.textSize),
     speechRate: convexSettings.speechRate,

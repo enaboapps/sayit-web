@@ -1,6 +1,5 @@
 import { describe, expect, jest, test } from '@jest/globals';
 import { getProfileByEmail, getProfileByUserId } from '@/convex/profiles';
-import { removeCustomVoiceData } from '@/convex/migrations';
 
 type Row = Record<string, unknown>;
 type EqBuilder = { eq: (field: string, value: unknown) => unknown };
@@ -112,40 +111,5 @@ describe('getProfileByEmail', () => {
     const result = await getProfileByEmail._handler(mockCtx(tables()) as never, { email: 'nobody@example.com' });
 
     expect(result).toBeNull();
-  });
-});
-
-describe('removeCustomVoiceData migration', () => {
-  test('deletes saved connections and moves custom settings to browser speech', async () => {
-    const tables = {
-      customProviders: [{ _id: 'cp-1' }, { _id: 'cp-2' }],
-      userSettings: [
-        { _id: 's-custom', ttsProvider: 'custom', ttsVoiceId: 'custom:abc:voice', prepareSpeechWhileTyping: true },
-        { _id: 's-flag-only', ttsProvider: 'elevenlabs', ttsVoiceId: 'v1', prepareSpeechWhileTyping: false },
-        { _id: 's-clean', ttsProvider: 'browser', ttsVoiceId: '' },
-      ],
-    };
-    const ctx = mockCtx(tables);
-
-    const result = await removeCustomVoiceData._handler(ctx as never, {});
-
-    expect(result).toEqual({ connectionsDeleted: 2, settingsReset: 2, totalSettings: 3 });
-    expect(ctx.db.delete).toHaveBeenCalledWith('cp-1');
-    expect(ctx.db.delete).toHaveBeenCalledWith('cp-2');
-    expect(ctx.db.patch).toHaveBeenCalledWith('s-custom', {
-      ttsProvider: 'browser',
-      ttsVoiceId: '',
-      prepareSpeechWhileTyping: undefined,
-    });
-    expect(ctx.db.patch).toHaveBeenCalledWith('s-flag-only', { prepareSpeechWhileTyping: undefined });
-    expect(ctx.db.patch).not.toHaveBeenCalledWith('s-clean', expect.anything());
-  });
-
-  test('does nothing when there is nothing left to clean', async () => {
-    const ctx = mockCtx({ customProviders: [], userSettings: [{ _id: 's-clean', ttsProvider: 'browser' }] });
-
-    await expect(removeCustomVoiceData._handler(ctx as never, {}))
-      .resolves.toEqual({ connectionsDeleted: 0, settingsReset: 0, totalSettings: 1 });
-    expect(ctx.db.patch).not.toHaveBeenCalled();
   });
 });
