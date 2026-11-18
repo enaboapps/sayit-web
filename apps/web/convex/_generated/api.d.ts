@@ -15,6 +15,7 @@ import type * as boardAccess from "../boardAccess.js";
 import type * as boardTileHydration from "../boardTileHydration.js";
 import type * as boardTiles from "../boardTiles.js";
 import type * as caregiverClients from "../caregiverClients.js";
+import type * as caregiverLinks from "../caregiverLinks.js";
 import type * as connectionRequests from "../connectionRequests.js";
 import type * as conversationHistory from "../conversationHistory.js";
 import type * as migrations from "../migrations.js";
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   boardTileHydration: typeof boardTileHydration;
   boardTiles: typeof boardTiles;
   caregiverClients: typeof caregiverClients;
+  caregiverLinks: typeof caregiverLinks;
   connectionRequests: typeof connectionRequests;
   conversationHistory: typeof conversationHistory;
   migrations: typeof migrations;

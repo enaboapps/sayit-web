@@ -2,26 +2,20 @@ import { v } from 'convex/values';
 import { internalMutation, mutation } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import { getUserIdentity } from './users';
+import { requireUser } from './users';
 
 const STAGED_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
 
 export const generateUploadUrl = mutation({
   handler: async (ctx) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    await requireUser(ctx);
     return await ctx.storage.generateUploadUrl();
   },
 });
 
 export const startImportSymbolUpload = mutation({
   handler: async (ctx) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const uploadSessionId = await ctx.db.insert('stagedSymbolUploads', {
       userId: identity.subject,
@@ -47,10 +41,7 @@ export const registerImportSymbolUpload = mutation({
     storageId: v.id('_storage'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const staged = await ctx.db.get(args.uploadSessionId);
     if (!staged || staged.userId !== identity.subject) {
@@ -88,10 +79,7 @@ export const cleanupOrphanSymbols = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
     if (args.uploads.length === 0) return;
 
     await Promise.allSettled(args.uploads.map(async (upload) => {

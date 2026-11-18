@@ -2,7 +2,7 @@ import { v } from 'convex/values';
 import { mutation, internalMutation } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
-import { getUserIdentity } from './users';
+import { requireUser } from './users';
 import { FIXED_GRID_LAYOUT_VERSION } from './aacLayout';
 import { MAX_IMPORT_BOARDS, MAX_IMPORT_TILES } from './openBoardLimits';
 import {
@@ -65,10 +65,7 @@ export const importBoards = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     if (args.boards.length === 0) {
       throw new Error('Import package does not contain any boards');
@@ -272,8 +269,7 @@ export const importBoards = mutation({
 export const deleteImportedPackage = mutation({
   args: { packageId: v.id('importedPackages') },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const pkg = await ctx.db.get(args.packageId);
     if (!pkg || pkg.userId !== identity.subject) {

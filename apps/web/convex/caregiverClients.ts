@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
+import { findCaregiverLink, isCaregiverOf } from './caregiverLinks';
 
 // Query: Get all clients for the current caregiver
 export const getClients = query({
@@ -83,10 +84,7 @@ export const addClient = mutation({
     communicatorId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     // Verify the caregiver has the correct role
     const caregiverProfile = await ctx.db
@@ -113,16 +111,7 @@ export const addClient = mutation({
     }
 
     // Check if relationship already exists
-    const existing = await ctx.db
-      .query('caregiverClients')
-      .withIndex('by_caregiver', (q) => q.eq('caregiverId', identity.subject))
-      .collect();
-
-    const alreadyLinked = existing.find(
-      (rel) => rel.communicatorId === args.communicatorId
-    );
-
-    if (alreadyLinked) {
+    if (await isCaregiverOf(ctx, identity.subject, args.communicatorId)) {
       throw new Error('Client is already linked');
     }
 
@@ -142,22 +131,12 @@ export const removeClient = mutation({
     communicatorId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const caregiverId = identity.subject;
 
     // Find the relationship
-    const relationships = await ctx.db
-      .query('caregiverClients')
-      .withIndex('by_caregiver', (q) => q.eq('caregiverId', caregiverId))
-      .collect();
-
-    const relationship = relationships.find(
-      (rel) => rel.communicatorId === args.communicatorId
-    );
+    const relationship = await findCaregiverLink(ctx, caregiverId, args.communicatorId);
 
     if (!relationship) {
       throw new Error('Client relationship not found');

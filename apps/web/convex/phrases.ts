@@ -1,14 +1,11 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getUserIdentity } from './users';
+import { requireUser } from './users';
 
 // Query: Get all phrases for current user
 export const getPhrases = query({
   handler: async (ctx) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     return await ctx.db
       .query('phrases')
@@ -21,10 +18,7 @@ export const getPhrases = query({
 export const getPhrase = query({
   args: { id: v.id('phrases') },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const phrase = await ctx.db.get(args.id);
     if (!phrase || phrase.userId !== identity.subject) {
@@ -43,10 +37,7 @@ export const addPhrase = mutation({
     symbolStorageId: v.optional(v.id('_storage')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     let symbolUrl: string | undefined;
     if (args.symbolStorageId) {
@@ -75,10 +66,7 @@ export const updatePhrase = mutation({
     removeSymbol: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const { id, removeSymbol, symbolStorageId, ...updates } = args;
 
@@ -117,10 +105,7 @@ export const deletePhrase = mutation({
     confirmLockedCoreDelete: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     // Verify ownership
     const phrase = await ctx.db.get(args.id);

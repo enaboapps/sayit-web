@@ -1,6 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
 import { withoutRemovedTTSProvider } from '../lib/tts-types';
 
 // 'custom' and prepareSpeechWhileTyping belonged to the custom voice providers
@@ -58,10 +58,7 @@ export const initializeSettings = mutation({
     typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
   },
   handler: async (ctx, rawArgs) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const { prepareSpeechWhileTyping: _removed, ...legacyArgs } = rawArgs;
     void _removed;
@@ -169,10 +166,7 @@ export const updateSettings = mutation({
     lastSyncedAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const settings = await ctx.db
       .query('userSettings')
