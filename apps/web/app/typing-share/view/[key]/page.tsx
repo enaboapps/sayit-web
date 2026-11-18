@@ -6,7 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { useTypingShareSpeech } from '@/lib/hooks/useTypingShareSpeech';
 import AnimatedLoading from '@/app/components/phrases/AnimatedLoading';
-import { ExclamationTriangleIcon, MinusIcon, PlusIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon, MinusIcon, PauseCircleIcon, PlusIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 
 export default function TypingShareViewPage({ params }: { params: Promise<{ key: string }> }) {
   const { key } = use(params);
@@ -14,6 +14,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
   const { uiPreferences, updateUIPreference } = useSettings();
   const loading = session === undefined;
   const sessionMissing = session === null;
+  const isStopped = session?.isActive === false;
   const isPaused = Boolean(session?.isPaused);
   const fontSize = uiPreferences.typingShareFontSize;
   const {
@@ -21,7 +22,7 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
     enableAudio,
     isSpeaking,
     error: speechError,
-  } = useTypingShareSpeech(session);
+  } = useTypingShareSpeech(isStopped ? null : session);
 
   const increaseFontSize = () => {
     updateUIPreference('typingShareFontSize', Math.min(fontSize + 4, 64));
@@ -48,6 +49,22 @@ export default function TypingShareViewPage({ params }: { params: Promise<{ key:
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-4">Session Unavailable</h1>
           <p className="text-text-secondary">This typing session does not exist or has expired.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isStopped) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-surface rounded-3xl shadow-2xl p-12 max-w-md w-full text-center" role="status" aria-live="polite">
+          <div className="mx-auto w-20 h-20 bg-surface-hover rounded-3xl flex items-center justify-center mb-6">
+            <PauseCircleIcon className="w-10 h-10 text-text-secondary" aria-hidden="true" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-4">Not sharing right now</h1>
+          <p className="text-text-secondary">
+            Keep this page open. Live Typing will appear here as soon as the communicator starts sharing.
+          </p>
         </div>
       </div>
     );

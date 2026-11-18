@@ -178,7 +178,11 @@ export default defineSchema({
         modelId: v.optional(v.string()),
       })),
     })),
-    expiresAt: v.number(), // Unix timestamp
+    // Unix timestamp for 24-hour sessions from older clients. Absent on the
+    // account's permanent Live Typing link.
+    expiresAt: v.optional(v.number()),
+    // Account link sharing state. Absent on 24-hour sessions, which are active until they expire.
+    isActive: v.optional(v.boolean()),
   })
     .index('by_user_id', ['userId'])
     .index('by_session_key', ['sessionKey']),

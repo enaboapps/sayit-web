@@ -174,19 +174,21 @@ describe('typingSessions pause state', () => {
     });
   });
 
-  test('requires the current draft when resuming', async () => {
+  test('keeps the last shared text when resuming without a draft', async () => {
     mockSessionLookup({
       _id: 'session-1',
       userId: 'user-1',
+      content: 'Last shared text',
       isPaused: true,
       expiresAt: Date.now() + 60_000,
     });
 
-    await expect(setTypingSessionPaused._handler(mockCtx as never, {
+    await setTypingSessionPaused._handler(mockCtx as never, {
       sessionKey: 'session-key',
       isPaused: false,
-    })).rejects.toThrow('Current content is required');
-    expect(mockDb.patch).not.toHaveBeenCalled();
+    });
+
+    expect(mockDb.patch).toHaveBeenCalledWith('session-1', { isPaused: false });
   });
 
   test('suppresses content updates while paused, including queued updates', async () => {

@@ -77,6 +77,8 @@ function renderSheet(
     onPauseSession: jest.fn().mockResolvedValue(undefined),
     onResumeSession: jest.fn().mockResolvedValue(undefined),
     onEndSession: jest.fn().mockResolvedValue(undefined),
+    isResettingLink: false,
+    onResetLink: jest.fn().mockResolvedValue(true),
     ...overrides,
   };
 
@@ -157,16 +159,63 @@ describe('LiveTypingBottomSheet', () => {
     expect(screen.getByRole('button', { name: 'Copy Live Typing link' })).toBeDisabled();
   });
 
-  it('ends the session and closes the sheet', async () => {
+  it('stops sharing and closes the sheet', async () => {
     const user = userEvent.setup();
     const { props } = renderSheet();
 
-    await user.click(screen.getByRole('button', { name: 'End Live Typing' }));
+    await user.click(screen.getByRole('button', { name: 'Stop Live Typing' }));
 
     await waitFor(() => {
       expect(props.onEndSession).toHaveBeenCalledTimes(1);
     });
     expect(props.onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('explains that the link stays the same across devices', () => {
+    renderSheet({ isSharing: false, shareableLink: null });
+
+    expect(screen.getByText(/Your link stays the same on every device you sign in to/)).toBeInTheDocument();
+    expect(screen.queryByText(/expires in 24 hours/)).not.toBeInTheDocument();
+  });
+
+  it('asks for confirmation before resetting the link', async () => {
+    const user = userEvent.setup();
+    const { props } = renderSheet();
+
+    await user.click(screen.getByRole('button', { name: 'Reset link' }));
+
+    expect(props.onResetLink).not.toHaveBeenCalled();
+    expect(screen.getByRole('group', { name: 'Confirm new link' })).toHaveTextContent(
+      'Anyone using the current link or QR code will lose access.'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Get new link' }));
+
+    expect(props.onResetLink).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(screen.queryByRole('group', { name: 'Confirm new link' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('cancels a link reset', async () => {
+    const user = userEvent.setup();
+    const { props } = renderSheet();
+
+    await user.click(screen.getByRole('button', { name: 'Reset link' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(props.onResetLink).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Reset link' })).toBeInTheDocument();
+  });
+
+  it('keeps the confirmation open when a reset fails', async () => {
+    const user = userEvent.setup();
+    renderSheet({ onResetLink: jest.fn().mockResolvedValue(false) });
+
+    await user.click(screen.getByRole('button', { name: 'Reset link' }));
+    await user.click(screen.getByRole('button', { name: 'Get new link' }));
+
+    expect(screen.getByRole('group', { name: 'Confirm new link' })).toBeInTheDocument();
   });
 
   it('pauses an active session while keeping the share link available', async () => {
@@ -199,7 +248,8 @@ describe('LiveTypingBottomSheet', () => {
     renderSheet({ isTransitioning: true });
 
     expect(screen.getByRole('button', { name: 'Pausing…' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'End Live Typing' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Stop Live Typing' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset link' })).toBeDisabled();
   });
 
   it('shows a session transition error without removing sharing controls', () => {
