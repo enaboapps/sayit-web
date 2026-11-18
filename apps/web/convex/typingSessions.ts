@@ -2,7 +2,7 @@ import { cleanLiveTypingSpeechSettings } from '../lib/live-typing-speech';
 import { v } from 'convex/values';
 import { mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Doc } from './_generated/dataModel';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
 import { assertServerSecret } from './serverSecret';
 
 // Each account has one permanent Live Typing link: a typingSessions row with no
@@ -47,10 +47,7 @@ function toViewerSession(session: TypingSession) {
 }
 
 async function requireUserId(ctx: QueryCtx | MutationCtx) {
-  const identity = await getUserIdentity(ctx);
-  if (!identity) {
-    throw new Error('Unauthenticated');
-  }
+  const identity = await requireUser(ctx);
   return identity.subject;
 }
 

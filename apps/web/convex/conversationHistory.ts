@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
 
 const MAX_STORED_MESSAGES = 100;
 const MAX_MESSAGE_LENGTH = 500;
@@ -34,10 +34,7 @@ export const recordMessage = mutation({
     tabId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const trimmedText = args.text.trim();
     if (!trimmedText) {

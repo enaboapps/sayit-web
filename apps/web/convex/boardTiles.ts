@@ -2,7 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import type { Doc } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
 import { getBoardAccess } from './boardAccess';
 import {
   normaliseAudioMimeType,
@@ -122,8 +122,7 @@ export const addAudioTile = mutation({
     audioByteSize: v.number(),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const access = await getBoardAccess(ctx, args.boardId, identity.subject);
     if (!access) throw new Error('Board not found');
@@ -170,8 +169,7 @@ export const updateAudioTile = mutation({
     audioByteSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const tile = await ctx.db.get(args.tileId);
     if (!tile) throw new Error('Tile not found');
@@ -224,8 +222,7 @@ export const addPhraseTile = mutation({
     phraseId: v.id('phrases'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     // Verify phrase ownership.
     const phrase = await ctx.db.get(args.phraseId);
@@ -269,8 +266,7 @@ export const addNavigateTile = mutation({
     targetBoardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     if (args.boardId === args.targetBoardId) {
       throw new Error('A navigate tile cannot point at its own board');
@@ -315,8 +311,7 @@ export const updateNavigateTile = mutation({
     targetBoardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const tile = await ctx.db.get(args.tileId);
     if (!tile) throw new Error('Tile not found');
@@ -347,8 +342,7 @@ export const reorderTiles = mutation({
     orderedTileIds: v.array(v.id('boardTiles')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const access = await getBoardAccess(ctx, args.boardId, identity.subject);
     if (!access) throw new Error('Board not found');
@@ -385,8 +379,7 @@ export const moveTileToCell = mutation({
     column: v.number(),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const tile = await ctx.db.get(args.tileId);
     if (!tile) throw new Error('Tile not found');
@@ -417,8 +410,7 @@ export const updateTileLayoutMetadata = mutation({
     isLocked: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const tile = await ctx.db.get(args.tileId);
     if (!tile) throw new Error('Tile not found');
@@ -445,8 +437,7 @@ export const deleteTile = mutation({
     confirmLockedCoreDelete: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const tile = await ctx.db.get(args.tileId);
     if (!tile) return;
@@ -476,8 +467,7 @@ export const removePhraseTileFromBoard = mutation({
     boardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const access = await getBoardAccess(ctx, args.boardId, identity.subject);
     if (!access || !access.canEdit) throw new Error('Unauthorized');

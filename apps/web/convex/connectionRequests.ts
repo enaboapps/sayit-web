@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
+import { isCaregiverOf } from './caregiverLinks';
 
 // Query: Get pending requests FOR the current communicator
 export const getPendingRequestsForCommunicator = query({
@@ -90,10 +91,7 @@ export const createConnectionRequest = mutation({
     communicatorId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const caregiverId = identity.subject;
 
@@ -122,16 +120,7 @@ export const createConnectionRequest = mutation({
     }
 
     // Check if already connected
-    const existingClient = await ctx.db
-      .query('caregiverClients')
-      .withIndex('by_caregiver', (q) => q.eq('caregiverId', caregiverId))
-      .collect();
-
-    const alreadyConnected = existingClient.find(
-      (rel) => rel.communicatorId === args.communicatorId
-    );
-
-    if (alreadyConnected) {
+    if (await isCaregiverOf(ctx, caregiverId, args.communicatorId)) {
       throw new Error('Already connected to this client');
     }
 
@@ -165,10 +154,7 @@ export const acceptConnectionRequest = mutation({
     requestId: v.id('connectionRequests'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const request = await ctx.db.get(args.requestId);
     if (!request) {
@@ -204,10 +190,7 @@ export const rejectConnectionRequest = mutation({
     requestId: v.id('connectionRequests'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const request = await ctx.db.get(args.requestId);
     if (!request) {
@@ -236,10 +219,7 @@ export const cancelConnectionRequest = mutation({
     requestId: v.id('connectionRequests'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const request = await ctx.db.get(args.requestId);
     if (!request) {

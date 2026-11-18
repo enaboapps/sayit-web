@@ -1,6 +1,6 @@
 import { v } from 'convex/values';
 import { mutation } from './_generated/server';
-import { getUserIdentity } from './users';
+import { requireUser } from './users';
 import { getBoardAccess } from './boardAccess';
 
 /**
@@ -14,8 +14,7 @@ import { getBoardAccess } from './boardAccess';
 export const generateUploadUrl = mutation({
   args: { boardId: v.id('phraseBoards') },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const access = await getBoardAccess(ctx, args.boardId, identity.subject);
     if (!access) throw new Error('Board not found');
@@ -39,8 +38,7 @@ export const deleteOrphanUpload = mutation({
     storageId: v.id('_storage'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const access = await getBoardAccess(ctx, args.boardId, identity.subject);
     if (!access || !access.canEdit) throw new Error('Unauthorized');

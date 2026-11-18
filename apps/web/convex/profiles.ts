@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
+import { isCaregiverOf } from './caregiverLinks';
 import { assertServerSecret } from './serverSecret';
 
 // Query: Name and email of a user, for that user or one of their caregivers
@@ -11,12 +12,8 @@ export const getProfileByUserId = query({
     const identity = await getUserIdentity(ctx);
     if (!identity) return null;
 
-    if (identity.subject !== args.userId) {
-      const links = await ctx.db
-        .query('caregiverClients')
-        .withIndex('by_caregiver', (q) => q.eq('caregiverId', identity.subject))
-        .collect();
-      if (!links.some((link) => link.communicatorId === args.userId)) return null;
+    if (identity.subject !== args.userId && !await isCaregiverOf(ctx, identity.subject, args.userId)) {
+      return null;
     }
 
     const profile = await ctx.db
@@ -187,10 +184,7 @@ export const deleteProfile = mutation({
 // Mutation: Migrate null roles to 'communicator' for existing users
 export const migrateNullRole = mutation({
   handler: async (ctx) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const profile = await ctx.db
       .query('profiles')
@@ -212,10 +206,7 @@ export const migrateNullRole = mutation({
 // Self-heals users whose Clerk webhook never created a profile, or whose role is null
 export const ensureProfile = mutation({
   handler: async (ctx) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const profile = await ctx.db
       .query('profiles')
@@ -250,10 +241,7 @@ export const setRole = mutation({
     role: v.union(v.literal('caregiver'), v.literal('communicator')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const profile = await ctx.db
       .query('profiles')
@@ -287,10 +275,7 @@ export const changeRole = mutation({
     newRole: v.union(v.literal('caregiver'), v.literal('communicator')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Not authenticated');
-    }
+    const identity = await requireUser(ctx, 'Not authenticated');
 
     const profile = await ctx.db
       .query('profiles')

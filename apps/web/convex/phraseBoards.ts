@@ -1,7 +1,8 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
-import { getUserIdentity } from './users';
+import { getUserIdentity, requireUser } from './users';
+import { isCaregiverOf } from './caregiverLinks';
 import { nextFixedGridCell } from './aacLayout';
 import { loadHydratedBoardTiles } from './boardTileHydration';
 
@@ -231,10 +232,7 @@ export const addPhraseBoard = mutation({
     clientAccessLevel: v.optional(v.union(v.literal('view'), v.literal('edit'))),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const boardId = await ctx.db.insert('phraseBoards', {
       userId: identity.subject,
@@ -265,10 +263,7 @@ export const updatePhraseBoard = mutation({
     hiddenFromPicker: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const { id, ...updates } = args;
 
@@ -288,10 +283,7 @@ export const deletePhraseBoard = mutation({
     id: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     // Verify ownership
     const board = await ctx.db.get(args.id);
@@ -340,10 +332,7 @@ export const addPhraseToBoard = mutation({
     boardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     // Verify phrase ownership
     const phrase = await ctx.db.get(args.phraseId);
@@ -394,10 +383,7 @@ export const reorderPhrasesOnBoard = mutation({
     orderedPhraseIds: v.array(v.id('phrases')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     // Verify board access
     const board = await ctx.db.get(args.boardId);
@@ -442,10 +428,7 @@ export const removePhraseFromBoard = mutation({
     boardId: v.id('phraseBoards'),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     // Verify edit access on the target board. (Pre-existing bug: this
     // mutation only authenticated, not authorized — any logged-in user
@@ -511,19 +494,14 @@ export const assignBoardToClient = mutation({
     accessLevel: v.union(v.literal('view'), v.literal('edit')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) throw new Error('Unauthenticated');
+    const identity = await requireUser(ctx);
 
     const board = await ctx.db.get(args.boardId);
     if (!board || board.userId !== identity.subject) throw new Error('Unauthorized');
     if (board.pendingDelete) throw new Error('This board is being deleted');
     if (board.forClientId) throw new Error('This board is already assigned to a client');
 
-    const relationships = await ctx.db
-      .query('caregiverClients')
-      .withIndex('by_caregiver', (q) => q.eq('caregiverId', identity.subject))
-      .collect();
-    if (!relationships.some((relationship) => relationship.communicatorId === args.clientId)) {
+    if (!await isCaregiverOf(ctx, identity.subject, args.clientId)) {
       throw new Error('Client relationship not found');
     }
 
@@ -541,10 +519,7 @@ export const updateBoardClientAccess = mutation({
     accessLevel: v.union(v.literal('view'), v.literal('edit')),
   },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const board = await ctx.db.get(args.boardId);
     if (!board || board.userId !== identity.subject) {
@@ -561,10 +536,7 @@ export const updateBoardClientAccess = mutation({
 export const unassignBoardFromClient = mutation({
   args: { boardId: v.id('phraseBoards') },
   handler: async (ctx, args) => {
-    const identity = await getUserIdentity(ctx);
-    if (!identity) {
-      throw new Error('Unauthenticated');
-    }
+    const identity = await requireUser(ctx);
 
     const board = await ctx.db.get(args.boardId);
     if (!board || board.userId !== identity.subject) {
