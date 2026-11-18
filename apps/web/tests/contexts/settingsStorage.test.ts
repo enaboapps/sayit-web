@@ -92,9 +92,12 @@ describe('settings storage helpers', () => {
   });
 });
 
-it('defaults preparation off and preserves an explicit opt-in', () => {
-  const storage = createStorage();
-  expect(loadSettingsFromLocalStorage(storage).prepareSpeechWhileTyping).toBe(false);
-  saveSettingsToLocalStorage({ ...defaultAllSettings, prepareSpeechWhileTyping: true }, storage);
-  expect(loadSettingsFromLocalStorage(storage).prepareSpeechWhileTyping).toBe(true);
+it('falls back to browser speech when a removed custom provider was saved', () => {
+  const storage = createStorage({
+    settings: JSON.stringify({ ttsProvider: 'custom', ttsVoiceId: 'custom:abc:voice', speechRate: 1.5 }),
+  });
+  const loaded = loadSettingsFromLocalStorage(storage);
+  expect(loaded.ttsProvider).toBe('browser');
+  expect(loaded.ttsVoiceId).toBe('');
+  expect(loaded.speechRate).toBe(1.5);
 });

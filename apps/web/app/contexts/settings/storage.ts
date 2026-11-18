@@ -10,6 +10,7 @@ import {
   type TypingDockMode,
   type UIPreferences,
 } from './types';
+import { withoutRemovedTTSProvider } from '@/lib/tts-types';
 
 function safeParseObject(value: string | null): Record<string, unknown> {
   if (!value) return {};
@@ -46,7 +47,7 @@ function parseTypingShareFontSize(value: string | null): number {
 }
 
 function normalizeStoredSettings(parsedSettings: Record<string, unknown>) {
-  const normalized = { ...parsedSettings };
+  const normalized = withoutRemovedTTSProvider({ ...parsedSettings });
 
   if (normalized.textSize !== undefined) {
     normalized.textSize = normalizeTextSize(normalized.textSize as number | string);

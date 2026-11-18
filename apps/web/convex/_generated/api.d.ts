@@ -17,7 +17,6 @@ import type * as boardTiles from "../boardTiles.js";
 import type * as caregiverClients from "../caregiverClients.js";
 import type * as connectionRequests from "../connectionRequests.js";
 import type * as conversationHistory from "../conversationHistory.js";
-import type * as customProviders from "../customProviders.js";
 import type * as migrations from "../migrations.js";
 import type * as openBoardImport from "../openBoardImport.js";
 import type * as openBoardLimits from "../openBoardLimits.js";
@@ -45,7 +44,6 @@ declare const fullApi: ApiFromModules<{
   caregiverClients: typeof caregiverClients;
   connectionRequests: typeof connectionRequests;
   conversationHistory: typeof conversationHistory;
-  customProviders: typeof customProviders;
   migrations: typeof migrations;
   openBoardImport: typeof openBoardImport;
   openBoardLimits: typeof openBoardLimits;
