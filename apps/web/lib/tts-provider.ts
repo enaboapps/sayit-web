@@ -1,11 +1,9 @@
-import { ElevenLabsTTS } from './elevenlabs-tts';
-import { AzureTTS } from './azure-tts';
-import { GeminiTTS } from './gemini-tts';
+import { CLOUD_TTS_PROVIDER_INFO } from './tts-providers';
 import { TextToSpeech as WebSpeechTTS } from './tts';
 
-import type { TTSProviderType } from './tts-types';
-import type { LiveTypingSpeechAccess } from './live-typing-speech';
-export type { TTSProviderType } from './tts-types';
+import { CLOUD_TTS_PROVIDERS, isCloudProvider } from './tts-types';
+import type { CloudTTSClient, CloudTTSProviderType, CloudTTSSpeakOptions, TTSProviderType } from './tts-types';
+export type { CloudTTSProviderType, TTSProviderType } from './tts-types';
 
 export interface TTSCallbacks {
   onStart?: () => void;
@@ -23,24 +21,37 @@ export interface TTSVoice {
   languageCodes?: { bcp47: string; iso639_3: string; display: string }[];
 }
 
+export interface CloudTTSStatus {
+  // The server has a key for it and returned voices.
+  available: boolean;
+  // The voice list has been fetched at least once (available or not).
+  voicesLoaded: boolean;
+}
+
 export interface TTSStatus {
   isSpeaking: boolean;
   activeProvider: TTSProviderType;
-  elevenLabsAvailable: boolean;
-  azureAvailable: boolean;
-  geminiAvailable: boolean;
   browserTTSAvailable: boolean;
-  elevenLabsVoicesLoaded: boolean;
-  azureVoicesLoaded: boolean;
-  geminiVoicesLoaded: boolean;
+  cloud: Record<CloudTTSProviderType, CloudTTSStatus>;
 }
+
+export function emptyCloudTTSStatus(): Record<CloudTTSProviderType, CloudTTSStatus> {
+  return Object.fromEntries(
+    CLOUD_TTS_PROVIDERS.map((provider) => [provider, { available: false, voicesLoaded: false }]),
+  ) as Record<CloudTTSProviderType, CloudTTSStatus>;
+}
+
+export type TTSSpeakOptions = CloudTTSSpeakOptions & {
+  // Browser voices only.
+  rate?: number;
+  pitch?: number;
+  volume?: number;
+};
 
 // Unified class that can use either provider
 export class TTSProvider {
   private static instance: TTSProvider;
-  private elevenlabsTTS: ElevenLabsTTS;
-  private azureTTS: AzureTTS;
-  private geminiTTS: GeminiTTS;
+  private cloudClients: Record<CloudTTSProviderType, CloudTTSClient>;
   private webSpeechTTS: WebSpeechTTS;
   private activeProvider: TTSProviderType = 'browser';
   private isSpeaking: boolean = false;
@@ -51,15 +62,10 @@ export class TTSProvider {
 
   private constructor() {
     this.webSpeechTTS = WebSpeechTTS.getInstance();
-    this.elevenlabsTTS = ElevenLabsTTS.getInstance();
-    this.azureTTS = AzureTTS.getInstance();
-    this.geminiTTS = GeminiTTS.getInstance();
+    this.cloudClients = Object.fromEntries(
+      CLOUD_TTS_PROVIDERS.map((provider) => [provider, CLOUD_TTS_PROVIDER_INFO[provider].client()]),
+    ) as Record<CloudTTSProviderType, CloudTTSClient>;
     this.setupCallbacks();
-
-    // Default to ElevenLabs if available
-    if (this.elevenlabsTTS.isAvailable()) {
-      this.activeProvider = 'elevenlabs';
-    }
   }
 
   public static getInstance(): TTSProvider {
@@ -95,9 +101,9 @@ export class TTSProvider {
       ...this.makeProviderCallbacks(onVoicesChanged),
       onWordBoundary: (word, charIndex) => this.emit('onWordBoundary', word, charIndex),
     });
-    this.elevenlabsTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
-    this.azureTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
-    this.geminiTTS.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
+    for (const client of Object.values(this.cloudClients)) {
+      client.setCallbacks(this.makeProviderCallbacks(onVoicesChanged));
+    }
   }
 
   public addCallbacks(callbacks: TTSCallbacks): () => void {
@@ -120,34 +126,15 @@ export class TTSProvider {
     if (provider === this.activeProvider) {
       return;
     }
-    
-    if (
-      provider === 'elevenlabs'
-      && this.elevenlabsTTS.hasLoadedVoices()
-      && !this.elevenlabsTTS.isAvailable()
-    ) {
-      console.warn('ElevenLabs is not available, staying with browser TTS');
-      return;
+
+    if (isCloudProvider(provider)) {
+      const client = this.cloudClients[provider];
+      if (client.hasLoadedVoices() && !client.isAvailable()) {
+        console.warn(`${CLOUD_TTS_PROVIDER_INFO[provider].name} is not available, staying with browser TTS`);
+        return;
+      }
     }
 
-    if (
-      provider === 'azure'
-      && this.azureTTS.hasLoadedVoices()
-      && !this.azureTTS.isAvailable()
-    ) {
-      console.warn('Azure TTS is not available, staying with browser TTS');
-      return;
-    }
-
-    if (
-      provider === 'gemini'
-      && this.geminiTTS.hasLoadedVoices()
-      && !this.geminiTTS.isAvailable()
-    ) {
-      console.warn('Gemini TTS is not available, staying with browser TTS');
-      return;
-    }
-    
     this.activeProvider = provider;
   }
 
@@ -156,37 +143,23 @@ export class TTSProvider {
   }
 
   public getAllVoices(): TTSVoice[] {
-    const browserVoices = this.webSpeechTTS.getVoices().map(voice => ({
+    const browserVoices: TTSVoice[] = this.webSpeechTTS.getVoices().map(voice => ({
       id: voice.voiceURI,
       name: `${voice.name} (${voice.lang})`,
-      provider: 'browser' as TTSProviderType
+      provider: 'browser',
     }));
 
-    const elevenLabsVoices = this.elevenlabsTTS.getVoices().map(voice => ({
-      id: voice.voice_id,
-      name: `${voice.name} (ElevenLabs)`,
-      provider: 'elevenlabs' as TTSProviderType,
-      gender: voice.gender,
-      languageCodes: voice.languageCodes,
-    }));
+    const cloudVoices = CLOUD_TTS_PROVIDERS.flatMap((provider): TTSVoice[] => (
+      this.cloudClients[provider].getVoices().map(voice => ({
+        id: voice.voice_id,
+        name: `${voice.name}${CLOUD_TTS_PROVIDER_INFO[provider].voiceNameSuffix}`,
+        provider,
+        gender: voice.gender,
+        languageCodes: voice.languageCodes,
+      }))
+    ));
 
-    const azureVoices = this.azureTTS.getVoices().map(voice => ({
-      id: voice.voice_id,
-      name: voice.name,
-      provider: 'azure' as TTSProviderType,
-      gender: voice.gender,
-      languageCodes: voice.languageCodes,
-    }));
-
-    const geminiVoices = this.geminiTTS.getVoices().map(voice => ({
-      id: voice.voice_id,
-      name: `${voice.name} (Gemini)`,
-      provider: 'gemini' as TTSProviderType,
-      gender: voice.gender,
-      languageCodes: voice.languageCodes,
-    }));
-
-    return [...browserVoices, ...elevenLabsVoices, ...azureVoices, ...geminiVoices];
+    return [...browserVoices, ...cloudVoices];
   }
 
   public getVoicesByProvider(provider: TTSProviderType): TTSVoice[] {
@@ -202,31 +175,13 @@ export class TTSProvider {
     this.emit('onVoicesChanged', this.getAllVoices());
   }
 
-  public async loadElevenLabsVoices() {
-    await this.elevenlabsTTS.loadVoices();
+  // Fetches a cloud provider's voice list (once; later calls reuse it).
+  public async loadCloudVoices(provider: CloudTTSProviderType) {
+    await this.cloudClients[provider].loadVoices();
     this.emit('onVoicesChanged', this.getAllVoices());
   }
 
-  public async loadAzureVoices() {
-    await this.azureTTS.loadVoices();
-    this.emit('onVoicesChanged', this.getAllVoices());
-  }
-
-  public async loadGeminiVoices() {
-    await this.geminiTTS.loadVoices();
-    this.emit('onVoicesChanged', this.getAllVoices());
-  }
-
-  public speak(text: string, options?: {
-    voiceId?: string;
-    rate?: number;
-    pitch?: number;
-    volume?: number;
-    stability?: number;
-    similarityBoost?: number;
-    modelId?: string;
-    liveTyping?: LiveTypingSpeechAccess;
-  }) {
+  public speak(text: string, options?: TTSSpeakOptions) {
     // Determine which provider to use based on the selected voice
     let provider = this.activeProvider;
 
@@ -237,54 +192,43 @@ export class TTSProvider {
       }
     }
 
-    if (provider === 'elevenlabs') {
-      this.elevenlabsTTS.speak(text, {
+    if (isCloudProvider(provider)) {
+      void this.cloudClients[provider].speak(text, {
         voiceId: options?.voiceId,
         stability: options?.stability,
         similarityBoost: options?.similarityBoost,
         modelId: options?.modelId,
         liveTyping: options?.liveTyping,
       });
-    } else if (provider === 'azure') {
-      this.azureTTS.speak(text, { voiceId: options?.voiceId, liveTyping: options?.liveTyping });
-    } else if (provider === 'gemini') {
-      this.geminiTTS.speak(text, { voiceId: options?.voiceId, liveTyping: options?.liveTyping });
-    } else {
-      this.webSpeechTTS.speak(text, {
-        voiceURI: options?.voiceId,
-        rate: options?.rate,
-        pitch: options?.pitch,
-        volume: options?.volume,
-      });
+      return;
     }
+
+    this.webSpeechTTS.speak(text, {
+      voiceURI: options?.voiceId,
+      rate: options?.rate,
+      pitch: options?.pitch,
+      volume: options?.volume,
+    });
   }
 
   public stop() {
     this.webSpeechTTS.stop();
-    this.elevenlabsTTS.stop();
-    this.azureTTS.stop();
-    this.geminiTTS.stop();
+    for (const client of Object.values(this.cloudClients)) {
+      client.stop();
+    }
   }
 
   public pause() {
-    if (this.activeProvider === 'elevenlabs') {
-      this.elevenlabsTTS.pause();
-    } else if (this.activeProvider === 'azure') {
-      this.azureTTS.pause();
-    } else if (this.activeProvider === 'gemini') {
-      this.geminiTTS.pause();
+    if (isCloudProvider(this.activeProvider)) {
+      this.cloudClients[this.activeProvider].pause();
     } else {
       this.webSpeechTTS.pause();
     }
   }
 
   public resume() {
-    if (this.activeProvider === 'elevenlabs') {
-      this.elevenlabsTTS.resume();
-    } else if (this.activeProvider === 'azure') {
-      this.azureTTS.resume();
-    } else if (this.activeProvider === 'gemini') {
-      this.geminiTTS.resume();
+    if (isCloudProvider(this.activeProvider)) {
+      this.cloudClients[this.activeProvider].resume();
     } else {
       this.webSpeechTTS.resume();
     }
@@ -292,22 +236,23 @@ export class TTSProvider {
 
   public isAvailable(): boolean {
     return this.webSpeechTTS.isAvailable()
-      || this.elevenlabsTTS.isAvailable()
-      || this.azureTTS.isAvailable()
-      || this.geminiTTS.isAvailable();
+      || Object.values(this.cloudClients).some(client => client.isAvailable());
   }
 
   public getStatus(): TTSStatus {
+    const cloud = emptyCloudTTSStatus();
+    for (const provider of CLOUD_TTS_PROVIDERS) {
+      cloud[provider] = {
+        available: this.cloudClients[provider].isAvailable(),
+        voicesLoaded: this.cloudClients[provider].hasLoadedVoices(),
+      };
+    }
+
     return {
       isSpeaking: this.isSpeaking,
       activeProvider: this.activeProvider,
-      elevenLabsAvailable: this.elevenlabsTTS.isAvailable(),
-      azureAvailable: this.azureTTS.isAvailable(),
-      geminiAvailable: this.geminiTTS.isAvailable(),
       browserTTSAvailable: this.webSpeechTTS.isAvailable(),
-      elevenLabsVoicesLoaded: this.elevenlabsTTS.hasLoadedVoices(),
-      azureVoicesLoaded: this.azureTTS.hasLoadedVoices(),
-      geminiVoicesLoaded: this.geminiTTS.hasLoadedVoices(),
+      cloud,
     };
   }
-} 
+}

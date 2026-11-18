@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TTSProvider } from '@/lib/tts-provider';
+import { isCloudProvider } from '@/lib/tts-types';
 import { cleanLiveTypingSpeechSettings, type LiveTypingSpeechCommand, type LiveTypingSpeechSettings } from '@/lib/live-typing-speech';
 
 interface TypingShareSpeechSession {
@@ -13,22 +14,12 @@ interface TypingShareSpeechSession {
 async function prepareProvider(tts: TTSProvider, settings: LiveTypingSpeechSettings) {
   tts.setProvider(settings.provider);
 
-  if (settings.provider === 'browser') {
-    tts.refreshVoices();
+  if (isCloudProvider(settings.provider)) {
+    await tts.loadCloudVoices(settings.provider);
     return;
   }
 
-  if (settings.provider === 'elevenlabs') {
-    await tts.loadElevenLabsVoices();
-    return;
-  }
-
-  if (settings.provider === 'azure') {
-    await tts.loadAzureVoices();
-    return;
-  }
-
-  await tts.loadGeminiVoices();
+  tts.refreshVoices();
 }
 
 export function useTypingShareSpeech(session: TypingShareSpeechSession | null | undefined) {

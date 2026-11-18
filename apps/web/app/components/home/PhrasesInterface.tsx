@@ -28,6 +28,7 @@ import {
 } from '@/lib/open-board-format/export';
 import type { BoardSummary, BoardTileSummary, PhraseSummary } from '../phrases/types';
 import StatusBanner from '../ui/StatusBanner';
+import { isCloudProvider } from '@/lib/tts-types';
 
 export default function PhrasesInterface() {
   const tts = useTTS();
@@ -48,22 +49,17 @@ export default function PhrasesInterface() {
   const activeTabId = uiPreferences.activeTypingTabId;
   const {
     hasSubscription,
-    loadElevenLabsVoices,
-    loadGeminiVoices,
+    loadCloudVoices,
   } = tts;
 
   // Pre-load premium voices so they're ready before first tap
   useEffect(() => {
     if (!hasSubscription) return;
 
-    if (settings.ttsProvider === 'elevenlabs') {
-      loadElevenLabsVoices();
+    if (isCloudProvider(settings.ttsProvider)) {
+      void loadCloudVoices(settings.ttsProvider);
     }
-
-    if (settings.ttsProvider === 'gemini') {
-      loadGeminiVoices();
-    }
-  }, [hasSubscription, settings.ttsProvider, loadElevenLabsVoices, loadGeminiVoices]);
+  }, [hasSubscription, settings.ttsProvider, loadCloudVoices]);
 
   // Clear active phrase highlight when TTS finishes
   useEffect(() => {
@@ -200,7 +196,7 @@ export default function PhrasesInterface() {
     isOnline
     && settings.ttsProvider === 'elevenlabs'
     && settings.ttsModelPreference === 'high_quality'
-    && tts.status.elevenLabsAvailable;
+    && tts.status.cloud.elevenlabs.available;
 
   const liveTypingSpeechSettings = useMemo<LiveTypingSpeechSettings>(() => {
     const modelId = settings.ttsModelPreference === 'high_quality'
@@ -210,9 +206,7 @@ export default function PhrasesInterface() {
       ? tts.voices.find(voice => voice.id === settings.ttsVoiceId)
       : undefined;
     const selectedProvider = selectedVoice?.provider ?? settings.ttsProvider;
-    const usingPremium = selectedProvider === 'elevenlabs'
-      || selectedProvider === 'azure'
-      || selectedProvider === 'gemini';
+    const usingPremium = isCloudProvider(selectedProvider);
 
     if (usingPremium && !tts.hasSubscription) {
       return {

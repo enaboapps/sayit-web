@@ -4,7 +4,7 @@ import TTSSettings from '@/app/components/TTSSettings';
 import { useSettings } from '@/app/contexts/SettingsContext';
 import { useTTS } from '@/lib/hooks/useTTS';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
-import { TTSProviderType, TTSVoice } from '@/lib/tts-provider';
+import { CloudTTSProviderType, CloudTTSStatus, TTSProviderType, TTSVoice } from '@/lib/tts-provider';
 
 jest.mock('@/app/contexts/SettingsContext', () => ({
   useSettings: jest.fn(),
@@ -23,9 +23,7 @@ const mockUseTTS = jest.mocked(useTTS);
 const mockUseOnlineStatus = jest.mocked(useOnlineStatus);
 
 const mockUpdateSetting = jest.fn();
-const mockLoadElevenLabsVoices = jest.fn();
-const mockLoadAzureVoices = jest.fn();
-const mockLoadGeminiVoices = jest.fn();
+const mockLoadCloudVoices = jest.fn();
 
 const voices: TTSVoice[] = [
   { id: 'browser-voice-1', name: 'Browser Voice', provider: 'browser' },
@@ -54,14 +52,15 @@ const defaultSettings = {
 const defaultStatus = {
   isSpeaking: false,
   activeProvider: 'browser' as TTSProviderType,
-  elevenLabsAvailable: true,
-  azureAvailable: true,
-  geminiAvailable: true,
   browserTTSAvailable: true,
-  elevenLabsVoicesLoaded: true,
-  azureVoicesLoaded: true,
-  geminiVoicesLoaded: true,
+  cloud: {
+    elevenlabs: { available: true, voicesLoaded: true },
+    azure: { available: true, voicesLoaded: true },
+    gemini: { available: true, voicesLoaded: true },
+  } as Record<CloudTTSProviderType, CloudTTSStatus>,
 };
+
+type StatusOverrides = { cloud?: Partial<Record<CloudTTSProviderType, Partial<CloudTTSStatus>>> };
 
 function renderTTSSettings({
   settings = {},
@@ -70,12 +69,17 @@ function renderTTSSettings({
   hasSubscription = true,
 }: {
   settings?: Partial<typeof defaultSettings>;
-  status?: Partial<typeof defaultStatus>;
+  status?: StatusOverrides;
   isOnline?: boolean;
   hasSubscription?: boolean;
 } = {}) {
   const mergedSettings = { ...defaultSettings, ...settings };
-  const mergedStatus = { ...defaultStatus, ...status };
+  const cloud = { ...defaultStatus.cloud };
+  for (const [provider, overrides] of Object.entries(status.cloud ?? {})) {
+    const id = provider as CloudTTSProviderType;
+    cloud[id] = { ...cloud[id], ...overrides };
+  }
+  const mergedStatus = { ...defaultStatus, cloud };
 
   mockUseSettings.mockReturnValue({
     settings: mergedSettings,
@@ -94,9 +98,7 @@ function renderTTSSettings({
     status: mergedStatus,
     getVoicesByProvider: jest.fn((provider: TTSProviderType) => voices.filter(voice => voice.provider === provider)),
     refreshVoices: jest.fn(),
-    loadElevenLabsVoices: mockLoadElevenLabsVoices,
-    loadAzureVoices: mockLoadAzureVoices,
-    loadGeminiVoices: mockLoadGeminiVoices,
+    loadCloudVoices: mockLoadCloudVoices,
     hasSubscription,
   } as never);
 
@@ -177,7 +179,7 @@ describe('TTSSettings provider dropdown', () => {
 
   it('hides Azure when unavailable', async () => {
     const user = userEvent.setup();
-    renderTTSSettings({ status: { azureAvailable: false } });
+    renderTTSSettings({ status: { cloud: { azure: { available: false } } } });
 
     await openProviderDropdown(user);
 
@@ -197,7 +199,7 @@ describe('TTSSettings provider dropdown', () => {
 
   it('hides Gemini when unavailable', async () => {
     const user = userEvent.setup();
-    renderTTSSettings({ status: { geminiAvailable: false } });
+    renderTTSSettings({ status: { cloud: { gemini: { available: false } } } });
 
     await openProviderDropdown(user);
 
@@ -212,15 +214,26 @@ describe('TTSSettings provider dropdown', () => {
     await openProviderDropdown(user);
 
     expect(screen.getAllByText('PRO')).toHaveLength(3);
+    expect(screen.getByText('AI voices - Pro')).toBeInTheDocument();
+    expect(screen.getByText('Neural voices - Pro')).toBeInTheDocument();
+    expect(screen.getByText('Expressive AI voices - Pro')).toBeInTheDocument();
 
     await user.click(screen.getByText('Azure'));
     expect(mockUpdateSetting).toHaveBeenCalledWith('ttsProvider', 'azure');
   });
 
-  it('loads Gemini voices while online', () => {
+  it('loads voices for every cloud provider while online', () => {
     renderTTSSettings();
 
-    expect(mockLoadGeminiVoices).toHaveBeenCalled();
+    expect(mockLoadCloudVoices).toHaveBeenCalledWith('elevenlabs');
+    expect(mockLoadCloudVoices).toHaveBeenCalledWith('azure');
+    expect(mockLoadCloudVoices).toHaveBeenCalledWith('gemini');
+  });
+
+  it('loads no cloud voices while offline', () => {
+    renderTTSSettings({ isOnline: false });
+
+    expect(mockLoadCloudVoices).not.toHaveBeenCalled();
   });
 
   it('renders Gemini voice settings copy', () => {
@@ -271,9 +284,11 @@ describe('TTSSettings provider dropdown', () => {
   it('does not render credential or unavailable provider copy', () => {
     renderTTSSettings({
       status: {
-        elevenLabsAvailable: false,
-        azureAvailable: false,
-        geminiAvailable: false,
+        cloud: {
+          elevenlabs: { available: false },
+          azure: { available: false },
+          gemini: { available: false },
+        },
       },
     });
 
@@ -288,8 +303,7 @@ describe('TTSSettings provider dropdown', () => {
     renderTTSSettings({
       settings: { ttsProvider: 'elevenlabs', ttsVoiceId: 'eleven-voice-1' },
       status: {
-        elevenLabsAvailable: false,
-        elevenLabsVoicesLoaded: true,
+        cloud: { elevenlabs: { available: false, voicesLoaded: true } },
       },
     });
 

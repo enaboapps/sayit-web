@@ -1,14 +1,8 @@
 import { CloudTTSLifecycle } from './cloud-tts-lifecycle';
 import { TextToSpeech as WebSpeechTTS } from './tts';
-import { BaseTTSCallbacks } from './tts-types';
-import type { LiveTypingSpeechAccess } from './live-typing-speech';
+import type { BaseTTSCallbacks, CloudTTSClient, CloudTTSSpeakOptions, CloudVoice } from './tts-types';
 
-export interface Voice {
-  voice_id: string;
-  name: string;
-  gender?: 'Male' | 'Female' | 'Unknown';
-  languageCodes?: { bcp47: string; iso639_3: string; display: string }[];
-}
+export type Voice = CloudVoice;
 
 /**
  * ElevenLabs Text-to-Speech Provider.
@@ -16,7 +10,7 @@ export interface Voice {
  * Fetches audio from the server-side proxy route (/api/text-to-speech) and
  * delegates browser audio/session handling to CloudTTSLifecycle.
  */
-export class ElevenLabsTTS {
+export class ElevenLabsTTS implements CloudTTSClient {
   private static instance: ElevenLabsTTS;
   private voices: Voice[] = [];
   private isAvailableFlag = false;
@@ -91,14 +85,7 @@ export class ElevenLabsTTS {
     return this.voices.find(v => v.voice_id === voiceId);
   }
 
-  public async speak(text: string, options?: {
-    voiceId?: string;
-    stability?: number;
-    similarityBoost?: number;
-    streaming?: boolean;
-    modelId?: string;
-    liveTyping?: LiveTypingSpeechAccess;
-  }) {
+  public async speak(text: string, options?: CloudTTSSpeakOptions & { streaming?: boolean }) {
     const session = this.lifecycle.beginSession(this.callbacks);
     this.lastRequestTime = Date.now();
 

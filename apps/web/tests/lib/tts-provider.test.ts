@@ -102,24 +102,97 @@ describe('TTSProvider status', () => {
   it('reports provider voice loading state in status', async () => {
     const provider = TTSProvider.getInstance();
 
-    expect(provider.getStatus()).toEqual(expect.objectContaining({
-      elevenLabsVoicesLoaded: false,
-      azureVoicesLoaded: false,
-      geminiVoicesLoaded: false,
-    }));
+    expect(provider.getStatus().cloud).toEqual({
+      elevenlabs: { available: false, voicesLoaded: false },
+      azure: { available: false, voicesLoaded: false },
+      gemini: { available: false, voicesLoaded: false },
+    });
 
-    await provider.loadElevenLabsVoices();
-    await provider.loadAzureVoices();
-    await provider.loadGeminiVoices();
+    await provider.loadCloudVoices('elevenlabs');
+    await provider.loadCloudVoices('azure');
+    await provider.loadCloudVoices('gemini');
 
-    expect(provider.getStatus()).toEqual(expect.objectContaining({
-      elevenLabsAvailable: true,
-      azureAvailable: true,
-      geminiAvailable: true,
-      elevenLabsVoicesLoaded: true,
-      azureVoicesLoaded: true,
-      geminiVoicesLoaded: true,
-    }));
+    expect(provider.getStatus().cloud).toEqual({
+      elevenlabs: { available: true, voicesLoaded: true },
+      azure: { available: true, voicesLoaded: true },
+      gemini: { available: true, voicesLoaded: true },
+    });
+  });
+
+  it('loads only the requested provider', async () => {
+    const provider = TTSProvider.getInstance();
+
+    await provider.loadCloudVoices('azure');
+
+    expect(mockAzureTTS.loadVoices).toHaveBeenCalledTimes(1);
+    expect(mockElevenLabsTTS.loadVoices).not.toHaveBeenCalled();
+    expect(mockGeminiTTS.loadVoices).not.toHaveBeenCalled();
+  });
+});
+
+describe('TTSProvider routing', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (TTSProvider as unknown as { instance?: TTSProvider }).instance = undefined;
+    mockElevenLabsAvailable = false;
+    mockAzureAvailable = false;
+    mockGeminiAvailable = false;
+    mockElevenLabsLoaded = false;
+    mockAzureLoaded = false;
+    mockGeminiLoaded = false;
+  });
+
+  it('labels cloud voices from the provider list', () => {
+    mockElevenLabsTTS.getVoices.mockReturnValueOnce([{ voice_id: 'e1', name: 'Rachel' }] as never);
+    mockAzureTTS.getVoices.mockReturnValueOnce([{ voice_id: 'a1', name: 'Jenny' }] as never);
+    mockGeminiTTS.getVoices.mockReturnValueOnce([{ voice_id: 'g1', name: 'Puck' }] as never);
+
+    const voices = TTSProvider.getInstance().getAllVoices();
+
+    expect(voices).toEqual([
+      expect.objectContaining({ id: 'e1', name: 'Rachel (ElevenLabs)', provider: 'elevenlabs' }),
+      expect.objectContaining({ id: 'a1', name: 'Jenny', provider: 'azure' }),
+      expect.objectContaining({ id: 'g1', name: 'Puck (Gemini)', provider: 'gemini' }),
+    ]);
+  });
+
+  it('speaks through the active cloud provider with its options', () => {
+    const provider = TTSProvider.getInstance();
+    provider.setProvider('gemini');
+
+    provider.speak('Hello', { liveTyping: { sessionKey: 'k', commandId: 'c' } });
+
+    expect(mockGeminiTTS.speak).toHaveBeenCalledWith('Hello', {
+      voiceId: undefined,
+      stability: undefined,
+      similarityBoost: undefined,
+      modelId: undefined,
+      liveTyping: { sessionKey: 'k', commandId: 'c' },
+    });
+    expect(mockBrowserTTS.speak).not.toHaveBeenCalled();
+  });
+
+  it('stays on browser speech when a loaded cloud provider is unavailable', () => {
+    mockAzureLoaded = true;
+    const provider = TTSProvider.getInstance();
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    provider.setProvider('azure');
+
+    expect(provider.getCurrentProvider()).toBe('browser');
+  });
+
+  it('pauses and resumes only the active provider', () => {
+    const provider = TTSProvider.getInstance();
+    provider.setProvider('azure');
+
+    provider.pause();
+    provider.resume();
+
+    expect(mockAzureTTS.pause).toHaveBeenCalledTimes(1);
+    expect(mockAzureTTS.resume).toHaveBeenCalledTimes(1);
+    expect(mockBrowserTTS.pause).not.toHaveBeenCalled();
+    expect(mockGeminiTTS.pause).not.toHaveBeenCalled();
   });
 });
 

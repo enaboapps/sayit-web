@@ -1,4 +1,4 @@
-import type { TTSProviderType } from './tts-types';
+import type { CloudTTSSpeakOptions, TTSProviderType } from './tts-types';
 
 export type LiveTypingSpeechAction = 'speak' | 'stop';
 
@@ -23,10 +23,7 @@ export interface LiveTypingSpeechCommand {
 
 // Sent with a viewer's cloud voice request so the server can allow it without
 // a signed-in Pro user (see lib/server/live-typing-access.ts).
-export interface LiveTypingSpeechAccess {
-  sessionKey: string;
-  commandId: string;
-}
+export type LiveTypingSpeechAccess = NonNullable<CloudTTSSpeakOptions['liveTyping']>;
 
 export function cleanLiveTypingSpeechSettings(settings: LiveTypingSpeechSettings): LiveTypingSpeechSettings {
   return {
