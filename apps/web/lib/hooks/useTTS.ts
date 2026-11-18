@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { emptyCloudTTSStatus, TTSProvider, TTSVoice, TTSProviderType, TTSStatus } from '../tts-provider';
 import { CLOUD_TTS_PROVIDERS, isCloudProvider, type CloudTTSProviderType } from '../tts-types';
+import { useSubscription } from '@/app/hooks/useSubscription';
+import { useSettings } from '@/app/contexts/SettingsContext';
 
 function sameStatus(a: TTSStatus, b: TTSStatus) {
   return a.isSpeaking === b.isSpeaking
@@ -13,8 +15,6 @@ function sameStatus(a: TTSStatus, b: TTSStatus) {
       && a.cloud[provider].voicesLoaded === b.cloud[provider].voicesLoaded
     ));
 }
-import { useSubscription } from '@/app/hooks/useSubscription';
-import { useSettings } from '@/app/contexts/SettingsContext';
 
 export function useTTS() {
   const [isAvailable, setIsAvailable] = useState<boolean>(false);
