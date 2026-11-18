@@ -1,6 +1,7 @@
 /** @jest-environment node */
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { apiRoute, ApiError, requireServerEnv, serverEnv } from '@/lib/server/api-route';
+import { clearProAccessCache } from '@/lib/server/pro-access';
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(), clerkClient: jest.fn() }));
 
@@ -24,6 +25,7 @@ const ok = jest.fn(async () => Response.json({ ok: true }));
 
 beforeEach(() => {
   jest.clearAllMocks();
+  clearProAccessCache();
   (clerkClient as unknown as jest.Mock).mockResolvedValue({ users: { getUser } });
   getUser.mockResolvedValue({ publicMetadata: {} });
   jest.spyOn(console, 'error').mockImplementation(() => {});

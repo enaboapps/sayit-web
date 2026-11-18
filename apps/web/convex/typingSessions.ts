@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { mutation, query, type MutationCtx, type QueryCtx } from './_generated/server';
 import type { Doc } from './_generated/dataModel';
 import { getUserIdentity } from './users';
+import { assertServerSecret } from './serverSecret';
 
 // Each account has one permanent Live Typing link: a typingSessions row with no
 // expiresAt. Stopping it keeps the row (and the URL) but marks it inactive.
@@ -86,6 +87,20 @@ export const getTypingSession = query({
     if (!session) return null;
     if (!isAccountSession(session) && !isLive(session)) return null;
     return toViewerSession(session);
+  },
+});
+
+// Query: A shared session with its owner, for trusted server code only (the
+// TTS routes use it to let signed-out viewers play a Pro sharer's voice).
+// Same visibility rules as getTypingSession.
+export const getTypingSessionForServer = query({
+  args: { serverSecret: v.string(), sessionKey: v.string() },
+  handler: async (ctx, args) => {
+    assertServerSecret(args.serverSecret);
+    const session = await findByKey(ctx, args.sessionKey);
+    if (!session) return null;
+    if (!isAccountSession(session) && !isLive(session)) return null;
+    return { ...toViewerSession(session), userId: session.userId };
   },
 });
 

@@ -1,6 +1,7 @@
-import { auth, clerkClient } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { BYPASS_SUBSCRIPTION_METADATA_KEY, PRO_PLAN } from '@/lib/subscription';
+import { PRO_PLAN } from '@/lib/subscription';
+import { userHasPro } from './pro-access';
 
 // Who may call a route:
 // - public: anyone
@@ -61,10 +62,8 @@ export interface RouteOptions<Body> {
 async function hasPro(userId: string, has: (params: { plan: string }) => boolean) {
   if (has({ plan: PRO_PLAN })) return true;
 
-  // Bypass users have no plan; only they pay for this lookup.
-  const client = await clerkClient();
-  const user = await client.users.getUser(userId);
-  return user.publicMetadata?.[BYPASS_SUBSCRIPTION_METADATA_KEY] === true;
+  // The session token says there's no plan, so only the bypass flag is left.
+  return userHasPro(userId, { checkPlan: false });
 }
 
 async function checkAccess(access: RouteAccess): Promise<{ userId: string | null; denied: ApiError | null }> {

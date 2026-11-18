@@ -89,6 +89,43 @@ describe('useTypingShareSpeech', () => {
     }));
   });
 
+  it('sends the session key and command ID so the server can allow cloud voices', async () => {
+    const { result, rerender } = renderHook(
+      ({ command }: { command?: LiveTypingSpeechCommand }) => useTypingShareSpeech({ sessionKey: 'key-1', speechCommand: command }),
+      { initialProps: { command: speakCommand('old-command') } }
+    );
+
+    act(() => {
+      result.current.enableAudio();
+    });
+
+    rerender({ command: speakCommand('new-command', 'New message') });
+
+    await waitFor(() => {
+      expect(mockTTSProvider.speak).toHaveBeenCalledWith('New message', expect.objectContaining({
+        liveTyping: { sessionKey: 'key-1', commandId: 'new-command' },
+      }));
+    });
+  });
+
+  it('leaves out live typing details without a session key', async () => {
+    const { result, rerender } = renderHook(
+      ({ command }: { command?: LiveTypingSpeechCommand }) => useTypingShareSpeech({ speechCommand: command }),
+      { initialProps: { command: speakCommand('old-command') } }
+    );
+
+    act(() => {
+      result.current.enableAudio();
+    });
+
+    rerender({ command: speakCommand('new-command', 'New message') });
+
+    await waitFor(() => {
+      expect(mockTTSProvider.speak).toHaveBeenCalledTimes(1);
+    });
+    expect(mockTTSProvider.speak).toHaveBeenCalledWith('New message', expect.not.objectContaining({ liveTyping: expect.anything() }));
+  });
+
   it('stops speech when a stop command arrives after audio is enabled', async () => {
     const { result, rerender } = renderHook(
       ({ command }: { command?: LiveTypingSpeechCommand }) => useTypingShareSpeech({ speechCommand: command }),
