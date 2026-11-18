@@ -80,6 +80,16 @@ export const deleteProfile = mutation({
   handler: async (ctx, args) => {
     const userId = args.userId;
 
+    // Remove Live Typing links so a deleted account's permanent link stops working.
+    const typingSessions = await ctx.db
+      .query('typingSessions')
+      .withIndex('by_user_id', (q) => q.eq('userId', userId))
+      .collect();
+
+    for (const session of typingSessions) {
+      await ctx.db.delete(session._id);
+    }
+
     // 1. Get user's profile to check their role
     const profile = await ctx.db
       .query('profiles')

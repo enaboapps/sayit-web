@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowPathIcon,
   CheckIcon,
@@ -26,6 +26,8 @@ interface LiveTypingBottomSheetProps {
   onPauseSession: () => Promise<void>;
   onResumeSession: () => Promise<void>;
   onEndSession: () => Promise<void>;
+  isResettingLink: boolean;
+  onResetLink: () => Promise<boolean>;
 }
 
 export default function LiveTypingBottomSheet({
@@ -41,9 +43,16 @@ export default function LiveTypingBottomSheet({
   onPauseSession,
   onResumeSession,
   onEndSession,
+  isResettingLink,
+  onResetLink,
 }: LiveTypingBottomSheetProps) {
   const [copied, setCopied] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !isSharing) setConfirmingReset(false);
+  }, [isOpen, isSharing]);
 
   const handleCopy = async () => {
     if (!shareableLink) return;
@@ -77,6 +86,11 @@ export default function LiveTypingBottomSheet({
     }
   };
 
+  const handleResetLink = async () => {
+    const reset = await onResetLink();
+    if (reset) setConfirmingReset(false);
+  };
+
   return (
     <BottomSheet
       isOpen={isOpen}
@@ -92,7 +106,7 @@ export default function LiveTypingBottomSheet({
             <ShareIcon className="w-12 h-12 mx-auto text-text-secondary mb-3" />
             <h3 className="text-lg font-medium text-foreground mb-2">Live Typing</h3>
             <p className="text-text-secondary text-sm mb-6">
-              Let others see what you're typing in real-time. The session expires in 24 hours.
+              Let others see what you're typing in real-time. Your link stays the same on every device you sign in to, so viewers can keep it.
             </p>
 
             <button
@@ -107,7 +121,7 @@ export default function LiveTypingBottomSheet({
               {isCreating ? (
                 <>
                   <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                  <span>Creating Session...</span>
+                  <span>Starting…</span>
                 </>
               ) : (
                 <>
@@ -229,7 +243,48 @@ export default function LiveTypingBottomSheet({
               </span>
             </button>
 
-            {/* End session button */}
+            {confirmingReset ? (
+              <div
+                role="group"
+                aria-label="Confirm new link"
+                className="space-y-3 rounded-[var(--radius-control)] border border-amber-500/50 bg-status-warning p-3 text-status-warning-foreground"
+              >
+                <p className="text-sm">
+                  Anyone using the current link or QR code will lose access. You will need to share the new link again.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleResetLink()}
+                    disabled={isResettingLink}
+                    className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[var(--radius-control)] bg-primary-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-primary-600 disabled:cursor-wait disabled:opacity-50"
+                  >
+                    {isResettingLink && <ArrowPathIcon className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />}
+                    <span>{isResettingLink ? 'Getting new link…' : 'Get new link'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingReset(false)}
+                    disabled={isResettingLink}
+                    className="min-h-11 flex-1 rounded-[var(--radius-control)] border border-border bg-surface px-4 text-sm font-semibold text-foreground transition-colors hover:bg-surface-hover disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingReset(true)}
+                disabled={isEnding || isTransitioning}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[var(--radius-control)] px-4 text-sm font-semibold text-text-secondary transition-colors hover:bg-surface-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:opacity-50"
+              >
+                <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />
+                <span>Reset link</span>
+              </button>
+            )}
+
+            {/* Stop sharing button */}
             <button
               onClick={handleEndSession}
               disabled={isEnding || isTransitioning}
@@ -238,12 +293,12 @@ export default function LiveTypingBottomSheet({
               {isEnding ? (
                 <>
                   <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                  <span>Ending Session...</span>
+                  <span>Stopping…</span>
                 </>
               ) : (
                 <>
                   <StopIcon className="w-5 h-5" />
-                  <span>End Live Typing</span>
+                  <span>Stop Live Typing</span>
                 </>
               )}
             </button>

@@ -81,9 +81,9 @@ export default function LiveTypingBanner({
         onClick={onEnd}
         disabled={isTransitioning}
         className="min-h-11 shrink-0 rounded-[var(--radius-control)] bg-error px-3 text-xs font-semibold text-white transition-colors hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-wait disabled:opacity-50"
-        aria-label="End live typing"
+        aria-label="Stop live typing"
       >
-        End
+        Stop
       </button>
     </div>
   );
