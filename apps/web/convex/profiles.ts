@@ -3,25 +3,54 @@ import { mutation, query } from './_generated/server';
 import { getUserIdentity } from './users';
 import { assertServerSecret } from './serverSecret';
 
-// Query: Get profile for a specific user (used by server-side routes)
+// Query: Name and email of a user, for that user or one of their caregivers
+// (used by the caregiver client page). Returns null to anyone else.
 export const getProfileByUserId = query({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const identity = await getUserIdentity(ctx);
+    if (!identity) return null;
+
+    if (identity.subject !== args.userId) {
+      const links = await ctx.db
+        .query('caregiverClients')
+        .withIndex('by_caregiver', (q) => q.eq('caregiverId', identity.subject))
+        .collect();
+      if (!links.some((link) => link.communicatorId === args.userId)) return null;
+    }
+
+    const profile = await ctx.db
       .query('profiles')
       .withIndex('by_user_id', (q) => q.eq('userId', args.userId))
       .first();
+    if (!profile) return null;
+
+    return { userId: profile.userId, fullName: profile.fullName, email: profile.email };
   },
 });
 
-// Query: Get profile by email (used for finding clients)
+// Query: Find a user by email so a caregiver can send them a client request.
+// Caregivers only, and only what the request needs.
 export const getProfileByEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const identity = await getUserIdentity(ctx);
+    if (!identity) return null;
+
+    const caller = await ctx.db
+      .query('profiles')
+      .withIndex('by_user_id', (q) => q.eq('userId', identity.subject))
+      .first();
+    if (caller?.role !== 'caregiver') return null;
+
+    const profile = await ctx.db
       .query('profiles')
       .withIndex('by_email', (q) => q.eq('email', args.email.toLowerCase()))
       .first();
+    if (!profile) return null;
+
+    // email is what the caregiver searched for, so returning it reveals nothing new.
+    return { userId: profile.userId, fullName: profile.fullName, email: profile.email, role: profile.role };
   },
 });
 
