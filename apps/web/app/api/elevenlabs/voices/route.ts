@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { serverEnv } from '@/lib/server/api-route';
 import { ElevenLabsTTSClient } from 'js-tts-wrapper';
 
 export const runtime = 'nodejs';
@@ -6,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const apiKey = process.env.ELEVENLABS_API_KEY?.replace(/^\uFEFF/, '').trim();
+    const apiKey = serverEnv('ELEVENLABS_API_KEY');
 
     if (!apiKey) {
       return NextResponse.json({ voices: [], available: false });

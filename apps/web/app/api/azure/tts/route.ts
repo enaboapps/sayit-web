@@ -1,51 +1,35 @@
 import { AzureTTSClient } from 'js-tts-wrapper';
-import { NextResponse } from 'next/server';
+import { apiRoute, ApiError, requireServerEnv } from '@/lib/server/api-route';
+import { isLiveTypingSpeechRequest } from '@/lib/server/live-typing-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
-  try {
-    const subscriptionKey = process.env.AZURE_SUBSCRIPTION_KEY?.replace(/^\uFEFF/, '').trim();
-    const region = process.env.AZURE_REGION?.replace(/^\uFEFF/, '').trim();
+export const POST = apiRoute<{ text?: string; voiceId?: string }>({
+  name: 'Azure TTS API',
+  access: 'pro',
+  allow: ({ body }) => isLiveTypingSpeechRequest(body, 'azure'),
+}, async ({ body }) => {
+  const { AZURE_SUBSCRIPTION_KEY: subscriptionKey, AZURE_REGION: region } = requireServerEnv('AZURE_SUBSCRIPTION_KEY', 'AZURE_REGION');
+  const { text, voiceId } = body;
 
-    if (!subscriptionKey || !region) {
-      console.error('AZURE_SUBSCRIPTION_KEY or AZURE_REGION is not set');
-      return NextResponse.json({ error: 'API configuration error' }, { status: 500 });
-    }
+  if (!text) throw new ApiError(400, 'Text is required');
+  if (!voiceId) throw new ApiError(400, 'Voice ID is required');
 
-    const body = await request.json();
-    const { text, voiceId } = body;
+  const client = new AzureTTSClient({ subscriptionKey, region });
 
-    if (!text) {
-      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
-    }
+  const { audioStream } = await client.synthToBytestream(text, {
+    voice: voiceId,
+    format: 'mp3',
+    useWordBoundary: false,
+  });
 
-    if (!voiceId) {
-      return NextResponse.json({ error: 'Voice ID is required' }, { status: 400 });
-    }
-
-    const client = new AzureTTSClient({ subscriptionKey, region });
-
-    const { audioStream } = await client.synthToBytestream(text, {
-      voice: voiceId,
-      format: 'mp3',
-      useWordBoundary: false,
-    });
-
-    return new Response(audioStream, {
-      status: 200,
-      headers: {
-        'Content-Type': 'audio/mpeg',
-        'Transfer-Encoding': 'chunked',
-        'Cache-Control': 'no-cache',
-      },
-    });
-  } catch (error) {
-    console.error('Error in Azure TTS API:', error);
-    return NextResponse.json(
-      { error: 'Server error', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 },
-    );
-  }
-}
+  return new Response(audioStream, {
+    status: 200,
+    headers: {
+      'Content-Type': 'audio/mpeg',
+      'Transfer-Encoding': 'chunked',
+      'Cache-Control': 'no-cache',
+    },
+  });
+});

@@ -1,5 +1,6 @@
 import { TextToSpeech as WebSpeechTTS } from './tts';
 import { BaseTTSCallbacks } from './tts-types';
+import type { LiveTypingSpeechAccess } from './live-typing-speech';
 import { CloudTTSLifecycle } from './cloud-tts-lifecycle';
 
 export interface AzureVoice {
@@ -93,6 +94,7 @@ export class AzureTTS {
 
   public async speak(text: string, options?: {
     voiceId?: string;
+    liveTyping?: LiveTypingSpeechAccess;
   }) {
     const session = this.lifecycle.beginSession(this.callbacks);
 
@@ -129,7 +131,7 @@ export class AzureTTS {
       const response = await fetch('/api/azure/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceId }),
+        body: JSON.stringify({ text, voiceId, ...(options?.liveTyping ? { liveTyping: options.liveTyping } : {}) }),
         signal: session.signal,
       });
 

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { serverEnv } from '@/lib/server/api-route';
 import { AzureTTSClient } from 'js-tts-wrapper';
 
 export const runtime = 'nodejs';
@@ -6,8 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const subscriptionKey = process.env.AZURE_SUBSCRIPTION_KEY?.replace(/^\uFEFF/, '').trim();
-    const region = process.env.AZURE_REGION?.replace(/^\uFEFF/, '').trim();
+    const subscriptionKey = serverEnv('AZURE_SUBSCRIPTION_KEY');
+    const region = serverEnv('AZURE_REGION');
 
     if (!subscriptionKey || !region) {
       return NextResponse.json({ voices: [], available: false });

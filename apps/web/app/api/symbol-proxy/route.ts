@@ -1,58 +1,39 @@
 import { NextResponse } from 'next/server';
+import { apiRoute, ApiError } from '@/lib/server/api-route';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+const ALLOWED_HOSTS = ['globalsymbols.com', 'www.globalsymbols.com', 'mulberrysymbols.org', 'www.mulberrysymbols.org'];
+
+export const GET = apiRoute({ name: 'symbol proxy', access: 'user' }, async ({ request }) => {
+  const { searchParams } = new URL(request.url);
+  const url = searchParams.get('url');
+
+  if (!url) throw new ApiError(400, 'URL parameter is required');
+
+  // Only allow proxying from Global Symbols domains over HTTPS
+  let parsedUrl: URL;
   try {
-    const { searchParams } = new URL(request.url);
-    const url = searchParams.get('url');
-
-    if (!url) {
-      return NextResponse.json(
-        { error: 'URL parameter is required' },
-        { status: 400 },
-      );
-    }
-
-    // Only allow proxying from Global Symbols domains over HTTPS
-    const parsedUrl = new URL(url);
-    if (parsedUrl.protocol !== 'https:') {
-      return NextResponse.json(
-        { error: 'URL not allowed' },
-        { status: 403 },
-      );
-    }
-    const allowedHosts = ['globalsymbols.com', 'www.globalsymbols.com', 'mulberrysymbols.org', 'www.mulberrysymbols.org'];
-    if (!allowedHosts.some((host) => parsedUrl.hostname === host || parsedUrl.hostname.endsWith(`.${host}`))) {
-      return NextResponse.json(
-        { error: 'URL not allowed' },
-        { status: 403 },
-      );
-    }
-
-    const response = await fetch(url);
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: 'Failed to fetch image' },
-        { status: response.status },
-      );
-    }
-
-    const contentType = response.headers.get('content-type') ?? 'image/png';
-    const buffer = await response.arrayBuffer();
-
-    return new NextResponse(buffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400',
-      },
-    });
-  } catch (error) {
-    console.error('Error in symbol proxy:', error);
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 },
-    );
+    parsedUrl = new URL(url);
+  } catch {
+    throw new ApiError(400, 'URL parameter is invalid');
   }
-}
+  if (parsedUrl.protocol !== 'https:') throw new ApiError(403, 'URL not allowed');
+  if (!ALLOWED_HOSTS.some((host) => parsedUrl.hostname === host || parsedUrl.hostname.endsWith(`.${host}`))) {
+    throw new ApiError(403, 'URL not allowed');
+  }
+
+  const response = await fetch(url);
+  if (!response.ok) throw new ApiError(response.status, 'Failed to fetch image');
+
+  const contentType = response.headers.get('content-type') ?? 'image/png';
+  const buffer = await response.arrayBuffer();
+
+  return new NextResponse(buffer, {
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+});
