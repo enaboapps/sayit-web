@@ -605,7 +605,15 @@ describe('Composer', () => {
       getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
     });
 
-    render(
+    const view = render(
+      <Composer
+        text=""
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+    view.rerender(
       <Composer
         text="Private paused draft"
         onChange={jest.fn()}
@@ -620,6 +628,84 @@ describe('Composer', () => {
     await user.click(screen.getByRole('button', { name: 'Resume Live Typing' }));
 
     expect(resumeSession).toHaveBeenCalledWith('Private paused draft');
+  });
+
+  it('resumes from a device that has not typed without replacing the shared text', async () => {
+    const user = userEvent.setup();
+    const resumeSession = jest.fn().mockResolvedValue(true);
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'user@example.com' },
+      loading: false,
+    });
+    mockUseLiveTyping.mockReturnValue({
+      session: null,
+      isSharing: true,
+      isCreating: false,
+      isPaused: true,
+      isTransitioning: false,
+      error: null,
+      createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession,
+      endSession: jest.fn(),
+      updateContent: jest.fn(),
+      publishSpeechCommand: jest.fn(),
+      getShareableLink: jest.fn(() => 'https://example.com/typing-share/view/session-key'),
+    });
+
+    render(
+      <Composer
+        text="Old draft on this tablet"
+        onChange={jest.fn()}
+        onSpeak={jest.fn()}
+        enableLiveTyping={true}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Resume Live Typing' }));
+
+    expect(resumeSession).toHaveBeenCalledWith(undefined);
+  });
+
+  it('does not push its own text when sharing starts on another device', () => {
+    const updateContent = jest.fn();
+    mockUseAuth.mockReturnValue({
+      user: { id: 'user-1', email: 'user@example.com' },
+      loading: false,
+    });
+    const liveTyping = (isSharing: boolean) => ({
+      session: null,
+      isSharing,
+      isCreating: false,
+      isPaused: false,
+      isTransitioning: false,
+      error: null,
+      createSession: jest.fn(),
+      pauseSession: jest.fn(),
+      resumeSession: jest.fn(),
+      endSession: jest.fn(),
+      updateContent,
+      publishSpeechCommand: jest.fn(),
+      getShareableLink: jest.fn(() => null),
+    });
+    mockUseLiveTyping.mockReturnValue(liveTyping(false));
+
+    const view = render(
+      <Composer text="Draft on this laptop" onChange={jest.fn()} onSpeak={jest.fn()} enableLiveTyping={true} />
+    );
+
+    mockUseLiveTyping.mockReturnValue(liveTyping(true));
+    view.rerender(
+      <Composer text="Draft on this laptop" onChange={jest.fn()} onSpeak={jest.fn()} enableLiveTyping={true} />
+    );
+
+    expect(updateContent).not.toHaveBeenCalled();
+
+    view.rerender(
+      <Composer text="Draft on this laptop, edited" onChange={jest.fn()} onSpeak={jest.fn()} enableLiveTyping={true} />
+    );
+
+    expect(updateContent).toHaveBeenCalledWith('Draft on this laptop, edited');
   });
 
   it('delegates speak and stop actions to the parent while sharing', async () => {

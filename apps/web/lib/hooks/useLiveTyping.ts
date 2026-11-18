@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { nanoid } from 'nanoid';
-import { useMutation, useQuery } from 'convex/react';
+import { useConvexAuth, useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import {
@@ -53,35 +53,51 @@ export function useLiveTyping() {
   const resetTypingSessionLink = useMutation(api.typingSessions.resetTypingSessionLink);
   const deleteTypingSession = useMutation(api.typingSessions.deleteTypingSession);
 
+  const { isAuthenticated } = useConvexAuth();
   const accountSession = useQuery(api.typingSessions.getMyTypingSession);
   const session: TypingSession = accountSession ?? null;
   const isSharing = session?.isActive === true;
   const sessionKey = isSharing ? session.sessionKey : null;
   const isPaused = isSharing && Boolean(session.isPaused);
 
-  // End any per-device session left by an older version of the app once the
-  // account query has resolved (so auth is ready).
+  // End any per-device session left by an older version of the app. Waits for
+  // Convex auth so the delete isn't rejected, and keeps the key until the
+  // session is gone (or isn't ours) so a failed attempt is retried next load.
+  const legacyCleanupStartedRef = useRef(false);
   useEffect(() => {
-    if (accountSession === undefined || typeof window === 'undefined') return;
+    if (!isAuthenticated || accountSession === undefined || typeof window === 'undefined') return;
+    if (legacyCleanupStartedRef.current) return;
     const legacyKey = window.localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!legacyKey) return;
-    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
-    if (legacyKey !== accountSession?.sessionKey) {
-      deleteTypingSession({ sessionKey: legacyKey }).catch(() => {});
+    legacyCleanupStartedRef.current = true;
+
+    const forget = () => window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    if (legacyKey === accountSession?.sessionKey) {
+      forget();
+      return;
     }
-  }, [accountSession, deleteTypingSession]);
+    deleteTypingSession({ sessionKey: legacyKey })
+      .then(forget)
+      .catch((err: unknown) => {
+        // Unauthorized means the session no longer exists or isn't this account's.
+        if (String(err).includes('Unauthorized')) forget();
+      });
+  }, [accountSession, deleteTypingSession, isAuthenticated]);
 
   // Another device can stop sharing; drop any queued update when that happens.
   useEffect(() => {
     if (!isSharing) clearPendingUpdate(updateTimeoutRef);
   }, [isSharing]);
 
-  const createSession = useCallback(async (): Promise<boolean> => {
+  const createSession = useCallback(async (content?: string): Promise<boolean> => {
     setIsCreating(true);
     setError(null);
 
     try {
-      const started = await startTypingSession({ sessionKey: nanoid(SESSION_KEY_LENGTH) });
+      const started = await startTypingSession({
+        sessionKey: nanoid(SESSION_KEY_LENGTH),
+        ...(content !== undefined ? { content } : {}),
+      });
       if (!started) {
         throw new Error('Failed to start Live Typing');
       }
@@ -129,13 +145,18 @@ export function useLiveTyping() {
     }
   }, [isPaused, sessionKey, setTypingSessionPaused]);
 
-  const resumeSession = useCallback(async (content: string): Promise<boolean> => {
+  // Pass content to publish this device's draft; omit it to keep the last shared text.
+  const resumeSession = useCallback(async (content?: string): Promise<boolean> => {
     if (!sessionKey || !isPaused) return Boolean(sessionKey);
 
     setIsTransitioning(true);
     setError(null);
     try {
-      await setTypingSessionPaused({ sessionKey, isPaused: false, content });
+      await setTypingSessionPaused({
+        sessionKey,
+        isPaused: false,
+        ...(content !== undefined ? { content } : {}),
+      });
       return true;
     } catch (err) {
       console.error('Error resuming live typing session:', err);

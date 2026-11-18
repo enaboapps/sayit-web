@@ -27,11 +27,22 @@ async function findByKey(ctx: QueryCtx | MutationCtx, sessionKey: string) {
 }
 
 async function findAccountSession(ctx: QueryCtx | MutationCtx, userId: string) {
-  const sessions = await ctx.db
+  return await ctx.db
     .query('typingSessions')
     .withIndex('by_user_id', (q) => q.eq('userId', userId))
-    .collect();
-  return sessions.find(isAccountSession) ?? null;
+    .filter((q) => q.eq(q.field('expiresAt'), undefined))
+    .first();
+}
+
+// What a viewer with the link may see. Leaves out the owner's user ID.
+function toViewerSession(session: TypingSession) {
+  return {
+    sessionKey: session.sessionKey,
+    content: session.content,
+    isPaused: session.isPaused,
+    isActive: session.isActive,
+    speechCommand: session.speechCommand,
+  };
 }
 
 async function requireUserId(ctx: QueryCtx | MutationCtx) {
@@ -73,8 +84,8 @@ export const getTypingSession = query({
   handler: async (ctx, args) => {
     const session = await findByKey(ctx, args.sessionKey);
     if (!session) return null;
-    if (isAccountSession(session)) return session;
-    return isLive(session) ? session : null;
+    if (!isAccountSession(session) && !isLive(session)) return null;
+    return toViewerSession(session);
   },
 });
 
@@ -104,10 +115,12 @@ export const getUserTypingSessions = query({
 });
 
 // Mutation: Start sharing on the account link, creating it on first use.
-// sessionKey is only used when the account has no link yet.
+// sessionKey is only used when the account has no link yet. content is the
+// starting device's draft; it is ignored when another device is already sharing.
 export const startTypingSession = mutation({
   args: {
     sessionKey: v.string(),
+    content: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
@@ -115,7 +128,7 @@ export const startTypingSession = mutation({
 
     if (existing) {
       if (!existing.isActive) {
-        await ctx.db.patch(existing._id, { ...stoppedFields, isActive: true });
+        await ctx.db.patch(existing._id, { ...stoppedFields, isActive: true, content: args.content ?? '' });
       }
       return await ctx.db.get(existing._id);
     }
@@ -124,7 +137,7 @@ export const startTypingSession = mutation({
     const sessionId = await ctx.db.insert('typingSessions', {
       userId,
       sessionKey: args.sessionKey,
-      content: '',
+      content: args.content ?? '',
       isPaused: false,
       isActive: true,
     });
@@ -225,6 +238,7 @@ export const updateTypingSessionContent = mutation({
 });
 
 // Mutation: Pause or resume a typing session without changing its share URL.
+// Resuming with content publishes that draft; without it, the last shared text stays.
 export const setTypingSessionPaused = mutation({
   args: {
     sessionKey: v.string(),
@@ -238,12 +252,8 @@ export const setTypingSessionPaused = mutation({
       throw new Error('Unauthorized');
     }
 
-    if (!args.isPaused && args.content === undefined) {
-      throw new Error('Current content is required when resuming');
-    }
-
-    await ctx.db.patch(session._id, args.isPaused
-      ? { isPaused: true }
+    await ctx.db.patch(session._id, args.isPaused || args.content === undefined
+      ? { isPaused: args.isPaused }
       : {
         isPaused: false,
         content: args.content,

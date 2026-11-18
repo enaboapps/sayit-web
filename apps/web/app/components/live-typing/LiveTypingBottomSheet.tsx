@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowPathIcon,
   CheckIcon,
@@ -49,6 +49,10 @@ export default function LiveTypingBottomSheet({
   const [copied, setCopied] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !isSharing) setConfirmingReset(false);
+  }, [isOpen, isSharing]);
 
   const handleCopy = async () => {
     if (!shareableLink) return;

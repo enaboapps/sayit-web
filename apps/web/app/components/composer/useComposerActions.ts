@@ -177,26 +177,40 @@ export function useComposerActions({
     };
   }, [error]);
 
-  // Live typing content sync
+  // Live typing content sync. Sharing state belongs to the account, so other
+  // signed-in devices see it too; only push when this device's text changes,
+  // never just because sharing started, paused or resumed elsewhere.
+  const canSyncLiveTyping = enableLiveTyping && !!user;
+  const previousTextRef = useRef(currentText);
+  // The text this device last published (or loaded with). Resume only sends a
+  // draft when this device has edited since then.
+  const lastSharedTextRef = useRef(currentText);
   useEffect(() => {
-    if (enableLiveTyping && user && isLiveTypingSharing && !isLiveTypingPaused) {
+    if (currentText === previousTextRef.current) return;
+    previousTextRef.current = currentText;
+    if (canSyncLiveTyping && isLiveTypingSharing && !isLiveTypingPaused) {
       updateLiveTypingContent(currentText);
+      lastSharedTextRef.current = currentText;
     }
-  }, [currentText, enableLiveTyping, isLiveTypingPaused, isLiveTypingSharing, updateLiveTypingContent, user]);
+  }, [canSyncLiveTyping, currentText, isLiveTypingPaused, isLiveTypingSharing, updateLiveTypingContent]);
 
   const handleStartLiveTyping = useCallback(async () => {
-    const created = await createLiveTypingSession();
-    if (created) {
-      updateLiveTypingContent(currentText);
+    const started = await createLiveTypingSession(currentText);
+    if (started) {
+      lastSharedTextRef.current = currentText;
     }
-  }, [createLiveTypingSession, currentText, updateLiveTypingContent]);
+  }, [createLiveTypingSession, currentText]);
 
   const handlePauseLiveTyping = useCallback(async () => {
     await pauseLiveTypingSession();
   }, [pauseLiveTypingSession]);
 
   const handleResumeLiveTyping = useCallback(async () => {
-    await resumeLiveTypingSession(currentText);
+    const editedHere = currentText !== lastSharedTextRef.current;
+    const resumed = await resumeLiveTypingSession(editedHere ? currentText : undefined);
+    if (resumed && editedHere) {
+      lastSharedTextRef.current = currentText;
+    }
   }, [currentText, resumeLiveTypingSession]);
 
   // Fix text

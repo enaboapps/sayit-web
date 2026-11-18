@@ -12,6 +12,15 @@ import { deleteProfile } from '@/convex/profiles';
 
 type MockSession = Record<string, unknown>;
 type EqBuilder = { eq: (field: string, value: unknown) => unknown };
+type FilterBuilder = {
+  field: (name: string) => string;
+  eq: (field: string, value: unknown) => (row: MockSession) => boolean;
+};
+
+const filterBuilder: FilterBuilder = {
+  field: (name) => name,
+  eq: (field, value) => (row) => row[field] === value,
+};
 
 // In-memory stand-in for the typingSessions table (plus any other tables a
 // test needs), enough for index lookups.
@@ -27,11 +36,14 @@ function mockTable(sessions: MockSession[], otherTables: Record<string, MockSess
           let field = '';
           let value: unknown;
           build({ eq: (f, v) => { field = f; value = v; return {}; } });
-          const matches = (tables[table] ?? []).filter((row) => row[field] === value);
-          return {
-            first: jest.fn(async () => matches[0] ?? null),
-            collect: jest.fn(async () => matches),
-          };
+          const results = (rows: MockSession[]) => ({
+            first: jest.fn(async () => rows[0] ?? null),
+            collect: jest.fn(async () => rows),
+            // Supports filter((q) => q.eq(q.field(name), value)).
+            filter: jest.fn((predicate: (q: FilterBuilder) => (row: MockSession) => boolean) =>
+              results(rows.filter(predicate(filterBuilder)))),
+          });
+          return results((tables[table] ?? []).filter((row) => row[field] === value));
         }),
       })),
       insert: jest.fn(async (_table: string, doc: MockSession) => {
@@ -55,12 +67,12 @@ describe('typingSessions account link', () => {
   test('creates one permanent link for the account on first start', async () => {
     const ctx = mockTable([]);
 
-    const session = await startTypingSession._handler(ctx as never, { sessionKey: 'new-key' });
+    const session = await startTypingSession._handler(ctx as never, { sessionKey: 'new-key', content: 'Hello' });
 
     expect(ctx.db.insert).toHaveBeenCalledWith('typingSessions', {
       userId: 'user-1',
       sessionKey: 'new-key',
-      content: '',
+      content: 'Hello',
       isPaused: false,
       isActive: true,
     });
@@ -74,10 +86,10 @@ describe('typingSessions account link', () => {
       { _id: 'account', userId: 'user-1', sessionKey: 'account-key', isActive: false, content: '' },
     ]);
 
-    const session = await startTypingSession._handler(ctx as never, { sessionKey: 'ignored-key' });
+    const session = await startTypingSession._handler(ctx as never, { sessionKey: 'ignored-key', content: 'Draft' });
 
     expect(ctx.db.insert).not.toHaveBeenCalled();
-    expect(ctx.db.patch).toHaveBeenCalledWith('account', { ...stoppedFields, isActive: true });
+    expect(ctx.db.patch).toHaveBeenCalledWith('account', { ...stoppedFields, isActive: true, content: 'Draft' });
     expect(session).toEqual(expect.objectContaining({ sessionKey: 'account-key', isActive: true }));
   });
 
@@ -86,7 +98,7 @@ describe('typingSessions account link', () => {
       { _id: 'account', userId: 'user-1', sessionKey: 'account-key', isActive: true, content: 'Typing on my tablet' },
     ]);
 
-    const session = await startTypingSession._handler(ctx as never, { sessionKey: 'ignored-key' });
+    const session = await startTypingSession._handler(ctx as never, { sessionKey: 'ignored-key', content: 'Laptop draft' });
 
     expect(ctx.db.patch).not.toHaveBeenCalled();
     expect(session).toEqual(expect.objectContaining({ content: 'Typing on my tablet' }));
@@ -149,7 +161,7 @@ describe('typingSessions account link', () => {
     });
     await expect(getTypingSession._handler(ctx as never, { sessionKey: 'old-key' })).resolves.toBeNull();
     await expect(getTypingSession._handler(ctx as never, { sessionKey: 'new-key' }))
-      .resolves.toEqual(expect.objectContaining({ _id: 'account', isActive: true }));
+      .resolves.toEqual(expect.objectContaining({ sessionKey: 'new-key', isActive: true }));
   });
 
   test('resetting refuses a key that is already in use', async () => {
@@ -170,6 +182,22 @@ describe('typingSessions account link', () => {
 
     await expect(getTypingSession._handler(ctx as never, { sessionKey: 'account-key' }))
       .resolves.toEqual(expect.objectContaining({ isActive: false, content: '' }));
+  });
+
+  test('viewers do not receive the owner user ID', async () => {
+    const ctx = mockTable([
+      { _id: 'account', userId: 'user-1', sessionKey: 'account-key', isActive: true, content: 'Hi' },
+    ]);
+
+    const viewed = await getTypingSession._handler(ctx as never, { sessionKey: 'account-key' });
+
+    expect(viewed).toEqual({
+      sessionKey: 'account-key',
+      content: 'Hi',
+      isPaused: undefined,
+      isActive: true,
+      speechCommand: undefined,
+    });
   });
 
   test('viewers get nothing for an expired 24-hour session', async () => {

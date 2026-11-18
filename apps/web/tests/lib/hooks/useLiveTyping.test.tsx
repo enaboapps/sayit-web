@@ -11,6 +11,7 @@ const mockMutations: Record<string, jest.Mock> = {
   delete: jest.fn(),
 };
 let mockAccountSession: unknown;
+let mockIsAuthenticated = true;
 
 jest.mock('@/convex/_generated/api', () => ({
   api: {
@@ -28,6 +29,7 @@ jest.mock('@/convex/_generated/api', () => ({
 }));
 
 jest.mock('convex/react', () => ({
+  useConvexAuth: jest.fn(() => ({ isAuthenticated: mockIsAuthenticated, isLoading: false })),
   useMutation: jest.fn((name: string) => mockMutations[name]),
   useQuery: jest.fn(() => mockAccountSession),
 }));
@@ -51,6 +53,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   Object.values(mockMutations).forEach((mock) => mock.mockResolvedValue(true));
   mockAccountSession = accountSession;
+  mockIsAuthenticated = true;
   window.localStorage.clear();
 });
 
@@ -88,10 +91,10 @@ describe('useLiveTyping account link', () => {
     const { result } = renderHook(() => useLiveTyping());
 
     await act(async () => {
-      await expect(result.current.createSession()).resolves.toBe(true);
+      await expect(result.current.createSession('Current draft')).resolves.toBe(true);
     });
 
-    expect(mockMutations.start).toHaveBeenCalledWith({ sessionKey: 'generated-key' });
+    expect(mockMutations.start).toHaveBeenCalledWith({ sessionKey: 'generated-key', content: 'Current draft' });
   });
 
   it('stops sharing without deleting the link', async () => {
@@ -134,6 +137,34 @@ describe('useLiveTyping account link', () => {
       expect(mockMutations.delete).toHaveBeenCalledWith({ sessionKey: 'old-device-key' });
     });
     expect(window.localStorage.getItem(LEGACY_STORAGE_KEY)).toBeNull();
+  });
+
+  it('waits for Convex auth before cleaning up a device-stored session', () => {
+    mockIsAuthenticated = false;
+    mockAccountSession = null;
+    window.localStorage.setItem(LEGACY_STORAGE_KEY, 'old-device-key');
+    renderHook(() => useLiveTyping());
+
+    expect(mockMutations.delete).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem(LEGACY_STORAGE_KEY)).toBe('old-device-key');
+  });
+
+  it('keeps the device-stored key when cleanup fails so it is retried', async () => {
+    mockMutations.delete.mockRejectedValue(new Error('Connection lost'));
+    window.localStorage.setItem(LEGACY_STORAGE_KEY, 'old-device-key');
+    renderHook(() => useLiveTyping());
+
+    await waitFor(() => expect(mockMutations.delete).toHaveBeenCalled());
+    await act(async () => {});
+    expect(window.localStorage.getItem(LEGACY_STORAGE_KEY)).toBe('old-device-key');
+  });
+
+  it('forgets the device-stored key when the session is already gone', async () => {
+    mockMutations.delete.mockRejectedValue(new Error('[CONVEX] Server Error Uncaught Error: Unauthorized'));
+    window.localStorage.setItem(LEGACY_STORAGE_KEY, 'old-device-key');
+    renderHook(() => useLiveTyping());
+
+    await waitFor(() => expect(window.localStorage.getItem(LEGACY_STORAGE_KEY)).toBeNull());
   });
 
   it('waits for the account query before cleaning up a device-stored session', () => {
@@ -207,6 +238,17 @@ describe('useLiveTyping pause state', () => {
       isPaused: false,
       content: 'Complete private draft',
     });
+  });
+
+  it('resumes without content to keep the last shared text', async () => {
+    mockAccountSession = { ...accountSession, isPaused: true };
+    const { result } = renderHook(() => useLiveTyping());
+
+    await act(async () => {
+      await result.current.resumeSession();
+    });
+
+    expect(mockMutations.setPaused).toHaveBeenCalledWith({ sessionKey: 'account-key', isPaused: false });
   });
 
   it('keeps the confirmed paused state when resume fails', async () => {
