@@ -21,6 +21,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.CLERK_WEBHOOK_SECRET = secret;
   process.env.NEXT_PUBLIC_CONVEX_URL = 'https://example.convex.cloud';
+  process.env.CONVEX_WEBHOOK_SECRET = 's'.repeat(40);
   (ConvexHttpClient as unknown as jest.Mock).mockImplementation(() => ({ mutation: mutate }));
   jest.spyOn(console, 'log').mockImplementation(() => {});
   jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -29,7 +30,7 @@ afterEach(() => jest.restoreAllMocks());
 test('verifies original bytes before parsing the event under Svix 2', async () => {
   const body = JSON.stringify(event, null, 2) + '\n';
   expect((await POST(request(body))).status).toBe(200);
-  expect(mutate).toHaveBeenCalledWith(expect.anything(), { userId: 'test-user', email: 'test@example.com', fullName: 'Test User' });
+  expect(mutate).toHaveBeenCalledWith(expect.anything(), { serverSecret: 's'.repeat(40), userId: 'test-user', email: 'test@example.com', fullName: 'Test User' });
 });
 test('rejects tampering and old signatures before any mutation', async () => {
   const body = JSON.stringify(event);
@@ -42,5 +43,15 @@ test('rejects missing signature headers and signed invalid JSON', async () => {
   (headers as jest.Mock).mockResolvedValue(new Headers());
   expect((await POST(req)).status).toBe(400);
   expect((await POST(request('not json'))).status).toBe(400);
+  expect(mutate).not.toHaveBeenCalled();
+});
+test('passes the server secret when deleting a profile', async () => {
+  const body = JSON.stringify({ type: 'user.deleted', data: { id: 'test-user' } });
+  expect((await POST(request(body))).status).toBe(200);
+  expect(mutate).toHaveBeenCalledWith(expect.anything(), { serverSecret: 's'.repeat(40), userId: 'test-user' });
+});
+test('refuses to sync profiles when the server secret is not configured', async () => {
+  delete process.env.CONVEX_WEBHOOK_SECRET;
+  await expect(POST(request(JSON.stringify(event)))).rejects.toThrow('CONVEX_WEBHOOK_SECRET');
   expect(mutate).not.toHaveBeenCalled();
 });

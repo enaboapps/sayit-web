@@ -248,7 +248,12 @@ describe('account deletion', () => {
       profiles: [{ _id: 'profile-1', userId: 'user-1' }],
     });
 
-    await deleteProfile._handler(ctx as never, { userId: 'user-1' });
+    process.env.CONVEX_WEBHOOK_SECRET = 'x'.repeat(40);
+    try {
+      await deleteProfile._handler(ctx as never, { serverSecret: 'x'.repeat(40), userId: 'user-1' });
+    } finally {
+      delete process.env.CONVEX_WEBHOOK_SECRET;
+    }
 
     expect(ctx.db.delete).toHaveBeenCalledWith('account');
     expect(ctx.db.delete).toHaveBeenCalledWith('legacy');

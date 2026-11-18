@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { getUserIdentity } from './users';
+import { assertServerSecret } from './serverSecret';
 
 // Query: Get profile for a specific user (used by server-side routes)
 export const getProfileByUserId = query({
@@ -41,14 +42,17 @@ export const getProfile = query({
   },
 });
 
-// Mutation: Create or update user profile (called by Clerk webhook)
+// Mutation: Create or update user profile (called by Clerk webhook only)
 export const upsertProfile = mutation({
   args: {
+    serverSecret: v.string(),
     userId: v.string(),
     email: v.string(),
     fullName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    assertServerSecret(args.serverSecret);
+
     const existing = await ctx.db
       .query('profiles')
       .withIndex('by_user_id', (q) => q.eq('userId', args.userId))
@@ -72,12 +76,15 @@ export const upsertProfile = mutation({
 });
 
 // Mutation: Delete user profile with full relationship cleanup
-// This handles cascade deletion of all related data when a user account is deleted
+// This handles cascade deletion of all related data when a user account is deleted.
+// Called by the Clerk webhook only.
 export const deleteProfile = mutation({
   args: {
+    serverSecret: v.string(),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
+    assertServerSecret(args.serverSecret);
     const userId = args.userId;
 
     // Remove Live Typing links so a deleted account's permanent link stops working.

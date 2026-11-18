@@ -8,12 +8,17 @@ export async function POST(req: Request) {
   // Get the Clerk webhook secret from environment variables
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  // Lets Convex trust these profile writes; anonymous callers can't supply it.
+  const serverSecret = process.env.CONVEX_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
     throw new Error('Please add CLERK_WEBHOOK_SECRET to .env.local');
   }
   if (!convexUrl) {
     throw new Error('Please add NEXT_PUBLIC_CONVEX_URL to the environment');
+  }
+  if (!serverSecret) {
+    throw new Error('Please add CONVEX_WEBHOOK_SECRET to the environment');
   }
 
   const convex = new ConvexHttpClient(convexUrl);
@@ -64,6 +69,7 @@ export async function POST(req: Request) {
     console.log('Creating user profile:', { id, email, first_name, last_name });
 
     await convex.mutation(api.profiles.upsertProfile, {
+      serverSecret,
       userId: id,
       email,
       fullName: first_name && last_name ? `${first_name} ${last_name}` : undefined,
@@ -79,6 +85,7 @@ export async function POST(req: Request) {
     console.log('Updating user profile:', { id, email, first_name, last_name });
 
     await convex.mutation(api.profiles.upsertProfile, {
+      serverSecret,
       userId: id,
       email,
       fullName: first_name && last_name ? `${first_name} ${last_name}` : undefined,
@@ -99,6 +106,7 @@ export async function POST(req: Request) {
     // Optionally delete user profile from Supabase
     // Or just mark as deleted if you want to keep the data
     await convex.mutation(api.profiles.deleteProfile, {
+      serverSecret,
       userId: id,
     });
 
