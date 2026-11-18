@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { userSettingsTableFields } from './settingsFields';
 
 export default defineSchema({
   profiles: defineTable({
@@ -187,49 +188,8 @@ export default defineSchema({
   userSettings: defineTable({
     userId: v.string(), // Clerk user ID
 
-    // Main Settings (from SettingsContext)
-    // Accepts both old enum values (for migration) and new number values
-    textSize: v.union(
-      v.number(),
-      v.literal('small'),
-      v.literal('medium'),
-      v.literal('large'),
-      v.literal('xlarge')
-    ),
-    speechRate: v.number(),
-    speechPitch: v.number(),
-    speechVolume: v.number(),
-    speechVoice: v.string(),
-    enterKeyBehavior: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
-    doubleEnterEnabled: v.optional(v.boolean()),
-    doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
-    doubleEnterTimeoutMs: v.optional(v.number()),
-    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini')),
-    ttsVoiceId: v.string(),
-    ttsStability: v.number(),
-    ttsSimilarityBoost: v.number(),
-    ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
-    aiReplySuggestionsEnabled: v.optional(v.boolean()),
-    messageCaptureMode: v.optional(
-      v.union(
-        v.literal('disabled'),
-        v.literal('clearOnly'),
-        v.literal('speakOnly'),
-        v.literal('speakAndClearOnly'),
-        v.literal('speakAny')
-      )
-    ),
-    usePhraseBar: v.optional(v.boolean()),
-    speakPhrasesOnTap: v.optional(v.boolean()),
-
-    // UI Preferences (consolidated from various components)
-    typingAreaVisible: v.boolean(),
-    typingAreaExpanded: v.boolean(),
-    selectedBoardId: v.optional(v.string()),
-    typingShareFontSize: v.number(),
-    typingTabs: v.optional(v.string()), // JSON stringified TypingTabsState
-    activeTypingTabId: v.optional(v.string()),
-    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
+    // Synced settings: validators are shared with the settings mutations.
+    ...userSettingsTableFields,
 
     // Metadata for sync tracking
     lastSyncedAt: v.number(),

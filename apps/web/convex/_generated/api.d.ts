@@ -24,6 +24,8 @@ import type * as openBoardLimits from "../openBoardLimits.js";
 import type * as phraseBoards from "../phraseBoards.js";
 import type * as phrases from "../phrases.js";
 import type * as profiles from "../profiles.js";
+import type * as serverSecret from "../serverSecret.js";
+import type * as settingsFields from "../settingsFields.js";
 import type * as symbols from "../symbols.js";
 import type * as typingSessions from "../typingSessions.js";
 import type * as userSettings from "../userSettings.js";
@@ -52,6 +54,8 @@ declare const fullApi: ApiFromModules<{
   phraseBoards: typeof phraseBoards;
   phrases: typeof phrases;
   profiles: typeof profiles;
+  serverSecret: typeof serverSecret;
+  settingsFields: typeof settingsFields;
   symbols: typeof symbols;
   typingSessions: typeof typingSessions;
   userSettings: typeof userSettings;

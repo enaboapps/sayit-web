@@ -67,6 +67,37 @@ describe('settings mutations with values from old clients', () => {
     expect(patch).not.toHaveProperty('prepareSpeechWhileTyping');
   });
 
+  test('initializeSettings rejects out-of-range numbers with the original messages', async () => {
+    const ctx = mockCtx(null);
+
+    await expect(initializeSettings._handler(ctx as never, { ...fullSettings, ttsProvider: 'browser', speechRate: 3 }))
+      .rejects.toThrow('speechRate must be a valid number between 0.1 and 2.0');
+    await expect(initializeSettings._handler(ctx as never, { ...fullSettings, ttsProvider: 'browser', speechVolume: Number.NaN }))
+      .rejects.toThrow('speechVolume must be a valid number between 0.0 and 1.0');
+    // The first failing setting in the original order wins.
+    await expect(initializeSettings._handler(ctx as never, { ...fullSettings, ttsProvider: 'browser', textSize: 100, typingShareFontSize: 1 }))
+      .rejects.toThrow('textSize must be a valid number between 8 and 72');
+    expect(ctx.db.insert).not.toHaveBeenCalled();
+  });
+
+  test('updateSettings rejects an infinite value and patches nothing', async () => {
+    const ctx = mockCtx({ _id: 'settings-1', userId: 'user-1' });
+
+    await expect(updateSettings._handler(ctx as never, { lastSyncedAt: 1, doubleEnterTimeoutMs: Number.POSITIVE_INFINITY }))
+      .rejects.toThrow('doubleEnterTimeoutMs must be a valid number between 1000 and 10000');
+    expect(ctx.db.patch).not.toHaveBeenCalled();
+  });
+
+  test('updateSettings patches only known settings', async () => {
+    const ctx = mockCtx({ _id: 'settings-1', userId: 'user-1' });
+
+    await updateSettings._handler(ctx as never, { lastSyncedAt: 1, speechRate: 1.5, notASetting: 'x' } as never);
+
+    const [, patch] = ctx.db.patch.mock.calls[0] as unknown as [string, Record<string, unknown>];
+    expect(patch).toEqual(expect.objectContaining({ speechRate: 1.5, lastSyncedAt: 1 }));
+    expect(patch).not.toHaveProperty('notASetting');
+  });
+
   test('updateSettings leaves supported providers alone', async () => {
     const ctx = mockCtx({ _id: 'settings-1', userId: 'user-1' });
 

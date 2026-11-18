@@ -2,12 +2,48 @@ import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getUserIdentity, requireUser } from './users';
 import { withoutRemovedTTSProvider } from '../lib/tts-types';
+import { coreSettingsFields, laterSettingsFields, optionalSettingsFields } from './settingsFields';
 
 // 'custom' and prepareSpeechWhileTyping belonged to the custom voice providers
 // removed in v5.4.0. Clients cached before then may still send them, so they're
 // accepted here; 'custom' is stored as browser speech and the flag is ignored.
 // The schema no longer allows either.
 const ttsProviderArg = v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom'));
+const legacySettingsArgs = {
+  prepareSpeechWhileTyping: v.optional(v.boolean()),
+};
+
+// What a client sends to create settings. Validators come from settingsFields.ts.
+const settingsArgs = {
+  textSize: v.number(), // Font size in pixels (8-72)
+  ttsProvider: ttsProviderArg,
+  ...coreSettingsFields,
+  ...laterSettingsFields,
+  ...optionalSettingsFields,
+};
+
+// Allowed ranges for numeric settings, with the bounds as shown in errors.
+const NUMBER_RANGES = {
+  textSize: [8, 72, '8 and 72'],
+  speechRate: [0.1, 2.0, '0.1 and 2.0'],
+  speechPitch: [0.1, 2.0, '0.1 and 2.0'],
+  speechVolume: [0.0, 1.0, '0.0 and 1.0'],
+  doubleEnterTimeoutMs: [1000, 10000, '1000 and 10000'],
+  ttsStability: [0.0, 1.0, '0.0 and 1.0'],
+  ttsSimilarityBoost: [0.0, 1.0, '0.0 and 1.0'],
+  typingShareFontSize: [12, 64, '12 and 64'],
+} as const;
+
+// Throws for any numeric setting that is present and out of range.
+function validateNumberRanges(settings: Partial<Record<keyof typeof NUMBER_RANGES, number>>) {
+  for (const [name, [min, max, label]] of Object.entries(NUMBER_RANGES)) {
+    const value = settings[name as keyof typeof NUMBER_RANGES];
+    if (value === undefined) continue;
+    if (!Number.isFinite(value) || value < min || value > max) {
+      throw new Error(`${name} must be a valid number between ${label}`);
+    }
+  }
+}
 
 // Query to get user settings
 export const getUserSettings = query({
@@ -30,32 +66,8 @@ export const getUserSettings = query({
 // Mutation to initialize settings (called on first sign-in or when settings don't exist)
 export const initializeSettings = mutation({
   args: {
-    textSize: v.number(), // Font size in pixels (8-72)
-    speechRate: v.number(),
-    speechPitch: v.number(),
-    speechVolume: v.number(),
-    speechVoice: v.string(),
-    enterKeyBehavior: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
-    doubleEnterEnabled: v.boolean(),
-    doubleEnterAction: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
-    doubleEnterTimeoutMs: v.number(),
-    ttsProvider: ttsProviderArg,
-    ttsVoiceId: v.string(),
-    ttsStability: v.number(),
-    ttsSimilarityBoost: v.number(),
-    ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
-    aiReplySuggestionsEnabled: v.boolean(),
-    messageCaptureMode: v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny')),
-    usePhraseBar: v.optional(v.boolean()),
-    prepareSpeechWhileTyping: v.optional(v.boolean()),
-    speakPhrasesOnTap: v.optional(v.boolean()),
-    typingAreaVisible: v.boolean(),
-    typingAreaExpanded: v.boolean(),
-    selectedBoardId: v.optional(v.string()),
-    typingShareFontSize: v.number(),
-    typingTabs: v.optional(v.string()),
-    activeTypingTabId: v.optional(v.string()),
-    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
+    ...settingsArgs,
+    ...legacySettingsArgs,
   },
   handler: async (ctx, rawArgs) => {
     const identity = await requireUser(ctx);
@@ -64,31 +76,7 @@ export const initializeSettings = mutation({
     void _removed;
     const args = withoutRemovedTTSProvider(legacyArgs) as typeof legacyArgs & { ttsProvider: 'browser' | 'elevenlabs' | 'azure' | 'gemini' };
 
-    // Validate numeric fields
-    if (!Number.isFinite(args.textSize) || args.textSize < 8 || args.textSize > 72) {
-      throw new Error('textSize must be a valid number between 8 and 72');
-    }
-    if (!Number.isFinite(args.speechRate) || args.speechRate < 0.1 || args.speechRate > 2.0) {
-      throw new Error('speechRate must be a valid number between 0.1 and 2.0');
-    }
-    if (!Number.isFinite(args.speechPitch) || args.speechPitch < 0.1 || args.speechPitch > 2.0) {
-      throw new Error('speechPitch must be a valid number between 0.1 and 2.0');
-    }
-    if (!Number.isFinite(args.speechVolume) || args.speechVolume < 0.0 || args.speechVolume > 1.0) {
-      throw new Error('speechVolume must be a valid number between 0.0 and 1.0');
-    }
-    if (!Number.isFinite(args.doubleEnterTimeoutMs) || args.doubleEnterTimeoutMs < 1000 || args.doubleEnterTimeoutMs > 10000) {
-      throw new Error('doubleEnterTimeoutMs must be a valid number between 1000 and 10000');
-    }
-    if (!Number.isFinite(args.ttsStability) || args.ttsStability < 0.0 || args.ttsStability > 1.0) {
-      throw new Error('ttsStability must be a valid number between 0.0 and 1.0');
-    }
-    if (!Number.isFinite(args.ttsSimilarityBoost) || args.ttsSimilarityBoost < 0.0 || args.ttsSimilarityBoost > 1.0) {
-      throw new Error('ttsSimilarityBoost must be a valid number between 0.0 and 1.0');
-    }
-    if (!Number.isFinite(args.typingShareFontSize) || args.typingShareFontSize < 12 || args.typingShareFontSize > 64) {
-      throw new Error('typingShareFontSize must be a valid number between 12 and 64');
-    }
+    validateNumberRanges(args);
 
     // Check if settings already exist
     const existing = await ctx.db
@@ -102,32 +90,8 @@ export const initializeSettings = mutation({
 
     const now = Date.now();
     return await ctx.db.insert('userSettings', {
+      ...args,
       userId: identity.subject,
-      textSize: args.textSize,
-      speechRate: args.speechRate,
-      speechPitch: args.speechPitch,
-      speechVolume: args.speechVolume,
-      speechVoice: args.speechVoice,
-      enterKeyBehavior: args.enterKeyBehavior,
-      doubleEnterEnabled: args.doubleEnterEnabled,
-      doubleEnterAction: args.doubleEnterAction,
-      doubleEnterTimeoutMs: args.doubleEnterTimeoutMs,
-      ttsProvider: args.ttsProvider,
-      ttsVoiceId: args.ttsVoiceId,
-      ttsStability: args.ttsStability,
-      ttsSimilarityBoost: args.ttsSimilarityBoost,
-      ttsModelPreference: args.ttsModelPreference,
-      aiReplySuggestionsEnabled: args.aiReplySuggestionsEnabled,
-      messageCaptureMode: args.messageCaptureMode,
-      usePhraseBar: args.usePhraseBar,
-      speakPhrasesOnTap: args.speakPhrasesOnTap,
-      typingAreaVisible: args.typingAreaVisible,
-      typingAreaExpanded: args.typingAreaExpanded,
-      selectedBoardId: args.selectedBoardId,
-      typingShareFontSize: args.typingShareFontSize,
-      typingTabs: args.typingTabs,
-      activeTypingTabId: args.activeTypingTabId,
-      typingDockMode: args.typingDockMode,
       lastSyncedAt: now,
       updatedAt: now,
     });
@@ -137,32 +101,8 @@ export const initializeSettings = mutation({
 // Mutation to update settings (supports partial updates)
 export const updateSettings = mutation({
   args: {
-    textSize: v.optional(v.number()), // Font size in pixels (8-72)
-    speechRate: v.optional(v.number()),
-    speechPitch: v.optional(v.number()),
-    speechVolume: v.optional(v.number()),
-    speechVoice: v.optional(v.string()),
-    enterKeyBehavior: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
-    doubleEnterEnabled: v.optional(v.boolean()),
-    doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
-    doubleEnterTimeoutMs: v.optional(v.number()),
-    ttsProvider: v.optional(ttsProviderArg),
-    ttsVoiceId: v.optional(v.string()),
-    ttsStability: v.optional(v.number()),
-    ttsSimilarityBoost: v.optional(v.number()),
-    ttsModelPreference: v.optional(v.union(v.literal('fast'), v.literal('high_quality'))),
-    aiReplySuggestionsEnabled: v.optional(v.boolean()),
-    messageCaptureMode: v.optional(v.union(v.literal('disabled'), v.literal('clearOnly'), v.literal('speakOnly'), v.literal('speakAndClearOnly'), v.literal('speakAny'))),
-    usePhraseBar: v.optional(v.boolean()),
-    prepareSpeechWhileTyping: v.optional(v.boolean()),
-    speakPhrasesOnTap: v.optional(v.boolean()),
-    typingAreaVisible: v.optional(v.boolean()),
-    typingAreaExpanded: v.optional(v.boolean()),
-    selectedBoardId: v.optional(v.string()),
-    typingShareFontSize: v.optional(v.number()),
-    typingTabs: v.optional(v.string()),
-    activeTypingTabId: v.optional(v.string()),
-    typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
+    ...v.object(settingsArgs).partial().fields,
+    ...legacySettingsArgs,
     lastSyncedAt: v.number(),
   },
   handler: async (ctx, args) => {
@@ -186,80 +126,17 @@ export const updateSettings = mutation({
       throw new Error('lastSyncedAt must be a valid non-negative timestamp');
     }
 
-    // Validate numeric fields
-    if (updates.textSize !== undefined) {
-      if (!Number.isFinite(updates.textSize) || updates.textSize < 8 || updates.textSize > 72) {
-        throw new Error('textSize must be a valid number between 8 and 72');
-      }
-    }
-    if (updates.speechRate !== undefined) {
-      if (!Number.isFinite(updates.speechRate) || updates.speechRate < 0.1 || updates.speechRate > 2.0) {
-        throw new Error('speechRate must be a valid number between 0.1 and 2.0');
-      }
-    }
-    if (updates.speechPitch !== undefined) {
-      if (!Number.isFinite(updates.speechPitch) || updates.speechPitch < 0.1 || updates.speechPitch > 2.0) {
-        throw new Error('speechPitch must be a valid number between 0.1 and 2.0');
-      }
-    }
-    if (updates.speechVolume !== undefined) {
-      if (!Number.isFinite(updates.speechVolume) || updates.speechVolume < 0.0 || updates.speechVolume > 1.0) {
-        throw new Error('speechVolume must be a valid number between 0.0 and 1.0');
-      }
-    }
-    if (updates.doubleEnterTimeoutMs !== undefined) {
-      if (!Number.isFinite(updates.doubleEnterTimeoutMs) || updates.doubleEnterTimeoutMs < 1000 || updates.doubleEnterTimeoutMs > 10000) {
-        throw new Error('doubleEnterTimeoutMs must be a valid number between 1000 and 10000');
-      }
-    }
-    if (updates.ttsStability !== undefined) {
-      if (!Number.isFinite(updates.ttsStability) || updates.ttsStability < 0.0 || updates.ttsStability > 1.0) {
-        throw new Error('ttsStability must be a valid number between 0.0 and 1.0');
-      }
-    }
-    if (updates.ttsSimilarityBoost !== undefined) {
-      if (!Number.isFinite(updates.ttsSimilarityBoost) || updates.ttsSimilarityBoost < 0.0 || updates.ttsSimilarityBoost > 1.0) {
-        throw new Error('ttsSimilarityBoost must be a valid number between 0.0 and 1.0');
-      }
-    }
-    if (updates.typingShareFontSize !== undefined) {
-      if (!Number.isFinite(updates.typingShareFontSize) || updates.typingShareFontSize < 12 || updates.typingShareFontSize > 64) {
-        throw new Error('typingShareFontSize must be a valid number between 12 and 64');
-      }
-    }
+    validateNumberRanges(updates);
 
-    // Build update object with only the fields that were provided
+    // Only the settings that were provided are changed.
     const updateData: Record<string, unknown> = {
       updatedAt: Date.now(),
       lastSyncedAt,
     };
-
-    // Add each optional field if it was provided
-    if (updates.textSize !== undefined) updateData.textSize = updates.textSize;
-    if (updates.speechRate !== undefined) updateData.speechRate = updates.speechRate;
-    if (updates.speechPitch !== undefined) updateData.speechPitch = updates.speechPitch;
-    if (updates.speechVolume !== undefined) updateData.speechVolume = updates.speechVolume;
-    if (updates.speechVoice !== undefined) updateData.speechVoice = updates.speechVoice;
-    if (updates.enterKeyBehavior !== undefined) updateData.enterKeyBehavior = updates.enterKeyBehavior;
-    if (updates.doubleEnterEnabled !== undefined) updateData.doubleEnterEnabled = updates.doubleEnterEnabled;
-    if (updates.doubleEnterAction !== undefined) updateData.doubleEnterAction = updates.doubleEnterAction;
-    if (updates.doubleEnterTimeoutMs !== undefined) updateData.doubleEnterTimeoutMs = updates.doubleEnterTimeoutMs;
-    if (updates.ttsProvider !== undefined) updateData.ttsProvider = updates.ttsProvider;
-    if (updates.ttsVoiceId !== undefined) updateData.ttsVoiceId = updates.ttsVoiceId;
-    if (updates.ttsStability !== undefined) updateData.ttsStability = updates.ttsStability;
-    if (updates.ttsSimilarityBoost !== undefined) updateData.ttsSimilarityBoost = updates.ttsSimilarityBoost;
-    if (updates.ttsModelPreference !== undefined) updateData.ttsModelPreference = updates.ttsModelPreference;
-    if (updates.aiReplySuggestionsEnabled !== undefined) updateData.aiReplySuggestionsEnabled = updates.aiReplySuggestionsEnabled;
-    if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
-    if (updates.usePhraseBar !== undefined) updateData.usePhraseBar = updates.usePhraseBar;
-    if (updates.speakPhrasesOnTap !== undefined) updateData.speakPhrasesOnTap = updates.speakPhrasesOnTap;
-    if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;
-    if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;
-    if (updates.selectedBoardId !== undefined) updateData.selectedBoardId = updates.selectedBoardId;
-    if (updates.typingShareFontSize !== undefined) updateData.typingShareFontSize = updates.typingShareFontSize;
-    if (updates.typingTabs !== undefined) updateData.typingTabs = updates.typingTabs;
-    if (updates.activeTypingTabId !== undefined) updateData.activeTypingTabId = updates.activeTypingTabId;
-    if (updates.typingDockMode !== undefined) updateData.typingDockMode = updates.typingDockMode;
+    const provided = updates as Record<string, unknown>;
+    for (const name of Object.keys(settingsArgs)) {
+      if (provided[name] !== undefined) updateData[name] = provided[name];
+    }
 
     await ctx.db.patch(settings._id, updateData);
 
