@@ -2,7 +2,7 @@
 import { ConvexHttpClient } from 'convex/browser';
 import { auth, clerkClient } from '@clerk/nextjs/server';
 import { isLiveTypingSpeechRequest, LIVE_TYPING_SPEECH_WINDOW_MS } from '@/lib/server/live-typing-access';
-import { clearProAccessCache } from '@/lib/server/pro-access';
+import { clearProAccessCache, isProSubscriptionItem } from '@/lib/server/pro-access';
 import { POST as azurePOST } from '@/app/api/azure/tts/route';
 import { POST as geminiPOST } from '@/app/api/gemini/tts/route';
 import { POST as elevenLabsPOST } from '@/app/api/text-to-speech/route';
@@ -60,6 +60,7 @@ beforeEach(() => {
   getUserBillingSubscription.mockResolvedValue(proSubscription());
   getUser.mockResolvedValue({ publicMetadata: {} });
   jest.spyOn(console, 'error').mockImplementation(() => {});
+  jest.spyOn(console, 'warn').mockImplementation(() => {});
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -91,10 +92,20 @@ describe('isLiveTypingSpeechRequest', () => {
     await expect(isLiveTypingSpeechRequest(body, 'elevenlabs')).resolves.toBe(false);
   });
 
-  test('refuses when the sharer has no Pro plan or bypass flag', async () => {
+  test('refuses when the sharer never subscribed and has no bypass flag', async () => {
     query.mockResolvedValue(session());
-    getUserBillingSubscription.mockRejectedValue(new Error('Not found'));
+    getUserBillingSubscription.mockRejectedValue(Object.assign(new Error('Not found'), { status: 404 }));
     await expect(isLiveTypingSpeechRequest(body, 'azure')).resolves.toBe(false);
+    expect(getUser).toHaveBeenCalledWith('owner-1');
+  });
+
+  test('a Clerk outage refuses this request but is not cached', async () => {
+    query.mockResolvedValue(session());
+    getUserBillingSubscription.mockRejectedValueOnce(Object.assign(new Error('Unavailable'), { status: 503 }));
+    await expect(isLiveTypingSpeechRequest(body, 'azure')).resolves.toBe(false);
+    expect(getUser).not.toHaveBeenCalled();
+
+    await expect(isLiveTypingSpeechRequest(body, 'azure')).resolves.toBe(true);
   });
 
   test('refuses an ended Pro subscription', async () => {
@@ -127,6 +138,22 @@ describe('isLiveTypingSpeechRequest', () => {
   test('refuses when Convex fails', async () => {
     query.mockRejectedValue(new Error('down'));
     await expect(isLiveTypingSpeechRequest(body, 'azure')).resolves.toBe(false);
+  });
+});
+
+describe('isProSubscriptionItem', () => {
+  const now = 1_000_000;
+  const item = (status: string, periodEnd: number | null = null, slug = 'sayit_pro_monthly') => ({ status, periodEnd, plan: { slug } });
+
+  test.each([
+    ['active', item('active'), true],
+    ['past due', item('past_due'), true],
+    ['cancelled inside the paid period', item('canceled', now + 1000), true],
+    ['cancelled after the paid period', item('canceled', now - 1000), false],
+    ['ended', item('ended'), false],
+    ['another plan', item('active', null, 'other_plan'), false],
+  ])('%s', (_label, subscriptionItem, expected) => {
+    expect(isProSubscriptionItem(subscriptionItem, now)).toBe(expected);
   });
 });
 

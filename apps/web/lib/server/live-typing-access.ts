@@ -30,7 +30,11 @@ export async function isLiveTypingSpeechRequest(body: unknown, provider: TTSProv
   const text = (body as { text?: unknown } | null)?.text;
   const convexUrl = serverEnv('NEXT_PUBLIC_CONVEX_URL');
   const serverSecret = serverEnv('CONVEX_WEBHOOK_SECRET');
-  if (!liveTyping || typeof text !== 'string' || !convexUrl || !serverSecret) return false;
+  if (!liveTyping || typeof text !== 'string') return false;
+  if (!convexUrl || !serverSecret) {
+    console.warn('Live Typing speech check needs NEXT_PUBLIC_CONVEX_URL and CONVEX_WEBHOOK_SECRET');
+    return false;
+  }
 
   try {
     const convex = new ConvexHttpClient(convexUrl);
