@@ -1,6 +1,12 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { getUserIdentity } from './users';
+import { withoutRemovedTTSProvider } from '../lib/tts-types';
+
+// 'custom' and prepareSpeechWhileTyping belonged to the removed custom voice
+// providers. They are still accepted so clients cached before the removal can
+// save settings; 'custom' is stored as browser speech and the flag is ignored.
+const ttsProviderArg = v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom'));
 
 // Query to get user settings
 export const getUserSettings = query({
@@ -32,7 +38,7 @@ export const initializeSettings = mutation({
     doubleEnterEnabled: v.boolean(),
     doubleEnterAction: v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear')),
     doubleEnterTimeoutMs: v.number(),
-    ttsProvider: v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom')),
+    ttsProvider: ttsProviderArg,
     ttsVoiceId: v.string(),
     ttsStability: v.number(),
     ttsSimilarityBoost: v.number(),
@@ -50,11 +56,15 @@ export const initializeSettings = mutation({
     activeTypingTabId: v.optional(v.string()),
     typingDockMode: v.optional(v.union(v.literal('expanded'), v.literal('fullscreen'), v.literal('minimized'))),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, rawArgs) => {
     const identity = await getUserIdentity(ctx);
     if (!identity) {
       throw new Error('Unauthenticated');
     }
+
+    const { prepareSpeechWhileTyping: _removed, ...legacyArgs } = rawArgs;
+    void _removed;
+    const args = withoutRemovedTTSProvider(legacyArgs) as typeof legacyArgs & { ttsProvider: 'browser' | 'elevenlabs' | 'azure' | 'gemini' };
 
     // Validate numeric fields
     if (!Number.isFinite(args.textSize) || args.textSize < 8 || args.textSize > 72) {
@@ -112,7 +122,6 @@ export const initializeSettings = mutation({
       aiReplySuggestionsEnabled: args.aiReplySuggestionsEnabled,
       messageCaptureMode: args.messageCaptureMode,
       usePhraseBar: args.usePhraseBar,
-      prepareSpeechWhileTyping: args.prepareSpeechWhileTyping ?? false,
       speakPhrasesOnTap: args.speakPhrasesOnTap,
       typingAreaVisible: args.typingAreaVisible,
       typingAreaExpanded: args.typingAreaExpanded,
@@ -139,7 +148,7 @@ export const updateSettings = mutation({
     doubleEnterEnabled: v.optional(v.boolean()),
     doubleEnterAction: v.optional(v.union(v.literal('newline'), v.literal('speak'), v.literal('clear'), v.literal('speakAndClear'))),
     doubleEnterTimeoutMs: v.optional(v.number()),
-    ttsProvider: v.optional(v.union(v.literal('browser'), v.literal('elevenlabs'), v.literal('azure'), v.literal('gemini'), v.literal('custom'))),
+    ttsProvider: v.optional(ttsProviderArg),
     ttsVoiceId: v.optional(v.string()),
     ttsStability: v.optional(v.number()),
     ttsSimilarityBoost: v.optional(v.number()),
@@ -173,7 +182,9 @@ export const updateSettings = mutation({
       throw new Error('Settings not initialized. Call initializeSettings first.');
     }
 
-    const { lastSyncedAt, ...updates } = args;
+    const { lastSyncedAt, prepareSpeechWhileTyping: _removed, ...legacyUpdates } = args;
+    void _removed;
+    const updates = withoutRemovedTTSProvider(legacyUpdates);
 
     // Validate lastSyncedAt
     if (!Number.isFinite(lastSyncedAt) || lastSyncedAt < 0) {
@@ -246,7 +257,6 @@ export const updateSettings = mutation({
     if (updates.aiReplySuggestionsEnabled !== undefined) updateData.aiReplySuggestionsEnabled = updates.aiReplySuggestionsEnabled;
     if (updates.messageCaptureMode !== undefined) updateData.messageCaptureMode = updates.messageCaptureMode;
     if (updates.usePhraseBar !== undefined) updateData.usePhraseBar = updates.usePhraseBar;
-    if (updates.prepareSpeechWhileTyping !== undefined) updateData.prepareSpeechWhileTyping = updates.prepareSpeechWhileTyping;
     if (updates.speakPhrasesOnTap !== undefined) updateData.speakPhrasesOnTap = updates.speakPhrasesOnTap;
     if (updates.typingAreaVisible !== undefined) updateData.typingAreaVisible = updates.typingAreaVisible;
     if (updates.typingAreaExpanded !== undefined) updateData.typingAreaExpanded = updates.typingAreaExpanded;

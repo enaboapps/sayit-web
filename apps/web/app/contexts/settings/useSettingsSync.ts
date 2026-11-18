@@ -20,6 +20,7 @@ import {
   loadSettingsFromLocalStorage,
   saveSettingsToLocalStorage,
 } from './storage';
+import { REMOVED_CUSTOM_TTS_PROVIDER, withoutRemovedTTSProvider } from '@/lib/tts-types';
 
 type AuthUser = {
   id?: string;
@@ -35,8 +36,7 @@ type ConvexSettings = {
   doubleEnterEnabled?: boolean;
   doubleEnterAction?: EnterKeyBehavior;
   doubleEnterTimeoutMs?: number;
-  ttsProvider: Settings['ttsProvider'];
-  prepareSpeechWhileTyping?: boolean;
+  ttsProvider: Settings['ttsProvider'] | typeof REMOVED_CUSTOM_TTS_PROVIDER;
   ttsVoiceId: string;
   ttsStability: number;
   ttsSimilarityBoost: number;
@@ -70,7 +70,6 @@ function buildInitializeSettingsPayload(localSettings: AllSettings) {
     doubleEnterAction: localSettings.doubleEnterAction,
     doubleEnterTimeoutMs: normalizeDoubleEnterTimeout(localSettings.doubleEnterTimeoutMs),
     ttsProvider: localSettings.ttsProvider,
-    prepareSpeechWhileTyping: localSettings.prepareSpeechWhileTyping,
     ttsVoiceId: localSettings.ttsVoiceId,
     ttsStability: localSettings.ttsStability,
     ttsSimilarityBoost: localSettings.ttsSimilarityBoost,
@@ -88,7 +87,8 @@ function buildInitializeSettingsPayload(localSettings: AllSettings) {
   };
 }
 
-function mergeConvexSettings(convexSettings: ConvexSettings): AllSettings {
+function mergeConvexSettings(storedSettings: ConvexSettings): AllSettings {
+  const convexSettings = withoutRemovedTTSProvider(storedSettings) as Omit<ConvexSettings, 'ttsProvider'> & { ttsProvider: Settings['ttsProvider'] };
   return {
     textSize: normalizeTextSize(convexSettings.textSize),
     speechRate: convexSettings.speechRate,
@@ -102,7 +102,6 @@ function mergeConvexSettings(convexSettings: ConvexSettings): AllSettings {
       convexSettings.doubleEnterTimeoutMs ?? defaultSettings.doubleEnterTimeoutMs
     ),
     ttsProvider: convexSettings.ttsProvider,
-    prepareSpeechWhileTyping: convexSettings.prepareSpeechWhileTyping ?? false,
     ttsVoiceId: convexSettings.ttsVoiceId,
     ttsStability: convexSettings.ttsStability,
     ttsSimilarityBoost: convexSettings.ttsSimilarityBoost,
